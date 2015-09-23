@@ -21,7 +21,7 @@ class RemoteSparkMagics(Magics):
     logger = Log()
     livy_clients = dict()
 
-    def __init__(self, shell, data, mode):
+    def __init__(self, shell, data=None, mode="normal"):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
         Log.mode = mode
@@ -197,11 +197,5 @@ class RemoteSparkMagics(Magics):
         elif language == "sql":
             return client.execute_sql(command)
         
-
-
-
-# This class must then be registered with a manually created instance,
-# since its constructor has different arguments from the default:
-ip = get_ipython()
-magics = RemoteSparkMagics(ip, None, "normal")
-ip.register_magics(magics)
+def load_ipython_extension(ip):
+    ip.register_magics(RemoteSparkMagics)
