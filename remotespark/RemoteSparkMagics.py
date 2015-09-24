@@ -1,16 +1,18 @@
 ﻿"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
-Provides the %remotesparkmode, %remotesparkconfig, %remotesparkinfo, %remotesparksql, %%remotesparkscala, %%remotesparkpyspark magics."""
+Provides the %sparkmagic, %sparkconf magics."""
 
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
-from IPython.core.magic import (Magics, magics_class, line_magic, cell_magic, line_cell_magic)
+from IPython.core.magic import (Magics, magics_class, line_magic, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
 
 from clientmanager import ClientManager
+from livyclientfactory import LivyClientFactory
 from log import Log
 								
+
 @magics_class
 class RemoteSparkMagics(Magics):
 
@@ -21,6 +23,7 @@ class RemoteSparkMagics(Magics):
         super(RemoteSparkMagics, self).__init__(shell)
         Log.mode = mode
         self.client_manager = ClientManager()
+        self.client_factory = LivyClientFactory()
 
     @magic_arguments()
     @argument("-l", "--language", help='The language to execute: "scala", "pyspark", "sql". Default is "scala".')
@@ -58,7 +61,7 @@ class RemoteSparkMagics(Magics):
 
         # Select client
         if not args.client:
-            self.client_manager.get_any_client()
+            client_to_use = self.client_manager.get_any_client()
         else:
             args.client = args.client.lower()
             client_to_use = self.client_manager.get_client(args.client)
@@ -91,8 +94,9 @@ class RemoteSparkMagics(Magics):
                Set the mode to be used. Possible arguments are: "normal" or "debug".
                e.g. `%sparkconf mode debug`
            add
-               Add a Livy endpoint. First argument is the friendly name of the endpoint and second argument is the connection string.
-               e.g. `%sparkconf add defaultlivy url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword`
+               Add a Livy endpoint. First argument is the friendly name of the endpoint and second argument
+               is the connection string.
+               e.g. `%sparkconf add test url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword`
            delete
                Delete a Livy endpoint. Argument is the friendly name of the endpoint to be deleted.
                e.g. `%sparkconf delete defaultlivy`
@@ -125,7 +129,9 @@ class RemoteSparkMagics(Magics):
             name = args.command[1].lower()
             connection_string = args.command[2]
 
-            self.client_manager.add_client(name, connection_string)
+            livy_client = self.client_factory.build_client(connection_string)
+
+            self.client_manager.add_client(name, livy_client)
 
             self._print_info()
         # delete
@@ -146,9 +152,6 @@ class RemoteSparkMagics(Magics):
         else:
             raise ValueError("Subcommand '{}' not supported. {}".format(subcommand, usage))
 
-
-
-
     def _print_info(self):
         print("Info for running sparkmagic:\n    mode={}\n    {}\n".format(Log.mode, self._get_client_keys()))
 
@@ -163,5 +166,6 @@ class RemoteSparkMagics(Magics):
         elif language == "sql":
             return client.execute_sql(command)
         
+
 def load_ipython_extension(ip):
     ip.register_magics(RemoteSparkMagics)
