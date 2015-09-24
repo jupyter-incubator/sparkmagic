@@ -20,8 +20,7 @@ class LivyClientFactory(object):
     def build_client(self, connection_string):
         cso = get_connection_string_elements(connection_string)
 
-        token = b64encode(bytes(cso.username + ":" + cso.password)).decode("ascii")
-        headers = {"Content-Type": "application/json", "Authorization": "Basic {}".format(token)}
+        headers = self._get_headers(cso.username, cso.password)
 
         http_client = ReliableHttpClient(cso.url, headers)
 
@@ -29,3 +28,7 @@ class LivyClientFactory(object):
         pyspark_session = LivySession(http_client, "pyspark")
 
         return LivyClient(spark_session, pyspark_session)
+
+    def _get_headers(self, username, password):
+        token = b64encode(bytes(username + ":" + password)).decode("ascii")
+        return {"Content-Type": "application/json", "Authorization": "Basic {}".format(token)}
