@@ -7,24 +7,20 @@ Provides the %remotesparkmode, %remotesparkconfig, %remotesparkinfo, %remotespar
 from __future__ import print_function
 from IPython.core.magic import (Magics, magics_class, line_magic, cell_magic, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
-from base64 import b64encode
 
-from connectionstringutil import get_connection_string_elements
-from livysession import LivySession
-from livyclient import LivyClient
-from reliablehttpclient import ReliableHttpClient
+from clientmanager import ClientManager
 from log import Log
 								
 @magics_class
 class RemoteSparkMagics(Magics):
 
     logger = Log()
-    livy_clients = dict()
 
     def __init__(self, shell, data=None, mode="normal"):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
         Log.mode = mode
+        self.client_manager = ClientManager()
 
     @magic_arguments()
     @argument("-l", "--language", help='The language to execute: "scala", "pyspark", "sql". Default is "scala".')
@@ -62,17 +58,10 @@ class RemoteSparkMagics(Magics):
 
         # Select client
         if not args.client:
-            number_of_sessions = len(self.livy_clients)
-            if number_of_sessions == 1:
-                key = self.livy_clients.keys()[0]
-                client_to_use = self.livy_clients[key]
-            elif number_of_sessions == 0:
-                raise SyntaxError("You need to have at least 1 client created to execute commands.")
-            else:
-                raise SyntaxError("Please specify the client to use. {}".format(self._get_client_keys()))
+            self.client_manager.get_any_client()
         else:
             args.client = args.client.lower()
-            client_to_use = self.livy_clients[args.client]
+            client_to_use = self.client_manager.get_client(args.client)
 
         # Execute
         print(self._send_command(client_to_use, command, args.language))
@@ -136,22 +125,7 @@ class RemoteSparkMagics(Magics):
             name = args.command[1].lower()
             connection_string = args.command[2]
 
-            if name in self.livy_clients.keys():
-                raise AssertionError("Endpoint with name '{}' already exists. Please delete the ednpoint first if you intend to replace it.".format(name))
-
-            cso = get_connection_string_elements(connection_string)
-
-            token = b64encode(bytes(cso.username + ":" + cso.password)).decode("ascii")
-            headers = {"Content-Type": "application/json", "Authorization": "Basic {}".format(token)}
-
-            http_client = ReliableHttpClient(cso.url, headers)
-
-            spark_session = LivySession(http_client, "spark")
-            pyspark_session = LivySession(http_client, "pyspark")
-
-            livy_client = LivyClient(spark_session, pyspark_session)
-
-            self.livy_clients[name] = livy_client
+            self.client_manager.add_client(name, connection_string)
 
             self._print_info()
         # delete
@@ -160,13 +134,12 @@ class RemoteSparkMagics(Magics):
                 raise ValueError("Subcommand 'delete' requires an argument. {}".format(usage))
 
             name = args.command[1].lower()
-            self._remove_endpoint(name)
+            self.client_manager.delete_client(name)
 
             self._print_info()
         # delete
         elif subcommand == "cleanup":
-            for name in self.livy_clients.keys():
-                self._remove_endpoint(name)
+            self.client_manager.clean_up_all()
 
             self._print_info()
         # error
@@ -176,18 +149,11 @@ class RemoteSparkMagics(Magics):
 
 
 
-    def _remove_endpoint(self, name):
-        if name in self.livy_clients.keys():
-            self.livy_clients[name].close_sessions()
-            del self.livy_clients[name]
-        else:
-            raise ValueError("Could not find '{}' endpoint in list of saved endpoints. {}".format(name, self._get_client_keys()))
-        
     def _print_info(self):
         print("Info for running sparkmagic:\n    mode={}\n    {}\n".format(Log.mode, self._get_client_keys()))
 
     def _get_client_keys(self):
-        return "Possible endpoints are: {}".format(self.livy_clients.keys())
+        return "Possible endpoints are: {}".format(self.client_manager.get_endpoints_list())
 
     def _send_command(self, client, command, language):
         if language == "scala":

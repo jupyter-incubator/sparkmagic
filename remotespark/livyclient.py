@@ -29,7 +29,7 @@ class LivyClient(object):
     def _make_SQL(self, command):
         sql = ""
         sql += ("val sqlContext = new org.apache.spark.sql.SQLContext(sc)\nimport sqlContext.implicits._\n")
-        sql += 'sqlContext.sql("' + command + '")'
+        sql += 'sqlContext.sql("' + command + '").collect()'
         
         return sql
     
