@@ -9,6 +9,7 @@ from livysession import LivySession
 from livyclient import LivyClient
 from reliablehttpclient import ReliableHttpClient
 
+
 class LivyClientFactory(object):
     """Spark client for Livy endpoint"""
     logger = Log()

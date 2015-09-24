@@ -94,4 +94,3 @@ def test_clean_up():
 
     client0.close_sessions.assert_called_once_with()
     client1.close_sessions.assert_called_once_with()
-
