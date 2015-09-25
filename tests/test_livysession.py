@@ -1,8 +1,10 @@
-﻿from nose.tools import raises, with_setup, assert_equals
-import json
-from mock import MagicMock, Mock
+﻿import json
 
-from remotespark.livysession import LivySession
+from nose.tools import raises, assert_equals
+from mock import MagicMock
+
+from remotespark.livyclientlib.livysession import LivySession
+
 
 class DummyResponse():
     def __init__(self, status_code, json_text):
@@ -14,6 +16,7 @@ class DummyResponse():
 
     def status_code(self):
         return self._status_code
+
 
 class TestLivySession:
     pi_result = "Pi is roughly 3.14336"
@@ -65,7 +68,7 @@ class TestLivySession:
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         self.get_responses = [DummyResponse(200, self.busy_sessions_json),
-                     DummyResponse(200, self.ready_sessions_json)]
+                              DummyResponse(200, self.ready_sessions_json)]
         http_client.get.side_effect = self.next_response_get
         session = LivySession(http_client, "spark")
 
@@ -96,10 +99,10 @@ class TestLivySession:
         kind = "spark"
         http_client = MagicMock()
         self.post_responses = [DummyResponse(201, self.session_create_json),
-                          DummyResponse(201, self.post_statement_json)]
+                               DummyResponse(201, self.post_statement_json)]
         http_client.post.side_effect = self.next_response_post
         self.get_responses = [DummyResponse(200, self.running_statement_json),
-                          DummyResponse(200, self.ready_statement_json)]
+                              DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self.next_response_get
         session = LivySession(http_client, kind)
         command = "command"

@@ -7,6 +7,7 @@
 
 from collections import namedtuple
 
+
 def get_connection_string(url, username, password):
     """Build a connection string for remote Spark submission via http basic authorization.
        
