@@ -3,11 +3,11 @@
 
 from base64 import b64encode
 
-from log import Log
-from connectionstringutil import get_connection_string_elements
-from livysession import LivySession
-from livyclient import LivyClient
-from reliablehttpclient import ReliableHttpClient
+from .log import Log
+from .connectionstringutil import get_connection_string_elements
+from .livysession import LivySession
+from .livyclient import LivyClient
+from .reliablehttpclient import ReliableHttpClient
 
 
 class LivyClientFactory(object):
@@ -20,15 +20,14 @@ class LivyClientFactory(object):
     def build_client(self, connection_string):
         cso = get_connection_string_elements(connection_string)
 
-        headers = self._get_headers(cso.username, cso.password)
+        headers = self._get_headers()
 
-        http_client = ReliableHttpClient(cso.url, headers)
+        http_client = ReliableHttpClient(cso.url, headers, cso.username, cso.password)
 
         spark_session = LivySession(http_client, "spark")
         pyspark_session = LivySession(http_client, "pyspark")
 
         return LivyClient(spark_session, pyspark_session)
 
-    def _get_headers(self, username, password):
-        token = b64encode(bytes(username + ":" + password)).decode("ascii")
-        return {"Content-Type": "application/json", "Authorization": "Basic {}".format(token)}
+    def _get_headers(self):
+        return {"Content-Type": "application/json"}

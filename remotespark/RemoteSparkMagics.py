@@ -5,13 +5,14 @@ Provides the %sparkmagic, %sparkconf magics."""
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
+
 from IPython.core.magic import (Magics, magics_class, line_magic, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
 
-from clientmanager import ClientManager
-from livyclientfactory import LivyClientFactory
-from log import Log
-								
+from remotespark.livyclientlib.clientmanager import ClientManager
+from remotespark.livyclientlib.livyclientfactory import LivyClientFactory
+from remotespark.livyclientlib.log import Log
+
 
 @magics_class
 class RemoteSparkMagics(Magics):

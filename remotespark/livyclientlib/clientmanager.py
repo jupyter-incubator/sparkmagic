@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from log import Log
+from .log import Log
 
 
 class ClientManager(object):
@@ -12,10 +12,10 @@ class ClientManager(object):
         self.livy_clients = dict()
 
     def get_endpoints_list(self):
-        return self.livy_clients.keys()
+        return list(self.livy_clients.keys())
 
     def add_client(self, name, livy_client):
-        if name in self.livy_clients.keys():
+        if name in self.get_endpoints_list():
             raise ValueError("Endpoint with name '{}' already exists. Please delete the endpoint"
                              " first if you intend to replace it.".format(name))
 
@@ -24,7 +24,7 @@ class ClientManager(object):
     def get_any_client(self):
         number_of_sessions = len(self.livy_clients)
         if number_of_sessions == 1:
-            key = self.livy_clients.keys()[0]
+            key = self.get_endpoints_list()[0]
             return self.livy_clients[key]
         elif number_of_sessions == 0:
             raise AssertionError("You need to have at least 1 client created to execute commands.")
@@ -33,7 +33,7 @@ class ClientManager(object):
                 self.get_endpoints_list()))
         
     def get_client(self, name):
-        if name in self.livy_clients.keys():
+        if name in self.get_endpoints_list():
             return self.livy_clients[name]
         raise ValueError("Could not find '{}' endpoint in list of saved endpoints. Possible endpoints are {}".format(
             name, self.get_endpoints_list()))
@@ -42,11 +42,11 @@ class ClientManager(object):
         self._remove_endpoint(name)
     
     def clean_up_all(self):
-        for name in self.livy_clients.keys():
+        for name in self.get_endpoints_list():
             self._remove_endpoint(name)
 
     def _remove_endpoint(self, name):
-        if name in self.livy_clients.keys():
+        if name in self.get_endpoints_list():
             self.livy_clients[name].close_sessions()
             del self.livy_clients[name]
         else:

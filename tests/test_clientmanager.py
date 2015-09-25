@@ -1,7 +1,7 @@
 ﻿from nose.tools import raises, assert_equals
 from mock import MagicMock
 
-from remotespark.clientmanager import ClientManager
+from remotespark.livyclientlib.clientmanager import ClientManager
 
 
 @raises(ValueError)
@@ -54,7 +54,7 @@ def test_client_names_returned():
     manager.add_client("name0", client)
     manager.add_client("name1", client)
 
-    assert_equals(["name0", "name1"], manager.get_endpoints_list())
+    assert_equals({"name0", "name1"}, set(manager.get_endpoints_list()))
 
 
 def test_get_any_client():

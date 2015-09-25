@@ -1,6 +1,6 @@
 ﻿from nose.tools import assert_equals
 
-import remotespark.connectionstringutil as csutil
+import remotespark.livyclientlib.connectionstringutil as csutil
 
 connection_string = "url=dns;username=user;password=pass"
 host = "dns"

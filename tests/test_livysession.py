@@ -1,8 +1,9 @@
-﻿from nose.tools import raises, assert_equals
-import json
+﻿import json
+
+from nose.tools import raises, assert_equals
 from mock import MagicMock
 
-from remotespark.livysession import LivySession
+from remotespark.livyclientlib.livysession import LivySession
 
 
 class DummyResponse():

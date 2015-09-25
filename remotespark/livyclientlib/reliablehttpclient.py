@@ -10,9 +10,11 @@ class ReliableHttpClient(object):
     # TODO(aggftw): retry on retriable status codes
     # TODO(aggftw): unit tests
 
-    def __init__(self, url, headers):
+    def __init__(self, url, headers, username, password):
         self._url = url.rstrip("/")
         self._headers = headers
+        self._username = username
+        self._password = password
 
     def compose_url(self, relative_url):
         r_u = "/{}".format(relative_url.rstrip("/").lstrip("/"))
@@ -35,9 +37,9 @@ class ReliableHttpClient(object):
         url = self.compose_url(relative_url)
 
         if data is None:
-            r = function(url, headers=self._headers)
+            r = function(url, headers=self._headers, auth=(self._username, self._password))
         else:
-            r = function(url, headers=self._headers, data=json.dumps(data))
+            r = function(url, headers=self._headers, auth=(self._username, self._password), data=json.dumps(data))
 
         if r.status_code not in accepted_status_codes:
             raise ValueError("Invalid status code '{}' from {}"

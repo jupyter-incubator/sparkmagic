@@ -1,6 +1,6 @@
 ﻿from mock import MagicMock
 
-from remotespark.livyclient import LivyClient
+from remotespark.livyclientlib.livyclient import LivyClient
 
 
 def test_execute_scala():

@@ -4,7 +4,7 @@
 import textwrap
 from time import sleep
 
-from log import Log
+from .log import Log
 
 
 class LivySession(object):
