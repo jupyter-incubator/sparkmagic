@@ -9,9 +9,9 @@ from __future__ import print_function
 from IPython.core.magic import (Magics, magics_class, line_magic, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
 
-from remotespark.livyclientlib.clientmanager import ClientManager
-from remotespark.livyclientlib.livyclientfactory import LivyClientFactory
-from remotespark.livyclientlib.log import Log
+from livyclientlib.clientmanager import ClientManager
+from livyclientlib.livyclientfactory import LivyClientFactory
+from livyclientlib.log import Log
 
 
 @magics_class
