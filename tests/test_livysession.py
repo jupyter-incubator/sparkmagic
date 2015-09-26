@@ -169,6 +169,8 @@ class TestLivySession:
         http_client.reset_mock()
 
         session.create_sql_context()
+
+        # Second call should not issue a post request
         session.create_sql_context()
 
         http_client.post.assert_called_once_with("/sessions/0/statements", [201],
