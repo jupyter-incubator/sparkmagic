@@ -31,22 +31,23 @@ class TestLivySession:
     get_responses = []
     post_responses = []
 
-    def next_response_get(self, *args):
+    def _next_response_get(self, *args):
         val = self.get_responses[0]
         self.get_responses = self.get_responses[1:]
         return val
 
-    def next_response_post(self, *args):
+    def _next_response_post(self, *args):
         val = self.post_responses[0]
         self.post_responses = self.post_responses[1:]    
         return val
 
-    def test_init_starts_session(self):
+    def test_start_starts_session(self):
         kind = "spark"
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
 
         session = LivySession(http_client, kind)
+        session.start()
     
         assert_equals("spark", session.kind)
         assert_equals("starting", session._state)
@@ -58,6 +59,7 @@ class TestLivySession:
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         http_client.get.return_value = DummyResponse(200, self.ready_sessions_json)
         session = LivySession(http_client, "spark")
+        session.start()
     
         state = session.state
 
@@ -69,8 +71,9 @@ class TestLivySession:
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         self.get_responses = [DummyResponse(200, self.busy_sessions_json),
                               DummyResponse(200, self.ready_sessions_json)]
-        http_client.get.side_effect = self.next_response_get
+        http_client.get.side_effect = self._next_response_get
         session = LivySession(http_client, "spark")
+        session.start()
 
         session.wait_for_state("idle")
 
@@ -78,6 +81,17 @@ class TestLivySession:
         assert_equals(2, http_client.get.call_count)
 
     def test_delete_session_when_active(self):
+        http_client = MagicMock()
+        http_client.post.return_value = DummyResponse(201, self.session_create_json)
+        session = LivySession(http_client, "spark")
+        session.start()
+
+        session.delete()
+
+        assert_equals("dead", session._state)
+
+    @raises(ValueError)
+    def test_delete_session_when_not_started(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         session = LivySession(http_client, "spark")
@@ -100,11 +114,12 @@ class TestLivySession:
         http_client = MagicMock()
         self.post_responses = [DummyResponse(201, self.session_create_json),
                                DummyResponse(201, self.post_statement_json)]
-        http_client.post.side_effect = self.next_response_post
+        http_client.post.side_effect = self._next_response_post
         self.get_responses = [DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
-        http_client.get.side_effect = self.next_response_get
+        http_client.get.side_effect = self._next_response_get
         session = LivySession(http_client, kind)
+        session.start()
         command = "command"
 
         result = session.execute(command)
@@ -113,3 +128,58 @@ class TestLivySession:
         http_client.get.assert_called_with("/sessions/0/statements", [200])
         assert_equals(2, http_client.get.call_count)
         assert_equals(self.pi_result, result)
+
+    def test_create_sql_context_spark(self):
+        kind = "spark"
+        http_client = MagicMock()
+        self.post_responses = [DummyResponse(201, self.session_create_json),
+                               DummyResponse(201, self.post_statement_json)]
+        http_client.post.side_effect = self._next_response_post
+        self.get_responses = [DummyResponse(200, self.ready_sessions_json),
+                              DummyResponse(200, self.running_statement_json),
+                              DummyResponse(200, self.ready_statement_json)]
+        http_client.get.side_effect = self._next_response_get
+        session = LivySession(http_client, kind)
+        session.start()
+
+        session.create_sql_context()
+
+        http_client.post.assert_called_with("/sessions/0/statements", [201],
+                                            {"code": "val sqlContext = new org.apache.spark.sql.SQLContext(sc)\n"
+                                                     "import sqlContext.implicits._"})
+
+    def test_create_sql_context_pyspark(self):
+        kind = "pyspark"
+        http_client = MagicMock()
+        self.post_responses = [DummyResponse(201, self.session_create_json),
+                               DummyResponse(201, self.post_statement_json)]
+        http_client.post.side_effect = self._next_response_post
+        self.get_responses = [DummyResponse(200, self.ready_sessions_json),
+                              DummyResponse(200, self.running_statement_json),
+                              DummyResponse(200, self.ready_statement_json)]
+        http_client.get.side_effect = self._next_response_get
+        session = LivySession(http_client, kind)
+        session.start()
+
+        session.create_sql_context()
+
+        http_client.post.assert_called_with("/sessions/0/statements", [201],
+                                            {"code": "from pyspark.sql import SQLContext\n"
+                                                     "from pyspark.sql.types import *\n"
+                                                     "sqlContext = SQLContext(sc)"})
+
+    @raises(ValueError)
+    def test_create_sql_context_unknown_throws(self):
+        kind = "unknown"
+        http_client = MagicMock()
+        self.post_responses = [DummyResponse(201, self.session_create_json),
+                               DummyResponse(201, self.post_statement_json)]
+        http_client.post.side_effect = self._next_response_post
+        self.get_responses = [DummyResponse(200, self.ready_sessions_json),
+                              DummyResponse(200, self.running_statement_json),
+                              DummyResponse(200, self.ready_statement_json)]
+        http_client.get.side_effect = self._next_response_get
+        session = LivySession(http_client, kind)
+        session.start()
+
+        session.create_sql_context()

@@ -12,6 +12,7 @@ from IPython.core.magic_arguments import (argument, magic_arguments, parse_argst
 from livyclientlib.clientmanager import ClientManager
 from livyclientlib.livyclientfactory import LivyClientFactory
 from livyclientlib.log import Log
+from livyclientlib.constants import Constants
 
 
 @magics_class
@@ -27,7 +28,7 @@ class RemoteSparkMagics(Magics):
         self.client_factory = LivyClientFactory()
 
     @magic_arguments()
-    @argument("-l", "--language", help='The language to execute: "scala", "pyspark", "sql". Default is "scala".')
+    @argument("-l", "--language", help='The language to execute: "scala", "pyspark", "sql", "pysql". Default is "scala".')
     @argument("-m", "--mode", help='The mode to execute the magic in: "normal" or "debug". Default is "normal".')
     @argument("-c", "--client", help="The name of the Livy client to use. "
               "Add a session by using %sparkconfig. "
@@ -55,9 +56,9 @@ class RemoteSparkMagics(Magics):
 
         # Select language
         if not args.language:
-            args.language = "scala"
+            args.language = Constants.lang_scala
         args.language = args.language.lower()
-        if args.language not in ["scala", "pyspark", "sql"]:
+        if args.language not in Constants.lang_supported:
             raise ValueError("Language '{}' not supported.".format(args.language))
 
         # Select client
@@ -160,12 +161,14 @@ class RemoteSparkMagics(Magics):
         return "Possible endpoints are: {}".format(self.client_manager.get_endpoints_list())
 
     def _send_command(self, client, command, language):
-        if language == "scala":
+        if language == Constants.lang_scala:
             return client.execute_scala(command)
-        elif language == "pyspark":
+        elif language == Constants.lang_pyspark:
             return client.execute_pyspark(command)
-        elif language == "sql":
-            return client.execute_sql(command)
+        elif language == Constants.lang_sql:
+            return client.execute_scala_sql(command)
+        elif language == Constants.lang_pysql:
+            return client.execute_pyspark_sql(command)
         
 
 def load_ipython_extension(ip):
