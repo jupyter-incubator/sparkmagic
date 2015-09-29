@@ -16,7 +16,7 @@ class LivySession(object):
     _idle_session_state = "idle"
     _possible_session_states = ['not_started', _idle_session_state, 'starting', 'busy', 'error', 'dead']
 
-    def __init__(self, http_client, language):
+    def __init__(self, http_client, language, state_sleep_seconds=2, statement_sleep_seconds=2):
         # TODO(aggftw): make threadsafe
         language = language.lower()
         if language not in Constants.lang_supported:
@@ -28,6 +28,8 @@ class LivySession(object):
         self._http_client = http_client
         self._language = language
         self._started_sql_context = False
+        self._state_sleep_seconds = state_sleep_seconds
+        self._statement_sleep_seconds = statement_sleep_seconds
 
     def start(self):
         """Start the session against actual livy server."""
@@ -107,7 +109,7 @@ class LivySession(object):
             else:
                 self.logger.debug("Session {} in state {}. Sleeping."
                                   .format(self._id, current_state))
-                sleep(2)
+                sleep(self._state_sleep_seconds)
 
     def _statements_url(self):
         return "/sessions/{}/statements".format(self._id)
@@ -136,7 +138,7 @@ class LivySession(object):
             self.logger.debug("State of statement {} is {}.".format(statement_id, state))
 
             if state == "running":
-                sleep(2)
+                sleep(self._statement_sleep_seconds)
             else:
                 statement_running = False
                 

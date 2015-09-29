@@ -12,7 +12,6 @@ from IPython.core.magic_arguments import (argument, magic_arguments, parse_argst
 from livyclientlib.clientmanager import ClientManager
 from livyclientlib.livyclientfactory import LivyClientFactory
 from livyclientlib.log import Log
-from livyclientlib.constants import Constants
 
 
 @magics_class
@@ -161,11 +160,16 @@ class RemoteSparkMagics(Magics):
 
     def _send_command(self, client, command, language):
         if language == "sql":
-            return client.execute_sql(command)
+            result = client.execute_sql(command)
         elif language == "default":
-            return client.execute(command)
+            result = client.execute(command)
         else:
             raise ValueError("Language '{}' is not supported by the spark magics.".format(language))
+
+        if result is str:
+            print(result)
+        else:
+            return result
         
 
 def load_ipython_extension(ip):
