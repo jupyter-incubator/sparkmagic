@@ -47,7 +47,7 @@ class ClientManager(object):
 
     def _remove_endpoint(self, name):
         if name in self.get_endpoints_list():
-            self.livy_clients[name].close_sessions()
+            self.livy_clients[name].close_session()
             del self.livy_clients[name]
         else:
             raise ValueError("Could not find '{}' endpoint in list of saved endpoints. Possible endpoints are {}"
