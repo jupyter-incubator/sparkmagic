@@ -15,20 +15,19 @@ class LivyClientFactory(object):
     def __init__(self):
         pass
 
-    def build_client(self, connection_string):
+    def build_client(self, connection_string, language):
         cso = get_connection_string_elements(connection_string)
 
         headers = self._get_headers()
 
         http_client = ReliableHttpClient(cso.url, headers, cso.username, cso.password)
 
-        spark_session = self._create_session(http_client, Constants.session_kind_spark)
-        pyspark_session = self._create_session(http_client, Constants.session_kind_pyspark)
+        session = self._create_session(http_client, language)
 
-        return LivyClient(spark_session, pyspark_session)
+        return LivyClient(session)
 
-    def _create_session(self, http_client, kind):
-        session = LivySession(http_client, kind)
+    def _create_session(self, http_client, language):
+        session = LivySession(http_client, language)
         session.start()
         return session
 
