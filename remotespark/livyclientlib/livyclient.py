@@ -17,7 +17,7 @@ class LivyClient(object):
 
     def execute_sql(self, command):
         self._session.create_sql_context()
-        return self.execute('sqlContext.sql("' + command + '").collect()')
+        return self.execute('sqlContext.sql("{}").collect()'.format(command))
 
     def close_session(self):
         self._session.delete()
