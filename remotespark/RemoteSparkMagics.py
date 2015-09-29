@@ -28,7 +28,7 @@ class RemoteSparkMagics(Magics):
         self.client_factory = LivyClientFactory()
 
     @magic_arguments()
-    @argument("-l", "--language", help='The language to execute: "scala", "pyspark", "sql", "pysql". Default is "scala".')
+    @argument("-l", "--language", help='The language to execute: "default" for session or "sql". If not provided, "default".')
     @argument("-m", "--mode", help='The mode to execute the magic in: "normal" or "debug". Default is "normal".')
     @argument("-c", "--client", help="The name of the Livy client to use. "
               "Add a session by using %sparkconfig. "
@@ -54,19 +54,17 @@ class RemoteSparkMagics(Magics):
         self.logger.debug("args: " + str(args))
         self.logger.debug("command: " + command)
 
-        # Select language
-        if not args.language:
-            args.language = Constants.lang_scala
-        args.language = args.language.lower()
-        if args.language not in Constants.lang_supported:
-            raise ValueError("Language '{}' not supported.".format(args.language))
-
         # Select client
         if not args.client:
             client_to_use = self.client_manager.get_any_client()
         else:
             args.client = args.client.lower()
             client_to_use = self.client_manager.get_client(args.client)
+
+        # Select language
+        if not args.language:
+            args.language = client_to_use.language
+        args.language = args.language.lower()
 
         # Execute
         print(self._send_command(client_to_use, command, args.language))
@@ -96,9 +94,9 @@ class RemoteSparkMagics(Magics):
                Set the mode to be used. Possible arguments are: "normal" or "debug".
                e.g. `%sparkconf mode debug`
            add
-               Add a Livy endpoint. First argument is the friendly name of the endpoint and second argument
-               is the connection string.
-               e.g. `%sparkconf add test url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword`
+               Add a Livy endpoint. First argument is the friendly name of the endpoint, second argument
+               is the language, and third argument is the connection string.
+               e.g. `%sparkconf add test python url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword`
            delete
                Delete a Livy endpoint. Argument is the friendly name of the endpoint to be deleted.
                e.g. `%sparkconf delete defaultlivy`
@@ -126,12 +124,13 @@ class RemoteSparkMagics(Magics):
             self._print_info()
         # add
         elif subcommand == "add":
-            if len(args.command) != 3:
-                raise ValueError("Subcommand 'add' requires two arguments. {}".format(usage))
+            if len(args.command) != 4:
+                raise ValueError("Subcommand 'add' requires three arguments. {}".format(usage))
             name = args.command[1].lower()
-            connection_string = args.command[2]
+            language = args.command[2]
+            connection_string = args.command[3]
 
-            livy_client = self.client_factory.build_client(connection_string)
+            livy_client = self.client_factory.build_client(connection_string, language)
 
             self.client_manager.add_client(name, livy_client)
 
@@ -161,14 +160,12 @@ class RemoteSparkMagics(Magics):
         return "Possible endpoints are: {}".format(self.client_manager.get_endpoints_list())
 
     def _send_command(self, client, command, language):
-        if language == Constants.lang_scala:
-            return client.execute_scala(command)
-        elif language == Constants.lang_pyspark:
-            return client.execute_pyspark(command)
-        elif language == Constants.lang_sql:
-            return client.execute_scala_sql(command)
-        elif language == Constants.lang_pysql:
-            return client.execute_pyspark_sql(command)
+        if language == "sql":
+            return client.execute_sql(command)
+        elif language == "default":
+            return client.execute(command)
+        else:
+            raise ValueError("Language '{}' is not supported by the spark magics.".format(language))
         
 
 def load_ipython_extension(ip):

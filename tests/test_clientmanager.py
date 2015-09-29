@@ -92,5 +92,5 @@ def test_clean_up():
 
     manager.clean_up_all()
 
-    client0.close_sessions.assert_called_once_with()
-    client1.close_sessions.assert_called_once_with()
+    client0.close_session.assert_called_once_with()
+    client1.close_session.assert_called_once_with()
