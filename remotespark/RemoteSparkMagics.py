@@ -1,33 +1,34 @@
 ﻿"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
-Provides the %remotesparkmode, %remotesparkconfig, %remotesparkinfo, %remotesparksql, %%remotesparkscala, %%remotesparkpyspark magics."""
+Provides the %sparkmagic, %sparkconf magics."""
 
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
-from IPython.core.magic import (Magics, magics_class, line_magic, cell_magic, line_cell_magic)
-from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
-from base64 import b64encode
 
-from connectionstringutil import get_connection_string_elements
-from livysession import LivySession
-from livyclient import LivyClient
-from reliablehttpclient import ReliableHttpClient
-from log import Log
-								
+from IPython.core.magic import (Magics, magics_class, line_magic, line_cell_magic)
+from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
+
+from livyclientlib.clientmanager import ClientManager
+from livyclientlib.livyclientfactory import LivyClientFactory
+from livyclientlib.log import Log
+from livyclientlib.constants import Constants
+
+
 @magics_class
 class RemoteSparkMagics(Magics):
 
     logger = Log()
-    livy_clients = dict()
 
     def __init__(self, shell, data=None, mode="normal"):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
         Log.mode = mode
+        self.client_manager = ClientManager()
+        self.client_factory = LivyClientFactory()
 
     @magic_arguments()
-    @argument("-l", "--language", help='The language to execute: "scala", "pyspark", "sql". Default is "scala".')
+    @argument("-l", "--language", help='The language to execute: "default" for session or "sql". If not provided, "default".')
     @argument("-m", "--mode", help='The mode to execute the magic in: "normal" or "debug". Default is "normal".')
     @argument("-c", "--client", help="The name of the Livy client to use. "
               "Add a session by using %sparkconfig. "
@@ -53,26 +54,17 @@ class RemoteSparkMagics(Magics):
         self.logger.debug("args: " + str(args))
         self.logger.debug("command: " + command)
 
-        # Select language
-        if not args.language:
-            args.language = "scala"
-        args.language = args.language.lower()
-        if args.language not in ["scala", "pyspark", "sql"]:
-            raise ValueError("Language '{}' not supported.".format(args.language))
-
         # Select client
         if not args.client:
-            number_of_sessions = len(self.livy_clients)
-            if number_of_sessions == 1:
-                key = self.livy_clients.keys()[0]
-                client_to_use = self.livy_clients[key]
-            elif number_of_sessions == 0:
-                raise SyntaxError("You need to have at least 1 client created to execute commands.")
-            else:
-                raise SyntaxError("Please specify the client to use. {}".format(self._get_client_keys()))
+            client_to_use = self.client_manager.get_any_client()
         else:
             args.client = args.client.lower()
-            client_to_use = self.livy_clients[args.client]
+            client_to_use = self.client_manager.get_client(args.client)
+
+        # Select language
+        if not args.language:
+            args.language = client_to_use.language
+        args.language = args.language.lower()
 
         # Execute
         print(self._send_command(client_to_use, command, args.language))
@@ -102,8 +94,9 @@ class RemoteSparkMagics(Magics):
                Set the mode to be used. Possible arguments are: "normal" or "debug".
                e.g. `%sparkconf mode debug`
            add
-               Add a Livy endpoint. First argument is the friendly name of the endpoint and second argument is the connection string.
-               e.g. `%sparkconf add defaultlivy url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword`
+               Add a Livy endpoint. First argument is the friendly name of the endpoint, second argument
+               is the language, and third argument is the connection string.
+               e.g. `%sparkconf add test python url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword`
            delete
                Delete a Livy endpoint. Argument is the friendly name of the endpoint to be deleted.
                e.g. `%sparkconf delete defaultlivy`
@@ -131,27 +124,15 @@ class RemoteSparkMagics(Magics):
             self._print_info()
         # add
         elif subcommand == "add":
-            if len(args.command) != 3:
-                raise ValueError("Subcommand 'add' requires two arguments. {}".format(usage))
+            if len(args.command) != 4:
+                raise ValueError("Subcommand 'add' requires three arguments. {}".format(usage))
             name = args.command[1].lower()
-            connection_string = args.command[2]
+            language = args.command[2]
+            connection_string = args.command[3]
 
-            if name in self.livy_clients.keys():
-                raise AssertionError("Endpoint with name '{}' already exists. Please delete the ednpoint first if you intend to replace it.".format(name))
+            livy_client = self.client_factory.build_client(connection_string, language)
 
-            cso = get_connection_string_elements(connection_string)
-
-            token = b64encode(bytes(cso.username + ":" + cso.password)).decode("ascii")
-            headers = {"Content-Type": "application/json", "Authorization": "Basic {}".format(token)}
-
-            http_client = ReliableHttpClient(cso.url, headers)
-
-            spark_session = LivySession(http_client, "spark")
-            pyspark_session = LivySession(http_client, "pyspark")
-
-            livy_client = LivyClient(spark_session, pyspark_session)
-
-            self.livy_clients[name] = livy_client
+            self.client_manager.add_client(name, livy_client)
 
             self._print_info()
         # delete
@@ -160,42 +141,32 @@ class RemoteSparkMagics(Magics):
                 raise ValueError("Subcommand 'delete' requires an argument. {}".format(usage))
 
             name = args.command[1].lower()
-            self._remove_endpoint(name)
+            self.client_manager.delete_client(name)
 
             self._print_info()
         # delete
         elif subcommand == "cleanup":
-            for name in self.livy_clients.keys():
-                self._remove_endpoint(name)
+            self.client_manager.clean_up_all()
 
             self._print_info()
         # error
         else:
             raise ValueError("Subcommand '{}' not supported. {}".format(subcommand, usage))
 
-
-
-
-    def _remove_endpoint(self, name):
-        if name in self.livy_clients.keys():
-            self.livy_clients[name].close_sessions()
-            del self.livy_clients[name]
-        else:
-            raise ValueError("Could not find '{}' endpoint in list of saved endpoints. {}".format(name, self._get_client_keys()))
-        
     def _print_info(self):
         print("Info for running sparkmagic:\n    mode={}\n    {}\n".format(Log.mode, self._get_client_keys()))
 
     def _get_client_keys(self):
-        return "Possible endpoints are: {}".format(self.livy_clients.keys())
+        return "Possible endpoints are: {}".format(self.client_manager.get_endpoints_list())
 
     def _send_command(self, client, command, language):
-        if language == "scala":
-            return client.execute_scala(command)
-        elif language == "pyspark":
-            return client.execute_pyspark(command)
-        elif language == "sql":
+        if language == "sql":
             return client.execute_sql(command)
+        elif language == "default":
+            return client.execute(command)
+        else:
+            raise ValueError("Language '{}' is not supported by the spark magics.".format(language))
         
+
 def load_ipython_extension(ip):
     ip.register_magics(RemoteSparkMagics)

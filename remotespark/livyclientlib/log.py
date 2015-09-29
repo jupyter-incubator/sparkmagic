@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+
 class Log(object):
     """Logger."""
 
@@ -17,7 +18,7 @@ class Log(object):
     def mode(self, value):
         self.debug("Logger mode set to: {}".format(value))
 
-        if line.lower() == "debug":
+        if value.lower() == "debug":
             self.mode = "debug"
         else:
             self.mode = "normal"
@@ -26,5 +27,3 @@ class Log(object):
         """Prints if in debug mode."""
         if self._mode == "debug":
             print("DEBUG\t" + message)
-
-

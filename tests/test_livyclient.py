@@ -1,31 +1,27 @@
-﻿from nose.tools import raises, with_setup, assert_equals
-from mock import MagicMock, Mock
+﻿from mock import MagicMock
 
-from remotespark.livyclient import LivyClient
+from remotespark.livyclientlib.livyclient import LivyClient
 
-def test_execute_scala():
-    mock_sparksession = MagicMock()
-    mock_pysparksession = MagicMock()
-    client = LivyClient(mock_sparksession, mock_pysparksession)
+
+def test_execute_code():
+    mock_spark_session = MagicMock()
+    client = LivyClient(mock_spark_session)
     command = "command"
-    client.execute_scala(command)
-    mock_sparksession.wait_for_state.assert_called_with("idle")
-    mock_sparksession.execute.assert_called_with(command)
 
-def test_execute_pyspark():
-    mock_sparksession = MagicMock()
-    mock_pysparksession = MagicMock()
-    client = LivyClient(mock_sparksession, mock_pysparksession)
-    command = "command"
-    client.execute_pyspark(command)
-    mock_pysparksession.wait_for_state.assert_called_with("idle")
-    mock_pysparksession.execute.assert_called_with(command)
+    client.execute(command)
+
+    mock_spark_session.wait_for_state.assert_called_with("idle")
+    mock_spark_session.execute.assert_called_with(command)
+
 
 def test_execute_sql():
-    mock_sparksession = MagicMock()
-    mock_pysparksession = MagicMock()
-    client = LivyClient(mock_sparksession, mock_pysparksession)
+    mock_spark_session = MagicMock()
+    client = LivyClient(mock_spark_session)
     command = "command"
+
     client.execute_sql(command)
-    mock_sparksession.wait_for_state.assert_called_with("idle")
-    mock_sparksession.execute.assert_called_with("val sqlContext = new org.apache.spark.sql.SQLContext(sc)\nimport sqlContext.implicits._\nsqlContext.sql(\"{}\")".format(command))
+
+    mock_spark_session.create_sql_context.assert_called_with()
+    mock_spark_session.wait_for_state.assert_called_with("idle")
+    mock_spark_session.execute.assert_called_with("sqlContext.sql(\"{}\").collect()".format(command))
+
