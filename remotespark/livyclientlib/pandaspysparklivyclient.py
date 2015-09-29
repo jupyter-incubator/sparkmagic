@@ -32,8 +32,9 @@ class PandasPysparkLivyClient(LivyClient):
     def close_session(self):
         super(PandasPysparkLivyClient, self).close_session()
 
+    @property
     def language(self):
-        super(PandasPysparkLivyClient, self).language()
+        return super(PandasPysparkLivyClient, self).language
 
     def _make_sql_take(self, command):
         return 'sqlContext.sql("{}").take({})'.format(command, str(self._max_take_rows))
