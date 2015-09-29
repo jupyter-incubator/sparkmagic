@@ -19,6 +19,8 @@ from livyclientlib.constants import Constants
 class RemoteSparkMagics(Magics):
 
     logger = Log()
+    default_usage = "default"
+    sql_usage = "sql"
 
     def __init__(self, shell, data=None, mode="normal"):
         # You must call the parent constructor
@@ -63,7 +65,7 @@ class RemoteSparkMagics(Magics):
 
         # Select language
         if not args.language:
-            args.language = client_to_use.language
+            args.language = self.default_usage
         args.language = args.language.lower()
 
         # Execute
@@ -160,9 +162,9 @@ class RemoteSparkMagics(Magics):
         return "Possible endpoints are: {}".format(self.client_manager.get_endpoints_list())
 
     def _send_command(self, client, command, language):
-        if language == "sql":
+        if language == self.sql_usage:
             return client.execute_sql(command)
-        elif language == "default":
+        elif language == self.default_usage:
             return client.execute(command)
         else:
             raise ValueError("Language '{}' is not supported by the spark magics.".format(language))
