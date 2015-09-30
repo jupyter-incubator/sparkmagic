@@ -16,7 +16,6 @@ class LivyClient(object):
         return self._session.execute(commands)
 
     def execute_sql(self, command):
-        self._session.create_sql_context()
         return self.execute('sqlContext.sql("{}").collect()'.format(command))
 
     def close_session(self):

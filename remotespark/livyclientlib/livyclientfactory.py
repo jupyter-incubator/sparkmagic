@@ -5,6 +5,7 @@ from .connectionstringutil import get_connection_string_elements
 from .livysession import LivySession
 from .livyclient import LivyClient
 from .pandaspysparklivyclient import PandasPysparkLivyClient
+from .pandasscalalivyclient import PandasScalaLivyClient
 from .reliablehttpclient import ReliableHttpClient
 from .constants import Constants
 
@@ -12,6 +13,7 @@ from .constants import Constants
 class LivyClientFactory(object):
     """Spark client for Livy endpoint"""
     logger = Log()
+    max_results = 2500
 
     def __init__(self):
         pass
@@ -26,7 +28,9 @@ class LivyClientFactory(object):
         session = self._create_session(http_client, language)
 
         if language == Constants.lang_python:
-            return PandasPysparkLivyClient(session, 250)
+            return PandasPysparkLivyClient(session, self.max_results)
+        elif language == Constants.lang_scala:
+            return PandasScalaLivyClient(session, self.max_results)
         else:
             return LivyClient(session)
 
