@@ -4,4 +4,4 @@ python:
     - "3.3"
 install:
     pip install -r requirements.txt -e .
-script: nosetests
+script: tests/run_tests.sh

@@ -9,10 +9,10 @@ from __future__ import print_function
 from IPython.core.magic import (Magics, magics_class, line_magic, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
 
-from livyclientlib.clientmanager import ClientManager
-from livyclientlib.livyclientfactory import LivyClientFactory
-from livyclientlib.log import Log
-from livyclientlib.constants import Constants
+from .livyclientlib.clientmanager import ClientManager
+from .livyclientlib.livyclientfactory import LivyClientFactory
+from .livyclientlib.log import Log
+from .livyclientlib.constants import Constants
 
 
 @magics_class
@@ -28,7 +28,7 @@ class RemoteSparkMagics(Magics):
         self.client_factory = LivyClientFactory()
 
     @magic_arguments()
-    @argument("-l", "--language", help='The language to execute: "default" for session or "sql". If not provided, "default".')
+    @argument("-s", "--sql", type=bool, default=False, help='Whether to use SQL.')
     @argument("-m", "--mode", help='The mode to execute the magic in: "normal" or "debug". Default is "normal".')
     @argument("-c", "--client", help="The name of the Livy client to use. "
               "Add a session by using %sparkconfig. "
@@ -61,13 +61,8 @@ class RemoteSparkMagics(Magics):
             args.client = args.client.lower()
             client_to_use = self.client_manager.get_client(args.client)
 
-        # Select language
-        if not args.language:
-            args.language = client_to_use.language
-        args.language = args.language.lower()
-
         # Execute
-        print(self._send_command(client_to_use, command, args.language))
+        print(self._send_command(client_to_use, command, args.sql))
 
         # Revert mode
         Log.mode = previous_mode
@@ -159,13 +154,12 @@ class RemoteSparkMagics(Magics):
     def _get_client_keys(self):
         return "Possible endpoints are: {}".format(self.client_manager.get_endpoints_list())
 
-    def _send_command(self, client, command, language):
-        if language == "sql":
-            return client.execute_sql(command)
-        elif language == "default":
-            return client.execute(command)
+    def _send_command(self, client, command, sql):
+        if sql:
+            res = client.execute_sql(command)
         else:
-            raise ValueError("Language '{}' is not supported by the spark magics.".format(language))
+            res = client.execute(command)
+        return res
         
 
 def load_ipython_extension(ip):

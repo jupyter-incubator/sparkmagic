@@ -21,6 +21,6 @@ class LivyClient(object):
 
     def close_session(self):
         self._session.delete()
-
+    @property
     def language(self):
         return self._session.language
