@@ -62,10 +62,15 @@ class RemoteSparkMagics(Magics):
             client_to_use = self.client_manager.get_client(args.client)
 
         # Execute
-        self._send_command(client_to_use, command, args.sql)
+        result = self._send_command(client_to_use, command, args.sql)
 
         # Revert mode
         Log.mode = previous_mode
+
+        if result is str:
+            print(result)
+        else:
+            return result
 
     @magic_arguments()
     @argument("command", type=str, default=[""], nargs="*", help="Command to execute.")
@@ -160,10 +165,7 @@ class RemoteSparkMagics(Magics):
         else:
             res = client.execute(command)
 
-        if res is str:
-            print(res)
-        else:
-            return res
+        return res
         
 
 def load_ipython_extension(ip):
