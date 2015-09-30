@@ -66,7 +66,7 @@ class RemoteSparkMagics(Magics):
                 raise ValueError("Subcommand 'delete' requires an argument. {}".format(usage))
             name = args.command[1].lower()
             self.delete_endpoint(name)  
-        # delete
+        # cleanup 
         elif subcommand == "cleanup":
             self.cleanup()
         # run
