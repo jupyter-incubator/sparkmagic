@@ -3,6 +3,13 @@
 from remotespark.livyclientlib.livyclient import LivyClient
 
 
+def test_create_sql_context_atutomatically():
+    mock_spark_session = MagicMock()
+    LivyClient(mock_spark_session)
+
+    mock_spark_session.create_sql_context.assert_called_with()
+
+
 def test_execute_code():
     mock_spark_session = MagicMock()
     client = LivyClient(mock_spark_session)
@@ -10,6 +17,7 @@ def test_execute_code():
 
     client.execute(command)
 
+    mock_spark_session.create_sql_context.assert_called_with()
     mock_spark_session.wait_for_state.assert_called_with("idle")
     mock_spark_session.execute.assert_called_with(command)
 
@@ -24,4 +32,3 @@ def test_execute_sql():
     mock_spark_session.create_sql_context.assert_called_with()
     mock_spark_session.wait_for_state.assert_called_with("idle")
     mock_spark_session.execute.assert_called_with("sqlContext.sql(\"{}\").collect()".format(command))
-

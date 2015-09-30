@@ -3,7 +3,6 @@ from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
 from remotespark.livyclientlib.pandaspysparklivyclient import PandasPysparkLivyClient
-from remotespark.livyclientlib.pandaspysparklivyclient import Row
 
 
 class TestPandasPysparkLivyClient:
@@ -29,16 +28,13 @@ class TestPandasPysparkLivyClient:
         client = PandasPysparkLivyClient(mock_spark_session, 10)
 
         # Set up spark session to return JSON
-        # result_json = '[{"id":0,"state":"starting","kind":"spark"},{"id":1,"state":"starting","kind":"spark"}]'
-        result_collect = '[Row(0, "starting", "spark"), Row(1, "starting", "spark")]'
-        result_columns = '["id", "state", "kind"]'
-        self.execute_responses = [result_collect, result_columns]
+        result_json = "['{\"buildingID\":0,\"date\":\"6/1/13\",\"temp_diff\":12}','{\"buildingID\":1,\"date\":\"6/1/13\",\"temp_diff\":0}']"
+        self.execute_responses = [result_json]
         mock_spark_session.execute.side_effect = self._next_response_execute
 
         # pandas to return
-        records = [Row(0, "starting", "spark"), Row(1, "starting", "spark")]
-        columns = ["id", "state", "kind"]
-        desired_result = pd.DataFrame.from_records(records, columns=columns)
+        records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12}, {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0}]
+        desired_result = pd.DataFrame(records)
 
         command = "command"
 

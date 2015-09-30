@@ -10,6 +10,7 @@ class LivyClient(object):
 
     def __init__(self, session):
         self._session = session
+        self._session.create_sql_context()
 
     def execute(self, commands):
         self._session.wait_for_state("idle")

@@ -40,8 +40,6 @@ class LivySession(object):
         self._id = str(r.json()["id"])
         self._state = str(r.json()["state"])
 
-        self.create_sql_context()
-
         self.logger.debug("Session '{}' started.".format(self._language))
 
     def create_sql_context(self):
