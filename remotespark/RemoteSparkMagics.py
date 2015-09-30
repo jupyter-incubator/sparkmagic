@@ -30,14 +30,32 @@ class RemoteSparkMagics(Magics):
     @magic_arguments()
     @argument("-s", "--sql", type=bool, default=False, help='Whether to use SQL.')
     @argument("-c", "--client", help="The name of the Livy client to use. "
-              "Add a session by using %sparkconfig. "
               "If only one client has been created, there's no need to specify a client.")
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @line_cell_magic
     def spark(self, line, cell=""):
-        """Magic to do remote execution of Spark code.
-           Arguments should be in line while code should be in cell."""
-        usage = "Please look at usage of sparkconf by executing `%sparkconf?`."
+        """Magic to execute spark remotely.
+           
+           If invoked with no subcommand, the code will be executed against the specified endpoint.
+           Subcommands
+           -----------
+           info
+               Display the mode and available Livy endpoints.
+           mode
+               Set the mode to be used. Possible arguments are: "normal" or "debug".
+               e.g. `%%spark mode debug`
+           add
+               Add a Livy endpoint. First argument is the friendly name of the endpoint, second argument
+               is the language, and third argument is the connection string.
+               e.g. `%%spark add test python url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword`
+           delete
+               Delete a Livy endpoint. Argument is the friendly name of the endpoint to be deleted.
+               e.g. `%%spark delete defaultlivy`
+           cleanup
+               Delete all Livy endpoints. No arguments required.
+               e.g. `%%spark cleanup`
+        """
+        usage = "Please look at usage of sparkconf by executing `%spark?`."
         user_input = line
         args = parse_argstring(self.spark, user_input)
 
@@ -85,10 +103,10 @@ class RemoteSparkMagics(Magics):
 
     def run_cell(self, client_name, sql, cell):
         # Select client
-        if not client_name:
+        if client_name is None:
             client_to_use = self.client_manager.get_any_client()
         else:
-            args.client = args.client.lower()
+            client_name= client_name.lower()
             client_to_use = self.client_manager.get_client(client_name)
 
         # Execute

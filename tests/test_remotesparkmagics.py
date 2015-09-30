@@ -1,30 +1,41 @@
 from nose.tools import raises, with_setup, assert_equals
-from remotespark.RemoteSparkMagics import RemoteSparkMagics
 from mock import MagicMock
+
+from remotespark.livyclientlib.log import Log
+from remotespark.RemoteSparkMagics import RemoteSparkMagics
+
+
 
 ip = get_ipython()
 magic = None
+client_manager = None
+client_factory = None
 
 def _setup():
-	global magic
+	global magic, client_manager, client_factory
 	magic = RemoteSparkMagics(shell=ip)
 	ip.register_magics(magic)
+
+	client_manager = MagicMock()
+	client_factory = MagicMock()
+	magic.client_manager = client_manager
+	magic.client_factory = client_factory
 
 def _teardown():
 	pass
 
 @with_setup(_setup, _teardown)
-def test_info_command():
+def test_info_command_parses():
 	mock_method = MagicMock()
 	magic._print_info = mock_method
 	command = "info"
 
 	ip.run_line_magic("spark", command)
 
-	mock_method.assert_called_with()
+	mock_method.assert_called_once_with()
 
 @with_setup(_setup, _teardown)
-def test_add_endpoint_command():
+def test_add_endpoint_command_parses():
 	mock_method = MagicMock()
 	magic.add_endpoint = mock_method
 	command = "add"
@@ -35,11 +46,24 @@ def test_add_endpoint_command():
 
 	ip.run_line_magic("spark", line)
 
-	mock_method.assert_called_with(name, language, connection_string)
+	mock_method.assert_called_once_with(name, language, connection_string)
+
+@with_setup(_setup, _teardown)
+def test_add_endpoint():
+	name = "name"
+	language = "python"
+	connection_string = "url=http://location:port;username=name;password=word"
+	client = "client"
+	client_factory.build_client = MagicMock(return_value=client)
+
+	magic.add_endpoint(name, language, connection_string)
+
+	client_factory.build_client.assert_called_once_with(connection_string, language)
+	client_manager.add_client.assert_called_once_with(name, client)
 
 
 @with_setup(_setup, _teardown)
-def test_delete_endpoint_command():
+def test_delete_endpoint_command_parses():
 	mock_method = MagicMock()
 	magic.delete_endpoint = mock_method
 	command = "delete"
@@ -48,10 +72,18 @@ def test_delete_endpoint_command():
 
 	ip.run_line_magic("spark", line)
 
-	mock_method.assert_called_with(name)
+	mock_method.assert_called_once_with(name)
 
 @with_setup(_setup, _teardown)
-def test_mode_command():
+def test_delete_endpoint():
+	name = "name"
+
+	magic.delete_endpoint(name)
+
+	client_manager.delete_client.assert_called_once_with(name)
+
+@with_setup(_setup, _teardown)
+def test_mode_command_parses():
 	mock_method = MagicMock()
 	magic.log_mode = mock_method
 	command = "mode"
@@ -61,27 +93,40 @@ def test_mode_command():
 
 	ip.run_line_magic("spark", line)
 
-	mock_method.assert_called_with(mode)
+	mock_method.assert_called_once_with(mode)
 
 @with_setup(_setup, _teardown)
-def test_cleanup_command():
+def test_delete_endpoint():
+	mode = "debug"
+
+	magic.log_mode(mode)
+
+	assert_equals(mode, Log.mode)
+
+@with_setup(_setup, _teardown)
+def test_cleanup_command_parses():
 	mock_method = MagicMock()
 	magic.cleanup = mock_method
 	command = "cleanup"
 
 	ip.run_line_magic("spark", command)
 
-	mock_method.assert_called_with()
+	mock_method.assert_called_once_with()
+
+@with_setup(_setup, _teardown)
+def test_cleanup():
+	magic.cleanup()
+	client_manager.clean_up_all.assert_called_once_with()
 
 @raises(ValueError)
 @with_setup(_setup, _teardown)
-def test_bad_command():
+def test_bad_command_throws_exception():
 	command = "bad_command"
 
 	ip.run_line_magic("spark", command)
 
 @with_setup(_setup, _teardown)
-def test_run_cell():
+def test_run_cell_command_parses():
 	mock_method = MagicMock()
 	magic.run_cell = mock_method
 	command = "-c"
@@ -91,4 +136,35 @@ def test_run_cell():
 
 	ip.run_cell_magic("spark", line, cell)
 
-	mock_method.assert_called_with(name, False, cell)
+	mock_method.assert_called_once_with(name, False, cell)
+
+@with_setup(_setup, _teardown)
+def test_run_cell():
+	mock_method = MagicMock()
+	magic._send_command = mock_method
+	default_client = MagicMock()
+	chosen_client = MagicMock()
+	client_manager.get_any_client = MagicMock(return_value=default_client)
+	client_manager.get_client = MagicMock(return_value=chosen_client)
+	name = "endpoint_name"
+	sql = False
+	cell = "cell code"
+
+	magic.run_cell(name, sql, cell)
+	mock_method.assert_called_with(chosen_client, cell, sql)
+
+	magic.run_cell(None, sql, cell)
+	mock_method.assert_called_with(default_client, cell, sql)
+
+	sql = False
+
+	magic.run_cell(name, sql, cell)
+	mock_method.assert_called_with(chosen_client, cell, sql)
+
+	magic.run_cell(None, sql, cell)
+	mock_method.assert_called_with(default_client, cell, sql)
+
+
+
+
+
