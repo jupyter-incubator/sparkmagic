@@ -4,6 +4,7 @@ from .log import Log
 from .connectionstringutil import get_connection_string_elements
 from .livysession import LivySession
 from .livyclient import LivyClient
+from .pandaspysparklivyclient import PandasPysparkLivyClient
 from .reliablehttpclient import ReliableHttpClient
 from .constants import Constants
 
@@ -24,12 +25,17 @@ class LivyClientFactory(object):
 
         session = self._create_session(http_client, language)
 
-        return LivyClient(session)
+        if language == Constants.lang_python:
+            return PandasPysparkLivyClient(session, 250)
+        else:
+            return LivyClient(session)
 
-    def _create_session(self, http_client, language):
+    @staticmethod
+    def _create_session(http_client, language):
         session = LivySession(http_client, language)
         session.start()
         return session
 
-    def _get_headers(self):
+    @staticmethod
+    def _get_headers():
         return {"Content-Type": "application/json"}
