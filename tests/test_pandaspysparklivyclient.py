@@ -46,3 +46,28 @@ class TestPandasPysparkLivyClient:
 
         # Verify result is desired pandas dataframe
         assert_frame_equal(desired_result, result)
+
+    def test_execute_sql_pandas_pyspark_livy_no_results(self):
+        mock_spark_session = MagicMock()
+        client = PandasPysparkLivyClient(mock_spark_session, 10)
+
+        # Set up spark session to return JSON
+        result_json = "[]"
+        result_columns = "['buildingID', 'date', 'temp_diff']"
+        self.execute_responses = [result_json, result_columns]
+        mock_spark_session.execute.side_effect = self._next_response_execute
+
+        # pandas to return
+        columns = eval(result_columns)
+        desired_result = pd.DataFrame.from_records(list(), columns=columns)
+
+        command = "command"
+
+        result = client.execute_sql(command)
+
+        # Verify basic calls were done
+        mock_spark_session.create_sql_context.assert_called_with()
+        mock_spark_session.wait_for_state.assert_called_with("idle")
+
+        # Verify result is desired pandas dataframe
+        assert_frame_equal(desired_result, result)

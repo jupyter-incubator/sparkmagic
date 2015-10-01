@@ -20,12 +20,23 @@ class PandasPysparkLivyClient(LivyClient):
         return super(PandasPysparkLivyClient, self).execute(commands)
 
     def execute_sql(self, command):
-        records_text = self.execute(self._make_sql_take(command))
+        records_text = self.execute(self._make_sql_json_take(command))
+        self.logger.debug("Records: " + records_text)
 
-        jsonData = eval(records_text)
-        jsonArray = "[{}]".format(",".join(jsonData))
+        if records_text == "[]":
+            # If there are no records, show some columns at least.
+            columns_text = self.execute(self._make_sql_columns(command))
+            self.logger.debug("Columns: " + columns_text)
 
-        return pd.DataFrame(json.loads(jsonArray))
+            records = list()
+            columns = eval(columns_text)
+
+            return pd.DataFrame.from_records(records, columns=columns)
+        else:
+            jsonData = eval(records_text)
+            jsonArray = "[{}]".format(",".join(jsonData))
+
+            return pd.DataFrame(json.loads(jsonArray))
 
     def close_session(self):
         super(PandasPysparkLivyClient, self).close_session()
@@ -34,5 +45,9 @@ class PandasPysparkLivyClient(LivyClient):
     def language(self):
         return super(PandasPysparkLivyClient, self).language
 
-    def _make_sql_take(self, command):
+    def _make_sql_json_take(self, command):
         return 'sqlContext.sql("{}").toJSON().take({})'.format(command, str(self._max_take_rows))
+
+    @staticmethod
+    def _make_sql_columns(command):
+        return 'sqlContext.sql("{}").columns'.format(command)
