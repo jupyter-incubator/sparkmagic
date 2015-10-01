@@ -3,7 +3,7 @@
 from remotespark.livyclientlib.livyclient import LivyClient
 
 
-def test_create_sql_context_atutomatically():
+def test_create_sql_context_automatically():
     mock_spark_session = MagicMock()
     LivyClient(mock_spark_session)
 
