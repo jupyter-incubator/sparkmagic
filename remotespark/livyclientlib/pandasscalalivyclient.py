@@ -22,9 +22,9 @@ class PandasScalaLivyClient(LivyClient):
     def execute_sql(self, command):
         records_text = self.execute(self._make_sql_take(command))
 
-        jsonArray = "[{}]".format(",".join(records_text.split("\n")))
+        json_array = "[{}]".format(",".join(records_text.split("\n")))
 
-        return pd.DataFrame(json.loads(jsonArray))
+        return pd.DataFrame(json.loads(json_array))
 
     def close_session(self):
         super(PandasScalaLivyClient, self).close_session()
