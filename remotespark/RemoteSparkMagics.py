@@ -67,10 +67,7 @@ class RemoteSparkMagics(Magics):
         # Revert mode
         Log.mode = previous_mode
 
-        if result is str:
-            print(result)
-        else:
-            return result
+        return result
 
     @magic_arguments()
     @argument("command", type=str, default=[""], nargs="*", help="Command to execute.")

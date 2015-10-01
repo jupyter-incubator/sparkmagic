@@ -59,12 +59,4 @@ target/
 # Notebook Checkpoints
 .ipynb_checkpoints
 
-.idea/misc.xml
-
-.idea/modules.xml
-
-.idea/vcs.xml
-
-.idea/sparkmagic.iml
-
-.idea/workspace.xml
+.idea/*
