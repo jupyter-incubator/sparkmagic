@@ -3,7 +3,6 @@
 from .log import Log
 from .connectionstringutil import get_connection_string_elements
 from .livysession import LivySession
-from .livyclient import LivyClient
 from .pandaspysparklivyclient import PandasPysparkLivyClient
 from .pandasscalalivyclient import PandasScalaLivyClient
 from .reliablehttpclient import ReliableHttpClient
@@ -32,7 +31,7 @@ class LivyClientFactory(object):
         elif language == Constants.lang_scala:
             return PandasScalaLivyClient(session, self.max_results)
         else:
-            return LivyClient(session)
+            raise ValueError("Language '{}' is not supported.".format(language))
 
     @staticmethod
     def _create_session(http_client, language):
