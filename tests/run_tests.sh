@@ -1,2 +1,2 @@
 #!/bin/bash
-nosetests -v
+ipython -c "import nose; nose.run()"
