@@ -55,7 +55,7 @@ class RemoteSparkMagics(Magics):
                Delete all Livy endpoints. No arguments required.
                e.g. `%%spark cleanup`
         """
-        usage = "Please look at usage of sparkconf by executing `%spark?`."
+        usage = "Please look at usage of %spark by executing `%spark?`."
         user_input = line
         args = parse_argstring(self.spark, user_input)
 
@@ -99,6 +99,9 @@ class RemoteSparkMagics(Magics):
         
         # Print info after any valid subcommand
         if len(subcommand) > 0:
+            if len(cell) > 0:
+                print("Warning: Cell body not executed because subcommmand found.")
+                print(usage)
             self._print_info()
 
     def run_cell(self, client_name, sql, cell):

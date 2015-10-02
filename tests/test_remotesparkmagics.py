@@ -140,8 +140,6 @@ def test_run_cell_command_parses():
 
 @with_setup(_setup, _teardown)
 def test_run_cell():
-	mock_method = MagicMock()
-	magic._send_command = mock_method
 	default_client = MagicMock()
 	chosen_client = MagicMock()
 	client_manager.get_any_client = MagicMock(return_value=default_client)
@@ -151,20 +149,15 @@ def test_run_cell():
 	cell = "cell code"
 
 	magic.run_cell(name, sql, cell)
-	mock_method.assert_called_with(chosen_client, cell, sql)
+	chosen_client.execute.assert_called_with(cell)
 
 	magic.run_cell(None, sql, cell)
-	mock_method.assert_called_with(default_client, cell, sql)
+	default_client.execute.assert_called_with(cell)
 
-	sql = False
+	sql = True
 
 	magic.run_cell(name, sql, cell)
-	mock_method.assert_called_with(chosen_client, cell, sql)
+	chosen_client.execute_sql.assert_called_with(cell)
 
 	magic.run_cell(None, sql, cell)
-	mock_method.assert_called_with(default_client, cell, sql)
-
-
-
-
-
+	default_client.execute_sql.assert_called_with(cell)
