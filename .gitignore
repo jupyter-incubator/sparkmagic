@@ -58,3 +58,5 @@ target/
 
 # Notebook Checkpoints
 .ipynb_checkpoints
+
+.idea/*
