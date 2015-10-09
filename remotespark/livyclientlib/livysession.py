@@ -16,57 +16,50 @@ class LivySession(object):
     _idle_session_state = "idle"
     _possible_session_states = ['not_started', _idle_session_state, 'starting', 'busy', 'error', 'dead']
 
-    def __init__(self, http_client, kind):
+    def __init__(self, http_client, language, state_sleep_seconds=2, statement_sleep_seconds=2):
         # TODO(aggftw): make threadsafe
-        kind = kind.lower()
-        if kind not in Constants.session_supported_kinds:
-            raise ValueError("Session of kind '{}' not supported. Session must be of kinds {}."
-                             .format(kind, ", ".join(Constants.session_supported_kinds)))
+        language = language.lower()
+        if language not in Constants.lang_supported:
+            raise ValueError("Session of language '{}' not supported. Session must be of languages {}."
+                             .format(language, ", ".join(Constants.lang_supported)))
 
         self._state = "not_started"
         self._id = "-1"
         self._http_client = http_client
-        self._kind = kind
+        self._language = language
         self._started_sql_context = False
+        self._state_sleep_seconds = state_sleep_seconds
+        self._statement_sleep_seconds = statement_sleep_seconds
 
     def start(self):
         """Start the session against actual livy server."""
         # TODO(aggftw): do a pass to make all contracts variables; i.e. not peppered in code
-        self.logger.debug("Starting '{}' session.".format(self._kind))
+        self.logger.debug("Starting '{}' session.".format(self._language))
 
-        r = self._http_client.post("/sessions", [201], {"kind": self._kind})
+        r = self._http_client.post("/sessions", [201], {"kind": self._get_livy_kind()})
         self._id = str(r.json()["id"])
         self._state = str(r.json()["state"])
 
-        self.logger.debug("Session '{}' started.".format(self._kind))
+        self.logger.debug("Session '{}' started.".format(self._language))
 
     def create_sql_context(self):
         """Create a sqlContext object on the session. Object will be accessible via variable 'sqlContext'."""
         if self._started_sql_context:
             return
 
-        self.logger.debug("Starting '{}' session.".format(self._kind))
+        self.logger.debug("Starting '{}' sql session.".format(self._language))
 
-        if self._kind == Constants.session_kind_spark:
-            sql_context_command = "val sqlContext = new org.apache.spark.sql.SQLContext(sc)\n" \
-                                  "import sqlContext.implicits._"
-        elif self._kind == Constants.session_kind_pyspark:
-            sql_context_command = "from pyspark.sql import SQLContext\nfrom pyspark.sql.types import *\n" \
-                                  "sqlContext = SQLContext(sc)"
-        else:
-            raise ValueError("Do not know how to create sqlContext in session of kind {}.".format(self._kind))
-
-        # Wait for session to be idle
         self.wait_for_state(self._idle_session_state)
 
-        self.execute(sql_context_command)
+        self.execute(self._get_sql_context_creation_command())
 
         self._started_sql_context = True
 
+        self.logger.debug("Started '{}' sql session.".format(self._language))
+
     @property
-    def kind(self):
-        """One of: 'spark', 'pyspark'"""
-        return self._kind
+    def language(self):
+        return self._language
 
     @property
     def state(self):
@@ -116,13 +109,13 @@ class LivySession(object):
             else:
                 self.logger.debug("Session {} in state {}. Sleeping."
                                   .format(self._id, current_state))
-                sleep(2)
+                sleep(self._state_sleep_seconds)
 
     def _statements_url(self):
         return "/sessions/{}/statements".format(self._id)
 
     def _get_session_state(self):
-        """Get current session state."""
+        """Get current session state. Network call."""
         r = self._http_client.get("/sessions", [200])
         sessions = r.json()["sessions"]
         filtered_sessions = [s for s in sessions if s["id"] == int(self._id)]
@@ -145,7 +138,7 @@ class LivySession(object):
             self.logger.debug("State of statement {} is {}.".format(statement_id, state))
 
             if state == "running":
-                sleep(2)
+                sleep(self._statement_sleep_seconds)
             else:
                 statement_running = False
                 
@@ -157,3 +150,23 @@ class LivySession(object):
 
         self.logger.debug("Output of statement {} is {}.".format(statement_id, output))
         return output
+
+    def _get_livy_kind(self):
+        if self.language == Constants.lang_scala:
+            return Constants.session_kind_spark
+        elif self.language == Constants.lang_python:
+            return Constants.session_kind_pyspark
+        else:
+            raise ValueError("Cannot get session kind for {}.".format(self.language))
+
+    def _get_sql_context_creation_command(self):
+        if self.language == Constants.lang_scala:
+            sql_context_command = "val sqlContext = new org.apache.spark.sql.SQLContext(sc)\n" \
+                                  "import sqlContext.implicits._"
+        elif self.language == Constants.lang_python:
+            sql_context_command = "from pyspark.sql import SQLContext\nfrom pyspark.sql.types import *\n" \
+                                  "sqlContext = SQLContext(sc)"
+        else:
+            raise ValueError("Do not know how to create sqlContext in session of language {}.".format(self.language))
+
+        return sql_context_command

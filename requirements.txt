@@ -2,3 +2,4 @@ ipython==3.2
 nose
 mock
 requests
+pandas

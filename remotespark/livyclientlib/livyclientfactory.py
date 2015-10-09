@@ -3,7 +3,8 @@
 from .log import Log
 from .connectionstringutil import get_connection_string_elements
 from .livysession import LivySession
-from .livyclient import LivyClient
+from .pandaspysparklivyclient import PandasPysparkLivyClient
+from .pandasscalalivyclient import PandasScalaLivyClient
 from .reliablehttpclient import ReliableHttpClient
 from .constants import Constants
 
@@ -11,26 +12,33 @@ from .constants import Constants
 class LivyClientFactory(object):
     """Spark client for Livy endpoint"""
     logger = Log()
+    max_results = 2500
 
     def __init__(self):
         pass
 
-    def build_client(self, connection_string):
+    def build_client(self, connection_string, language):
         cso = get_connection_string_elements(connection_string)
 
         headers = self._get_headers()
 
         http_client = ReliableHttpClient(cso.url, headers, cso.username, cso.password)
 
-        spark_session = self._create_session(http_client, Constants.session_kind_spark)
-        pyspark_session = self._create_session(http_client, Constants.session_kind_pyspark)
+        session = self._create_session(http_client, language)
 
-        return LivyClient(spark_session, pyspark_session)
+        if language == Constants.lang_python:
+            return PandasPysparkLivyClient(session, self.max_results)
+        elif language == Constants.lang_scala:
+            return PandasScalaLivyClient(session, self.max_results)
+        else:
+            raise ValueError("Language '{}' is not supported.".format(language))
 
-    def _create_session(self, http_client, kind):
-        session = LivySession(http_client, kind)
+    @staticmethod
+    def _create_session(http_client, language):
+        session = LivySession(http_client, language)
         session.start()
         return session
 
-    def _get_headers(self):
+    @staticmethod
+    def _get_headers():
         return {"Content-Type": "application/json"}
