@@ -6,7 +6,6 @@ from time import sleep
 
 from .log import Log
 from .constants import Constants
-from .livyclienttimeouterror import LivyClientTimeoutError
 
 
 class LivySession(object):
@@ -17,12 +16,8 @@ class LivySession(object):
     _idle_session_state = "idle"
     _possible_session_states = ['not_started', _idle_session_state, 'starting', 'busy', 'error', 'dead']
 
-    def __init__(self, http_client, language, state_sleep_seconds=2,
-                 statement_sleep_seconds=2, create_sql_context_timeout_seconds=60):
+    def __init__(self, http_client, language, state_sleep_seconds=2, statement_sleep_seconds=2):
         # TODO(aggftw): make threadsafe
-        assert state_sleep_seconds > 0
-        assert statement_sleep_seconds >= 0
-
         language = language.lower()
         if language not in Constants.lang_supported:
             raise ValueError("Session of language '{}' not supported. Session must be of languages {}."
@@ -35,7 +30,6 @@ class LivySession(object):
         self._started_sql_context = False
         self._state_sleep_seconds = state_sleep_seconds
         self._statement_sleep_seconds = statement_sleep_seconds
-        self._create_sql_context_timeout_seconds = create_sql_context_timeout_seconds
 
     def start(self):
         """Start the session against actual livy server."""
@@ -55,7 +49,7 @@ class LivySession(object):
 
         self.logger.debug("Starting '{}' sql session.".format(self._language))
 
-        self.wait_for_state(self._idle_session_state, self._create_sql_context_timeout_seconds)
+        self.wait_for_state(self._idle_session_state)
 
         self.execute(self._get_sql_context_creation_command())
 
@@ -105,20 +99,17 @@ class LivySession(object):
             raise ValueError("Cannot delete session {} that is in state '{}'."
                              .format(self._id, self._state))
 
-    def wait_for_state(self, state, seconds_to_wait):
-        """Wait for session to be in a certain state. Sleep meanwhile. Calls done every state_sleep_seconds as
-        indicated by the constructor."""
-        current_state = self.state
-        if current_state == state:
-            return
-        elif seconds_to_wait > 0:
-            self.logger.debug("Session {} in state {}. Sleeping {} seconds."
-                              .format(self._id, current_state, seconds_to_wait))
-            sleep(self._state_sleep_seconds)
-            return self.wait_for_state(state, seconds_to_wait - self._state_sleep_seconds)
-        else:
-            raise LivyClientTimeoutError("Session {} did not reach {} state in time. Current state is {}."
-                                         .format(self._id, state, current_state))
+    def wait_for_state(self, state):
+        """Wait for session to be in a certain state. Sleep meanwhile."""
+        # TODO(aggftw): implement timeout
+        while True:
+            current_state = self.state
+            if current_state == state:
+                return
+            else:
+                self.logger.debug("Session {} in state {}. Sleeping."
+                                  .format(self._id, current_state))
+                sleep(self._state_sleep_seconds)
 
     def _statements_url(self):
         return "/sessions/{}/statements".format(self._id)
