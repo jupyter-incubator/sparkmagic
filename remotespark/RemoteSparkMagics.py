@@ -13,6 +13,7 @@ from .livyclientlib.clientmanager import ClientManager
 from .livyclientlib.livyclientfactory import LivyClientFactory
 from .livyclientlib.log import Log
 from .livyclientlib.constants import Constants
+from .SparkWidget import AddEndpointWidget
 
 
 @magics_class
@@ -64,26 +65,31 @@ class RemoteSparkMagics(Magics):
 
         # info
         if subcommand == "info":
-            pass #info is printed by default
+            self._print_info()
         # mode
         elif subcommand == "mode":
             if len(args.command) != 2:
                 raise ValueError("Subcommand 'mode' requires an argument. {}".format(usage))
             self.log_mode(args.command[1])
+            self._print_info()
         # add
         elif subcommand == "add":
             if len(args.command) != 4:
-                raise ValueError("Subcommand 'add' requires three arguments. {}".format(usage))
-            name = args.command[1].lower()
-            language = args.command[2]
-            connection_string = args.command[3]
-            self.add_endpoint(name, language, connection_string)
+                return AddEndpointWidget(self)
+                #raise ValueError("Subcommand 'add' requires three arguments. {}".format(usage))
+            else:
+                name = args.command[1].lower()
+                language = args.command[2]
+                connection_string = args.command[3]
+                self.add_endpoint(name, language, connection_string)
+                self._print_info()
         # delete
         elif subcommand == "delete":
             if len(args.command) != 2:
                 raise ValueError("Subcommand 'delete' requires an argument. {}".format(usage))
             name = args.command[1].lower()
             self.delete_endpoint(name)  
+            self._print_info()
         # cleanup 
         elif subcommand == "cleanup":
             self.cleanup()
@@ -102,7 +108,7 @@ class RemoteSparkMagics(Magics):
             if len(cell) > 0:
                 print("Warning: Cell body not executed because subcommmand found.")
                 print(usage)
-            self._print_info()
+            
 
     def run_cell(self, client_name, sql, cell):
         # Select client
