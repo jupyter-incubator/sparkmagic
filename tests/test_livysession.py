@@ -4,6 +4,7 @@ from nose.tools import raises, assert_equals
 from mock import MagicMock
 
 from remotespark.livyclientlib.livysession import LivySession
+from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
 
 
 class DummyResponse:
@@ -111,10 +112,23 @@ class TestLivySession:
         session = LivySession(http_client, "scala", state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
 
-        session.wait_for_state("idle")
+        session.wait_for_state("idle", 30)
 
         http_client.get.assert_called_with("/sessions", [200])
         assert_equals(2, http_client.get.call_count)
+
+    @raises(LivyClientTimeoutError)
+    def test_wait_for_state_times_out(self):
+        http_client = MagicMock()
+        http_client.post.return_value = DummyResponse(201, self.session_create_json)
+        self.get_responses = [DummyResponse(200, self.busy_sessions_json),
+                              DummyResponse(200, self.busy_sessions_json),
+                              DummyResponse(200, self.ready_sessions_json)]
+        http_client.get.side_effect = self._next_response_get
+        session = LivySession(http_client, "scala", state_sleep_seconds=0.01, statement_sleep_seconds=60000)
+        session.start()
+
+        session.wait_for_state("idle", 0.01)
 
     def test_delete_session_when_active(self):
         http_client = MagicMock()
