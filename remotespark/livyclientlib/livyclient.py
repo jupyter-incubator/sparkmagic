@@ -8,12 +8,13 @@ class LivyClient(object):
     """Spark client for Livy endpoint"""
     logger = Log()
 
-    def __init__(self, session):
+    def __init__(self, session, execute_timeout_seconds=3600):
         self._session = session
         self._session.create_sql_context()
+        self._execute_timeout_seconds = execute_timeout_seconds
 
     def execute(self, commands):
-        self._session.wait_for_state("idle")
+        self._session.wait_for_state("idle", self._execute_timeout_seconds)
         return self._session.execute(commands)
 
     def execute_sql(self, command):

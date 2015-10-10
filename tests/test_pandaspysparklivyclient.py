@@ -20,7 +20,7 @@ class TestPandasPysparkLivyClient:
 
         client.execute(command)
 
-        mock_spark_session.wait_for_state.assert_called_with("idle")
+        mock_spark_session.wait_for_state.assert_called_with("idle", 3600)
         mock_spark_session.execute.assert_called_with(command)
 
     def test_execute_sql_pandas_pyspark_livy(self):
@@ -42,7 +42,7 @@ class TestPandasPysparkLivyClient:
 
         # Verify basic calls were done
         mock_spark_session.create_sql_context.assert_called_with()
-        mock_spark_session.wait_for_state.assert_called_with("idle")
+        mock_spark_session.wait_for_state.assert_called_with("idle", 3600)
 
         # Verify result is desired pandas dataframe
         assert_frame_equal(desired_result, result)
@@ -67,7 +67,7 @@ class TestPandasPysparkLivyClient:
 
         # Verify basic calls were done
         mock_spark_session.create_sql_context.assert_called_with()
-        mock_spark_session.wait_for_state.assert_called_with("idle")
+        mock_spark_session.wait_for_state.assert_called_with("idle", 3600)
 
         # Verify result is desired pandas dataframe
         assert_frame_equal(desired_result, result)
