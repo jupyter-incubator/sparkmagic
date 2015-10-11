@@ -7,6 +7,7 @@ from .pandaspysparklivyclient import PandasPysparkLivyClient
 from .pandasscalalivyclient import PandasScalaLivyClient
 from .reliablehttpclient import ReliableHttpClient
 from .constants import Constants
+from .linearretrypolicy import LinearRetryPolicy
 
 
 class LivyClientFactory(object):
@@ -22,7 +23,10 @@ class LivyClientFactory(object):
 
         headers = self._get_headers()
 
-        http_client = ReliableHttpClient(cso.url, headers, cso.username, cso.password)
+        # 30 seconds on a request max
+        retry_policy = LinearRetryPolicy(seconds_to_sleep=5, max_retries=5)
+
+        http_client = ReliableHttpClient(cso.url, headers, cso.username, cso.password, retry_policy)
 
         session = self._create_session(http_client, language)
 
