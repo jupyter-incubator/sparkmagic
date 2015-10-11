@@ -13,6 +13,7 @@ from .livyclientlib.clientmanager import ClientManager
 from .livyclientlib.livyclientfactory import LivyClientFactory
 from .livyclientlib.log import Log
 from .livyclientlib.constants import Constants
+from .SparkWidget import AddEndpointWidget, DeleteEndpointWidget, RunCellWidget
 
 
 @magics_class
@@ -34,7 +35,8 @@ class RemoteSparkMagics(Magics):
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @line_cell_magic
     def spark(self, line, cell=""):
-        """Magic to execute spark remotely.           
+        """Magic to execute spark remotely.
+           
            If invoked with no subcommand, the code will be executed against the specified endpoint.
            Subcommands
            -----------
@@ -63,31 +65,39 @@ class RemoteSparkMagics(Magics):
 
         # info
         if subcommand == "info":
-            pass #info is printed by default
+            self._print_info()
         # mode
         elif subcommand == "mode":
             if len(args.command) != 2:
                 raise ValueError("Subcommand 'mode' requires an argument. {}".format(usage))
             self.log_mode(args.command[1])
+            self._print_info()
         # add
         elif subcommand == "add":
             if len(args.command) != 4:
-                raise ValueError("Subcommand 'add' requires three arguments. {}".format(usage))
-            name = args.command[1].lower()
-            language = args.command[2]
-            connection_string = args.command[3]
-            self.add_endpoint(name, language, connection_string)
+                return AddEndpointWidget(self)
+                #raise ValueError("Subcommand 'add' requires three arguments. {}".format(usage))
+            else:
+                name = args.command[1].lower()
+                language = args.command[2]
+                connection_string = args.command[3]
+                self.add_endpoint(name, language, connection_string)
+                self._print_info()
         # delete
         elif subcommand == "delete":
             if len(args.command) != 2:
-                raise ValueError("Subcommand 'delete' requires an argument. {}".format(usage))
+                return DeleteEndpointWidget(self)
+                #raise ValueError("Subcommand 'delete' requires an argument. {}".format(usage))
             name = args.command[1].lower()
             self.delete_endpoint(name)  
+            self._print_info()
         # cleanup 
         elif subcommand == "cleanup":
             self.cleanup()
         # run
-        elif len(subcommand) == 0:    
+        elif len(subcommand) == 0:
+            if cell is None or len(cell) == 0:
+                return RunCellWidget(self)    
             self.logger.debug("line: " + line)
             self.logger.debug("cell: " + cell)
             self.logger.debug("args: " + str(args))
@@ -101,7 +111,7 @@ class RemoteSparkMagics(Magics):
             if len(cell) > 0:
                 print("Warning: Cell body not executed because subcommmand found.")
                 print(usage)
-            self._print_info()
+            
 
     def run_cell(self, client_name, sql, cell):
         # Select client
@@ -127,6 +137,9 @@ class RemoteSparkMagics(Magics):
         livy_client = self.client_factory.build_client(connection_string, language)
         self.client_manager.add_client(name, livy_client)
 
+    def get_endpoints_list(self):
+        return self.client_manager.get_endpoints_list()
+
     def _print_info(self):
         print("Info for running sparkmagic:\n    mode={}\n    {}\n".format(Log.mode, self._get_client_keys()))
 
@@ -138,7 +151,6 @@ class RemoteSparkMagics(Magics):
             res = client.execute_sql(command)
         else:
             res = client.execute(command)
-
         return res
 
         
