@@ -6,6 +6,7 @@ from IPython.display import display
 class AbstractMenuWidget(object):
     def __init__(self, spark_magic):
         self.spark_magic = spark_magic
+        self.ip = get_ipython()
 
     def _repr_html_(self):
         self._init_widgets()
@@ -77,7 +78,7 @@ class AddEndpointWidget(AbstractMenuWidget):
         self.spark_magic.add_endpoint(alias, language, connection_string)
 
     def __repr__(self):
-        return "console view (will prompt for password)"
+        raise ValueError("Subcommand 'add' requires three arguments on the command line. {}".format(self.spark_magic.usage))
         
 class DeleteEndpointWidget(AbstractMenuWidget):
     def __init__(self, spark_magic):
@@ -102,8 +103,9 @@ class DeleteEndpointWidget(AbstractMenuWidget):
         self.spark_magic.delete_endpoint(to_delete)
 
     def __repr__(self):
-        return "console view"
+        raise ValueError("Subcommand 'delete' requires an argument. {}".format(self.spark.usage))
 
+#Currently unused
 class RunCellWidget(AbstractMenuWidget):
 
     def __init__(self, spark_magic):

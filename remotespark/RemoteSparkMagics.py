@@ -21,6 +21,8 @@ class RemoteSparkMagics(Magics):
 
     logger = Log()
 
+    self.usage = "Please look at usage of %spark by executing `%spark?`."
+
     def __init__(self, shell, data=None, mode="normal"):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
@@ -56,7 +58,7 @@ class RemoteSparkMagics(Magics):
                Delete all Livy endpoints. No arguments required.
                e.g. `%%spark cleanup`
         """
-        usage = "Please look at usage of %spark by executing `%spark?`."
+        
         user_input = line
         args = parse_argstring(self.spark, user_input)
 
@@ -69,14 +71,13 @@ class RemoteSparkMagics(Magics):
         # mode
         elif subcommand == "mode":
             if len(args.command) != 2:
-                raise ValueError("Subcommand 'mode' requires an argument. {}".format(usage))
+                raise ValueError("Subcommand 'mode' requires an argument. {}".format(self.usage))
             self.log_mode(args.command[1])
             self._print_info()
         # add
         elif subcommand == "add":
             if len(args.command) != 4:
                 return AddEndpointWidget(self)
-                #raise ValueError("Subcommand 'add' requires three arguments. {}".format(usage))
             else:
                 name = args.command[1].lower()
                 language = args.command[2]
@@ -87,7 +88,6 @@ class RemoteSparkMagics(Magics):
         elif subcommand == "delete":
             if len(args.command) != 2:
                 return DeleteEndpointWidget(self)
-                #raise ValueError("Subcommand 'delete' requires an argument. {}".format(usage))
             name = args.command[1].lower()
             self.delete_endpoint(name)  
             self._print_info()
@@ -95,9 +95,7 @@ class RemoteSparkMagics(Magics):
         elif subcommand == "cleanup":
             self.cleanup()
         # run
-        elif len(subcommand) == 0:
-            if cell is None or len(cell) == 0:
-                return RunCellWidget(self)    
+        elif len(subcommand) == 0: 
             self.logger.debug("line: " + line)
             self.logger.debug("cell: " + cell)
             self.logger.debug("args: " + str(args))
