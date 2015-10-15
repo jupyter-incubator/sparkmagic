@@ -18,7 +18,7 @@ class LivyClientFactory(object):
     def __init__(self):
         pass
 
-    def build_client(self, connection_string, language):
+    def build_client(self, connection_string, language, start_session=True):
         cso = get_connection_string_elements(connection_string)
 
         headers = self._get_headers()
@@ -28,7 +28,7 @@ class LivyClientFactory(object):
 
         http_client = ReliableHttpClient(cso.url, headers, cso.username, cso.password, retry_policy)
 
-        session = self._create_session(http_client, language)
+        session = self._create_session(http_client, language, start_session)
 
         if language == Constants.lang_python:
             return PandasPysparkLivyClient(session, self.max_results)
@@ -38,9 +38,10 @@ class LivyClientFactory(object):
             raise ValueError("Language '{}' is not supported.".format(language))
 
     @staticmethod
-    def _create_session(http_client, language):
+    def _create_session(http_client, language, start_session):
         session = LivySession(http_client, language)
-        session.start()
+        if start_session:
+            session.start()
         return session
 
     @staticmethod
