@@ -3,7 +3,7 @@ from nose.tools import raises, assert_equals
 from mock import MagicMock
 
 from remotespark.livyclientlib.clientmanager import ClientManager
-from remotespark.livyclientlib.clientmanagerstateserializer import ClientManagerStateSerializer
+# from remotespark.livyclientlib.clientmanagerstateserializer import ClientManagerStateSerializer
 
 
 @raises(ValueError)
@@ -14,15 +14,14 @@ def test_get_client_throws_when_client_not_exists():
 
 
 def test_deserialize_on_creation():
-    client_factory = MagicMock()
-
-    serializer = ClientManagerStateSerializer('resources/managerstate.json', client_factory)
+    serializer = MagicMock()
+    serializer.deserialize_state.return_value = [("py", None), ("sc", None)]
     manager = ClientManager(serializer)
 
     assert "py" in manager.get_endpoints_list()
     assert "sc" in manager.get_endpoints_list()
 
-    serializer = ClientManagerStateSerializer('resources/empty.json', client_factory)
+    serializer = MagicMock()
     manager = ClientManager(serializer)
 
     assert len(manager.get_endpoints_list()) == 0
