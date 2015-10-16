@@ -1,7 +1,6 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-import json
 from threading import Timer
 
 from .log import Log
@@ -11,61 +10,26 @@ class ClientManager(object):
     """Livy client manager"""
     logger = Log()
 
-    def __init__(self, client_factory, path_to_serialized_state=None,
-                 serialize_periodically=False, serialize_period=30.0):
-        if client_factory is None:
-            raise ValueError("Client factory cannot be None")
-
-        if path_to_serialized_state is None and serialize_periodically is True:
-            raise ValueError("Will not be able to serialize periodically without path to serialize to.")
+    def __init__(self, serializer=None, serialize_periodically=False, serialize_period=10.0):
+        if serializer is None and serialize_periodically is True:
+            raise ValueError("Will not be able to serialize periodically without serializer.")
 
         self.livy_clients = dict()
-        self._client_factory = client_factory
-        self._path_to_serialized_state = path_to_serialized_state
+        self._serializer = serializer
         self._serialize_timer = None
 
-        if self.path_to_serialized_state is not None:
-            self.deserialize_state()
+        if self._serializer is not None:
+            self._serializer.deserialize_state(self)
 
             if serialize_periodically:
                 self.serialize_state_periodically(serialize_period)
 
-    @property
-    def path_to_serialized_state(self):
-        return self._path_to_serialized_state
-
     def serialize_state_periodically(self, serialize_period):
-        self._serialize_timer = Timer(serialize_period, self.serialize_state)
+        if self._serializer is None:
+            raise ValueError("Cannot start periodic serialization if serializer is None.")
+
+        self._serialize_timer = Timer(serialize_period, self._serializer.serialize_state)
         self._serialize_timer.start()
-
-    def serialize_state(self):
-        pass
-
-    def deserialize_state(self):
-        self.logger.debug("Deserializing state from {}".format(self.path_to_serialized_state))
-
-        if self.path_to_serialized_state is None:
-            raise FileNotFoundError("Cannot deserialize state from None file.")
-
-        with open(self.path_to_serialized_state, 'r') as f:
-            lines = f.readlines()
-            line = ''.join(lines).strip()
-
-            if line != '':
-                self.logger.debug("Read content. Converting to JSON.")
-                json_str = json.loads(line)
-                clients = json_str["clients"]
-
-                for client in clients:
-                    name = client["name"]
-                    language = client["language"]
-                    connection_string = client["connectionstring"]
-
-                    # Do not start session automatically. Just populate it.
-                    client_obj = self._client_factory.build_client(connection_string, language, False)
-                    self.add_client(name, client_obj)
-            else:
-                self.logger.debug("Empty manager state found at {}".format(self.path_to_serialized_state))
 
     def get_endpoints_list(self):
         return list(self.livy_clients.keys())
