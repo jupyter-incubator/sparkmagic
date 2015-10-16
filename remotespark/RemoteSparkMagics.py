@@ -124,7 +124,9 @@ class RemoteSparkMagics(Magics):
         self.client_manager.delete_client(name)
 
     def add_endpoint(self, name, language, connection_string):
-        livy_client = self.client_factory.build_client(connection_string, language)
+        session = self.client_factory.create_session(language, connection_string, "-1", False)
+        session.start()
+        livy_client = self.client_factory.build_client(language, session)
         self.client_manager.add_client(name, livy_client)
 
     def _print_info(self):

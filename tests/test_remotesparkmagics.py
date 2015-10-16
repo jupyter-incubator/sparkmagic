@@ -54,12 +54,16 @@ def test_add_endpoint():
 	language = "python"
 	connection_string = "url=http://location:port;username=name;password=word"
 	client = "client"
+	session = MagicMock()
+	client_factory.create_session = MagicMock(return_value=session)
 	client_factory.build_client = MagicMock(return_value=client)
 
 	magic.add_endpoint(name, language, connection_string)
 
-	client_factory.build_client.assert_called_once_with(connection_string, language)
+	client_factory.create_session.assert_called_once_with(language, connection_string, "-1", False)
+	client_factory.build_client.assert_called_once_with(language, session)
 	client_manager.add_client.assert_called_once_with(name, client)
+	session.start.assert_called_once_with()
 
 
 @with_setup(_setup, _teardown)

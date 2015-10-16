@@ -10,48 +10,53 @@ class ClientManagerStateSerializer(object):
     """Livy client manager state serializer"""
     logger = Log()
 
-    def __init__(self, path_to_serialized_state, client_factory):
-        if client_factory is None:
-            raise ValueError("Client factory cannot be None")
+    def __init__(self, client_factory, reader_writer):
+        assert client_factory is not None
+        assert reader_writer is not None
 
-        if path_to_serialized_state is None:
-            raise ValueError("Path to serialize file cannot be None")
-
-        self._path_to_serialized_state = path_to_serialized_state
         self._client_factory = client_factory
-
-    @property
-    def path_to_serialized_state(self):
-        return self._path_to_serialized_state
+        self._reader_writer = reader_writer
 
     def deserialize_state(self):
-        if self.path_to_serialized_state is None:
-            raise FileNotFoundError("Cannot deserialize state from None file.")
-
-        self.logger.debug("Deserializing state from {}".format(self.path_to_serialized_state))
+        self.logger.debug("Deserializing state.")
 
         clients_to_return = []
-        with open(self.path_to_serialized_state, 'r') as f:
-            lines = f.readlines()
-            line = ''.join(lines).strip()
 
-            if line != '':
-                self.logger.debug("Read content. Converting to JSON.")
-                json_str = json.loads(line)
-                clients = json_str["clients"]
+        lines = self._reader_writer.read_lines()
+        line = ''.join(lines).strip()
 
-                for client in clients:
-                    name = client["name"]
-                    language = client["language"]
-                    connection_string = client["connectionstring"]
+        if line != '':
+            self.logger.debug("Read content. Converting to JSON.")
+            json_str = json.loads(line)
+            clients = json_str["clients"]
 
-                    # Do not start session automatically. Just populate it.
-                    client_obj = self._client_factory.build_client(connection_string, language, False)
-                    clients_to_return.append((name, client_obj))
-            else:
-                self.logger.debug("Empty manager state found at {}".format(self.path_to_serialized_state))
+            for client in clients:
+                # Ignore version for now
+                name = client["name"]
+                id = client["id"]
+                sql_context_created = client["sqlcontext"]
+                language = client["language"]
+                connection_string = client["connectionstring"]
+
+                session = self._client_factory.create_session(language, connection_string, id, sql_context_created)
+
+                # Do not start session automatically. Just create it.
+                client_obj = self._client_factory.build_client(language, session)
+                clients_to_return.append((name, client_obj))
+        else:
+            self.logger.debug("Empty manager state found.")
 
         return clients_to_return
 
     def serialize_state(self, name_client_dictionary):
-        pass
+        self.logger.debug("Serializing state.")
+
+        serialized_clients = []
+        for name in name_client_dictionary.keys():
+            client = name_client_dictionary[name]
+            serialized_client = client.serialize()
+            serialized_client["name"] = name
+            serialized_clients.append(serialized_client)
+
+        serialized_str = json.dumps({"clients": serialized_clients})
+        self._reader_writer.overwrite_with_line(serialized_str)

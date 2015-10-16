@@ -17,25 +17,40 @@ class LivySession(object):
     _idle_session_state = "idle"
     _possible_session_states = ['not_started', _idle_session_state, 'starting', 'busy', 'error', 'dead']
 
-    def __init__(self, http_client, language, state_sleep_seconds=2,
-                 statement_sleep_seconds=2, create_sql_context_timeout_seconds=60):
+    def __init__(self, http_client, language, session_id, sql_created,
+                 state_sleep_seconds=2, statement_sleep_seconds=2, create_sql_context_timeout_seconds=60):
         # TODO(aggftw): make threadsafe
         assert state_sleep_seconds > 0
         assert statement_sleep_seconds >= 0
+        assert create_sql_context_timeout_seconds >= 0
+        if session_id == "-1" and sql_created is True:
+            raise ValueError("Cannot indicate sql state without session id.")
 
         language = language.lower()
         if language not in Constants.lang_supported:
             raise ValueError("Session of language '{}' not supported. Session must be of languages {}."
                              .format(language, ", ".join(Constants.lang_supported)))
 
-        self._state = "not_started"
-        self._id = "-1"
+        if session_id == "-1":
+            self._state = "not_started"
+            self._started_sql_context = False
+        else:
+            self._state = "busy"
+            self._started_sql_context = sql_created
+        self._id = session_id
         self._http_client = http_client
         self._language = language
-        self._started_sql_context = False
         self._state_sleep_seconds = state_sleep_seconds
         self._statement_sleep_seconds = statement_sleep_seconds
         self._create_sql_context_timeout_seconds = create_sql_context_timeout_seconds
+
+    def serialize(self):
+        serialized = self._http_client.serialize()
+        serialized["id"] = self._id
+        serialized["language"] = self._language
+        serialized["sqlcontext"] = self._started_sql_context
+        serialized["version"] = "0.0.0"
+        return serialized
 
     def start(self):
         """Start the session against actual livy server."""
@@ -62,6 +77,14 @@ class LivySession(object):
         self._started_sql_context = True
 
         self.logger.debug("Started '{}' sql session.".format(self._language))
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def started_sql_context(self):
+        return self._started_sql_context
 
     @property
     def language(self):

@@ -70,7 +70,7 @@ class TestLivySession:
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
 
-        session = LivySession(http_client, kind, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, kind, "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
     
         assert_equals(kind, session.language)
@@ -83,7 +83,7 @@ class TestLivySession:
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
 
-        session = LivySession(http_client, kind, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, kind, "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
 
         assert_equals(kind, session.language)
@@ -95,7 +95,7 @@ class TestLivySession:
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         http_client.get.return_value = DummyResponse(200, self.ready_sessions_json)
-        session = LivySession(http_client, "scala", state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, "scala", "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
     
         state = session.state
@@ -109,7 +109,7 @@ class TestLivySession:
         self.get_responses = [DummyResponse(200, self.busy_sessions_json),
                               DummyResponse(200, self.ready_sessions_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, "scala", state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, "scala", "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
 
         session.wait_for_state("idle", 30)
@@ -125,7 +125,7 @@ class TestLivySession:
                               DummyResponse(200, self.busy_sessions_json),
                               DummyResponse(200, self.ready_sessions_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, "scala", state_sleep_seconds=0.01, statement_sleep_seconds=60000)
+        session = LivySession(http_client, "scala", "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=60000)
         session.start()
 
         session.wait_for_state("idle", 0.01)
@@ -133,7 +133,7 @@ class TestLivySession:
     def test_delete_session_when_active(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
-        session = LivySession(http_client, "scala", state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, "scala", "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
 
         session.delete()
@@ -144,7 +144,7 @@ class TestLivySession:
     def test_delete_session_when_not_started(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
-        session = LivySession(http_client, "scala", state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, "scala", "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
 
         session.delete()
     
@@ -154,7 +154,7 @@ class TestLivySession:
     def test_delete_session_when_dead_throws(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
-        session = LivySession(http_client, "scala", state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, "scala", "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session._state = "dead"
 
         session.delete()
@@ -168,7 +168,7 @@ class TestLivySession:
         self.get_responses = [DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, kind, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, kind, "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
         command = "command"
 
@@ -189,7 +189,7 @@ class TestLivySession:
                               DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, kind, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, kind, "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
 
         # Reset the mock so that post called count is accurate
@@ -214,7 +214,7 @@ class TestLivySession:
                               DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, kind, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, kind, "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
 
         session.create_sql_context()
@@ -233,7 +233,7 @@ class TestLivySession:
                               DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, kind, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, kind, "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
 
         session.create_sql_context()
@@ -254,7 +254,7 @@ class TestLivySession:
                               DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, kind, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, kind, "-1", False, state_sleep_seconds=0.01, statement_sleep_seconds=0.01)
         session.start()
 
         session.create_sql_context()

@@ -5,6 +5,8 @@ import json
 import requests
 from time import sleep
 
+from .connectionstringutil import get_connection_string
+
 
 class ReliableHttpClient(object):
     """Http client that is reliable in its requests. Uses requests library."""
@@ -16,6 +18,9 @@ class ReliableHttpClient(object):
         self._username = username
         self._password = password
         self._retry_policy = retry_policy
+
+    def serialize(self):
+        return {"connectionstring": get_connection_string(self._url, self._username, self._password)}
 
     def compose_url(self, relative_url):
         r_u = "/{}".format(relative_url.rstrip("/").lstrip("/"))

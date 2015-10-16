@@ -3,7 +3,6 @@ from nose.tools import raises, assert_equals
 from mock import MagicMock
 
 from remotespark.livyclientlib.clientmanager import ClientManager
-# from remotespark.livyclientlib.clientmanagerstateserializer import ClientManagerStateSerializer
 
 
 @raises(ValueError)

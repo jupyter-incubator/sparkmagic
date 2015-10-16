@@ -13,6 +13,9 @@ class LivyClient(object):
         self._session.create_sql_context()
         self._execute_timeout_seconds = execute_timeout_seconds
 
+    def serialize(self):
+        return self._session.serialize()
+
     def execute(self, commands):
         self._session.wait_for_state("idle", self._execute_timeout_seconds)
         return self._session.execute(commands)
