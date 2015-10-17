@@ -7,7 +7,7 @@ from time import sleep
 from .log import Log
 from .constants import Constants
 from .livyclienttimeouterror import LivyClientTimeoutError
-from .magicssessionstate import MagicsSessionState
+from .livysessionstate import LivySessionState
 
 
 class LivySession(object):
@@ -43,11 +43,11 @@ class LivySession(object):
         self._statement_sleep_seconds = statement_sleep_seconds
         self._create_sql_context_timeout_seconds = create_sql_context_timeout_seconds
 
-        self._magics_session_state = MagicsSessionState(session_id, http_client.connection_string,
-                                                        language, sql_created)
+        self._state = LivySessionState(session_id, http_client.connection_string,
+                                       language, sql_created)
 
     def get_state(self):
-        return self._magics_session_state
+        return self._state
 
     def start(self):
         """Start the session against actual livy server."""
@@ -55,7 +55,7 @@ class LivySession(object):
         self.logger.debug("Starting '{}' session.".format(self.language))
 
         r = self._http_client.post("/sessions", [201], {"kind": self._get_livy_kind()})
-        self._magics_session_state.session_id = str(r.json()["id"])
+        self._state.session_id = str(r.json()["id"])
         self._status = str(r.json()["state"])
 
         self.logger.debug("Session '{}' started.".format(self.language))
@@ -71,21 +71,21 @@ class LivySession(object):
 
         self.execute(self._get_sql_context_creation_command())
 
-        self._magics_session_state.sql_context_created = True
+        self._state.sql_context_created = True
 
         self.logger.debug("Started '{}' sql session.".format(self.language))
 
     @property
     def id(self):
-        return self._magics_session_state.session_id
+        return self._state.session_id
 
     @property
     def started_sql_context(self):
-        return self._magics_session_state.sql_context_created
+        return self._state.sql_context_created
 
     @property
     def language(self):
-        return self._magics_session_state.language
+        return self._state.language
 
     @property
     def status(self):
@@ -121,7 +121,7 @@ class LivySession(object):
         if self._status != "not_started" and self._status != "dead":
             self._http_client.delete("/sessions/{}".format(self.id), [200, 404])
             self._status = 'dead'
-            self._magics_session_state.session_id = "-1"
+            self._state.session_id = "-1"
         else:
             raise ValueError("Cannot delete session {} that is in state '{}'."
                              .format(self.id, self._status))

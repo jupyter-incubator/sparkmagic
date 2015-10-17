@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 
-class MagicsSessionState(object):
+class LivySessionState(object):
     def __init__(self, session_id, connection_string, language, sql_context_created, version="0.0.0"):
         self._session_id = session_id
         self._language = language

@@ -2,7 +2,7 @@
 
 from remotespark.livyclientlib.livyclient import LivyClient
 from remotespark.livyclientlib.connectionstringutil import get_connection_string
-from remotespark.livyclientlib.magicssessionstate import MagicsSessionState
+from remotespark.livyclientlib.livysessionstate import LivySessionState
 
 
 def test_create_sql_context_automatically():
@@ -47,7 +47,7 @@ def test_serialize():
     session_id = "-1"
     sql_created = False
     session = MagicMock()
-    session.get_state.return_value = MagicsSessionState(session_id, connection_string, kind, sql_created)
+    session.get_state.return_value = LivySessionState(session_id, connection_string, kind, sql_created)
 
     client = LivyClient(session)
 
