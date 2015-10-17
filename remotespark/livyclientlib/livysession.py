@@ -21,8 +21,8 @@ class LivySession(object):
                  state_sleep_seconds=2, statement_sleep_seconds=2, create_sql_context_timeout_seconds=60):
         # TODO(aggftw): make threadsafe
         assert state_sleep_seconds > 0
-        assert statement_sleep_seconds >= 0
-        assert create_sql_context_timeout_seconds >= 0
+        assert statement_sleep_seconds > 0
+        assert create_sql_context_timeout_seconds > 0
         if session_id == "-1" and sql_created is True:
             raise ValueError("Cannot indicate sql state without session id.")
 
