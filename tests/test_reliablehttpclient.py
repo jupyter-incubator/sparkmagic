@@ -191,7 +191,5 @@ def test_compose_serialize():
     username = "username"
     password = "password"
     client = ReliableHttpClient(url, {}, username, password, retry_policy)
-    serialized = client.serialize()
 
-    assert serialized["connectionstring"] == get_connection_string(url, username, password)
-    assert len(serialized.keys()) == 1
+    assert client.connection_string == get_connection_string(url, username, password)
