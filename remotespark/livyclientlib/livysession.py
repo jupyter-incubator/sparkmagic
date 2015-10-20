@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import textwrap
-from time import sleep
+from time import sleep, time
 
 from .log import Log
 from .constants import Constants
@@ -108,6 +108,7 @@ class LivySession(object):
     def wait_for_state(self, state, seconds_to_wait):
         """Wait for session to be in a certain state. Sleep meanwhile. Calls done every state_sleep_seconds as
         indicated by the constructor."""
+        start_time = time()
         current_state = self.state
         if current_state == state:
             return
@@ -115,7 +116,8 @@ class LivySession(object):
             self.logger.debug("Session {} in state {}. Sleeping {} seconds."
                               .format(self._id, current_state, seconds_to_wait))
             sleep(self._state_sleep_seconds)
-            return self.wait_for_state(state, seconds_to_wait - self._state_sleep_seconds)
+            elapsed = (time() - start_time)
+            return self.wait_for_state(state, seconds_to_wait - elapsed)
         else:
             raise LivyClientTimeoutError("Session {} did not reach {} state in time. Current state is {}."
                                          .format(self._id, state, current_state))

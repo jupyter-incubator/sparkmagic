@@ -125,7 +125,7 @@ class TestLivySession:
                               DummyResponse(200, self.busy_sessions_json),
                               DummyResponse(200, self.ready_sessions_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, "scala", state_sleep_seconds=0.01, statement_sleep_seconds=60000)
+        session = LivySession(http_client, "scala", state_sleep_seconds=0.2, statement_sleep_seconds=60000)
         session.start()
 
         session.wait_for_state("idle", 0.01)
