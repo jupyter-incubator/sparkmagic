@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import textwrap
-from time import sleep
+from time import sleep, time
 
 from .log import Log
 from .constants import Constants
@@ -126,20 +126,22 @@ class LivySession(object):
             raise ValueError("Cannot delete session {} that is in state '{}'."
                              .format(self.id, self._status))
 
-    def wait_for_status(self, state, seconds_to_wait):
+    def wait_for_status(self, status, seconds_to_wait):
         """Wait for session to be in a certain status. Sleep meanwhile. Calls done every status_sleep_seconds as
         indicated by the constructor."""
+        start_time = time()
         current_status = self.status
-        if current_status == state:
+        if current_status == status:
             return
         elif seconds_to_wait > 0:
             self.logger.debug("Session {} in state {}. Sleeping {} seconds."
                               .format(self.id, current_status, seconds_to_wait))
             sleep(self._status_sleep_seconds)
-            return self.wait_for_status(state, seconds_to_wait - self._status_sleep_seconds)
+            elapsed = (time() - start_time)
+            return self.wait_for_status(status, seconds_to_wait - elapsed)
         else:
             raise LivyClientTimeoutError("Session {} did not reach {} status in time. Current status is {}."
-                                         .format(self.id, state, current_status))
+                                         .format(self.id, status, current_status))
 
     def _statements_url(self):
         return "/sessions/{}/statements".format(self.id)

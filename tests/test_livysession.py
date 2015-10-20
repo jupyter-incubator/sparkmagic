@@ -172,7 +172,8 @@ class TestLivySession:
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         http_client.get.return_value = DummyResponse(200, self.ready_sessions_json)
-        session = LivySession(http_client, "scala", "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        session = LivySession(http_client, "scala", "-1", False, status_sleep_seconds=0.01,
+                              statement_sleep_seconds=0.01)
         session.start()
     
         state = session.status
@@ -195,14 +196,15 @@ class TestLivySession:
         assert_equals(2, http_client.get.call_count)
 
     @raises(LivyClientTimeoutError)
-    def test_wait_for_state_times_out(self):
+    def test_wait_for_status_times_out(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         self.get_responses = [DummyResponse(200, self.busy_sessions_json),
                               DummyResponse(200, self.busy_sessions_json),
                               DummyResponse(200, self.ready_sessions_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, "scala", "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=6000)
+        session = LivySession(http_client, "scala", "-1", False, status_sleep_seconds=0.2, statement_sleep_seconds=6000)
+
         session.start()
 
         session.wait_for_status("idle", 0.01)
