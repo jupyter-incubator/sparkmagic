@@ -6,6 +6,7 @@ from mock import patch, PropertyMock, MagicMock
 
 from remotespark.livyclientlib.reliablehttpclient import ReliableHttpClient
 from remotespark.livyclientlib.linearretrypolicy import LinearRetryPolicy
+from remotespark.livyclientlib.connectionstringutil import get_connection_string
 
 
 retry_policy = None
@@ -183,3 +184,12 @@ def test_delete_will_retry():
         assert_equals(200, result.status_code)
         retry_policy.should_retry.assert_called_once_with(500, 0)
         retry_policy.seconds_to_sleep.assert_called_once_with(0)
+
+@with_setup(_setup, _teardown)
+def test_compose_serialize():
+    url = "url"
+    username = "username"
+    password = "password"
+    client = ReliableHttpClient(url, {}, username, password, retry_policy)
+
+    assert client.connection_string == get_connection_string(url, username, password)

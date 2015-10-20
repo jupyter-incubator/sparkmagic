@@ -7,76 +7,96 @@ from time import sleep, time
 from .log import Log
 from .constants import Constants
 from .livyclienttimeouterror import LivyClientTimeoutError
+from .livysessionstate import LivySessionState
 
 
 class LivySession(object):
     """Session that is livy specific."""
+    # TODO(aggftw): make threadsafe
     logger = Log()
 
     # TODO(aggftw): do a pass to remove all strings and consolidate into variables
-    _idle_session_state = "idle"
-    _possible_session_states = ['not_started', _idle_session_state, 'starting', 'busy', 'error', 'dead']
+    _idle_session_status = "idle"
+    _possible_session_status = ['not_started', _idle_session_status, 'starting', 'busy', 'error', 'dead']
 
-    def __init__(self, http_client, language, state_sleep_seconds=2,
-                 statement_sleep_seconds=2, create_sql_context_timeout_seconds=60):
-        # TODO(aggftw): make threadsafe
-        assert state_sleep_seconds > 0
-        assert statement_sleep_seconds >= 0
+    def __init__(self, http_client, language, session_id, sql_created,
+                 status_sleep_seconds=2, statement_sleep_seconds=2, create_sql_context_timeout_seconds=60):
+        assert status_sleep_seconds > 0
+        assert statement_sleep_seconds > 0
+        assert create_sql_context_timeout_seconds > 0
+        if session_id == "-1" and sql_created is True:
+            raise ValueError("Cannot indicate sql state without session id.")
 
         language = language.lower()
         if language not in Constants.lang_supported:
             raise ValueError("Session of language '{}' not supported. Session must be of languages {}."
                              .format(language, ", ".join(Constants.lang_supported)))
 
-        self._state = "not_started"
-        self._id = "-1"
+        if session_id == "-1":
+            self._status = "not_started"
+            sql_created = False
+        else:
+            self._status = "busy"
+
         self._http_client = http_client
-        self._language = language
-        self._started_sql_context = False
-        self._state_sleep_seconds = state_sleep_seconds
+        self._status_sleep_seconds = status_sleep_seconds
         self._statement_sleep_seconds = statement_sleep_seconds
         self._create_sql_context_timeout_seconds = create_sql_context_timeout_seconds
+
+        self._state = LivySessionState(session_id, http_client.connection_string,
+                                       language, sql_created)
+
+    def get_state(self):
+        return self._state
 
     def start(self):
         """Start the session against actual livy server."""
         # TODO(aggftw): do a pass to make all contracts variables; i.e. not peppered in code
-        self.logger.debug("Starting '{}' session.".format(self._language))
+        self.logger.debug("Starting '{}' session.".format(self.language))
 
         r = self._http_client.post("/sessions", [201], {"kind": self._get_livy_kind()})
-        self._id = str(r.json()["id"])
-        self._state = str(r.json()["state"])
+        self._state.session_id = str(r.json()["id"])
+        self._status = str(r.json()["state"])
 
-        self.logger.debug("Session '{}' started.".format(self._language))
+        self.logger.debug("Session '{}' started.".format(self.language))
 
     def create_sql_context(self):
         """Create a sqlContext object on the session. Object will be accessible via variable 'sqlContext'."""
-        if self._started_sql_context:
+        if self.started_sql_context:
             return
 
-        self.logger.debug("Starting '{}' sql session.".format(self._language))
+        self.logger.debug("Starting '{}' sql session.".format(self.language))
 
-        self.wait_for_state(self._idle_session_state, self._create_sql_context_timeout_seconds)
+        self.wait_for_status(self._idle_session_status, self._create_sql_context_timeout_seconds)
 
         self.execute(self._get_sql_context_creation_command())
 
-        self._started_sql_context = True
+        self._state.sql_context_created = True
 
-        self.logger.debug("Started '{}' sql session.".format(self._language))
+        self.logger.debug("Started '{}' sql session.".format(self.language))
+
+    @property
+    def id(self):
+        return self._state.session_id
+
+    @property
+    def started_sql_context(self):
+        return self._state.sql_context_created
 
     @property
     def language(self):
-        return self._language
+        return self._state.language
 
     @property
-    def state(self):
-        state = self._get_session_state()
+    def status(self):
+        status = self._get_latest_status()
 
-        if state in self._possible_session_states:
-            self._state = state
+        if status in self._possible_session_status:
+            self._status = status
         else:
-            raise ValueError("State '{}' not supported by session.".format(state))
+            raise ValueError("Status '{}' not supported by session.".format(status))
 
-        return self._state
+        return self._status
 
     @property
     def http_client(self):
@@ -96,44 +116,45 @@ class LivySession(object):
 
     def delete(self):
         """Deletes the session and releases any resources."""
-        self.logger.debug("Deleting session '{}'".format(self._id))
+        self.logger.debug("Deleting session '{}'".format(self.id))
 
-        if self._state != "not_started" and self._state != "dead":
-            self._http_client.delete("/sessions/{}".format(self._id), [200, 404])
-            self._state = 'dead'
+        if self._status != "not_started" and self._status != "dead":
+            self._http_client.delete("/sessions/{}".format(self.id), [200, 404])
+            self._status = 'dead'
+            self._state.session_id = "-1"
         else:
             raise ValueError("Cannot delete session {} that is in state '{}'."
-                             .format(self._id, self._state))
+                             .format(self.id, self._status))
 
-    def wait_for_state(self, state, seconds_to_wait):
-        """Wait for session to be in a certain state. Sleep meanwhile. Calls done every state_sleep_seconds as
+    def wait_for_status(self, status, seconds_to_wait):
+        """Wait for session to be in a certain status. Sleep meanwhile. Calls done every status_sleep_seconds as
         indicated by the constructor."""
         start_time = time()
-        current_state = self.state
-        if current_state == state:
+        current_status = self.status
+        if current_status == status:
             return
         elif seconds_to_wait > 0:
             self.logger.debug("Session {} in state {}. Sleeping {} seconds."
-                              .format(self._id, current_state, seconds_to_wait))
-            sleep(self._state_sleep_seconds)
+                              .format(self.id, current_status, seconds_to_wait))
+            sleep(self._status_sleep_seconds)
             elapsed = (time() - start_time)
-            return self.wait_for_state(state, seconds_to_wait - elapsed)
+            return self.wait_for_status(status, seconds_to_wait - elapsed)
         else:
-            raise LivyClientTimeoutError("Session {} did not reach {} state in time. Current state is {}."
-                                         .format(self._id, state, current_state))
+            raise LivyClientTimeoutError("Session {} did not reach {} status in time. Current status is {}."
+                                         .format(self.id, status, current_status))
 
     def _statements_url(self):
-        return "/sessions/{}/statements".format(self._id)
+        return "/sessions/{}/statements".format(self.id)
 
-    def _get_session_state(self):
+    def _get_latest_status(self):
         """Get current session state. Network call."""
         r = self._http_client.get("/sessions", [200])
         sessions = r.json()["sessions"]
-        filtered_sessions = [s for s in sessions if s["id"] == int(self._id)]
+        filtered_sessions = [s for s in sessions if s["id"] == int(self.id)]
                     
         if len(filtered_sessions) != 1:
             raise AssertionError("Expected one session of id {} but got {} sessions."
-                                 .format(self._id, len(filtered_sessions)))
+                                 .format(self.id, len(filtered_sessions)))
             
         session = filtered_sessions[0]
         return session['state']
@@ -144,11 +165,11 @@ class LivySession(object):
         while statement_running:
             r = self._http_client.get(self._statements_url(), [200])
             statement = [i for i in r.json()["statements"] if i["id"] == statement_id][0]
-            state = statement["state"]
+            status = statement["state"]
 
-            self.logger.debug("State of statement {} is {}.".format(statement_id, state))
+            self.logger.debug("Status of statement {} is {}.".format(statement_id, status))
 
-            if state == "running":
+            if status == "running":
                 sleep(self._statement_sleep_seconds)
             else:
                 statement_running = False
@@ -159,7 +180,6 @@ class LivySession(object):
                 elif statement_output["status"] == "error":
                     output = statement_output['evalue']
 
-        self.logger.debug("Output of statement {} is {}.".format(statement_id, output))
         return output
 
     def _get_livy_kind(self):
