@@ -6,14 +6,17 @@ from remotespark.RemoteSparkMagics import RemoteSparkMagics
 
 magic = None
 spark_controller = None
+viewer = None
 
 
 def _setup():
-    global magic, spark_controller
+    global magic, spark_controller, viewer
     magic = RemoteSparkMagics(shell=None)
 
     spark_controller = MagicMock()
+    viewer = MagicMock
     magic.spark_controller = spark_controller
+    magic.viewer = viewer
 
 
 def _teardown():
@@ -94,8 +97,12 @@ def test_bad_command_throws_exception():
 
 @with_setup(_setup, _teardown)
 def test_run_cell_command_parses():
-    mock_method = MagicMock()
-    spark_controller.run_cell = mock_method
+    run_cell_method = MagicMock()
+    run_cell_method.return_value = 1
+    spark_controller.run_cell = run_cell_method
+    visualize_method = MagicMock()
+    viewer.visualize = visualize_method
+
     command = "-c"
     name = "endpoint_name"
     line = " ".join([command, name])
@@ -103,4 +110,5 @@ def test_run_cell_command_parses():
 
     magic.spark(line, cell)
 
-    mock_method.assert_called_once_with(name, False, cell)
+    run_cell_method.assert_called_once_with(name, False, cell)
+    visualize_method.assert_called_once_with(1)

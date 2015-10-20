@@ -10,6 +10,7 @@ from IPython.core.magic import (Magics, magics_class, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
 
 from .livyclientlib.sparkcontroller import SparkController
+from .livyclientlib.rawviewer import RawViewer
 from .livyclientlib.log import Log
 
 
@@ -22,6 +23,7 @@ class RemoteSparkMagics(Magics):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
         self.spark_controller = SparkController(mode)
+        self.viewer = RawViewer()
 
     @magic_arguments()
     @argument("-s", "--sql", type=bool, default=False, help='Whether to use SQL.')
@@ -87,7 +89,8 @@ class RemoteSparkMagics(Magics):
             self.logger.debug("line: " + line)
             self.logger.debug("cell: " + cell)
             self.logger.debug("args: " + str(args))
-            return self.spark_controller.run_cell(args.client, args.sql, cell)
+            result = self.spark_controller.run_cell(args.client, args.sql, cell)
+            return self.viewer.visualize(result)
         # error
         else:
             raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
