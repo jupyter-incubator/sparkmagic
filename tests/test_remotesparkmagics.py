@@ -4,15 +4,13 @@ from mock import MagicMock
 from remotespark.RemoteSparkMagics import RemoteSparkMagics
 
 
-ip = get_ipython()
 magic = None
 spark_controller = None
 
 
 def _setup():
     global magic, spark_controller
-    magic = RemoteSparkMagics(shell=ip)
-    ip.register_magics(magic)
+    magic = RemoteSparkMagics(shell=None)
 
     spark_controller = MagicMock()
     magic.spark_controller = spark_controller
@@ -28,7 +26,7 @@ def test_info_command_parses():
     magic._print_info = print_info_mock
     command = "info"
 
-    ip.run_line_magic("spark", command)
+    magic.spark(command)
 
     print_info_mock.assert_called_once_with()
 
@@ -43,7 +41,7 @@ def test_add_endpoint_command_parses():
     connection_string = "url=http://location:port;username=name;password=word"
     line = " ".join([command, name, language, connection_string])
 
-    ip.run_line_magic("spark", line)
+    magic.spark(line)
 
     add_endpoint_mock.assert_called_once_with(name, language, connection_string)
 
@@ -56,7 +54,7 @@ def test_delete_endpoint_command_parses():
     name = "name"
     line = " ".join([command, name])
 
-    ip.run_line_magic("spark", line)
+    magic.spark(line)
 
     mock_method.assert_called_once_with(name)
 
@@ -70,7 +68,7 @@ def test_mode_command_parses():
 
     line = " ".join([command, mode])
 
-    ip.run_line_magic("spark", line)
+    magic.spark(line)
 
     mock_method.assert_called_once_with(mode)
 
@@ -79,9 +77,9 @@ def test_mode_command_parses():
 def test_cleanup_command_parses():
     mock_method = MagicMock()
     spark_controller.cleanup = mock_method
-    command = "cleanup"
+    line = "cleanup"
 
-    ip.run_line_magic("spark", command)
+    magic.spark(line)
 
     mock_method.assert_called_once_with()
 
@@ -89,9 +87,9 @@ def test_cleanup_command_parses():
 @raises(ValueError)
 @with_setup(_setup, _teardown)
 def test_bad_command_throws_exception():
-    command = "bad_command"
+    line = "bad_command"
 
-    ip.run_line_magic("spark", command)
+    magic.spark(line)
 
 
 @with_setup(_setup, _teardown)
@@ -103,6 +101,6 @@ def test_run_cell_command_parses():
     line = " ".join([command, name])
     cell = "cell code"
 
-    ip.run_cell_magic("spark", line, cell)
+    magic.spark(line, cell)
 
     mock_method.assert_called_once_with(name, False, cell)
