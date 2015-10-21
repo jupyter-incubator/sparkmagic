@@ -8,9 +8,11 @@ from __future__ import print_function
 
 from IPython.core.magic import (Magics, magics_class, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
+import altair.api as alt
 
 from .livyclientlib.sparkcontroller import SparkController
 from .livyclientlib.rawviewer import RawViewer
+from .livyclientlib.altairviewer import AltairViewer
 from .livyclientlib.log import Log
 
 
@@ -19,11 +21,16 @@ class RemoteSparkMagics(Magics):
 
     logger = Log()
 
-    def __init__(self, shell, data=None, mode="normal"):
+    def __init__(self, shell, data=None, mode="normal", use_altair=True):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
         self.spark_controller = SparkController(mode)
-        self.viewer = RawViewer()
+        if use_altair:
+            alt.use_renderer('lightning')
+            self.viewer = AltairViewer()
+        else:
+            self.viewer = RawViewer()
+
 
     @magic_arguments()
     @argument("-s", "--sql", type=bool, default=False, help='Whether to use SQL.')
