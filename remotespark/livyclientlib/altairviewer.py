@@ -37,7 +37,7 @@ class AltairViewer(object):
                 return result
 
             # Configure chart
-            # v.configure(width=6000, height=400, singleWidth=500, singleHeight=300)
+            v.configure(width=800, height=400)
 
             # Select chart type
             if chart_type == "line":
