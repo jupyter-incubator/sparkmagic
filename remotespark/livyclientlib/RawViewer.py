@@ -3,5 +3,5 @@
 
 class RawViewer(object):
     """A viewer that returns results as they are."""
-    def visualize(self, result):
+    def visualize(self, result, chart_type):
         return result

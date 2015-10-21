@@ -36,6 +36,7 @@ class RemoteSparkMagics(Magics):
     @argument("-s", "--sql", type=bool, default=False, help='Whether to use SQL.')
     @argument("-c", "--client", help="The name of the Livy client to use. "
               "If only one client has been created, there's no need to specify a client.")
+    @argument("-t", "--chart", type=str, default="area", help='Chart type to use: table, area, line, bar.')
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @line_cell_magic
     def spark(self, line, cell=""):
@@ -97,7 +98,7 @@ class RemoteSparkMagics(Magics):
             self.logger.debug("cell: " + cell)
             self.logger.debug("args: " + str(args))
             result = self.spark_controller.run_cell(args.client, args.sql, cell)
-            return self.viewer.visualize(result)
+            return self.viewer.visualize(result, args.chart)
         # error
         else:
             raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))

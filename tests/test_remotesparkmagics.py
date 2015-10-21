@@ -111,4 +111,4 @@ def test_run_cell_command_parses():
     magic.spark(line, cell)
 
     run_cell_method.assert_called_once_with(name, False, cell)
-    visualize_method.assert_called_once_with(1)
+    visualize_method.assert_called_once_with(1, "area")

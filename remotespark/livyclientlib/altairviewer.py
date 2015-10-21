@@ -3,31 +3,51 @@
 import pandas as pd
 import altair.api as alt
 
+from .log import Log
+
 
 class AltairViewer(object):
+
+    logger = Log()
+
     """A viewer that returns results as they are."""
-    def visualize(self, result):
+    def visualize(self, result, chart_type="area"):
         if type(result) == pd.DataFrame:
             columns = result.columns.values
 
             # Simply return dataframe if only 1 column is available
-            if len(columns) <= 1:
+            if len(columns) <= 1 or chart_type == "table":
                 return result
 
             # Create Altair Viz
             v = alt.Viz(result)
 
-            # TODO: Add helper method to Altair to know column types? Can i get them from pandas df?
-            # TODO: Select defaults - Do this on altair!: v.encode_default()
-            x_shorthand = self._get_x_shorthand(columns)
-            y_shorthand = self._get_y_shorthand(columns)
+            # Select default x
+            try:
+                v.select_x()
+            except AssertionError:
+                self.logger.debug("Could not select x default value.")
+                return result
 
-            # Ideal for example would be v = alt.Viz(result).encode(x='buildingID', y='avg(temp_diff)')
-            v.encode(x=x_shorthand, y=y_shorthand)
+            # Select default y
+            try:
+                v.select_y("avg")
+            except AssertionError:
+                self.logger.debug("Could not select y default value.")
+                return result
 
             # Configure chart
             # v.configure(width=6000, height=400, singleWidth=500, singleHeight=300)
-            v.area()
+
+            # Select chart type
+            if chart_type == "line":
+                v.line()
+            elif chart_type == "area":
+                v.area()
+            elif chart_type == "bar":
+                v.bar()
+            else:
+                v.area()
 
             return v.render()
         else:
