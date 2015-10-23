@@ -12,7 +12,7 @@ class AltairViewer(object):
 
     """A viewer that returns results as they are."""
     def visualize(self, result, chart_type="area"):
-        if type(result) == pd.DataFrame:
+        if type(result) is pd.DataFrame:
             columns = result.columns.values
 
             # Simply return dataframe if only 1 column is available
