@@ -5,10 +5,11 @@ import json
 import requests
 from time import sleep
 
+from .connectionstringutil import get_connection_string
+
 
 class ReliableHttpClient(object):
     """Http client that is reliable in its requests. Uses requests library."""
-    # TODO(aggftw): unit tests
 
     def __init__(self, url, headers, username, password, retry_policy):
         self._url = url.rstrip("/")
@@ -16,6 +17,10 @@ class ReliableHttpClient(object):
         self._username = username
         self._password = password
         self._retry_policy = retry_policy
+
+    @property
+    def connection_string(self):
+        return get_connection_string(self._url, self._username, self._password)
 
     def compose_url(self, relative_url):
         r_u = "/{}".format(relative_url.rstrip("/").lstrip("/"))
@@ -49,5 +54,5 @@ class ReliableHttpClient(object):
                 return self._send_request_helper(url, accepted_status_codes, function, data, retry_count + 1)
             else:
                 raise ValueError("Invalid status code '{}' from {}"
-                                .format(status, url))
+                                 .format(status, url))
         return r

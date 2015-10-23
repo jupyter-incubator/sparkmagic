@@ -1,4 +1,5 @@
-﻿from nose.tools import raises, assert_equals
+﻿import time
+from nose.tools import raises, assert_equals
 from mock import MagicMock
 
 from remotespark.livyclientlib.clientmanager import ClientManager
@@ -9,6 +10,34 @@ def test_get_client_throws_when_client_not_exists():
     manager = ClientManager()
 
     manager.get_client("name")
+
+
+def test_deserialize_on_creation():
+    serializer = MagicMock()
+    serializer.deserialize_state.return_value = [("py", None), ("sc", None)]
+    manager = ClientManager(serializer)
+
+    assert "py" in manager.get_endpoints_list()
+    assert "sc" in manager.get_endpoints_list()
+
+    serializer = MagicMock()
+    manager = ClientManager(serializer)
+
+    assert len(manager.get_endpoints_list()) == 0
+
+
+@raises(ValueError)
+def test_deserialize_throws_when_bad_combination():
+    ClientManager(None, True)
+
+
+def test_serialize_periodically():
+    serializer = MagicMock()
+    ClientManager(serializer, True, 0.1)
+
+    time.sleep(0.5)
+
+    assert serializer.serialize_state.call_count >= 1
 
 
 def test_get_client():
