@@ -3,27 +3,27 @@
 from remotespark.sparkkernelbase import SparkKernelBase
 
 
-class PySparkKernel(SparkKernelBase):
+class SparkKernel(SparkKernelBase):
     # Required by Jupyter - Overridden
-    implementation = 'PySpark'
+    implementation = 'Spark'
     implementation_version = '1.0'
     language = 'no-op'
     language_version = '0.1'
     language_info = {
-        'name': 'pyspark',
+        'name': 'spark',
         'mimetype': 'text/x-python'
     }
-    banner = "PySpark with automatic visualizations"
+    banner = "Spark with automatic visualizations"
 
     # Required by Spark - Overridden
     use_altair = False
-    username_env_var = "SPARKKERNEL_PYTHON_USERNAME"
-    password_env_var = "SPARKKERNEL_PYTHON_PASSWORD"
-    url_env_var = "SPARKKERNEL_PYTHON_URL"
-    session_language = "python"
-    client_name = "python_jupyter_kernel"
+    username_env_var = "SPARKKERNEL_SCALA_USERNAME"
+    password_env_var = "SPARKKERNEL_SCALA_PASSWORD"
+    url_env_var = "SPARKKERNEL_SCALA_URL"
+    session_language = "scala"
+    client_name = "scala_jupyter_kernel"
 
 
 if __name__ == '__main__':
     from ipykernel.kernelapp import IPKernelApp
-    IPKernelApp.launch_instance(kernel_class=PySparkKernel)
+    IPKernelApp.launch_instance(kernel_class=SparkKernel)

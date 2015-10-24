@@ -31,7 +31,7 @@ class SparkKernelBase(IPythonKernel):
     def initialize_magics(self):
         (username, password, url) = self.get_configuration()
 
-        connection_string = get_connection_string(username, password, url)
+        connection_string = get_connection_string(url, username, password)
 
         register_magics_code = "%load_ext remotespark\nimport requests\nrequests.packages.urllib3.disable_warnings()"
         self.execute_cell_for_user(register_magics_code, True, False)
