@@ -3,3 +3,4 @@ nose
 mock
 requests
 pandas
+ipykernel
