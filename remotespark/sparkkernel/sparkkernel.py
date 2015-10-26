@@ -16,7 +16,6 @@ class SparkKernel(SparkKernelBase):
     banner = "Spark with automatic visualizations"
 
     # Required by Spark - Overridden
-    use_altair = False
     username_env_var = "SPARKKERNEL_SCALA_USERNAME"
     password_env_var = "SPARKKERNEL_SCALA_PASSWORD"
     url_env_var = "SPARKKERNEL_SCALA_URL"

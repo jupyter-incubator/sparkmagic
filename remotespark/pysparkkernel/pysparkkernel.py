@@ -16,7 +16,6 @@ class PySparkKernel(SparkKernelBase):
     banner = "PySpark with automatic visualizations"
 
     # Required by Spark - Overridden
-    use_altair = False
     username_env_var = "SPARKKERNEL_PYTHON_USERNAME"
     password_env_var = "SPARKKERNEL_PYTHON_PASSWORD"
     url_env_var = "SPARKKERNEL_PYTHON_URL"
