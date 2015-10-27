@@ -8,8 +8,11 @@ from __future__ import print_function
 
 from IPython.core.magic import (Magics, magics_class, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
+import altair.api as alt
 
 from .livyclientlib.sparkcontroller import SparkController
+from .livyclientlib.rawviewer import RawViewer
+from .livyclientlib.altairviewer import AltairViewer
 from .livyclientlib.log import Log
 
 
@@ -18,15 +21,21 @@ class RemoteSparkMagics(Magics):
 
     logger = Log()
 
-    def __init__(self, shell, data=None, mode="normal"):
+    def __init__(self, shell, data=None, mode="normal", use_altair=True):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
         self.spark_controller = SparkController(mode)
+        if use_altair:
+            alt.use_renderer('lightning')
+            self.viewer = AltairViewer()
+        else:
+            self.viewer = RawViewer()
 
     @magic_arguments()
     @argument("-s", "--sql", type=bool, default=False, help='Whether to use SQL.')
     @argument("-c", "--client", help="The name of the Livy client to use. "
               "If only one client has been created, there's no need to specify a client.")
+    @argument("-t", "--chart", type=str, default="area", help='Chart type to use: table, area, line, bar.')
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @line_cell_magic
     def spark(self, line, cell=""):
@@ -36,6 +45,11 @@ class RemoteSparkMagics(Magics):
            -----------
            info
                Display the mode and available Livy endpoints.
+           viewer
+               Change how to display sql results: "auto" or "df"
+               "auto" will use Altair to create an automatic visualization.
+               "df" will display the results as pandas dataframes.
+               e.g. `%spark viewer auto`
            mode
                Set the mode to be used. Possible arguments are: "normal" or "debug".
                e.g. `%%spark mode debug`
@@ -60,6 +74,15 @@ class RemoteSparkMagics(Magics):
         if subcommand == "info":
             # Info is printed by default
             pass
+        # viewer
+        elif subcommand == "viewer":
+            if len(args.command) != 2:
+                raise ValueError("Subcommand 'viewer' requires an argument. {}".format(usage))
+            v = args.command[1].lower()
+            if v == "auto":
+                self.viewer = AltairViewer()
+            else:
+                self.viewer = RawViewer()
         # mode
         elif subcommand == "mode":
             if len(args.command) != 2:
@@ -87,7 +110,8 @@ class RemoteSparkMagics(Magics):
             self.logger.debug("line: " + line)
             self.logger.debug("cell: " + cell)
             self.logger.debug("args: " + str(args))
-            return self.spark_controller.run_cell(args.client, args.sql, cell)
+            result = self.spark_controller.run_cell(args.client, args.sql, cell)
+            return self.viewer.visualize(result, args.chart)
         # error
         else:
             raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))

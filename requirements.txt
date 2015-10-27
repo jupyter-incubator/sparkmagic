@@ -1,6 +1,7 @@
-ipython==3.2
+ipython==4.0
 nose
 mock
 requests
 pandas
+numpy
 ipykernel
