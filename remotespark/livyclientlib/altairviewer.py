@@ -46,7 +46,7 @@ class AltairViewer(object):
 
             return v.render()
         except (AssertionError, ValueError) as e:
-            self.logger.debug("Could not create Altair viz. Exception {}".format(str(e)))
+            self.logger.error("Could not create Altair viz. Exception {}".format(str(e)))
             return result
 
     def get_altair_viz(self, result):
