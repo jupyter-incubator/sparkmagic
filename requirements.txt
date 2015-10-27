@@ -4,4 +4,4 @@ mock
 requests
 pandas
 numpy
-ipykernel
+ipykernel==4.1.1

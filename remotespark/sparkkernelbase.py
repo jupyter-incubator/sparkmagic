@@ -30,13 +30,16 @@ class SparkKernelBase(IPythonKernel):
         self.logger = Log()
         self.already_ran_once = False
 
-        # Use lightning here so that the graphic doesn't display later when magics are registered
-        alt.use_renderer('lightning')
+        try:
+            # Use lightning here so that the graphic doesn't display later when magics are registered
+            alt.use_renderer('lightning')
 
-        # Create a dumb viz so that comparison warning is not shown
-        dummy_records = [{u'date': u'6/1/13', u'temp_diff': 8, u'buildingID': u'4'}]
-        dummy_df = pd.DataFrame(dummy_records)
-        alt.Viz(dummy_df)
+            # Create a dumb viz so that comparison warning is not shown
+            dummy_records = [{u'date': u'6/1/13', u'temp_diff': 8, u'buildingID': u'4'}]
+            dummy_df = pd.DataFrame(dummy_records)
+            alt.Viz(dummy_df)
+        except:
+            self.logger.error("Could not initialize renderer or create dummy records")
 
     @staticmethod
     def read_environment_variable(name):
