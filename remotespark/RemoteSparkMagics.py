@@ -19,12 +19,17 @@ from .livyclientlib.log import Log
 @magics_class
 class RemoteSparkMagics(Magics):
 
-    logger = Log()
-
-    def __init__(self, shell, data=None, mode="normal", use_altair=True):
+    def __init__(self, shell, data=None, mode="debug", use_altair=True, interactive=False):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
-        self.spark_controller = SparkController(mode)
+        self.spark_controller = SparkController()
+        self.logger = Log()
+        self.spark_controller.set_log_mode(mode)
+
+        self.logger.debug("Initialized spark magics.")
+
+        self.interactive = interactive
+
         if use_altair:
             alt.use_renderer('lightning')
             self.viewer = AltairViewer()
@@ -115,7 +120,7 @@ class RemoteSparkMagics(Magics):
         # error
         else:
             raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
-        
+
         # Print info after any valid subcommand
         if len(subcommand) > 0:
             if len(cell) > 0:
@@ -124,8 +129,9 @@ class RemoteSparkMagics(Magics):
             self._print_info()
 
     def _print_info(self):
-        print("Info for running Spark:\n    mode={}\n    {}\n"
-              .format(self.spark_controller.get_log_mode(), self.spark_controller.get_client_keys()))
+        if self.interactive:
+            print("Info for running Spark:\n    mode={}\n    {}\n"
+                  .format(self.spark_controller.get_log_mode(), self.spark_controller.get_client_keys()))
 
         
 def load_ipython_extension(ip):

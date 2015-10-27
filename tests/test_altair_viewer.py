@@ -53,7 +53,7 @@ def test_visualize_renders():
 
     assert returned is rendered
     viz_m.select_x.assert_called_once_with()
-    viz_m.select_y.assert_called_once_with("avg")
+    viz_m.select_y.assert_called_once_with(["Q", "O", "N", "T"], "avg")
     viz_m.configure.assert_called_once_with(width=800, height=400)
     viz_m.area.assert_called_once_with()
 
@@ -63,7 +63,7 @@ def test_visualize_renders():
 
     assert returned is rendered
     viz_m.select_x.assert_called_once_with()
-    viz_m.select_y.assert_called_once_with("avg")
+    viz_m.select_y.assert_called_once_with(["Q", "O", "N", "T"], "avg")
     viz_m.configure.assert_called_once_with(width=800, height=400)
     viz_m.line.assert_called_once_with()
 
@@ -73,6 +73,6 @@ def test_visualize_renders():
 
     assert returned is rendered
     viz_m.select_x.assert_called_once_with()
-    viz_m.select_y.assert_called_once_with("avg")
+    viz_m.select_y.assert_called_once_with(["Q", "O", "N", "T"], "avg")
     viz_m.configure.assert_called_once_with(width=800, height=400)
     viz_m.bar.assert_called_once_with()

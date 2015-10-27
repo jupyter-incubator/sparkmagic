@@ -13,8 +13,7 @@ class SparkController(object):
 
     logger = Log()
 
-    def __init__(self, mode):
-        self.set_log_mode(mode)
+    def __init__(self):
         self.client_manager = ClientManager()
         self.client_factory = LivyClientFactory()
 

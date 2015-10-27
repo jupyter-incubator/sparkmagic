@@ -2,13 +2,15 @@
 # Distributed under the terms of the Modified BSD License.
 import pandas as pd
 import altair.api as alt
+import sys
 
 from .log import Log
 
 
 class AltairViewer(object):
 
-    logger = Log()
+    def __init__(self):
+        self.logger = Log()
 
     """A viewer that returns results as they are."""
     def visualize(self, result, chart_type="area"):
@@ -29,7 +31,7 @@ class AltairViewer(object):
             v.select_x()
 
             # Select default y
-            v.select_y("avg")
+            v.select_y(["Q", "O", "N", "T"], "avg")
 
             # Configure chart
             v.configure(width=800, height=400)
@@ -47,6 +49,10 @@ class AltairViewer(object):
             return v.render()
         except (AssertionError, ValueError) as e:
             self.logger.error("Could not create Altair viz. Exception {}".format(str(e)))
+            return result
+        except:
+            e = sys.exc_info()[0]
+            self.logger.error("Unknown exception creating Altair viz. Exception {}".format(str(e)))
             return result
 
     def get_altair_viz(self, result):

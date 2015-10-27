@@ -15,13 +15,13 @@ def _setup():
 
     client_manager = MagicMock()
     client_factory = MagicMock()
-    controller = SparkController("normal")
+    controller = SparkController()
     controller.client_manager = client_manager
     controller.client_factory = client_factory
 
 
 def _teardown():
-    pass
+    controller.set_log_mode("normal")
 
 
 @with_setup(_setup, _teardown)
