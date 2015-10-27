@@ -18,8 +18,12 @@ class Log(object):
     def mode(self, value):
         self.debug("Logger mode set to: {}".format(value))
 
-        if value.lower() == "debug":
+        val = value.lower()
+
+        if val == "debug":
             self.mode = "debug"
+        elif val == "error":
+            self.mode = "error"
         else:
             self.mode = "normal"
 
@@ -27,3 +31,8 @@ class Log(object):
         """Prints if in debug mode."""
         if self._mode == "debug":
             print("DEBUG\t" + message)
+
+    def error(self, message):
+        """Prints if in debug mode."""
+        if self.mode == "debug" or self.mode == "error":
+            print("ERROR\t" + message)
