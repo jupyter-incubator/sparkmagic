@@ -2,7 +2,7 @@ from mock import MagicMock
 from nose.tools import raises
 
 from remotespark.livyclientlib.livyclientfactory import LivyClientFactory
-from remotespark.livyclientlib.connectionstringutil import get_connection_string
+from remotespark.livyclientlib.utils import get_connection_string
 from remotespark.livyclientlib.constants import Constants
 
 

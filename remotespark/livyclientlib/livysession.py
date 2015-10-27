@@ -153,7 +153,7 @@ class LivySession(object):
         filtered_sessions = [s for s in sessions if s["id"] == int(self.id)]
                     
         if len(filtered_sessions) != 1:
-            raise AssertionError("Expected one session of id {} but got {} sessions."
+            raise ValueError("Expected one session of id {} but got {} sessions."
                                  .format(self.id, len(filtered_sessions)))
             
         session = filtered_sessions[0]

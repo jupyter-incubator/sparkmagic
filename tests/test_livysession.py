@@ -4,7 +4,7 @@ from mock import MagicMock
 
 from remotespark.livyclientlib.livysession import LivySession
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
-from remotespark.livyclientlib.connectionstringutil import get_connection_string
+from remotespark.livyclientlib.utils import get_connection_string
 
 
 class DummyResponse:

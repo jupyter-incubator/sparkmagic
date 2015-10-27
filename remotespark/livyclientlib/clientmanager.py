@@ -66,6 +66,9 @@ class ClientManager(object):
         for name in self.get_endpoints_list():
             self._remove_endpoint(name)
 
+        if self._serializer is not None:
+            self._serialize_state()
+
     def _remove_endpoint(self, name):
         if name in self.get_endpoints_list():
             self._livy_clients[name].close_session()

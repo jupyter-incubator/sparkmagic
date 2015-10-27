@@ -1,7 +1,7 @@
 ﻿from mock import MagicMock
 
 from remotespark.livyclientlib.livyclient import LivyClient
-from remotespark.livyclientlib.connectionstringutil import get_connection_string
+from remotespark.livyclientlib.utils import get_connection_string
 from remotespark.livyclientlib.livysessionstate import LivySessionState
 
 

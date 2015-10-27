@@ -3,7 +3,7 @@ from mock import MagicMock, call
 import os
 
 from remotespark.sparkkernelbase import SparkKernelBase
-from remotespark.livyclientlib.connectionstringutil import get_connection_string
+from remotespark.livyclientlib.utils import get_connection_string
 
 
 kernel = None

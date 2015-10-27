@@ -5,17 +5,25 @@ Provides the %spark magic."""
 # Distributed under the terms of the Modified BSD License.
 
 from .clientmanager import ClientManager
-from .livyclientfactory import LivyClientFactory
 from .log import Log
+from .livyclientfactory import LivyClientFactory
+from .filesystemreaderwriter import FileSystemReaderWriter
+from .clientmanagerstateserializer import ClientManagerStateSerializer
 
 
 class SparkController(object):
 
-    logger = Log()
-
-    def __init__(self):
-        self.client_manager = ClientManager()
+    def __init__(self, serialize_path=None):
         self.client_factory = LivyClientFactory()
+
+        if serialize_path is not None:
+            serializer = ClientManagerStateSerializer(self.client_factory, FileSystemReaderWriter(serialize_path))
+            self.client_manager = ClientManager(serializer, True)
+        else:
+            self.client_manager = ClientManager()
+
+        self.logger = Log()
+
 
     @staticmethod
     def get_log_mode():

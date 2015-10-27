@@ -2,6 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
+from requests import ConnectionError
 
 from .log import Log
 
@@ -33,16 +34,21 @@ class ClientManagerStateSerializer(object):
             for client in clients:
                 # Ignore version for now
                 name = client["name"]
-                id = client["id"]
+                session_id = client["id"]
                 sql_context_created = client["sqlcontext"]
                 language = client["language"]
                 connection_string = client["connectionstring"]
 
-                session = self._client_factory.create_session(language, connection_string, id, sql_context_created)
+                session = self._client_factory.create_session(
+                    language, connection_string, session_id, sql_context_created)
 
-                # Do not start session automatically. Just create it.
-                client_obj = self._client_factory.build_client(language, session)
-                clients_to_return.append((name, client_obj))
+                # Do not start session automatically. Just create it but skip is not existent.
+                try:
+                    if session.status == "idle":
+                        client_obj = self._client_factory.build_client(language, session)
+                        clients_to_return.append((name, client_obj))
+                except (ValueError, ConnectionError) as e:
+                    self.logger.error("Skipping serialized session '{}' because {}".format(session.id, str(e)))
         else:
             self.logger.debug("Empty manager state found.")
 

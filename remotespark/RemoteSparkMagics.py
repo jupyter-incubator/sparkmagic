@@ -14,6 +14,7 @@ from .livyclientlib.sparkcontroller import SparkController
 from .livyclientlib.rawviewer import RawViewer
 from .livyclientlib.altairviewer import AltairViewer
 from .livyclientlib.log import Log
+from .livyclientlib.utils import get_magics_home_path, join_paths
 
 
 @magics_class
@@ -22,13 +23,21 @@ class RemoteSparkMagics(Magics):
     def __init__(self, shell, data=None, mode="debug", use_altair=True, interactive=False):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
-        self.spark_controller = SparkController()
+
         self.logger = Log()
-        self.spark_controller.set_log_mode(mode)
-
-        self.logger.debug("Initialized spark magics.")
-
         self.interactive = interactive
+
+        try:
+            self.magics_home_path = get_magics_home_path()
+            path_to_serialize = join_paths(self.magics_home_path, "state.json")
+
+            self.logger.debug("Will serialize to {}.".format(path_to_serialize))
+
+            self.spark_controller = SparkController(serialize_path=path_to_serialize)
+        except KeyError:
+            self.spark_controller = SparkController()
+
+        self.spark_controller.set_log_mode(mode)
 
         if use_altair:
             alt.use_renderer('lightning')
@@ -36,10 +45,12 @@ class RemoteSparkMagics(Magics):
         else:
             self.viewer = RawViewer()
 
+        self.logger.debug("Initialized spark magics.")
+
     @magic_arguments()
     @argument("-s", "--sql", type=bool, default=False, help='Whether to use SQL.')
     @argument("-c", "--client", help="The name of the Livy client to use. "
-              "If only one client has been created, there's no need to specify a client.")
+                                     "If only one client has been created, there's no need to specify a client.")
     @argument("-t", "--chart", type=str, default="area", help='Chart type to use: table, area, line, bar.')
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @line_cell_magic

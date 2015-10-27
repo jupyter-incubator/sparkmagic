@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 from .log import Log
-from .connectionstringutil import get_connection_string_elements
+from .utils import get_connection_string_elements
 from .livysession import LivySession
 from .pandaspysparklivyclient import PandasPysparkLivyClient
 from .pandasscalalivyclient import PandasScalaLivyClient

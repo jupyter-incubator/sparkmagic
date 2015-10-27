@@ -1,12 +1,11 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
-import os
 from ipykernel.ipkernel import IPythonKernel
 import altair.api as alt
 import pandas as pd
 
 from remotespark.livyclientlib.log import Log
-from remotespark.livyclientlib.connectionstringutil import get_connection_string
+from remotespark.livyclientlib.utils import get_connection_string, read_environment_variable
 
 
 class SparkKernelBase(IPythonKernel):
@@ -41,15 +40,11 @@ class SparkKernelBase(IPythonKernel):
         except:
             self.logger.error("Could not initialize renderer or create dummy records")
 
-    @staticmethod
-    def read_environment_variable(name):
-        return os.environ[name]
-
     def get_configuration(self):
         try:
-            username = self.read_environment_variable(self.username_env_var)
-            password = self.read_environment_variable(self.password_env_var)
-            url = self.read_environment_variable(self.url_env_var)
+            username = read_environment_variable(self.username_env_var)
+            password = read_environment_variable(self.password_env_var)
+            url = read_environment_variable(self.url_env_var)
             return username, password, url
         except KeyError:
             error = "FATAL ERROR: Please set environment variables '{}', '{}', '{} to initialize Kernel.".format(
