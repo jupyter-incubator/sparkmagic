@@ -31,12 +31,13 @@ class SparkKernelBase(IPythonKernel):
 
         try:
             # Use lightning here so that the graphic doesn't display later when magics are registered
-            alt.use_renderer('lightning')
+            # alt.use_renderer('lightning')
 
             # Create a dumb viz so that comparison warning is not shown
-            dummy_records = [{u'date': u'6/1/13', u'temp_diff': 8, u'buildingID': u'4'}]
-            dummy_df = pd.DataFrame(dummy_records)
-            alt.Viz(dummy_df)
+            # dummy_records = [{u'date': u'6/1/13', u'temp_diff': 8, u'buildingID': u'4'}]
+            # dummy_df = pd.DataFrame(dummy_records)
+            # alt.Viz(dummy_df)
+            pass
         except:
             self.logger.error("Could not initialize renderer or create dummy records")
 
@@ -64,8 +65,14 @@ class SparkKernelBase(IPythonKernel):
         register_magics_code = "%load_ext remotespark\nimport requests\nrequests.packages.urllib3.disable_warnings()"
         self.execute_cell_for_user(register_magics_code, True, False)
 
-        add_endpoint_code = "%spark add {} {} {}".format(self.client_name, self.session_language, connection_string)
-        self.execute_cell_for_user(add_endpoint_code, True, False)
+        debug_magics_code = "%spark mode debug"
+        self.execute_cell_for_user(debug_magics_code, True, False)
+
+        try:
+            add_endpoint_code = "%spark add {} {} {}".format(self.client_name, self.session_language, connection_string)
+            self.execute_cell_for_user(add_endpoint_code, True, False)
+        except ValueError:
+            self.logger.error("No need to add new endpoint since it already exists.")
 
         self.already_ran_once = True
 

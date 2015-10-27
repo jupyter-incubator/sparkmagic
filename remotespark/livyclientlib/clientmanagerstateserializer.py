@@ -44,9 +44,11 @@ class ClientManagerStateSerializer(object):
 
                 # Do not start session automatically. Just create it but skip is not existent.
                 try:
-                    if session.status == "idle":
-                        client_obj = self._client_factory.build_client(language, session)
-                        clients_to_return.append((name, client_obj))
+                    # Get status to know if it's alive or not. No exception means it is.
+                    s = session.status
+
+                    client_obj = self._client_factory.build_client(language, session)
+                    clients_to_return.append((name, client_obj))
                 except (ValueError, ConnectionError) as e:
                     self.logger.error("Skipping serialized session '{}' because {}".format(session.id, str(e)))
         else:
