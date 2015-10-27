@@ -4,3 +4,4 @@ mock
 requests
 pandas
 numpy
+ipykernel

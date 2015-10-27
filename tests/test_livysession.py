@@ -1,5 +1,4 @@
 ﻿import json
-
 from nose.tools import raises, assert_equals
 from mock import MagicMock
 
