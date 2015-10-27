@@ -2,6 +2,8 @@ from nose.tools import raises, with_setup
 from mock import MagicMock
 
 from remotespark.RemoteSparkMagics import RemoteSparkMagics
+from remotespark.livyclientlib.rawviewer import RawViewer
+from remotespark.livyclientlib.altairviewer import AltairViewer
 
 
 magic = None
@@ -112,3 +114,20 @@ def test_run_cell_command_parses():
 
     run_cell_method.assert_called_once_with(name, False, cell)
     visualize_method.assert_called_once_with(1, "area")
+
+
+@with_setup(_setup, _teardown)
+def test_viewer_command():
+    command = "viewer auto"
+    magic.viewer = None
+
+    magic.spark(command)
+
+    assert type(magic.viewer) == AltairViewer
+
+    command = "viewer df"
+    magic.viewer = None
+
+    magic.spark(command)
+
+    assert type(magic.viewer) == RawViewer

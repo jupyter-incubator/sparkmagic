@@ -31,7 +31,6 @@ class RemoteSparkMagics(Magics):
         else:
             self.viewer = RawViewer()
 
-
     @magic_arguments()
     @argument("-s", "--sql", type=bool, default=False, help='Whether to use SQL.')
     @argument("-c", "--client", help="The name of the Livy client to use. "
@@ -46,6 +45,11 @@ class RemoteSparkMagics(Magics):
            -----------
            info
                Display the mode and available Livy endpoints.
+           viewer
+               Change how to display sql results: "auto" or "df"
+               "auto" will use Altair to create an automatic visualization.
+               "df" will display the results as pandas dataframes.
+               e.g. `%spark viewer auto`
            mode
                Set the mode to be used. Possible arguments are: "normal" or "debug".
                e.g. `%%spark mode debug`
@@ -70,6 +74,15 @@ class RemoteSparkMagics(Magics):
         if subcommand == "info":
             # Info is printed by default
             pass
+        # viewer
+        elif subcommand == "viewer":
+            if len(args.command) != 2:
+                raise ValueError("Subcommand 'viewer' requires an argument. {}".format(usage))
+            v = args.command[1].lower()
+            if v == "auto":
+                self.viewer = AltairViewer()
+            else:
+                self.viewer = RawViewer()
         # mode
         elif subcommand == "mode":
             if len(args.command) != 2:

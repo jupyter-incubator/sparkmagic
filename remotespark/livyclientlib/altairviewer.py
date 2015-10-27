@@ -12,29 +12,24 @@ class AltairViewer(object):
 
     """A viewer that returns results as they are."""
     def visualize(self, result, chart_type="area"):
-        if type(result) is pd.DataFrame:
-            columns = result.columns.values
+        if type(result) is not pd.DataFrame:
+            return result
 
-            # Simply return dataframe if only 1 column is available
-            if len(columns) <= 1 or chart_type == "table":
-                return result
+        columns = result.columns.values
 
-            # Create Altair Viz
-            v = alt.Viz(result)
+        # Simply return dataframe if only 1 column is available
+        if len(columns) <= 1 or chart_type == "table":
+            return result
+
+        # Create Altair Viz
+        try:
+            v = self.get_altair_viz(result)
 
             # Select default x
-            try:
-                v.select_x()
-            except AssertionError:
-                self.logger.debug("Could not select x default value.")
-                return result
+            v.select_x()
 
             # Select default y
-            try:
-                v.select_y("avg")
-            except AssertionError:
-                self.logger.debug("Could not select y default value.")
-                return result
+            v.select_y("avg")
 
             # Configure chart
             v.configure(width=800, height=400)
@@ -50,13 +45,9 @@ class AltairViewer(object):
                 v.area()
 
             return v.render()
-        else:
+        except (AssertionError, ValueError) as e:
+            self.logger.debug("Could not create Altair viz. Exception {}".format(str(e)))
             return result
 
-    @staticmethod
-    def _get_x_shorthand(columns):
-        return columns[0]
-
-    @staticmethod
-    def _get_y_shorthand(columns):
-        return columns[1]
+    def get_altair_viz(self, result):
+        return alt.Viz(result)
