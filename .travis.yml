@@ -3,5 +3,6 @@ python:
     - "2.7"
     - "3.3"
 install:
+    pip install git+https://github.com/ellisonbg/altair
     pip install -r requirements.txt -e .
 script: tests/run_tests.sh
