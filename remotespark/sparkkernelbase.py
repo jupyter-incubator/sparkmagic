@@ -2,16 +2,14 @@
 # Distributed under the terms of the Modified BSD License.
 import os
 from ipykernel.ipkernel import IPythonKernel
+import altair.api as alt
+import pandas as pd
 
 from remotespark.livyclientlib.log import Log
 from remotespark.livyclientlib.connectionstringutil import get_connection_string
 
 
 class SparkKernelBase(IPythonKernel):
-    logger = Log()
-    already_ran_once = False
-    mode = "normal"
-
     # Required by Jupyter - Override
     implementation = None
     implementation_version = None
@@ -26,6 +24,19 @@ class SparkKernelBase(IPythonKernel):
     url_env_var = None
     session_language = None
     client_name = None
+
+    def __init__(self, **kwargs):
+        super(SparkKernelBase, self).__init__(**kwargs)
+        self.logger = Log()
+        self.already_ran_once = False
+
+        # Use lightning here so that the graphic doesn't display later when magics are registered
+        alt.use_renderer('lightning')
+
+        # Create a dumb viz so that comparison warning is not shown
+        dummy_records = [{u'date': u'6/1/13', u'temp_diff': 8, u'buildingID': u'4'}]
+        dummy_df = pd.DataFrame(dummy_records)
+        alt.Viz(dummy_df)
 
     @staticmethod
     def read_environment_variable(name):
