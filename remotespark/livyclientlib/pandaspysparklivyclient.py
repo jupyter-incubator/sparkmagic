@@ -4,7 +4,6 @@
 import pandas as pd
 import json
 
-from .log import Log
 from .livyclient import LivyClient
 
 
@@ -27,10 +26,13 @@ class PandasPysparkLivyClient(LivyClient):
 
             return pd.DataFrame.from_records(records, columns=columns)
         else:
-            jsonData = eval(records_text)
-            jsonArray = "[{}]".format(",".join(jsonData))
-
-            return pd.DataFrame(json.loads(jsonArray))
+            try:
+                json_data = eval(records_text)
+                json_array = "[{}]".format(",".join(json_data))
+                return pd.DataFrame(json.loads(json_array))
+            except (ValueError, SyntaxError):
+                self.logger.error("Could not parse json array for sql.")
+                return records_text
 
     def _make_sql_json_take(self, command):
         return 'sqlContext.sql("{}").toJSON().take({})'.format(command, str(self._max_take_rows))
