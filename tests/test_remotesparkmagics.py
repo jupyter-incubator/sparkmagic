@@ -38,6 +38,7 @@ def test_info_command_parses():
 
 @with_setup(_setup, _teardown)
 def test_add_endpoint_command_parses():
+    # Do not skip
     add_endpoint_mock = MagicMock()
     spark_controller.add_endpoint = add_endpoint_mock
     command = "add"
@@ -48,7 +49,20 @@ def test_add_endpoint_command_parses():
 
     magic.spark(line)
 
-    add_endpoint_mock.assert_called_once_with(name, language, connection_string)
+    add_endpoint_mock.assert_called_once_with(name, language, connection_string, False)
+
+    # Skip
+    add_endpoint_mock = MagicMock()
+    spark_controller.add_endpoint = add_endpoint_mock
+    command = "add"
+    name = "name"
+    language = "python"
+    connection_string = "url=http://location:port;username=name;password=word"
+    line = " ".join([command, name, language, connection_string, "skip"])
+
+    magic.spark(line)
+
+    add_endpoint_mock.assert_called_once_with(name, language, connection_string, True)
 
 
 @with_setup(_setup, _teardown)
@@ -62,20 +76,6 @@ def test_delete_endpoint_command_parses():
     magic.spark(line)
 
     mock_method.assert_called_once_with(name)
-
-
-@with_setup(_setup, _teardown)
-def test_mode_command_parses():
-    mock_method = MagicMock()
-    spark_controller.set_log_mode = mock_method
-    command = "mode"
-    mode = "debug"
-
-    line = " ".join([command, mode])
-
-    magic.spark(line)
-
-    mock_method.assert_called_once_with(mode)
 
 
 @with_setup(_setup, _teardown)

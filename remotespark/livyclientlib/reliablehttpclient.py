@@ -5,7 +5,7 @@ import json
 import requests
 from time import sleep
 
-from .connectionstringutil import get_connection_string
+from .utils import get_connection_string
 
 
 class ReliableHttpClient(object):

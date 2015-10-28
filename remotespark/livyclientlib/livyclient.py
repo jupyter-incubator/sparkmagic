@@ -6,9 +6,10 @@ from .log import Log
 
 class LivyClient(object):
     """Spark client for Livy endpoint"""
-    logger = Log()
 
     def __init__(self, session, execute_timeout_seconds=3600):
+        self.logger = Log("LivyClient")
+
         self._session = session
         self._session.create_sql_context()
         self._execute_timeout_seconds = execute_timeout_seconds
@@ -29,3 +30,7 @@ class LivyClient(object):
     @property
     def language(self):
         return self._session.language
+
+    @property
+    def session_id(self):
+        return self._session.id

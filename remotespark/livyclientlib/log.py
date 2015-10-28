@@ -4,48 +4,60 @@
 from __future__ import print_function
 from datetime import datetime
 
-from .utils import join_paths, get_magics_home_path
+from .utils import join_paths, get_magics_home_path, read_environment_variable
 
 
 class Log(object):
     """Logger."""
 
-    def __init__(self):
-        try:
-            magics_home_path = get_magics_home_path()
-            self.path_to_serialize = join_paths(magics_home_path, "logs/log.txt")
-        except KeyError:
-            self.path_to_serialize = None
+    def __init__(self, caller_name):
+        assert caller_name is not None
+
+        self._caller_name = caller_name
 
         self._mode = "normal"
+        self.path_to_serialize = None
+
+        self.read_config()
 
     @property
     def mode(self):
         """One of: 'debug', 'normal'"""
         return self._mode
 
-    @mode.setter
-    def mode(self, value):
-        self.debug("Logger mode set to: {}".format(value))
+    def read_config(self):
+        # Read path
+        try:
+            magics_home_path = get_magics_home_path()
+            self.path_to_serialize = join_paths(magics_home_path, "logs/log.txt")
+        except KeyError:
+            self.path_to_serialize = None
 
-        val = value.lower()
+        # Read log level
+        try:
+            level = read_environment_variable("SPARKMAGIC_LOG_LEVEL").lower()
 
-        if val == "debug":
-            self._mode = "debug"
-        else:
-            self._mode = "normal"
+            if level != "debug":
+                level = "normal"
+        except KeyError:
+            level = "normal"
+
+        self._mode = level
 
     def debug(self, message):
         """Prints if in debug mode."""
-        if self._mode == "debug":
-            self._handle_message("DEBUG", message)
+        self._handle_message("DEBUG", message, ["debug"])
 
     def error(self, message):
         """Always shows."""
-        self._handle_message("ERROR", message)
+        self._handle_message("ERROR", message, ["normal", "debug"])
 
-    def _handle_message(self, level, message):
-            message = "{}\t{}\t{}\n".format(str(datetime.utcnow()), level, message)
+    def _handle_message(self, level, message, accepted_modes):
+        self.read_config()
+
+        if self.mode in accepted_modes:
+            message = "{}\t{}\t{}\t{}\n".format(str(datetime.utcnow()), level, self._caller_name, message)
+
             if self.path_to_serialize is not None:
                 self._write_to_disk(message)
             else:

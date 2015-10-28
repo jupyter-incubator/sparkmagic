@@ -5,7 +5,7 @@ from remotespark.livyclientlib.log import Log
 
 
 def test_log_init():
-    logger = Log()
+    logger = Log("something")
 
     print(Log.mode)
     assert logger.mode == logger._mode

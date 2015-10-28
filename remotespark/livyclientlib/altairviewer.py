@@ -10,7 +10,7 @@ from .log import Log
 class AltairViewer(object):
 
     def __init__(self):
-        self.logger = Log()
+        self.logger = Log("AltairViewer")
 
     """A viewer that returns results as they are."""
     def visualize(self, result, chart_type="area"):

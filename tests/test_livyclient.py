@@ -1,4 +1,4 @@
-﻿from mock import MagicMock
+﻿from mock import MagicMock, PropertyMock
 
 from remotespark.livyclientlib.livyclient import LivyClient
 from remotespark.livyclientlib.utils import get_connection_string
@@ -59,3 +59,27 @@ def test_serialize():
     assert serialized["sqlcontext"] == sql_created
     assert serialized["version"] == "0.0.0"
     assert len(serialized.keys()) == 5
+
+
+def test_language():
+    lang = "python"
+    mock_spark_session = MagicMock()
+    language_mock = PropertyMock(return_value=lang)
+    type(mock_spark_session).language = language_mock
+    client = LivyClient(mock_spark_session)
+
+    l = client.language
+
+    assert l == lang
+
+
+def test_session_id():
+    session_id = "0"
+    mock_spark_session = MagicMock()
+    session_id_mock = PropertyMock(return_value=session_id)
+    type(mock_spark_session).id = session_id_mock
+    client = LivyClient(mock_spark_session)
+
+    i = client.session_id
+
+    assert i == session_id

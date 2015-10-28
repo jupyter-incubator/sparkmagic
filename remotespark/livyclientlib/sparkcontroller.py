@@ -14,6 +14,7 @@ from .clientmanagerstateserializer import ClientManagerStateSerializer
 class SparkController(object):
 
     def __init__(self, serialize_path=None):
+        self.logger = Log("SparkController")
         self.client_factory = LivyClientFactory()
 
         if serialize_path is not None:
@@ -21,17 +22,6 @@ class SparkController(object):
             self.client_manager = ClientManager(serializer, True)
         else:
             self.client_manager = ClientManager()
-
-        self.logger = Log()
-
-
-    @staticmethod
-    def get_log_mode():
-        return Log.mode
-
-    @staticmethod
-    def set_log_mode(mode):
-        Log.mode = mode
 
     def run_cell(self, client_name, sql, cell):
         # Select client
@@ -55,7 +45,11 @@ class SparkController(object):
     def delete_endpoint(self, name):
         self.client_manager.delete_client(name)
 
-    def add_endpoint(self, name, language, connection_string):
+    def add_endpoint(self, name, language, connection_string, skip_if_exists):
+        if skip_if_exists and (name in self.client_manager.get_endpoints_list()):
+            self.logger.debug("Skipping {} because it already exists in list of endpoints.".format(name))
+            return
+
         session = self.client_factory.create_session(language, connection_string, "-1", False)
         session.start()
         livy_client = self.client_factory.build_client(language, session)

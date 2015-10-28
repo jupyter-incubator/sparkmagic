@@ -13,11 +13,17 @@ from .livysessionstate import LivySessionState
 class LivySession(object):
     """Session that is livy specific."""
     # TODO(aggftw): make threadsafe
-    logger = Log()
 
-    # TODO(aggftw): do a pass to remove all strings and consolidate into variables
     _idle_session_status = "idle"
-    _possible_session_status = ['not_started', _idle_session_status, 'starting', 'busy', 'error', 'dead']
+    _error_session_status = 'error'
+    _dead_session_status = 'dead'
+    _not_started_session_status = 'not_started'
+    _starting_session_status = 'starting'
+    _busy_session_status = 'busy'
+
+    _possible_session_status = [_not_started_session_status, _idle_session_status, _starting_session_status,
+                                _busy_session_status, _error_session_status, _dead_session_status]
+    _final_status = [_dead_session_status, _error_session_status]
 
     def __init__(self, http_client, language, session_id, sql_created,
                  status_sleep_seconds=2, statement_sleep_seconds=2, create_sql_context_timeout_seconds=60):
@@ -26,6 +32,8 @@ class LivySession(object):
         assert create_sql_context_timeout_seconds > 0
         if session_id == "-1" and sql_created is True:
             raise ValueError("Cannot indicate sql state without session id.")
+
+        self.logger = Log("LivySession")
 
         language = language.lower()
         if language not in Constants.lang_supported:
@@ -101,12 +109,13 @@ class LivySession(object):
     @property
     def http_client(self):
         return self._http_client
+
+    def is_final_status(self, status):
+        return status in self._final_status
     
     def execute(self, commands):
         """Executes commands in session."""
         code = textwrap.dedent(commands)
-
-        self.logger.debug("Executing code:\n{}\nFrom commands: {}".format(code, commands))
 
         data = {"code": code}
         r = self._http_client.post(self._statements_url(), [201], data)
@@ -153,8 +162,8 @@ class LivySession(object):
         filtered_sessions = [s for s in sessions if s["id"] == int(self.id)]
                     
         if len(filtered_sessions) != 1:
-            raise ValueError("Expected one session of id {} but got {} sessions."
-                                 .format(self.id, len(filtered_sessions)))
+            raise ValueError("Expected one session of id {} and got {} sessions."
+                             .format(self.id, len(filtered_sessions)))
             
         session = filtered_sessions[0]
         return session['state']

@@ -8,11 +8,12 @@ from .log import Log
 
 class ClientManager(object):
     """Livy client manager"""
-    logger = Log()
 
     def __init__(self, serializer=None, serialize_periodically=False, serialize_period=10.0):
         if serializer is None and serialize_periodically is True:
             raise ValueError("Will not be able to serialize periodically without serializer.")
+
+        self.logger = Log("ClientManager")
 
         self._livy_clients = dict()
         self._serializer = serializer
@@ -26,6 +27,8 @@ class ClientManager(object):
                 self._serialize_state_periodically(serialize_period)
 
     def _serialize_state_periodically(self, serialize_period):
+        self.logger.debug("Starting state serialize timer.")
+
         self._serialize_timer = Timer(serialize_period, self._serialize_state)
         self._serialize_timer.start()
 

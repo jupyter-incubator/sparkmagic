@@ -12,16 +12,19 @@ pass_ev = "PASS"
 url_ev = "URL"
 
 
+class TestSparkKernel(SparkKernelBase):
+    client_name = "TestKernel"
+
+
 def _setup():
     global kernel, user_ev, pass_ev, url_ev
 
-    kernel = SparkKernelBase()
+    kernel = TestSparkKernel()
     kernel.use_altair = False
     kernel.username_env_var = user_ev
     kernel.password_env_var = pass_ev
     kernel.url_env_var = url_ev
     kernel.session_language = "python"
-    kernel.client_name = "test"
 
 
 def _teardown():
@@ -80,10 +83,11 @@ def test_initialize_magics():
 
     # Assertions
     assert kernel.already_ran_once
-    expected = [call("%spark add test python {}".format(conn_str), True, False),
-                call("%load_ext remotespark\nimport requests\nrequests.packages.urllib3.disable_warnings()",
-                     True, False)]
-    execute_cell_mock.mock_calls == expected
+    expected = [call("%spark add TestKernel python {} skip".format(conn_str), True, False),
+                call("%load_ext remotespark", True, False)]
+    assert len(execute_cell_mock.mock_calls) == 2
+    for kall in expected:
+        assert kall in execute_cell_mock.mock_calls
 
 
 @with_setup(_setup, _teardown)
