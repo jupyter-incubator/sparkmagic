@@ -6,6 +6,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from collections import namedtuple
+import os
 
 
 def get_connection_string(url, username, password):
@@ -56,3 +57,19 @@ def get_connection_string_elements(connection_string):
     cs = connectionstring(d["url"], d["username"], d["password"])
        
     return cs
+
+
+def read_environment_variable(name):
+    return os.environ[name]
+
+
+def expand_path(path):
+    return os.path.expanduser(path)
+
+
+def join_paths(p1, p2):
+    return os.path.join(p1, p2)
+
+
+def get_magics_home_path():
+    return expand_path(read_environment_variable("SPARKMAGIC_HOME"))

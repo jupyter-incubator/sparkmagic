@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 from .log import Log
-from .connectionstringutil import get_connection_string_elements
+from .utils import get_connection_string_elements
 from .livysession import LivySession
 from .pandaspysparklivyclient import PandasPysparkLivyClient
 from .pandasscalalivyclient import PandasScalaLivyClient
@@ -12,17 +12,18 @@ from .linearretrypolicy import LinearRetryPolicy
 
 class LivyClientFactory(object):
     """Spark client for Livy endpoint"""
-    logger = Log()
-    max_results = 2500
 
-    @staticmethod
-    def build_client(language, session):
+    def __init__(self):
+        self.logger = Log("LivyClientFactory")
+        self.max_results = 2500
+
+    def build_client(self, language, session):
         assert session is not None
 
         if language == Constants.lang_python:
-            return PandasPysparkLivyClient(session, LivyClientFactory.max_results)
+            return PandasPysparkLivyClient(session, self.max_results)
         elif language == Constants.lang_scala:
-            return PandasScalaLivyClient(session, LivyClientFactory.max_results)
+            return PandasScalaLivyClient(session, self.max_results)
         else:
             raise ValueError("Language '{}' is not supported.".format(language))
 

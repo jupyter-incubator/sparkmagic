@@ -5,6 +5,7 @@ Provides the %spark magic."""
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
+import warnings
 
 from IPython.core.magic import (Magics, magics_class, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
@@ -14,21 +15,39 @@ from .livyclientlib.sparkcontroller import SparkController
 from .livyclientlib.rawviewer import RawViewer
 from .livyclientlib.altairviewer import AltairViewer
 from .livyclientlib.log import Log
+from .livyclientlib.utils import get_magics_home_path, join_paths, read_environment_variable
 
 
 @magics_class
 class RemoteSparkMagics(Magics):
 
-    def __init__(self, shell, data=None, mode="debug", use_altair=True, interactive=False):
+    def __init__(self, shell, data=None, use_altair=True, interactive=False):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
-        self.spark_controller = SparkController()
-        self.logger = Log()
-        self.spark_controller.set_log_mode(mode)
 
-        self.logger.debug("Initialized spark magics.")
+        # Suppress Altair pandas Future Warning
+        warnings.simplefilter(action="ignore", category=FutureWarning)
 
+        self.logger = Log("RemoteSparkMagics")
         self.interactive = interactive
+
+        self.spark_controller = SparkController()
+
+        try:
+            should_serialize = read_environment_variable("SPARKMAGIC_SERIALIZE").lower() == "true"
+            if should_serialize:
+                self.logger.debug("Serialization enabled by environment var SPARKMAGIC_SERIALIZE")
+
+                self.magics_home_path = get_magics_home_path()
+                path_to_serialize = join_paths(self.magics_home_path, "state.json")
+
+                self.logger.debug("Will serialize to {}.".format(path_to_serialize))
+
+                self.spark_controller = SparkController(serialize_path=path_to_serialize)
+            else:
+                self.logger.debug("Serialization NOT enabled by environment var SPARKMAGIC_SERIALIZE")
+        except KeyError:
+            self.logger.error("Could not read env vars for serialization.")
 
         if use_altair:
             alt.use_renderer('lightning')
@@ -36,10 +55,12 @@ class RemoteSparkMagics(Magics):
         else:
             self.viewer = RawViewer()
 
+        self.logger.debug("Initialized spark magics.")
+
     @magic_arguments()
     @argument("-s", "--sql", type=bool, default=False, help='Whether to use SQL.')
     @argument("-c", "--client", help="The name of the Livy client to use. "
-              "If only one client has been created, there's no need to specify a client.")
+                                     "If only one client has been created, there's no need to specify a client.")
     @argument("-t", "--chart", type=str, default="area", help='Chart type to use: table, area, line, bar.')
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @line_cell_magic
@@ -55,12 +76,12 @@ class RemoteSparkMagics(Magics):
                "auto" will use Altair to create an automatic visualization.
                "df" will display the results as pandas dataframes.
                e.g. `%spark viewer auto`
-           mode
-               Set the mode to be used. Possible arguments are: "normal" or "debug".
-               e.g. `%%spark mode debug`
            add
                Add a Livy endpoint. First argument is the friendly name of the endpoint, second argument
-               is the language, and third argument is the connection string.
+               is the language, and third argument is the connection string. A fourth argument specifying if
+               endpoint can be skipped if already present is optional: "skip" or empty.
+               e.g. `%%spark add test python url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword skip`
+               or
                e.g. `%%spark add test python url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword`
            delete
                Delete a Livy endpoint. Argument is the friendly name of the endpoint to be deleted.
@@ -88,19 +109,18 @@ class RemoteSparkMagics(Magics):
                 self.viewer = AltairViewer()
             else:
                 self.viewer = RawViewer()
-        # mode
-        elif subcommand == "mode":
-            if len(args.command) != 2:
-                raise ValueError("Subcommand 'mode' requires an argument. {}".format(usage))
-            self.spark_controller.set_log_mode(args.command[1])
         # add
         elif subcommand == "add":
-            if len(args.command) != 4:
-                raise ValueError("Subcommand 'add' requires three arguments. {}".format(usage))
+            if len(args.command) != 4 and len(args.command) != 5:
+                raise ValueError("Subcommand 'add' requires three or four arguments. {}".format(usage))
             name = args.command[1].lower()
             language = args.command[2]
             connection_string = args.command[3]
-            self.spark_controller.add_endpoint(name, language, connection_string)
+            if len(args.command) == 5:
+                skip = args.command[4].lower() == "skip"
+            else:
+                skip = False
+            self.spark_controller.add_endpoint(name, language, connection_string, skip)
         # delete
         elif subcommand == "delete":
             if len(args.command) != 2:
@@ -112,9 +132,6 @@ class RemoteSparkMagics(Magics):
             self.spark_controller.cleanup()
         # run
         elif len(subcommand) == 0:
-            self.logger.debug("line: " + line)
-            self.logger.debug("cell: " + cell)
-            self.logger.debug("args: " + str(args))
             result = self.spark_controller.run_cell(args.client, args.sql, cell)
             return self.viewer.visualize(result, args.chart)
         # error
@@ -130,8 +147,7 @@ class RemoteSparkMagics(Magics):
 
     def _print_info(self):
         if self.interactive:
-            print("Info for running Spark:\n    mode={}\n    {}\n"
-                  .format(self.spark_controller.get_log_mode(), self.spark_controller.get_client_keys()))
+            print("Info for running Spark:\n\t{}\n".format(self.spark_controller.get_client_keys()))
 
         
 def load_ipython_extension(ip):

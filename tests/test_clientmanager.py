@@ -123,3 +123,18 @@ def test_clean_up():
 
     client0.close_session.assert_called_once_with()
     client1.close_session.assert_called_once_with()
+
+
+def test_clean_up_serializer():
+    client0 = MagicMock()
+    client1 = MagicMock()
+    serializer = MagicMock()
+    manager = ClientManager(serializer)
+    manager.add_client("name0", client0)
+    manager.add_client("name1", client1)
+
+    manager.clean_up_all()
+
+    client0.close_session.assert_called_once_with()
+    client1.close_session.assert_called_once_with()
+    serializer.serialize_state.assert_called_once_with({})

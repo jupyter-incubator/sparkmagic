@@ -5,25 +5,23 @@ Provides the %spark magic."""
 # Distributed under the terms of the Modified BSD License.
 
 from .clientmanager import ClientManager
-from .livyclientfactory import LivyClientFactory
 from .log import Log
+from .livyclientfactory import LivyClientFactory
+from .filesystemreaderwriter import FileSystemReaderWriter
+from .clientmanagerstateserializer import ClientManagerStateSerializer
 
 
 class SparkController(object):
 
-    logger = Log()
-
-    def __init__(self):
-        self.client_manager = ClientManager()
+    def __init__(self, serialize_path=None):
+        self.logger = Log("SparkController")
         self.client_factory = LivyClientFactory()
 
-    @staticmethod
-    def get_log_mode():
-        return Log.mode
-
-    @staticmethod
-    def set_log_mode(mode):
-        Log.mode = mode
+        if serialize_path is not None:
+            serializer = ClientManagerStateSerializer(self.client_factory, FileSystemReaderWriter(serialize_path))
+            self.client_manager = ClientManager(serializer, True)
+        else:
+            self.client_manager = ClientManager()
 
     def run_cell(self, client_name, sql, cell):
         # Select client
@@ -47,7 +45,11 @@ class SparkController(object):
     def delete_endpoint(self, name):
         self.client_manager.delete_client(name)
 
-    def add_endpoint(self, name, language, connection_string):
+    def add_endpoint(self, name, language, connection_string, skip_if_exists):
+        if skip_if_exists and (name in self.client_manager.get_endpoints_list()):
+            self.logger.debug("Skipping {} because it already exists in list of endpoints.".format(name))
+            return
+
         session = self.client_factory.create_session(language, connection_string, "-1", False)
         session.start()
         livy_client = self.client_factory.build_client(language, session)

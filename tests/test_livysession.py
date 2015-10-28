@@ -4,7 +4,7 @@ from mock import MagicMock
 
 from remotespark.livyclientlib.livysession import LivySession
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
-from remotespark.livyclientlib.connectionstringutil import get_connection_string
+from remotespark.livyclientlib.utils import get_connection_string
 
 
 class DummyResponse:
@@ -140,6 +140,19 @@ class TestLivySession:
 
         assert session.id == "-1"
         assert not session.started_sql_context
+
+    def test_is_final_status(self):
+        kind = "scala"
+        http_client = MagicMock()
+
+        session = LivySession(http_client, kind, "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+
+        assert not session.is_final_status("idle")
+        assert not session.is_final_status("starting")
+        assert not session.is_final_status("busy")
+
+        assert session.is_final_status("dead")
+        assert session.is_final_status("error")
 
     def test_start_scala_starts_session(self):
         kind = "scala"

@@ -1,5 +1,5 @@
 from nose.tools import raises
-from mock import MagicMock
+from mock import MagicMock, PropertyMock
 import json
 
 from remotespark.livyclientlib.clientmanagerstateserializer import ClientManagerStateSerializer
@@ -18,6 +18,7 @@ def test_serializer_throws_none_factory():
 def test_deserialize_not_emtpy():
     client_factory = MagicMock()
     session = MagicMock()
+    session.is_final_status.return_value = False
     client_factory.create_session.return_value = session
     reader_writer = MagicMock()
     reader_writer.read_lines.return_value = """{
@@ -50,16 +51,90 @@ def test_deserialize_not_emtpy():
     (name, client) = deserialized[0]
     assert name == "py"
     client_factory.create_session.assert_any_call("python",
-                                                     "url=https://mysite.com/livy;username=user;password=pass",
-                                                     "1", True)
+                                                  "url=https://mysite.com/livy;username=user;password=pass",
+                                                  "1", True)
     client_factory.build_client.assert_any_call("python", session)
 
     (name, client) = deserialized[1]
     assert name == "sc"
     client_factory.create_session.assert_any_call("scala",
-                                                     "url=https://mysite.com/livy;username=user;password=pass",
-                                                     "2", False)
+                                                  "url=https://mysite.com/livy;username=user;password=pass",
+                                                  "2", False)
     client_factory.build_client.assert_any_call("scala", session)
+
+
+def test_deserialize_not_emtpy_but_dead():
+    client_factory = MagicMock()
+    session = MagicMock()
+    session.is_final_status.return_value = True
+    client_factory.create_session.return_value = session
+    reader_writer = MagicMock()
+    reader_writer.read_lines.return_value = """{
+  "clients": [
+    {
+      "name": "py",
+      "id": "1",
+      "sqlcontext": true,
+      "language": "python",
+      "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
+      "version": "0.0.0"
+    },
+    {
+      "name": "sc",
+      "id": "2",
+      "sqlcontext": false,
+      "language": "scala",
+      "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
+      "version": "0.0.0"
+    }
+  ]
+}
+"""
+    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+
+    deserialized = serializer.deserialize_state()
+
+    assert len(deserialized) == 0
+    client_factory.create_session.assert_no_called()
+    client_factory.build_client.assert_no_called()
+
+
+def test_deserialize_not_emtpy_but_error():
+    client_factory = MagicMock()
+    session = MagicMock()
+    status_property = PropertyMock()
+    status_property.side_effect = ValueError()
+    type(session).status = status_property
+    client_factory.create_session.return_value = session
+    reader_writer = MagicMock()
+    reader_writer.read_lines.return_value = """{
+  "clients": [
+    {
+      "name": "py",
+      "id": "1",
+      "sqlcontext": true,
+      "language": "python",
+      "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
+      "version": "0.0.0"
+    },
+    {
+      "name": "sc",
+      "id": "2",
+      "sqlcontext": false,
+      "language": "scala",
+      "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
+      "version": "0.0.0"
+    }
+  ]
+}
+"""
+    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+
+    deserialized = serializer.deserialize_state()
+
+    assert len(deserialized) == 0
+    client_factory.create_session.assert_no_called()
+    client_factory.build_client.assert_no_called()
 
 
 def test_deserialize_empty():

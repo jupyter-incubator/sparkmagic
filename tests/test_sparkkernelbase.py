@@ -3,7 +3,7 @@ from mock import MagicMock, call
 import os
 
 from remotespark.sparkkernelbase import SparkKernelBase
-from remotespark.livyclientlib.connectionstringutil import get_connection_string
+from remotespark.livyclientlib.utils import get_connection_string
 
 
 kernel = None
@@ -12,16 +12,19 @@ pass_ev = "PASS"
 url_ev = "URL"
 
 
+class TestSparkKernel(SparkKernelBase):
+    client_name = "TestKernel"
+
+
 def _setup():
     global kernel, user_ev, pass_ev, url_ev
 
-    kernel = SparkKernelBase()
+    kernel = TestSparkKernel()
     kernel.use_altair = False
     kernel.username_env_var = user_ev
     kernel.password_env_var = pass_ev
     kernel.url_env_var = url_ev
     kernel.session_language = "python"
-    kernel.client_name = "test"
 
 
 def _teardown():
@@ -80,10 +83,38 @@ def test_initialize_magics():
 
     # Assertions
     assert kernel.already_ran_once
-    expected = [call("%spark add test python {}".format(conn_str), True, False),
-                call("%load_ext remotespark\nimport requests\nrequests.packages.urllib3.disable_warnings()",
-                     True, False)]
-    execute_cell_mock.mock_calls == expected
+    expected = [call("%spark add TestKernel python {} skip".format(conn_str), True, False),
+                call("%load_ext remotespark", True, False)]
+    assert len(execute_cell_mock.mock_calls) == 2
+    for kall in expected:
+        assert kall in execute_cell_mock.mock_calls
+
+
+@with_setup(_setup, _teardown)
+def test_do_execute_initializes_magics_if_not_run():
+    # Set up
+    usr = "u"
+    pwd = "p"
+    url = "url"
+    conn_str = get_connection_string(url, usr, pwd)
+    config_mock = MagicMock()
+    config_mock.return_value = (usr, pwd, url)
+
+    kernel.get_configuration = config_mock
+    kernel.execute_cell_for_user = execute_cell_mock = MagicMock()
+
+    code = "code"
+
+    # Call method
+    assert not kernel.already_ran_once
+    kernel.do_execute(code, False)
+
+    # Assertions
+    assert kernel.already_ran_once
+    assert len(execute_cell_mock.mock_calls) == 3
+    assert call("%spark add TestKernel python {} skip".format(conn_str), True, False) in execute_cell_mock.mock_calls
+    assert call("%load_ext remotespark", True, False) in execute_cell_mock.mock_calls
+    assert call("%%spark\n{}".format(code), False, True, None, False) in execute_cell_mock.mock_calls
 
 
 @with_setup(_setup, _teardown)

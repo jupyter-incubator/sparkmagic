@@ -6,7 +6,7 @@ from mock import patch, PropertyMock, MagicMock
 
 from remotespark.livyclientlib.reliablehttpclient import ReliableHttpClient
 from remotespark.livyclientlib.linearretrypolicy import LinearRetryPolicy
-from remotespark.livyclientlib.connectionstringutil import get_connection_string
+from remotespark.livyclientlib.utils import get_connection_string
 
 
 retry_policy = None

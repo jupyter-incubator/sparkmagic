@@ -2,17 +2,19 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
+from requests import ConnectionError
 
 from .log import Log
 
 
 class ClientManagerStateSerializer(object):
     """Livy client manager state serializer"""
-    logger = Log()
 
     def __init__(self, client_factory, reader_writer):
         assert client_factory is not None
         assert reader_writer is not None
+
+        self.logger = Log("ClientManagerStateSerializer")
 
         self._client_factory = client_factory
         self._reader_writer = reader_writer
@@ -33,16 +35,27 @@ class ClientManagerStateSerializer(object):
             for client in clients:
                 # Ignore version for now
                 name = client["name"]
-                id = client["id"]
+                session_id = client["id"]
                 sql_context_created = client["sqlcontext"]
                 language = client["language"]
                 connection_string = client["connectionstring"]
 
-                session = self._client_factory.create_session(language, connection_string, id, sql_context_created)
+                session = self._client_factory.create_session(
+                    language, connection_string, session_id, sql_context_created)
 
-                # Do not start session automatically. Just create it.
-                client_obj = self._client_factory.build_client(language, session)
-                clients_to_return.append((name, client_obj))
+                # Do not start session automatically. Just create it but skip is not existent.
+                try:
+                    # Get status to know if it's alive or not.
+                    status = session.status
+                    if not session.is_final_status(status):
+                        self.logger.debug("Adding session {}".format(session_id))
+                        client_obj = self._client_factory.build_client(language, session)
+                        clients_to_return.append((name, client_obj))
+                    else:
+                        self.logger.error("Skipping serialized session '{}' because session was in status {}."
+                                          .format(session.id, status))
+                except (ValueError, ConnectionError) as e:
+                    self.logger.error("Skipping serialized session '{}' because {}".format(session.id, str(e)))
         else:
             self.logger.debug("Empty manager state found.")
 

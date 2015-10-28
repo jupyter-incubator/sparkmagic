@@ -10,7 +10,7 @@ from .log import Log
 class AltairViewer(object):
 
     def __init__(self):
-        self.logger = Log()
+        self.logger = Log("AltairViewer")
 
     """A viewer that returns results as they are."""
     def visualize(self, result, chart_type="area"):
@@ -18,6 +18,10 @@ class AltairViewer(object):
             return result
 
         columns = result.columns.values
+
+        # Always return table for show tables
+        if "isTemporary" in columns and "name" in columns:
+            return result
 
         # Simply return dataframe if only 1 column is available
         if len(columns) <= 1 or chart_type == "table":

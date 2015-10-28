@@ -21,7 +21,7 @@ def _setup():
 
 
 def _teardown():
-    controller.set_log_mode("normal")
+    pass
 
 
 @with_setup(_setup, _teardown)
@@ -34,12 +34,31 @@ def test_add_endpoint():
     client_factory.create_session = MagicMock(return_value=session)
     client_factory.build_client = MagicMock(return_value=client)
 
-    controller.add_endpoint(name, language, connection_string)
+    controller.add_endpoint(name, language, connection_string, False)
 
     client_factory.create_session.assert_called_once_with(language, connection_string, "-1", False)
     client_factory.build_client.assert_called_once_with(language, session)
     client_manager.add_client.assert_called_once_with(name, client)
     session.start.assert_called_once_with()
+
+
+@with_setup(_setup, _teardown)
+def test_add_endpoint_skip():
+    name = "name"
+    language = "python"
+    connection_string = "url=http://location:port;username=name;password=word"
+    client = "client"
+    session = MagicMock()
+    client_factory.create_session = MagicMock(return_value=session)
+    client_factory.build_client = MagicMock(return_value=client)
+
+    client_manager.get_endpoints_list.return_value = [name]
+    controller.add_endpoint(name, language, connection_string, True)
+
+    assert client_factory.create_session.call_count == 0
+    assert client_factory.build_client.call_count == 0
+    assert client_manager.add_client.call_count == 0
+    assert session.start.call_count == 0
 
 
 @with_setup(_setup, _teardown)
@@ -49,16 +68,6 @@ def test_delete_endpoint():
     controller.delete_endpoint(name)
 
     client_manager.delete_client.assert_called_once_with(name)
-
-
-@with_setup(_setup, _teardown)
-def test_log_mode():
-    mode = "debug"
-
-    controller.set_log_mode(mode)
-
-    assert_equals(mode, Log.mode)
-    assert_equals(mode, controller.get_log_mode())
 
 
 @with_setup(_setup, _teardown)
