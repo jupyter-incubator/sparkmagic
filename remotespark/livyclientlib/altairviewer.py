@@ -19,6 +19,10 @@ class AltairViewer(object):
 
         columns = result.columns.values
 
+        # Always return table for show tables
+        if "isTemporary" in columns and "name" in columns:
+            return result
+
         # Simply return dataframe if only 1 column is available
         if len(columns) <= 1 or chart_type == "table":
             return result
