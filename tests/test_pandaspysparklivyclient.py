@@ -71,3 +71,22 @@ class TestPandasPysparkLivyClient:
 
         # Verify result is desired pandas dataframe
         assert_frame_equal(desired_result, result)
+
+    def test_execute_sql_pandas_pyspark_livy_some_exception(self):
+        mock_spark_session = MagicMock()
+        client = PandasPysparkLivyClient(mock_spark_session, 10)
+
+        # Set up spark session to return exception
+        some_exception = "some awful exception"
+        self.execute_responses = [some_exception]
+        mock_spark_session.execute.side_effect = self._next_response_execute
+
+        command = "command"
+        result = client.execute_sql(command)
+
+        # Verify basic calls were done
+        mock_spark_session.create_sql_context.assert_called_with()
+        mock_spark_session.wait_for_status.assert_called_with("idle", 3600)
+
+        # Verify result is desired pandas dataframe
+        assert some_exception == result
