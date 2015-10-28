@@ -5,6 +5,7 @@ Provides the %spark magic."""
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
+import warnings
 
 from IPython.core.magic import (Magics, magics_class, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
@@ -14,7 +15,7 @@ from .livyclientlib.sparkcontroller import SparkController
 from .livyclientlib.rawviewer import RawViewer
 from .livyclientlib.altairviewer import AltairViewer
 from .livyclientlib.log import Log
-from .livyclientlib.utils import get_magics_home_path, join_paths
+from .livyclientlib.utils import get_magics_home_path, join_paths, read_environment_variable
 
 
 @magics_class
@@ -24,18 +25,29 @@ class RemoteSparkMagics(Magics):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
 
+        # Suppress Altair pandas Future Warning
+        warnings.simplefilter(action = "ignore", category = FutureWarning)
+
         self.logger = Log("RemoteSparkMagics")
         self.interactive = interactive
 
+        self.spark_controller = SparkController()
+
         try:
-            self.magics_home_path = get_magics_home_path()
-            path_to_serialize = join_paths(self.magics_home_path, "state.json")
+            should_serialize = read_environment_variable("SPARKMAGIC_SERIALIZE").lower() == "true"
+            if should_serialize:
+                self.logger.debug("Serialization enabled by environment var SPARKMAGIC_SERIALIZE")
 
-            self.logger.debug("Will serialize to {}.".format(path_to_serialize))
+                self.magics_home_path = get_magics_home_path()
+                path_to_serialize = join_paths(self.magics_home_path, "state.json")
 
-            self.spark_controller = SparkController(serialize_path=path_to_serialize)
+                self.logger.debug("Will serialize to {}.".format(path_to_serialize))
+
+                self.spark_controller = SparkController(serialize_path=path_to_serialize)
+            else:
+                self.logger.debug("Serialization NOT enabled by environment var SPARKMAGIC_SERIALIZE")
         except KeyError:
-            self.spark_controller = SparkController()
+            self.logger.error("Could not read env vars for serialization.")
 
         if use_altair:
             alt.use_renderer('lightning')

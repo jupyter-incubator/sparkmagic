@@ -1,8 +1,6 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 from ipykernel.ipkernel import IPythonKernel
-import altair.api as alt
-import pandas as pd
 import requests
 
 from remotespark.livyclientlib.log import Log
@@ -45,12 +43,9 @@ class SparkKernelBase(IPythonKernel):
             # formatter.for_type(VisualizationLocal, lambda viz, kwds=None: viz.get_html())
 
             # Use lightning here so that the graphic doesn't display later when magics are registered
+            # import altair.api as alt
             # alt.use_renderer('lightning')
-
-            # Create a dumb viz so that comparison warning is not shown
-            dummy_records = [{u'date': u'6/1/13', u'temp_diff': 8, u'buildingID': u'4'}]
-            dummy_df = pd.DataFrame(dummy_records)
-            alt.Viz(dummy_df)
+            pass
         except:
             self.logger.error("Could not initialize renderer or create dummy records")
 
