@@ -26,7 +26,7 @@ class RemoteSparkMagics(Magics):
         super(RemoteSparkMagics, self).__init__(shell)
 
         # Suppress Altair pandas Future Warning
-        warnings.simplefilter(action = "ignore", category = FutureWarning)
+        warnings.simplefilter(action="ignore", category=FutureWarning)
 
         self.logger = Log("RemoteSparkMagics")
         self.interactive = interactive
