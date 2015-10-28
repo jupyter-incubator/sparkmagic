@@ -1,5 +1,5 @@
 from nose.tools import raises
-from mock import MagicMock
+from mock import MagicMock, PropertyMock
 import json
 
 from remotespark.livyclientlib.clientmanagerstateserializer import ClientManagerStateSerializer
@@ -67,6 +67,44 @@ def test_deserialize_not_emtpy_but_dead():
     client_factory = MagicMock()
     session = MagicMock()
     session.is_final_status.return_value = True
+    client_factory.create_session.return_value = session
+    reader_writer = MagicMock()
+    reader_writer.read_lines.return_value = """{
+  "clients": [
+    {
+      "name": "py",
+      "id": "1",
+      "sqlcontext": true,
+      "language": "python",
+      "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
+      "version": "0.0.0"
+    },
+    {
+      "name": "sc",
+      "id": "2",
+      "sqlcontext": false,
+      "language": "scala",
+      "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
+      "version": "0.0.0"
+    }
+  ]
+}
+"""
+    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+
+    deserialized = serializer.deserialize_state()
+
+    assert len(deserialized) == 0
+    client_factory.create_session.assert_no_called()
+    client_factory.build_client.assert_no_called()
+
+
+def test_deserialize_not_emtpy_but_error():
+    client_factory = MagicMock()
+    session = MagicMock()
+    status_property = PropertyMock()
+    status_property.side_effect = ValueError()
+    type(session).status = status_property
     client_factory.create_session.return_value = session
     reader_writer = MagicMock()
     reader_writer.read_lines.return_value = """{

@@ -61,6 +61,15 @@ def test_serialize():
     assert len(serialized.keys()) == 5
 
 
+def test_close_session():
+    mock_spark_session = MagicMock()
+    client = LivyClient(mock_spark_session)
+
+    client.close_session()
+
+    mock_spark_session.delete.assert_called_once_with()
+
+
 def test_language():
     lang = "python"
     mock_spark_session = MagicMock()
