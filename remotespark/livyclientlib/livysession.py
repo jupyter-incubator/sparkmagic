@@ -66,15 +66,17 @@ class LivySession(object):
         if self.started_sql_context:
             return
 
-        self.logger.debug("Starting '{}' sql session.".format(self.language))
+        self.logger.debug("Starting '{}' sql and hive session.".format(self.language))
 
         self.wait_for_status(Constants.idle_session_status, self._create_sql_context_timeout_seconds)
-
         self.execute(self._get_sql_context_creation_command())
+        self.logger.debug("Started '{}' sql session.".format(self.language))
+
+        self.wait_for_status(Constants.idle_session_status, self._create_sql_context_timeout_seconds)
+        self.execute(self._get_hive_context_creation_command())
+        self.logger.debug("Started '{}' hive session.".format(self.language))
 
         self._state.sql_context_created = True
-
-        self.logger.debug("Started '{}' sql session.".format(self.language))
 
     @property
     def id(self):
@@ -204,3 +206,13 @@ class LivySession(object):
             raise ValueError("Do not know how to create sqlContext in session of language {}.".format(self.language))
 
         return sql_context_command
+
+    def _get_hive_context_creation_command(self):
+        if self.language == Constants.lang_scala:
+            hive_context_command = "val hiveContext = new org.apache.spark.sql.hive.HiveContext(sc)"
+        elif self.language == Constants.lang_python:
+            hive_context_command = "from pyspark.sql import HiveContext\nhiveContext = HiveContext(sc)"
+        else:
+            raise ValueError("Do not know how to create hiveContext in session of language {}.".format(self.language))
+
+        return hive_context_command

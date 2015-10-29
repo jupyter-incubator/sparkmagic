@@ -150,21 +150,25 @@ def test_call_spark_sql_new_line():
 
 
 @with_setup(_setup, _teardown)
-def test_shutdown_cleansup():
+def test_shutdown_cleans_up():
     # No restart
     kernel.execute_cell_for_user = ecfu_m = MagicMock()
+    kernel.do_shutdown_ipykernel = dsi_m = MagicMock()
     kernel.already_ran_once = True
 
     kernel.do_shutdown(False)
 
     assert not kernel.already_ran_once
     ecfu_m.assert_called_once_with("%spark cleanup", True, False)
+    dsi_m.assert_called_once_with(False)
 
     # On restart
     kernel.execute_cell_for_user = ecfu_m = MagicMock()
+    kernel.do_shutdown_ipykernel = dsi_m = MagicMock()
     kernel.already_ran_once = True
 
     kernel.do_shutdown(True)
 
     assert not kernel.already_ran_once
     ecfu_m.assert_called_once_with("%spark cleanup", True, False)
+    dsi_m.assert_called_once_with(True)

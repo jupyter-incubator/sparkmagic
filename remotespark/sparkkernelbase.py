@@ -82,9 +82,6 @@ class SparkKernelBase(IPythonKernel):
 
         self.already_ran_once = True
 
-    def execute_cell_for_user(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
-        return super(SparkKernelBase, self).do_execute(code, silent, store_history, user_expressions, allow_stdin)
-
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         if not self.already_ran_once:
             (username, password, url) = self.get_configuration()
@@ -107,4 +104,10 @@ class SparkKernelBase(IPythonKernel):
             self.execute_cell_for_user(code, True, False)
             self.already_ran_once = False
 
+        return self.do_shutdown_ipykernel(restart)
+
+    def execute_cell_for_user(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
+        return super(SparkKernelBase, self).do_execute(code, silent, store_history, user_expressions, allow_stdin)
+
+    def do_shutdown_ipykernel(self, restart):
         return super(SparkKernelBase, self).do_shutdown(restart)
