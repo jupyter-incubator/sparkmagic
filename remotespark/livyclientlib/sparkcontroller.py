@@ -9,6 +9,7 @@ from .log import Log
 from .livyclientfactory import LivyClientFactory
 from .filesystemreaderwriter import FileSystemReaderWriter
 from .clientmanagerstateserializer import ClientManagerStateSerializer
+from .constants import Constants
 
 
 class SparkController(object):
@@ -23,7 +24,9 @@ class SparkController(object):
         else:
             self.client_manager = ClientManager()
 
-    def run_cell(self, client_name, sql, cell):
+    def run_cell(self, client_name, context, cell):
+        context = context.lower()
+
         # Select client
         if client_name is None:
             client_to_use = self.client_manager.get_any_client()
@@ -31,11 +34,15 @@ class SparkController(object):
             client_name = client_name.lower()
             client_to_use = self.client_manager.get_client(client_name)
 
-        # Execute
-        if sql:
+        # Execute in context
+        if context == Constants.context_name_sql:
             res = client_to_use.execute_sql(cell)
-        else:
+        elif context == Constants.context_name_hive:
+            res = client_to_use.execute_hive(cell)
+        elif context == Constants.context_name_spark:
             res = client_to_use.execute(cell)
+        else:
+            raise ValueError("Context '{}' specified is not known.")
 
         return res
 

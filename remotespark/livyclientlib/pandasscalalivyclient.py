@@ -15,11 +15,17 @@ class PandasScalaLivyClient(LivyClient):
         self._max_take_rows = max_take_rows
 
     def execute_sql(self, command):
-        records_text = self.execute(self._make_sql_json_take(command))
+        return self._execute_dataframe_helper("sqlContext", command)
+
+    def execute_hive(self, command):
+        return self._execute_dataframe_helper("hiveContext", command)
+
+    def _execute_dataframe_helper(self, context_name, command):
+        records_text = self.execute(self._make_context_json_take(context_name, command))
 
         if records_text == "":
             # If there are no records, show some columns at least.
-            columns_text = self.execute(self._make_sql_columns(command))
+            columns_text = self.execute(self._make_context_columns(context_name, command))
 
             records = list()
 
@@ -49,9 +55,9 @@ class PandasScalaLivyClient(LivyClient):
                 self.logger.error("Could not parse json array for sql.")
                 return records_text
 
-    def _make_sql_json_take(self, command):
-        return 'sqlContext.sql("{}").toJSON.take({}).foreach(println)'.format(command, str(self._max_take_rows))
+    def _make_context_json_take(self, context_name, command):
+        return '{}.sql("{}").toJSON.take({}).foreach(println)'.format(context_name, command, str(self._max_take_rows))
 
     @staticmethod
-    def _make_sql_columns(command):
-        return 'sqlContext.sql("{}").columns'.format(command)
+    def _make_context_columns(context_name, command):
+        return '{}.sql("{}").columns'.format(context_name, command)

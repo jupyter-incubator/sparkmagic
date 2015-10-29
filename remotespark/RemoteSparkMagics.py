@@ -62,9 +62,14 @@ class RemoteSparkMagics(Magics):
         self.logger.debug("Initialized spark magics.")
 
     @magic_arguments()
-    @argument("-s", "--sql", type=bool, default=False, help='Whether to use SQL.')
-    @argument("-c", "--client", help="The name of the Livy client to use. "
-                                     "If only one client has been created, there's no need to specify a client.")
+    @argument("-c", "--context", type=str, default=Constants.context_name_spark,
+              help="Context to use: '{}' for spark, '{}' for sql queries, and '{}' for hive queries. "
+                   "Default is '{}'.".format(Constants.context_name_spark,
+                                             Constants.context_name_sql,
+                                             Constants.context_name_hive,
+                                             Constants.context_name_spark))
+    @argument("-e", "--endpoint", help="The name of the Livy endpoint to use. "
+                                       "If only one endpoint has been created, there's no need to specify one.")
     @argument("-t", "--chart", type=str, default="area", help='Chart type to use: table, area, line, bar.')
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @line_cell_magic
@@ -136,7 +141,7 @@ class RemoteSparkMagics(Magics):
             self.spark_controller.cleanup()
         # run
         elif len(subcommand) == 0:
-            result = self.spark_controller.run_cell(args.client, args.sql, cell)
+            result = self.spark_controller.run_cell(args.endpoint, args.context, cell)
             return self.viewer.visualize(result, args.chart)
         # error
         else:

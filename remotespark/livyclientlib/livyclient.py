@@ -28,6 +28,9 @@ class LivyClient(object):
     def execute_sql(self, command):
         return self.execute('sqlContext.sql("{}").collect()'.format(command))
 
+    def execute_hive(self, command):
+        return self.execute('hiveContext.sql("{}").collect()'.format(command))
+
     def close_session(self):
         self._session.delete()
 

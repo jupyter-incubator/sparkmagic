@@ -41,6 +41,7 @@ class TestPandasPysparkLivyClient:
         result = client.execute_sql(command)
 
         # Verify basic calls were done
+        mock_spark_session.execute.assert_called_with('sqlContext.sql("{}").toJSON().take({})'.format(command, 10))
         mock_spark_session.create_sql_context.assert_called_with()
         mock_spark_session.wait_for_status.assert_called_with("idle", 3600)
 
@@ -66,6 +67,7 @@ class TestPandasPysparkLivyClient:
         result = client.execute_sql(command)
 
         # Verify basic calls were done
+        mock_spark_session.execute.assert_called_with('sqlContext.sql("{}").columns'.format(command))
         mock_spark_session.create_sql_context.assert_called_with()
         mock_spark_session.wait_for_status.assert_called_with("idle", 3600)
 
@@ -85,6 +87,7 @@ class TestPandasPysparkLivyClient:
         result = client.execute_sql(command)
 
         # Verify basic calls were done
+        mock_spark_session.execute.assert_called_with('sqlContext.sql("{}").toJSON().take({})'.format(command, 10))
         mock_spark_session.create_sql_context.assert_called_with()
         mock_spark_session.wait_for_status.assert_called_with("idle", 3600)
 
