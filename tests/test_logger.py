@@ -1,12 +1,10 @@
-from nose.tools import with_setup, assert_equals
-from mock import MagicMock
-
 from remotespark.livyclientlib.log import Log
+from remotespark.livyclientlib.constants import Constants
 
 
 def test_log_init():
     logger = Log("something")
 
-    print(Log.mode)
-    assert logger.mode == logger._mode
-    assert logger.mode == "normal"
+    print(Log.level)
+    assert logger.level == logger._level
+    assert logger.level == Constants.debug_level
