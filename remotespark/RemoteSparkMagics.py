@@ -15,28 +15,32 @@ from .livyclientlib.sparkcontroller import SparkController
 from .livyclientlib.rawviewer import RawViewer
 from .livyclientlib.altairviewer import AltairViewer
 from .livyclientlib.log import Log
-from .livyclientlib.utils import get_magics_home_path, join_paths, read_environment_variable
+from .livyclientlib.utils import get_magics_home_path, join_paths
+from .livyclientlib.configuration import get_configuration
+from .livyclientlib.constants import Constants
 
 
 @magics_class
 class RemoteSparkMagics(Magics):
 
-    def __init__(self, shell, data=None, use_altair=True, interactive=False):
+    def __init__(self, shell, data=None, test=False):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
 
         # Suppress Altair pandas Future Warning
         warnings.simplefilter(action="ignore", category=FutureWarning)
 
+        use_altair = get_configuration(Constants.use_altair, True) and not test
+        self.interactive = get_configuration(Constants.display_info, False)
+
         self.logger = Log("RemoteSparkMagics")
-        self.interactive = interactive
 
         self.spark_controller = SparkController()
 
         try:
-            should_serialize = read_environment_variable("SPARKMAGIC_SERIALIZE").lower() == "true"
+            should_serialize = get_configuration(Constants.serialize, False)
             if should_serialize:
-                self.logger.debug("Serialization enabled by environment var SPARKMAGIC_SERIALIZE")
+                self.logger.debug("Serialization enabled.")
 
                 self.magics_home_path = get_magics_home_path()
                 path_to_serialize = join_paths(self.magics_home_path, "state.json")
@@ -45,7 +49,7 @@ class RemoteSparkMagics(Magics):
 
                 self.spark_controller = SparkController(serialize_path=path_to_serialize)
             else:
-                self.logger.debug("Serialization NOT enabled by environment var SPARKMAGIC_SERIALIZE")
+                self.logger.debug("Serialization NOT enabled.")
         except KeyError:
             self.logger.error("Could not read env vars for serialization.")
 

@@ -19,7 +19,7 @@ class SparkController(object):
 
         if serialize_path is not None:
             serializer = ClientManagerStateSerializer(self.client_factory, FileSystemReaderWriter(serialize_path))
-            self.client_manager = ClientManager(serializer, True)
+            self.client_manager = ClientManager(serializer)
         else:
             self.client_manager = ClientManager()
 

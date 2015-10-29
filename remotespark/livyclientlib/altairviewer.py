@@ -5,6 +5,8 @@ import altair.api as alt
 import sys
 
 from .log import Log
+from .configuration import get_configuration
+from .constants import Constants
 
 
 class AltairViewer(object):
@@ -13,9 +15,12 @@ class AltairViewer(object):
         self.logger = Log("AltairViewer")
 
     """A viewer that returns results as they are."""
-    def visualize(self, result, chart_type="area"):
+    def visualize(self, result, chart_type=None):
         if type(result) is not pd.DataFrame:
             return result
+
+        if chart_type is None:
+            chart_type = get_configuration(Constants.default_chart_type, "area")
 
         columns = result.columns.values
 

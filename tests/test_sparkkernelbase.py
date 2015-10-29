@@ -1,9 +1,9 @@
 from nose.tools import with_setup
 from mock import MagicMock, call
-import os
 
 from remotespark.sparkkernelbase import SparkKernelBase
 from remotespark.livyclientlib.utils import get_connection_string
+from remotespark.livyclientlib.configuration import _t_config_hook
 
 
 kernel = None
@@ -21,18 +21,14 @@ def _setup():
 
     kernel = TestSparkKernel()
     kernel.use_altair = False
-    kernel.username_env_var = user_ev
-    kernel.password_env_var = pass_ev
-    kernel.url_env_var = url_ev
+    kernel.username_conf_name = user_ev
+    kernel.password_conf_name = pass_ev
+    kernel.url_conf_name = url_ev
     kernel.session_language = "python"
 
 
 def _teardown():
-    global user_ev, pass_ev, url_ev
-
-    os.environ.pop(user_ev, None)
-    os.environ.pop(pass_ev, None)
-    os.environ.pop(url_ev, None)
+    _t_config_hook({})
 
 
 @with_setup(_setup, _teardown)
@@ -41,9 +37,8 @@ def test_get_config():
     pwd = "p"
     url = "url"
 
-    os.environ[user_ev] = usr
-    os.environ[pass_ev] = pwd
-    os.environ[url_ev] = url
+    config = {user_ev: usr, pass_ev: pwd, url_ev: url}
+    _t_config_hook(config)
 
     u, p, r = kernel.get_configuration()
 
@@ -63,7 +58,7 @@ def test_get_config_not_set():
         # Above should have thrown because env var not set
         assert False
     except KeyError:
-        sr_m.assert_called_once_with(None, 'stream', {'text': "FATAL ERROR: Please set environment variables 'USER',"
+        sr_m.assert_called_once_with(None, 'stream', {'text': "FATAL ERROR: Please set configuration for 'USER',"
                                                               " 'PASS', 'URL to initialize Kernel.", 'name': 'stdout'})
         ds_m.assert_called_once_with(False)
 

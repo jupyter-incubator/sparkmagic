@@ -8,25 +8,18 @@ from .log import Log
 from .constants import Constants
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livysessionstate import LivySessionState
+from .configuration import get_configuration
 
 
 class LivySession(object):
     """Session that is livy specific."""
     # TODO(aggftw): make threadsafe
 
-    _idle_session_status = "idle"
-    _error_session_status = 'error'
-    _dead_session_status = 'dead'
-    _not_started_session_status = 'not_started'
-    _starting_session_status = 'starting'
-    _busy_session_status = 'busy'
+    def __init__(self, http_client, language, session_id, sql_created):
+        status_sleep_seconds = get_configuration(Constants.status_sleep_seconds, 2)
+        statement_sleep_seconds = get_configuration(Constants.statement_sleep_seconds, 2)
+        create_sql_context_timeout_seconds = get_configuration(Constants.create_sql_context_timeout_seconds, 60)
 
-    _possible_session_status = [_not_started_session_status, _idle_session_status, _starting_session_status,
-                                _busy_session_status, _error_session_status, _dead_session_status]
-    _final_status = [_dead_session_status, _error_session_status]
-
-    def __init__(self, http_client, language, session_id, sql_created,
-                 status_sleep_seconds=2, statement_sleep_seconds=2, create_sql_context_timeout_seconds=60):
         assert status_sleep_seconds > 0
         assert statement_sleep_seconds > 0
         assert create_sql_context_timeout_seconds > 0
@@ -41,10 +34,10 @@ class LivySession(object):
                              .format(language, ", ".join(Constants.lang_supported)))
 
         if session_id == "-1":
-            self._status = "not_started"
+            self._status = Constants.not_started_session_status
             sql_created = False
         else:
-            self._status = "busy"
+            self._status = Constants.busy_session_status
 
         self._http_client = http_client
         self._status_sleep_seconds = status_sleep_seconds
@@ -75,7 +68,7 @@ class LivySession(object):
 
         self.logger.debug("Starting '{}' sql session.".format(self.language))
 
-        self.wait_for_status(self._idle_session_status, self._create_sql_context_timeout_seconds)
+        self.wait_for_status(Constants.idle_session_status, self._create_sql_context_timeout_seconds)
 
         self.execute(self._get_sql_context_creation_command())
 
@@ -99,7 +92,7 @@ class LivySession(object):
     def status(self):
         status = self._get_latest_status()
 
-        if status in self._possible_session_status:
+        if status in Constants.possible_session_status:
             self._status = status
         else:
             raise ValueError("Status '{}' not supported by session.".format(status))
@@ -110,8 +103,9 @@ class LivySession(object):
     def http_client(self):
         return self._http_client
 
-    def is_final_status(self, status):
-        return status in self._final_status
+    @staticmethod
+    def is_final_status(status):
+        return status in Constants.final_status
     
     def execute(self, commands):
         """Executes commands in session."""
@@ -127,9 +121,9 @@ class LivySession(object):
         """Deletes the session and releases any resources."""
         self.logger.debug("Deleting session '{}'".format(self.id))
 
-        if self._status != "not_started" and self._status != "dead":
+        if self._status != Constants.not_started_session_status and self._status != Constants.dead_session_status:
             self._http_client.delete("/sessions/{}".format(self.id), [200, 404])
-            self._status = 'dead'
+            self._status = Constants.dead_session_status
             self._state.session_id = "-1"
         else:
             raise ValueError("Cannot delete session {} that is in state '{}'."

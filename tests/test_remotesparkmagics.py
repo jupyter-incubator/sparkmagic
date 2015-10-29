@@ -13,7 +13,7 @@ viewer = None
 
 def _setup():
     global magic, spark_controller, viewer
-    magic = RemoteSparkMagics(shell=None, use_altair=False)
+    magic = RemoteSparkMagics(shell=None, test=True)
 
     spark_controller = MagicMock()
     viewer = MagicMock

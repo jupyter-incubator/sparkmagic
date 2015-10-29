@@ -3,6 +3,7 @@ from nose.tools import raises, assert_equals
 from mock import MagicMock
 
 from remotespark.livyclientlib.clientmanager import ClientManager
+from remotespark.livyclientlib.configuration import _t_config_hook
 
 
 @raises(ValueError)
@@ -26,18 +27,16 @@ def test_deserialize_on_creation():
     assert len(manager.get_endpoints_list()) == 0
 
 
-@raises(ValueError)
-def test_deserialize_throws_when_bad_combination():
-    ClientManager(None, True)
-
-
 def test_serialize_periodically():
+    _t_config_hook({"serialize_period_seconds": 0.1})
     serializer = MagicMock()
-    ClientManager(serializer, True, 0.1)
+    ClientManager(serializer)
 
     time.sleep(0.5)
 
     assert serializer.serialize_state.call_count >= 1
+
+    _t_config_hook({})
 
 
 def test_get_client():

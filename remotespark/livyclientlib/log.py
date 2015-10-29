@@ -4,7 +4,9 @@
 from __future__ import print_function
 from datetime import datetime
 
-from .utils import join_paths, get_magics_home_path, read_environment_variable
+from .utils import join_paths, get_magics_home_path, get_instance_id, ensure_path_exists, ensure_file_exists
+from .configuration import get_configuration
+from .constants import Constants
 
 
 class Log(object):
@@ -15,54 +17,48 @@ class Log(object):
 
         self._caller_name = caller_name
 
-        self._mode = "normal"
-        self.path_to_serialize = None
+        self._level = Constants.normal_level
+        self._path_to_serialize = None
 
-        self.read_config()
+        self._read_config()
 
     @property
-    def mode(self):
+    def level(self):
         """One of: 'debug', 'normal'"""
-        return self._mode
+        return self._level
 
-    def read_config(self):
-        # Read path
-        try:
-            magics_home_path = get_magics_home_path()
-            self.path_to_serialize = join_paths(magics_home_path, "logs/log.txt")
-        except KeyError:
-            self.path_to_serialize = None
+    def _read_config(self):
+        # Create path name
+        magics_home_path = get_magics_home_path()
+        logs_folder_name = "logs"
+        log_file_name = "log_{}.log".format(get_instance_id())
+        self._path_to_serialize = join_paths(magics_home_path, logs_folder_name)
+        ensure_path_exists(self._path_to_serialize)
+        self._path_to_serialize = join_paths(self._path_to_serialize, log_file_name)
+        ensure_file_exists(self._path_to_serialize)
 
         # Read log level
-        try:
-            level = read_environment_variable("SPARKMAGIC_LOG_LEVEL").lower()
+        level = get_configuration(Constants.log_level, Constants.debug_level)
 
-            if level != "debug":
-                level = "normal"
-        except KeyError:
-            level = "normal"
-
-        self._mode = level
+        self._level = level
 
     def debug(self, message):
         """Prints if in debug mode."""
-        self._handle_message("DEBUG", message, ["debug"])
+        self._handle_message("DEBUG", message, [Constants.debug_level])
 
     def error(self, message):
         """Always shows."""
-        self._handle_message("ERROR", message, ["normal", "debug"])
+        self._handle_message("ERROR", message, [Constants.normal_level, Constants.debug_level])
 
     def _handle_message(self, level, message, accepted_modes):
-        self.read_config()
-
-        if self.mode in accepted_modes:
+        if self.level in accepted_modes:
             message = "{}\t{}\t{}\t{}\n".format(str(datetime.utcnow()), level, self._caller_name, message)
 
-            if self.path_to_serialize is not None:
+            if get_configuration(Constants.log_to_disk, True):
                 self._write_to_disk(message)
             else:
                 print(message)
 
     def _write_to_disk(self, message):
-        with open(self.path_to_serialize, "a+") as f:
+        with open(self._path_to_serialize, "a+") as f:
             f.write(message)
