@@ -44,7 +44,7 @@ class Log(object):
 
     def debug(self, message):
         """Prints if in debug mode."""
-        self._handle_message(Constants.debug_level, message, [Constants.debug_level])
+        self._handle_message("DEBUG", message, [Constants.debug_level])
 
     def error(self, message):
         """Always shows."""
