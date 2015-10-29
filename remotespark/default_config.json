@@ -1,5 +1,11 @@
 {
   "serialize": false,
+  "serialize_periodically": false,
+  "serialize_period_seconds": 3,
+  "display_info": false,
+
+  "use_altair": true,
+  "default_chart_type": "area",
 
   "kernel_python_username": "",
   "kernel_python_password": "",
@@ -10,5 +16,12 @@
   "kernel_scala_url": "",
 
   "log_level": "debug",
-  "log_to_disk": true
+  "log_to_disk": true,
+
+  "execute_timeout_seconds": 3600,
+  "status_sleep_seconds": 2,
+  "statement_sleep_seconds": 2,
+  "create_sql_context_timeout_seconds": 60,
+
+  "ignore_ssl_errors": false
 }

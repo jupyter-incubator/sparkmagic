@@ -1,14 +1,15 @@
 from remotespark.pysparkkernel.pysparkkernel import PySparkKernel
 from remotespark.sparkkernel.sparkkernel import SparkKernel
+from remotespark.livyclientlib.constants import Constants
 
 
 def test_pyspark_kernel_configs():
     kernel = PySparkKernel()
 
-    assert kernel.username_env_var == "SPARKKERNEL_PYTHON_USERNAME"
-    assert kernel.password_env_var == "SPARKKERNEL_PYTHON_PASSWORD"
-    assert kernel.url_env_var == "SPARKKERNEL_PYTHON_URL"
-    assert kernel.session_language == "python"
+    assert kernel.username_conf_name == Constants.kernel_python_username
+    assert kernel.password_conf_name == Constants.kernel_python_password
+    assert kernel.url_conf_name == Constants.kernel_python_url
+    assert kernel.session_language == Constants.lang_python
     assert kernel.client_name == "python_jupyter_kernel"
 
     assert kernel.implementation == 'PySpark'
@@ -24,10 +25,10 @@ def test_pyspark_kernel_configs():
 def test_spark_kernel_configs():
     kernel = SparkKernel()
 
-    assert kernel.username_env_var == "SPARKKERNEL_SCALA_USERNAME"
-    assert kernel.password_env_var == "SPARKKERNEL_SCALA_PASSWORD"
-    assert kernel.url_env_var == "SPARKKERNEL_SCALA_URL"
-    assert kernel.session_language == "scala"
+    assert kernel.username_conf_name == Constants.kernel_scala_username
+    assert kernel.password_conf_name == Constants.kernel_scala_password
+    assert kernel.url_conf_name == Constants.kernel_scala_url
+    assert kernel.session_language == Constants.lang_scala
     assert kernel.client_name == "scala_jupyter_kernel"
 
     assert kernel.implementation == 'Spark'

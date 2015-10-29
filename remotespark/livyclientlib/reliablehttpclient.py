@@ -6,6 +6,8 @@ import requests
 from time import sleep
 
 from .utils import get_connection_string
+from .configuration import get_configuration
+from .constants import Constants
 
 
 class ReliableHttpClient(object):
@@ -17,6 +19,8 @@ class ReliableHttpClient(object):
         self._username = username
         self._password = password
         self._retry_policy = retry_policy
+
+        self.ignore_ssl_errors = get_configuration(Constants.ignore_ssl_errors, False)
 
     @property
     def connection_string(self):
@@ -43,9 +47,11 @@ class ReliableHttpClient(object):
 
     def _send_request_helper(self, url, accepted_status_codes, function, data, retry_count):
         if data is None:
-            r = function(url, headers=self._headers, auth=(self._username, self._password))
+            r = function(url, headers=self._headers, auth=(self._username, self._password),
+                         verify=self.ignore_ssl_errors)
         else:
-            r = function(url, headers=self._headers, auth=(self._username, self._password), data=json.dumps(data))
+            r = function(url, headers=self._headers, auth=(self._username, self._password), data=json.dumps(data),
+                         verify=self.ignore_ssl_errors)
 
         status = r.status_code
         if status not in accepted_status_codes:

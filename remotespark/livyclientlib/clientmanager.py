@@ -4,14 +4,20 @@
 from threading import Timer
 
 from .log import Log
+from .configuration import get_configuration
+from .constants import Constants
 
 
 class ClientManager(object):
     """Livy client manager"""
 
-    def __init__(self, serializer=None, serialize_periodically=False, serialize_period=10.0):
-        if serializer is None and serialize_periodically is True:
-            raise ValueError("Will not be able to serialize periodically without serializer.")
+    def __init__(self, serializer=None):
+        serialize_periodically = False
+        serialize_period = 3
+
+        if serializer is not None:
+            serialize_periodically = get_configuration(Constants.serialize_periodically, True)
+            serialize_period = get_configuration(Constants.serialize_period_seconds, 3)
 
         self.logger = Log("ClientManager")
 

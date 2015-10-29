@@ -5,6 +5,7 @@ from mock import MagicMock
 from remotespark.livyclientlib.livysession import LivySession
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
 from remotespark.livyclientlib.utils import get_connection_string
+from remotespark.livyclientlib.configuration import _t_config_hook
 
 
 class DummyResponse:
@@ -66,16 +67,18 @@ class TestLivySession:
         return val
 
     @raises(AssertionError)
-    def test_constructor_throws_state_sleep_seconds(self):
+    def test_constructor_throws_status_sleep_seconds(self):
         kind = "scala"
         http_client = MagicMock()
         session_id = "-1"
         sql_created = False
-        state_sleep_seconds = 0
-        statement_sleep_seconds = 2
-        create_sql_context_timeout_seconds = 60
-        LivySession(http_client, kind, session_id, sql_created, state_sleep_seconds, statement_sleep_seconds,
-                    create_sql_context_timeout_seconds)
+        _t_config_hook({
+            "status_sleep_seconds": 0,
+            "statement_sleep_seconds": 2,
+            "create_sql_context_timeout_seconds": 60
+        })
+        LivySession(http_client, kind, session_id, sql_created)
+        _t_config_hook({})
 
     @raises(AssertionError)
     def test_constructor_throws_statement_sleep_seconds(self):
@@ -83,11 +86,13 @@ class TestLivySession:
         http_client = MagicMock()
         session_id = "-1"
         sql_created = False
-        state_sleep_seconds = 3
-        statement_sleep_seconds = 0
-        create_sql_context_timeout_seconds = 60
-        LivySession(http_client, kind, session_id, sql_created, state_sleep_seconds, statement_sleep_seconds,
-                    create_sql_context_timeout_seconds)
+        _t_config_hook({
+            "status_sleep_seconds": 3,
+            "statement_sleep_seconds": 0,
+            "create_sql_context_timeout_seconds": 60
+        })
+        LivySession(http_client, kind, session_id, sql_created)
+        _t_config_hook({})
 
     @raises(AssertionError)
     def test_constructor_throws_sql_create_timeout_seconds(self):
@@ -95,11 +100,13 @@ class TestLivySession:
         http_client = MagicMock()
         session_id = "-1"
         sql_created = False
-        state_sleep_seconds = 4
-        statement_sleep_seconds = 2
-        create_sql_context_timeout_seconds = 0
-        LivySession(http_client, kind, session_id, sql_created, state_sleep_seconds, statement_sleep_seconds,
-                    create_sql_context_timeout_seconds)
+        _t_config_hook({
+            "status_sleep_seconds": 4,
+            "statement_sleep_seconds": 2,
+            "create_sql_context_timeout_seconds": 0
+        })
+        LivySession(http_client, kind, session_id, sql_created)
+        _t_config_hook({})
 
     @raises(ValueError)
     def test_constructor_throws_invalid_session_sql_combo(self):
@@ -107,22 +114,26 @@ class TestLivySession:
         http_client = MagicMock()
         session_id = "-1"
         sql_created = True
-        state_sleep_seconds = 2
-        statement_sleep_seconds = 2
-        create_sql_context_timeout_seconds = 60
-        LivySession(http_client, kind, session_id, sql_created, state_sleep_seconds, statement_sleep_seconds,
-                    create_sql_context_timeout_seconds)
+        _t_config_hook({
+            "status_sleep_seconds": 2,
+            "statement_sleep_seconds": 2,
+            "create_sql_context_timeout_seconds": 60
+        })
+        LivySession(http_client, kind, session_id, sql_created)
+        _t_config_hook({})
 
     def test_constructor_starts_with_existing_session(self):
         kind = "scala"
         http_client = MagicMock()
         session_id = "1"
         sql_created = True
-        state_sleep_seconds = 4
-        statement_sleep_seconds = 2
-        create_sql_context_timeout_seconds = 60
-        session = LivySession(http_client, kind, session_id, sql_created, state_sleep_seconds, statement_sleep_seconds,
-                              create_sql_context_timeout_seconds)
+        _t_config_hook({
+            "status_sleep_seconds": 4,
+            "statement_sleep_seconds": 2,
+            "create_sql_context_timeout_seconds": 60
+        })
+        session = LivySession(http_client, kind, session_id, sql_created)
+        _t_config_hook({})
 
         assert session.id == "1"
         assert session.started_sql_context
@@ -132,11 +143,13 @@ class TestLivySession:
         http_client = MagicMock()
         session_id = "-1"
         sql_created = False
-        state_sleep_seconds = 4
-        statement_sleep_seconds = 2
-        create_sql_context_timeout_seconds = 60
-        session = LivySession(http_client, kind, session_id, sql_created, state_sleep_seconds, statement_sleep_seconds,
-                              create_sql_context_timeout_seconds)
+        _t_config_hook({
+            "status_sleep_seconds": 4,
+            "statement_sleep_seconds": 2,
+            "create_sql_context_timeout_seconds": 60
+        })
+        session = LivySession(http_client, kind, session_id, sql_created)
+        _t_config_hook({})
 
         assert session.id == "-1"
         assert not session.started_sql_context
@@ -145,7 +158,12 @@ class TestLivySession:
         kind = "scala"
         http_client = MagicMock()
 
-        session = LivySession(http_client, kind, "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, kind, "-1", False)
+        _t_config_hook({})
 
         assert not session.is_final_status("idle")
         assert not session.is_final_status("starting")
@@ -159,9 +177,14 @@ class TestLivySession:
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
 
-        session = LivySession(http_client, kind, "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, kind, "-1", False)
         session.start()
-    
+        _t_config_hook({})
+
         assert_equals(kind, session.language)
         assert_equals("starting", session._status)
         assert_equals("0", session.id)
@@ -172,20 +195,29 @@ class TestLivySession:
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
 
-        session = LivySession(http_client, kind, "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, kind, "-1", False)
         session.start()
+        _t_config_hook({})
 
         assert_equals(kind, session.language)
         assert_equals("starting", session._status)
         assert_equals("0", session.id)
         http_client.post.assert_called_with("/sessions", [201], {"kind": "pyspark"})
 
-    def test_state_gets_latest(self):
+    def test_status_gets_latest(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         http_client.get.return_value = DummyResponse(200, self.ready_sessions_json)
-        session = LivySession(http_client, "scala", "-1", False, status_sleep_seconds=0.01,
-                              statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, "scala", "-1", False)
+        _t_config_hook({})
         session.start()
     
         state = session.status
@@ -193,13 +225,20 @@ class TestLivySession:
         assert_equals("idle", state)
         http_client.get.assert_called_with("/sessions", [200])
 
-    def test_wait_for_state_returns_when_in_state(self):
+    def test_wait_for_status_returns_when_in_state(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         self.get_responses = [DummyResponse(200, self.busy_sessions_json),
                               DummyResponse(200, self.ready_sessions_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, "scala", "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, "scala", "-1", False)
+        _t_config_hook({})
+
         session.start()
 
         session.wait_for_status("idle", 30)
@@ -215,7 +254,13 @@ class TestLivySession:
                               DummyResponse(200, self.busy_sessions_json),
                               DummyResponse(200, self.ready_sessions_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, "scala", "-1", False, status_sleep_seconds=0.2, statement_sleep_seconds=6000)
+
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 6000
+        })
+        session = LivySession(http_client, "scala", "-1", False)
+        _t_config_hook({})
 
         session.start()
 
@@ -224,7 +269,12 @@ class TestLivySession:
     def test_delete_session_when_active(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
-        session = LivySession(http_client, "scala", "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, "scala", "-1", False)
+        _t_config_hook({})
         session.start()
 
         session.delete()
@@ -235,7 +285,12 @@ class TestLivySession:
     def test_delete_session_when_not_started(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
-        session = LivySession(http_client, "scala", "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, "scala", "-1", False)
+        _t_config_hook({})
 
         session.delete()
     
@@ -246,7 +301,12 @@ class TestLivySession:
     def test_delete_session_when_dead_throws(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
-        session = LivySession(http_client, "scala", "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, "scala", "-1", False)
+        _t_config_hook({})
         session._status = "dead"
 
         session.delete()
@@ -260,7 +320,12 @@ class TestLivySession:
         self.get_responses = [DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, kind, "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, kind, "-1", False)
+        _t_config_hook({})
         session.start()
         command = "command"
 
@@ -281,7 +346,12 @@ class TestLivySession:
                               DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, kind, "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, kind, "-1", False)
+        _t_config_hook({})
         session.start()
 
         # Reset the mock so that post called count is accurate
@@ -306,7 +376,12 @@ class TestLivySession:
                               DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, kind, "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, kind, "-1", False)
+        _t_config_hook({})
         session.start()
 
         session.create_sql_context()
@@ -325,7 +400,12 @@ class TestLivySession:
                               DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, kind, "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, kind, "-1", False)
+        _t_config_hook({})
         session.start()
 
         session.create_sql_context()
@@ -346,7 +426,12 @@ class TestLivySession:
                               DummyResponse(200, self.running_statement_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
-        session = LivySession(http_client, kind, "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, kind, "-1", False)
+        _t_config_hook({})
         session.start()
 
         session.create_sql_context()
@@ -359,7 +444,12 @@ class TestLivySession:
         http_client = MagicMock()
         http_client.connection_string = connection_string
         kind = "scala"
-        session = LivySession(http_client, kind, "-1", False, status_sleep_seconds=0.01, statement_sleep_seconds=0.01)
+        _t_config_hook({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = LivySession(http_client, kind, "-1", False)
+        _t_config_hook({})
 
         serialized = session.get_state().to_dict()
 

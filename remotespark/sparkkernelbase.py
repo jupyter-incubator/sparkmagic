@@ -4,7 +4,8 @@ from ipykernel.ipkernel import IPythonKernel
 import requests
 
 from remotespark.livyclientlib.log import Log
-from remotespark.livyclientlib.utils import get_connection_string, read_environment_variable
+from remotespark.livyclientlib.utils import get_connection_string
+from remotespark.livyclientlib.configuration import get_configuration
 
 
 class SparkKernelBase(IPythonKernel):
@@ -17,9 +18,9 @@ class SparkKernelBase(IPythonKernel):
     banner = None
 
     # Override
-    username_env_var = None
-    password_env_var = None
-    url_env_var = None
+    username_conf_name = None
+    password_conf_name = None
+    url_conf_name = None
     session_language = None
     client_name = None
 
@@ -31,33 +32,33 @@ class SparkKernelBase(IPythonKernel):
         # Disable warnings for test env in HDI
         requests.packages.urllib3.disable_warnings()
 
-        try:
-            # Try to initialize altair
-            # from lightning.visualization import VisualizationLocal
-            # from IPython.core.getipython import get_ipython
-            # from IPython.display import display, Javascript, HTML
-            # ip = get_ipython()
-            # formatter = ip.display_formatter.formatters['text/html']
-            # js = VisualizationLocal.load_embed()
-            # display(HTML("<script>" + js + "</script>"))
-            # formatter.for_type(VisualizationLocal, lambda viz, kwds=None: viz.get_html())
+        # try:
+        # Try to initialize altair
+        # from lightning.visualization import VisualizationLocal
+        # from IPython.core.getipython import get_ipython
+        # from IPython.display import display, Javascript, HTML
+        # ip = get_ipython()
+        # formatter = ip.display_formatter.formatters['text/html']
+        # js = VisualizationLocal.load_embed()
+        # display(HTML("<script>" + js + "</script>"))
+        # formatter.for_type(VisualizationLocal, lambda viz, kwds=None: viz.get_html())
 
-            # Use lightning here so that the graphic doesn't display later when magics are registered
-            # import altair.api as alt
-            # alt.use_renderer('lightning')
-            pass
-        except:
-            self.logger.error("Could not initialize renderer or create dummy records")
+        # Use lightning here so that the graphic doesn't display later when magics are registered
+        # import altair.api as alt
+        # alt.use_renderer('lightning')
+        #     pass
+        # except:
+        #     self.logger.error("Could not initialize renderer or create dummy records")
 
     def get_configuration(self):
         try:
-            username = read_environment_variable(self.username_env_var)
-            password = read_environment_variable(self.password_env_var)
-            url = read_environment_variable(self.url_env_var)
+            username = get_configuration(self.username_conf_name)
+            password = get_configuration(self.password_conf_name)
+            url = get_configuration(self.url_conf_name)
             return username, password, url
         except KeyError:
-            error = "FATAL ERROR: Please set environment variables '{}', '{}', '{} to initialize Kernel.".format(
-                self.username_env_var, self.password_env_var, self.url_env_var)
+            error = "FATAL ERROR: Please set configuration for '{}', '{}', '{} to initialize Kernel.".format(
+                self.username_conf_name, self.password_conf_name, self.url_conf_name)
             stream_content = {"name": "stdout", "text": error}
             self.send_response(self.iopub_socket, "stream", stream_content)
             self.logger.error(error)

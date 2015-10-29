@@ -64,10 +64,6 @@ def get_connection_string_elements(connection_string):
     return cs
 
 
-def read_environment_variable(name):
-    return os.environ[name]
-
-
 def expand_path(path):
     return os.path.expanduser(path)
 

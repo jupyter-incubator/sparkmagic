@@ -12,7 +12,7 @@ first_run = True
 config = None
 
 
-def get_configuration(config_name, default_value):
+def get_configuration(config_name, default_value=None):
     global first_run, config
 
     if first_run:
@@ -21,6 +21,9 @@ def get_configuration(config_name, default_value):
 
     if config is None:
         raise ValueError("Config has not been read.")
+
+    if default_value is None:
+        return config[config_name]
 
     return config.get(config_name, default_value)
 
@@ -40,3 +43,8 @@ def _read_config():
             config = {}
         else:
             config = json.loads(line)
+
+
+def _t_config_hook(test_config):
+    global config
+    config = test_config
