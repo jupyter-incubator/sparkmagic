@@ -89,9 +89,9 @@ class SparkKernelBase(IPythonKernel):
 
         # Modify code by prepending spark magic text
         if code.lower().startswith("%sql\n") or code.lower().startswith("%sql "):
-            code = "%%spark -s True\n{}".format(code[5:])
+            code = "%%spark -c sql\n{}".format(code[5:])
         elif code.lower().startswith("%%sql\n") or code.lower().startswith("%%sql "):
-            code = "%%spark -s True\n{}".format(code[6:])
+            code = "%%spark -c sql\n{}".format(code[6:])
         else:
             code = "%%spark\n{}".format(code)
 

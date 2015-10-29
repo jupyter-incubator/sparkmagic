@@ -141,7 +141,7 @@ def test_call_spark_sql_new_line():
 
         # Assertions
         assert kernel.already_ran_once
-        execute_cell_mock.assert_called_once_with("%%spark -s True\n{}".format(plain_code), False, True, None, False)
+        execute_cell_mock.assert_called_once_with("%%spark -c sql\n{}".format(plain_code), False, True, None, False)
 
     _check("%sql ")
     _check("%sql\n")
