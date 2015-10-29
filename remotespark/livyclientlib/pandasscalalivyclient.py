@@ -5,59 +5,45 @@ import pandas as pd
 import json
 import re
 
-from .livyclient import LivyClient
+from .pandaslivyclientbase import PandasLivyClientBase
 
 
-class PandasScalaLivyClient(LivyClient):
-    """Spark client for Livy endpoint"""
+class PandasScalaLivyClient(PandasLivyClientBase):
+    """Spark client for Livy endpoint in Scala"""
     def __init__(self, session, max_take_rows):
-        super(PandasScalaLivyClient, self).__init__(session)
-        self._max_take_rows = max_take_rows
+        super(PandasScalaLivyClient, self).__init__(session, max_take_rows)
 
-    def execute_sql(self, command):
-        return self._execute_dataframe_helper("sqlContext", command)
+    def get_records(self, context_name, command, max_take_rows):
+        command = '{}.sql("{}").toJSON.take({}).foreach(println)'.format(context_name, command, max_take_rows)
+        return self.execute(command)
 
-    def execute_hive(self, command):
-        return self._execute_dataframe_helper("hiveContext", command)
+    def no_records(self, records_text):
+        return records_text == ""
 
-    def _execute_dataframe_helper(self, context_name, command):
-        records_text = self.execute(self._make_context_json_take(context_name, command))
+    def get_columns_dataframe(self, context_name, command):
+        columns_text = self.execute(self.make_context_columns(context_name, command))
 
-        if records_text == "":
-            # If there are no records, show some columns at least.
-            columns_text = self.execute(self._make_context_columns(context_name, command))
+        records = list()
 
-            records = list()
+        # Columns will look something like this: 'res1: Array[String] = Array(tableName, isTemporary)'
+        # We need to transform them into a list of strings: ["tableName", "isTemporary"]
+        m = re.search('Array\[String\] = Array\((.*)\)', columns_text)
 
-            # Columns will look something like this: 'res1: Array[String] = Array(tableName, isTemporary)'
-            # We need to transform them into a list of strings: ["tableName", "isTemporary"]
-            m = re.search('Array\[String\] = Array\((.*)\)', columns_text)
+        # If we failed to find the columns
+        if m is None:
+            raise SyntaxError("Could not find columns in '{}'.".format(columns_text))
 
-            # If we failed to find the columns
-            if m is None:
-                raise SyntaxError("Could not find columns in '{}'.".format(columns_text))
+        captured_group = m.group(1)
 
-            captured_group = m.group(1)
+        # If there are no columns
+        if captured_group.strip() == "":
+            return "No data available."
 
-            # If there are no columns
-            if captured_group.strip() == "":
-                return "No data available."
+        # Convert the columns into an array of text
+        columns = [s.strip() for s in captured_group.split(",")]
 
-            # Convert the columns into an array of text
-            columns = [s.strip() for s in captured_group.split(",")]
+        return pd.DataFrame.from_records(records, columns=columns)
 
-            return pd.DataFrame.from_records(records, columns=columns)
-        else:
-            try:
-                json_array = "[{}]".format(",".join(records_text.split("\n")))
-                return pd.DataFrame(json.loads(json_array))
-            except ValueError:
-                self.logger.error("Could not parse json array for sql.")
-                return records_text
-
-    def _make_context_json_take(self, context_name, command):
-        return '{}.sql("{}").toJSON.take({}).foreach(println)'.format(context_name, command, str(self._max_take_rows))
-
-    @staticmethod
-    def _make_context_columns(context_name, command):
-        return '{}.sql("{}").columns'.format(context_name, command)
+    def get_data_dataframe(self, records_text):
+        json_array = "[{}]".format(",".join(records_text.split("\n")))
+        return pd.DataFrame(json.loads(json_array))

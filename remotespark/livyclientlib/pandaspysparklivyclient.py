@@ -4,45 +4,31 @@
 import pandas as pd
 import json
 
-from .livyclient import LivyClient
+from .pandaslivyclientbase import PandasLivyClientBase
 
 
-class PandasPysparkLivyClient(LivyClient):
-    """Spark client for Livy endpoint"""
+class PandasPysparkLivyClient(PandasLivyClientBase):
+    """Spark client for Livy endpoint in PySpark"""
 
     def __init__(self, session, max_take_rows):
-        super(PandasPysparkLivyClient, self).__init__(session)
-        self._max_take_rows = max_take_rows
+        super(PandasPysparkLivyClient, self).__init__(session, max_take_rows)
 
-    def execute_sql(self, command):
-        return self._execute_dataframe_helper("sqlContext", command)
+    def get_records(self, context_name, command, max_take_rows):
+        command = '{}.sql("{}").toJSON().take({})'.format(context_name, command, max_take_rows)
+        return self.execute(command)
 
-    def execute_hive(self, command):
-        return self._execute_dataframe_helper("hiveContext", command)
+    def no_records(self, records_text):
+        return records_text == "[]"
 
-    def _execute_dataframe_helper(self, context_name, command):
-        records_text = self.execute(self._make_context_json_take(context_name, command))
+    def get_columns_dataframe(self, context_name, command):
+        columns_text = self.execute(self.make_context_columns(context_name, command))
 
-        if records_text == "[]":
-            # If there are no records, show some columns at least.
-            columns_text = self.execute(self._make_context_columns(context_name, command))
+        records = list()
+        columns = eval(columns_text)
 
-            records = list()
-            columns = eval(columns_text)
+        return pd.DataFrame.from_records(records, columns=columns)
 
-            return pd.DataFrame.from_records(records, columns=columns)
-        else:
-            try:
-                json_data = eval(records_text)
-                json_array = "[{}]".format(",".join(json_data))
-                return pd.DataFrame(json.loads(json_array))
-            except (ValueError, SyntaxError):
-                self.logger.error("Could not parse json array for sql.")
-                return records_text
-
-    def _make_context_json_take(self, context_name, command):
-        return '{}.sql("{}").toJSON().take({})'.format(context_name, command, str(self._max_take_rows))
-
-    @staticmethod
-    def _make_context_columns(context_name, command):
-        return '{}.sql("{}").columns'.format(context_name, command)
+    def get_data_dataframe(self, records_text):
+        json_data = eval(records_text)
+        json_array = "[{}]".format(",".join(json_data))
+        return pd.DataFrame(json.loads(json_array))
