@@ -20,9 +20,7 @@ class PandasScalaLivyClient(PandasLivyClientBase):
     def no_records(self, records_text):
         return records_text == ""
 
-    def get_columns_dataframe(self, context_name, command):
-        columns_text = self.execute(self.make_context_columns(context_name, command))
-
+    def get_columns_dataframe(self, columns_text):
         records = list()
 
         # Columns will look something like this: 'res1: Array[String] = Array(tableName, isTemporary)'

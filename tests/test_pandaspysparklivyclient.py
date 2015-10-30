@@ -80,6 +80,26 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
 
 
 @with_setup(_setup, _teardown)
+def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
+    global execute_responses
+
+    # Set up spark session to return empty JSON and then columns
+    command = "command"
+    result_json = "[]"
+    some_exception = "some exception"
+    execute_responses = [result_json, some_exception]
+    execute_m.side_effect = _next_response_execute
+
+    result = client.execute_sql(command)
+
+    # Verify basic calls were done
+    execute_m.assert_called_with('sqlContext.sql("{}").columns'.format(command))
+
+    # Verify result is exception
+    assert result == some_exception
+
+
+@with_setup(_setup, _teardown)
 def test_execute_sql_pandas_pyspark_livy_some_exception():
     # Set up spark session to return empty JSON and then columns
     command = "command"

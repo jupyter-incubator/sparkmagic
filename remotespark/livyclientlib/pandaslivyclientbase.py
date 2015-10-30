@@ -19,15 +19,19 @@ class PandasLivyClientBase(LivyClient):
     def _execute_dataframe_helper(self, context_name, command):
         records_text = self.get_records(context_name, command, str(self.max_take_rows))
 
-        if self.no_records(records_text):
-            # If there are no records, show some columns at least.
-            return self.get_columns_dataframe(context_name, command)
-        else:
-            try:
+        try:
+            if self.no_records(records_text):
+                # If there are no records, show some columns at least.
+                records_text = self.get_columns(context_name, command)
+                return self.get_columns_dataframe(records_text)
+            else:
                 return self.get_data_dataframe(records_text)
-            except (ValueError, SyntaxError):
-                self.logger.error("Could not get json array for sql.")
-                return records_text
+        except (ValueError, SyntaxError):
+            self.logger.error("Could not convert sql results to pandas DF.")
+            return records_text
+
+    def get_columns(self, context_name, command):
+        return self.execute(self.make_context_columns(context_name, command))
 
     @staticmethod
     def make_context_columns(context_name, command):
@@ -40,7 +44,7 @@ class PandasLivyClientBase(LivyClient):
     def no_records(self, records_text):
         raise NotImplementedError()
 
-    def get_columns_dataframe(self, context_name, command):
+    def get_columns_dataframe(self, columns_text):
         raise NotImplementedError()
 
     def get_data_dataframe(self, records_text):

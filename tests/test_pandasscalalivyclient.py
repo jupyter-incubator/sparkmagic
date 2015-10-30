@@ -35,7 +35,7 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
-def test_execute_sql_pandas_pyspark_livy():
+def test_execute_sql_pandas_scala_livy():
     # result from livy
     result_json = "{\"buildingID\":0,\"date\":\"6/1/13\",\"temp_diff\":12}\n" \
                       "{\"buildingID\":1,\"date\":\"6/1/13\",\"temp_diff\":0}"
@@ -56,7 +56,7 @@ def test_execute_sql_pandas_pyspark_livy():
 
 
 @with_setup(_setup, _teardown)
-def test_execute_sql_pandas_pyspark_livy_no_results():
+def test_execute_sql_pandas_scala_livy_no_results():
     global execute_responses
 
     # Set up spark session to return empty JSON and then columns
@@ -80,7 +80,27 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
 
 
 @with_setup(_setup, _teardown)
-def test_execute_sql_pandas_pyspark_livy_some_exception():
+def test_execute_sql_pandas_scala_livy_no_results_exception_in_columns():
+    global execute_responses
+
+    # Set up spark session to return empty JSON and then columns
+    command = "command"
+    result_json = ""
+    some_exception = "some exception"
+    execute_responses = [result_json, some_exception]
+    execute_m.side_effect = _next_response_execute
+
+    result = client.execute_sql(command)
+
+    # Verify basic calls were done
+    execute_m.assert_called_with('sqlContext.sql("{}").columns'.format(command))
+
+    # Verify result is exception
+    assert result == some_exception
+
+
+@with_setup(_setup, _teardown)
+def test_execute_sql_pandas_scala_livy_some_exception():
     # Set up spark session to return empty JSON and then columns
     command = "command"
     some_exception = "some awful exception"
