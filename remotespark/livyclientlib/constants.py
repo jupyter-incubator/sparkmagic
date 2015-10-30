@@ -6,6 +6,10 @@ class Constants:
     session_kind_spark = "spark"
     session_kind_pyspark = "pyspark"
 
+    context_name_spark = "spark"
+    context_name_sql = "sql"
+    context_name_hive = "hive"
+
     lang_scala = "scala"
     lang_python = "python"
     lang_supported = [lang_scala, lang_python]

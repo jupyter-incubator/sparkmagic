@@ -1,7 +1,7 @@
 from nose.tools import with_setup, assert_equals
 from mock import MagicMock
 
-from remotespark.livyclientlib.log import Log
+from remotespark.livyclientlib.constants import Constants
 from remotespark.livyclientlib.sparkcontroller import SparkController
 
 
@@ -83,22 +83,37 @@ def test_run_cell():
     client_manager.get_any_client = MagicMock(return_value=default_client)
     client_manager.get_client = MagicMock(return_value=chosen_client)
     name = "endpoint_name"
-    sql = False
+    context = Constants.context_name_spark
     cell = "cell code"
 
-    controller.run_cell(name, sql, cell)
+    controller.run_cell(name, context, cell)
     chosen_client.execute.assert_called_with(cell)
 
-    controller.run_cell(None, sql, cell)
+    controller.run_cell(None, context, cell)
     default_client.execute.assert_called_with(cell)
 
-    sql = True
+    context = Constants.context_name_sql
 
-    controller.run_cell(name, sql, cell)
+    controller.run_cell(name, context, cell)
     chosen_client.execute_sql.assert_called_with(cell)
 
-    controller.run_cell(None, sql, cell)
+    controller.run_cell(None, context, cell)
     default_client.execute_sql.assert_called_with(cell)
+
+    context = Constants.context_name_hive
+
+    controller.run_cell(name, context, cell)
+    chosen_client.execute_hive.assert_called_with(cell)
+
+    controller.run_cell(None, context, cell)
+    default_client.execute_hive.assert_called_with(cell)
+
+    try:
+        context = "not_supported"
+        controller.run_cell(None, context, cell)
+        assert False  # Should have thrown for invalid context name
+    except ValueError:
+        pass
 
 @with_setup(_setup, _teardown)
 def test_get_client_keys():

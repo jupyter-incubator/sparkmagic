@@ -4,6 +4,7 @@ from mock import MagicMock
 from remotespark.RemoteSparkMagics import RemoteSparkMagics
 from remotespark.livyclientlib.rawviewer import RawViewer
 from remotespark.livyclientlib.altairviewer import AltairViewer
+from remotespark.livyclientlib.constants import Constants
 
 
 magic = None
@@ -105,14 +106,14 @@ def test_run_cell_command_parses():
     visualize_method = MagicMock()
     viewer.visualize = visualize_method
 
-    command = "-c"
+    command = "-e"
     name = "endpoint_name"
     line = " ".join([command, name])
     cell = "cell code"
 
     magic.spark(line, cell)
 
-    run_cell_method.assert_called_once_with(name, False, cell)
+    run_cell_method.assert_called_once_with(name, Constants.context_name_spark, cell)
     visualize_method.assert_called_once_with(1, "area")
 
 

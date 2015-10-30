@@ -141,7 +141,7 @@ def test_call_spark_sql_new_line():
 
         # Assertions
         assert kernel.already_ran_once
-        execute_cell_mock.assert_called_once_with("%%spark -s True\n{}".format(plain_code), False, True, None, False)
+        execute_cell_mock.assert_called_once_with("%%spark -c sql\n{}".format(plain_code), False, True, None, False)
 
     _check("%sql ")
     _check("%sql\n")
@@ -150,21 +150,47 @@ def test_call_spark_sql_new_line():
 
 
 @with_setup(_setup, _teardown)
-def test_shutdown_cleansup():
+def test_call_spark_hive_new_line():
+    def _check(prepend):
+        # Set up
+        plain_code = "select tables"
+        code = prepend + plain_code
+        kernel.already_ran_once = True
+        kernel.execute_cell_for_user = execute_cell_mock = MagicMock()
+
+        # Call method
+        kernel.do_execute(code, False)
+
+        # Assertions
+        assert kernel.already_ran_once
+        execute_cell_mock.assert_called_once_with("%%spark -c hive\n{}".format(plain_code), False, True, None, False)
+
+    _check("%hive ")
+    _check("%hive\n")
+    _check("%%hive ")
+    _check("%%hive\n")
+
+
+@with_setup(_setup, _teardown)
+def test_shutdown_cleans_up():
     # No restart
     kernel.execute_cell_for_user = ecfu_m = MagicMock()
+    kernel.do_shutdown_ipykernel = dsi_m = MagicMock()
     kernel.already_ran_once = True
 
     kernel.do_shutdown(False)
 
     assert not kernel.already_ran_once
     ecfu_m.assert_called_once_with("%spark cleanup", True, False)
+    dsi_m.assert_called_once_with(False)
 
     # On restart
     kernel.execute_cell_for_user = ecfu_m = MagicMock()
+    kernel.do_shutdown_ipykernel = dsi_m = MagicMock()
     kernel.already_ran_once = True
 
     kernel.do_shutdown(True)
 
     assert not kernel.already_ran_once
     ecfu_m.assert_called_once_with("%spark cleanup", True, False)
+    dsi_m.assert_called_once_with(True)

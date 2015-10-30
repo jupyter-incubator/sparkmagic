@@ -82,9 +82,6 @@ class SparkKernelBase(IPythonKernel):
 
         self.already_ran_once = True
 
-    def execute_cell_for_user(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
-        return super(SparkKernelBase, self).do_execute(code, silent, store_history, user_expressions, allow_stdin)
-
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         if not self.already_ran_once:
             (username, password, url) = self.get_configuration()
@@ -92,9 +89,13 @@ class SparkKernelBase(IPythonKernel):
 
         # Modify code by prepending spark magic text
         if code.lower().startswith("%sql\n") or code.lower().startswith("%sql "):
-            code = "%%spark -s True\n{}".format(code[5:])
+            code = "%%spark -c sql\n{}".format(code[5:])
         elif code.lower().startswith("%%sql\n") or code.lower().startswith("%%sql "):
-            code = "%%spark -s True\n{}".format(code[6:])
+            code = "%%spark -c sql\n{}".format(code[6:])
+        elif code.lower().startswith("%hive\n") or code.lower().startswith("%hive "):
+            code = "%%spark -c hive\n{}".format(code[6:])
+        elif code.lower().startswith("%%hive\n") or code.lower().startswith("%%hive "):
+            code = "%%spark -c hive\n{}".format(code[7:])
         else:
             code = "%%spark\n{}".format(code)
 
@@ -107,4 +108,10 @@ class SparkKernelBase(IPythonKernel):
             self.execute_cell_for_user(code, True, False)
             self.already_ran_once = False
 
+        return self.do_shutdown_ipykernel(restart)
+
+    def execute_cell_for_user(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
+        return super(SparkKernelBase, self).do_execute(code, silent, store_history, user_expressions, allow_stdin)
+
+    def do_shutdown_ipykernel(self, restart):
         return super(SparkKernelBase, self).do_shutdown(restart)

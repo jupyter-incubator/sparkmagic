@@ -1,6 +1,6 @@
 ﻿import json
 from nose.tools import raises, assert_equals
-from mock import MagicMock
+from mock import MagicMock, call
 
 from remotespark.livyclientlib.livysession import LivySession
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
@@ -336,14 +336,17 @@ class TestLivySession:
         assert_equals(2, http_client.get.call_count)
         assert_equals(self.pi_result, result)
 
-    def test_create_sql_context_happens_once(self):
+    def test_create_sql_hive_context_happens_once(self):
         kind = "scala"
         http_client = MagicMock()
         self.post_responses = [DummyResponse(201, self.session_create_json),
+                               DummyResponse(201, self.post_statement_json),
                                DummyResponse(201, self.post_statement_json)]
         http_client.post.side_effect = self._next_response_post
         self.get_responses = [DummyResponse(200, self.ready_sessions_json),
                               DummyResponse(200, self.running_statement_json),
+                              DummyResponse(200, self.ready_statement_json),
+                              DummyResponse(200, self.ready_sessions_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
         _t_config_hook({
@@ -362,18 +365,25 @@ class TestLivySession:
         # Second call should not issue a post request
         session.create_sql_context()
 
-        http_client.post.assert_called_once_with("/sessions/0/statements", [201],
-                                                 {"code": "val sqlContext = new org.apache.spark.sql.SQLContext(sc)\n"
-                                                          "import sqlContext.implicits._"})
+        assert call("/sessions/0/statements", [201], {"code": "val sqlContext = new org.apache.spark.sql.SQLContext"
+                                                              "(sc)\nimport sqlContext.implicits._"}) \
+               in http_client.post.call_args_list
+        assert call("/sessions/0/statements", [201], {"code": "val hiveContext = new org.apache.spark.sql.hive.Hive"
+                                                              "Context(sc)"}) \
+               in http_client.post.call_args_list
+        assert len(http_client.post.call_args_list) == 2
 
     def test_create_sql_context_spark(self):
         kind = "scala"
         http_client = MagicMock()
         self.post_responses = [DummyResponse(201, self.session_create_json),
+                               DummyResponse(201, self.post_statement_json),
                                DummyResponse(201, self.post_statement_json)]
         http_client.post.side_effect = self._next_response_post
         self.get_responses = [DummyResponse(200, self.ready_sessions_json),
                               DummyResponse(200, self.running_statement_json),
+                              DummyResponse(200, self.ready_statement_json),
+                              DummyResponse(200, self.ready_sessions_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
         _t_config_hook({
@@ -386,18 +396,25 @@ class TestLivySession:
 
         session.create_sql_context()
 
-        http_client.post.assert_called_with("/sessions/0/statements", [201],
-                                            {"code": "val sqlContext = new org.apache.spark.sql.SQLContext(sc)\n"
-                                                     "import sqlContext.implicits._"})
+        assert call("/sessions/0/statements", [201], {"code": "val sqlContext = new org.apache.spark.sql.SQLContext"
+                                                              "(sc)\nimport sqlContext.implicits._"}) \
+               in http_client.post.call_args_list
+        assert call("/sessions/0/statements", [201], {"code": "val hiveContext = new org.apache.spark.sql.hive.Hive"
+                                                              "Context(sc)"}) \
+               in http_client.post.call_args_list
 
-    def test_create_sql_context_pyspark(self):
+
+    def test_create_sql_hive_context_pyspark(self):
         kind = "python"
         http_client = MagicMock()
         self.post_responses = [DummyResponse(201, self.session_create_json),
+                               DummyResponse(201, self.post_statement_json),
                                DummyResponse(201, self.post_statement_json)]
         http_client.post.side_effect = self._next_response_post
         self.get_responses = [DummyResponse(200, self.ready_sessions_json),
                               DummyResponse(200, self.running_statement_json),
+                              DummyResponse(200, self.ready_statement_json),
+                              DummyResponse(200, self.ready_sessions_json),
                               DummyResponse(200, self.ready_statement_json)]
         http_client.get.side_effect = self._next_response_get
         _t_config_hook({
@@ -410,13 +427,16 @@ class TestLivySession:
 
         session.create_sql_context()
 
-        http_client.post.assert_called_with("/sessions/0/statements", [201],
-                                            {"code": "from pyspark.sql import SQLContext\n"
-                                                     "from pyspark.sql.types import *\n"
-                                                     "sqlContext = SQLContext(sc)"})
+        assert call("/sessions/0/statements", [201], {"code": "from pyspark.sql import SQLContext\n"
+                                                              "from pyspark.sql.types import *\n"
+                                                              "sqlContext = SQLContext(sc)"}) \
+               in http_client.post.call_args_list
+        assert call("/sessions/0/statements", [201], {"code": "from pyspark.sql import HiveContext\n"
+                                                              "hiveContext = HiveContext(sc)"}) \
+               in http_client.post.call_args_list
 
     @raises(ValueError)
-    def test_create_sql_context_unknown_throws(self):
+    def test_create_sql_hive_context_unknown_throws(self):
         kind = "unknown"
         http_client = MagicMock()
         self.post_responses = [DummyResponse(201, self.session_create_json),

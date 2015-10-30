@@ -4,39 +4,29 @@
 import pandas as pd
 import json
 
-from .livyclient import LivyClient
+from .pandaslivyclientbase import PandasLivyClientBase
 
 
-class PandasPysparkLivyClient(LivyClient):
-    """Spark client for Livy endpoint"""
+class PandasPysparkLivyClient(PandasLivyClientBase):
+    """Spark client for Livy endpoint in PySpark"""
 
     def __init__(self, session, max_take_rows):
-        super(PandasPysparkLivyClient, self).__init__(session)
-        self._max_take_rows = max_take_rows
+        super(PandasPysparkLivyClient, self).__init__(session, max_take_rows)
 
-    def execute_sql(self, command):
-        records_text = self.execute(self._make_sql_json_take(command))
+    def get_records(self, context_name, command, max_take_rows):
+        command = '{}.sql("{}").toJSON().take({})'.format(context_name, command, max_take_rows)
+        return self.execute(command)
 
-        if records_text == "[]":
-            # If there are no records, show some columns at least.
-            columns_text = self.execute(self._make_sql_columns(command))
+    def no_records(self, records_text):
+        return records_text == "[]"
 
-            records = list()
-            columns = eval(columns_text)
+    def get_columns_dataframe(self, columns_text):
+        records = list()
+        columns = eval(columns_text)
 
-            return pd.DataFrame.from_records(records, columns=columns)
-        else:
-            try:
-                json_data = eval(records_text)
-                json_array = "[{}]".format(",".join(json_data))
-                return pd.DataFrame(json.loads(json_array))
-            except (ValueError, SyntaxError):
-                self.logger.error("Could not parse json array for sql.")
-                return records_text
+        return pd.DataFrame.from_records(records, columns=columns)
 
-    def _make_sql_json_take(self, command):
-        return 'sqlContext.sql("{}").toJSON().take({})'.format(command, str(self._max_take_rows))
-
-    @staticmethod
-    def _make_sql_columns(command):
-        return 'sqlContext.sql("{}").columns'.format(command)
+    def get_data_dataframe(self, records_text):
+        json_data = eval(records_text)
+        json_array = "[{}]".format(",".join(json_data))
+        return pd.DataFrame(json.loads(json_array))
