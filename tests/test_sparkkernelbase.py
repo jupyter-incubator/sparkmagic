@@ -150,6 +150,28 @@ def test_call_spark_sql_new_line():
 
 
 @with_setup(_setup, _teardown)
+def test_call_spark_hive_new_line():
+    def _check(prepend):
+        # Set up
+        plain_code = "select tables"
+        code = prepend + plain_code
+        kernel.already_ran_once = True
+        kernel.execute_cell_for_user = execute_cell_mock = MagicMock()
+
+        # Call method
+        kernel.do_execute(code, False)
+
+        # Assertions
+        assert kernel.already_ran_once
+        execute_cell_mock.assert_called_once_with("%%spark -c hive\n{}".format(plain_code), False, True, None, False)
+
+    _check("%hive ")
+    _check("%hive\n")
+    _check("%%hive ")
+    _check("%%hive\n")
+
+
+@with_setup(_setup, _teardown)
 def test_shutdown_cleans_up():
     # No restart
     kernel.execute_cell_for_user = ecfu_m = MagicMock()

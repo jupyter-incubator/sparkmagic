@@ -92,6 +92,10 @@ class SparkKernelBase(IPythonKernel):
             code = "%%spark -c sql\n{}".format(code[5:])
         elif code.lower().startswith("%%sql\n") or code.lower().startswith("%%sql "):
             code = "%%spark -c sql\n{}".format(code[6:])
+        elif code.lower().startswith("%hive\n") or code.lower().startswith("%hive "):
+            code = "%%spark -c hive\n{}".format(code[6:])
+        elif code.lower().startswith("%%hive\n") or code.lower().startswith("%%hive "):
+            code = "%%spark -c hive\n{}".format(code[7:])
         else:
             code = "%%spark\n{}".format(code)
 
