@@ -22,6 +22,8 @@ class ReliableHttpClient(object):
         self._retry_policy = retry_policy
         self.logger = Log("ReliableHttpClient")
 
+        self._do_not_authenticate = self._username == "" and self._password == ""
+
         self.verify_ssl = not get_configuration(Constants.ignore_ssl_errors, False)
         if self.verify_ssl:
             self.logger.debug("ATTENTION: Will ignore SSL errors. This might render you vulnerable to attacks.")
@@ -50,12 +52,19 @@ class ReliableHttpClient(object):
         return self._send_request_helper(self.compose_url(relative_url), accepted_status_codes, function, data, 0)
 
     def _send_request_helper(self, url, accepted_status_codes, function, data, retry_count):
-        if data is None:
-            r = function(url, headers=self._headers, auth=(self._username, self._password),
-                         verify=self.verify_ssl)
+
+        if self._do_not_authenticate:
+            if data is None:
+                r = function(url, headers=self._headers, verify=self.verify_ssl)
+            else:
+                r = function(url, headers=self._headers, data=json.dumps(data), verify=self.verify_ssl)
         else:
-            r = function(url, headers=self._headers, auth=(self._username, self._password), data=json.dumps(data),
-                         verify=self.verify_ssl)
+            if data is None:
+                r = function(url, headers=self._headers, auth=(self._username, self._password),
+                             verify=self.verify_ssl)
+            else:
+                r = function(url, headers=self._headers, auth=(self._username, self._password), data=json.dumps(data),
+                             verify=self.verify_ssl)
 
         status = r.status_code
         if status not in accepted_status_codes:
