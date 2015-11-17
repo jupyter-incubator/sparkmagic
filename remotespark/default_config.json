@@ -20,19 +20,19 @@
     "formatters": {
       "magicsFormatter": { 
         "format": "%(asctime)s	%(levelname)s	%(message)s",
-	"datefmt": ""
+        "datefmt": ""
       }
     },
     "handlers": {
       "magicsHandler": { 
-        "class": "remotespark.livyclientlib.log.MagicsFileHandler",
-	"formatter": "magicsFormatter"
+        "class": "remotespark.livyclientlib.filehandler.MagicsFileHandler",
+        "formatter": "magicsFormatter"
       }
     },
     "loggers": {
       "magicsLogger": { 
         "handlers": ["magicsHandler"],
-	"level": "DEBUG"
+        "level": "DEBUG"
       }
     }
   },
