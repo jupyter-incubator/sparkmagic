@@ -1,10 +1,8 @@
 from remotespark.livyclientlib.log import Log
 from remotespark.livyclientlib.constants import Constants
-
+import logging
 
 def test_log_init():
     logger = Log("something")
+    assert isinstance(logger.logger, logging.Logger)
 
-    print(Log.level)
-    assert logger.level == logger._level
-    assert logger.level == Constants.debug_level

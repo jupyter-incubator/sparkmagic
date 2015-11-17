@@ -30,10 +30,8 @@ class Constants:
     kernel_scala_password = "kernel_scala_password"
     kernel_scala_url = "kernel_scala_url"
 
-    log_level = "log_level"
-    log_to_disk = "log_to_disk"
-    debug_level = "debug"
-    normal_level = "normal"
+    magics_logger_name = "magicsLogger"
+    logging_config = "logging_config"
 
     execute_timeout_seconds = "execute_timeout_seconds"
     status_sleep_seconds = "status_sleep_seconds"
