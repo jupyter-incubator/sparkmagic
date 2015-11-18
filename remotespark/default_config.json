@@ -15,8 +15,27 @@
   "kernel_scala_password": "",
   "kernel_scala_url": "",
 
-  "log_level": "debug",
-  "log_to_disk": true,
+  "logging_config": {
+    "version": 1,
+    "formatters": {
+      "magicsFormatter": { 
+        "format": "%(asctime)s\t%(levelname)s\t%(message)s",
+        "datefmt": ""
+      }
+    },
+    "handlers": {
+      "magicsHandler": { 
+        "class": "remotespark.livyclientlib.filehandler.MagicsFileHandler",
+        "formatter": "magicsFormatter"
+      }
+    },
+    "loggers": {
+      "magicsLogger": { 
+        "handlers": ["magicsHandler"],
+        "level": "DEBUG"
+      }
+    }
+  },
 
   "execute_timeout_seconds": 3600,
   "status_sleep_seconds": 2,
