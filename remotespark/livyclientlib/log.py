@@ -14,7 +14,7 @@ class Log(object):
     def __init__(self, caller_name):
         assert caller_name is not None
         self._caller_name = caller_name
-        self.logger = logging.getLogger(Constants.magics_logger_name)
+        self._getLogger()
     
     def debug(self, message):
         self.logger.debug(self._transform_log_message(message))
@@ -22,6 +22,9 @@ class Log(object):
     def error(self, message):
         self.logger.error(self._transform_log_message(message))
 
+    def _getLogger(self):
+        self.logger = logging.getLogger(Constants.magics_logger_name)
+
     def _transform_log_message(self, message):
         return '{}\t{}'.format(self._caller_name, message)
-
+    
