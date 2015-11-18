@@ -5,5 +5,6 @@ python:
 install:
     - pip install git+https://github.com/ellisonbg/altair
     - pip install -r requirements.txt -e .
+    - mkdir ~/.sparkmagic
     - cp remotespark/default_config.json ~/.sparkmagic/config.json
 script: nosetests
