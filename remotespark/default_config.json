@@ -33,7 +33,7 @@
       "magicsLogger": { 
         "handlers": ["magicsHandler"],
         "level": "DEBUG",
-	"propagate": 0
+        "propagate": 0
       }
     }
   },
