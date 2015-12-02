@@ -40,7 +40,7 @@ def test_get_config():
     config = {user_ev: usr, pass_ev: pwd, url_ev: url}
     _t_config_hook(config)
 
-    u, p, r = kernel.get_configuration()
+    u, p, r = kernel._get_configuration()
 
     assert u == usr
     assert p == pwd
@@ -49,17 +49,14 @@ def test_get_config():
 
 @with_setup(_setup, _teardown)
 def test_get_config_not_set():
-    kernel.send_response = sr_m = MagicMock()
     kernel.do_shutdown = ds_m = MagicMock()
 
     try:
-        kernel.get_configuration()
+        kernel._get_configuration()
 
         # Above should have thrown because env var not set
         assert False
-    except KeyError:
-        sr_m.assert_called_once_with(None, 'stream', {'text': "FATAL ERROR: Please set configuration for 'USER',"
-                                                              " 'PASS', 'URL to initialize Kernel.", 'name': 'stdout'})
+    except ValueError:
         ds_m.assert_called_once_with(False)
 
 
@@ -69,12 +66,12 @@ def test_initialize_magics():
     usr = "u"
     pwd = "p"
     url = "url"
-    kernel.execute_cell_for_user = execute_cell_mock = MagicMock()
+    kernel._execute_cell_for_user = execute_cell_mock = MagicMock()
     conn_str = get_connection_string(url, usr, pwd)
 
     # Call method
     assert not kernel.already_ran_once
-    kernel.initialize_magics(usr, pwd, url)
+    kernel._initialize_magics(usr, pwd, url)
 
     # Assertions
     assert kernel.already_ran_once
@@ -95,8 +92,8 @@ def test_do_execute_initializes_magics_if_not_run():
     config_mock = MagicMock()
     config_mock.return_value = (usr, pwd, url)
 
-    kernel.get_configuration = config_mock
-    kernel.execute_cell_for_user = execute_cell_mock = MagicMock()
+    kernel._get_configuration = config_mock
+    kernel._execute_cell_for_user = execute_cell_mock = MagicMock()
 
     code = "code"
 
@@ -117,7 +114,7 @@ def test_call_spark():
     # Set up
     code = "some spark code"
     kernel.already_ran_once = True
-    kernel.execute_cell_for_user = execute_cell_mock = MagicMock()
+    kernel._execute_cell_for_user = execute_cell_mock = MagicMock()
 
     # Call method
     kernel.do_execute(code, False)
@@ -134,7 +131,7 @@ def test_call_spark_sql_new_line():
         plain_code = "select tables"
         code = prepend + plain_code
         kernel.already_ran_once = True
-        kernel.execute_cell_for_user = execute_cell_mock = MagicMock()
+        kernel._execute_cell_for_user = execute_cell_mock = MagicMock()
 
         # Call method
         kernel.do_execute(code, False)
@@ -156,7 +153,7 @@ def test_call_spark_hive_new_line():
         plain_code = "select tables"
         code = prepend + plain_code
         kernel.already_ran_once = True
-        kernel.execute_cell_for_user = execute_cell_mock = MagicMock()
+        kernel._execute_cell_for_user = execute_cell_mock = MagicMock()
 
         # Call method
         kernel.do_execute(code, False)
@@ -174,8 +171,8 @@ def test_call_spark_hive_new_line():
 @with_setup(_setup, _teardown)
 def test_shutdown_cleans_up():
     # No restart
-    kernel.execute_cell_for_user = ecfu_m = MagicMock()
-    kernel.do_shutdown_ipykernel = dsi_m = MagicMock()
+    kernel._execute_cell_for_user = ecfu_m = MagicMock()
+    kernel._do_shutdown_ipykernel = dsi_m = MagicMock()
     kernel.already_ran_once = True
 
     kernel.do_shutdown(False)
@@ -185,8 +182,8 @@ def test_shutdown_cleans_up():
     dsi_m.assert_called_once_with(False)
 
     # On restart
-    kernel.execute_cell_for_user = ecfu_m = MagicMock()
-    kernel.do_shutdown_ipykernel = dsi_m = MagicMock()
+    kernel._execute_cell_for_user = ecfu_m = MagicMock()
+    kernel._do_shutdown_ipykernel = dsi_m = MagicMock()
     kernel.already_ran_once = True
 
     kernel.do_shutdown(True)
