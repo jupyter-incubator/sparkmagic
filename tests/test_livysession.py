@@ -256,7 +256,7 @@ class TestLivySession:
         http_client.get.side_effect = self._next_response_get
 
         _t_config_hook({
-            "status_sleep_seconds": 0.01,
+            "status_sleep_seconds": 0.011,
             "statement_sleep_seconds": 6000
         })
         session = LivySession(http_client, "scala", "-1", False)

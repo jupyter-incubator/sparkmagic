@@ -39,11 +39,12 @@ class Constants:
     create_sql_context_timeout_seconds = "create_sql_context_timeout_seconds"
 
     idle_session_status = "idle"
-    error_session_status = 'error'
-    dead_session_status = 'dead'
-    not_started_session_status = 'not_started'
-    starting_session_status = 'starting'
-    busy_session_status = 'busy'
+    error_session_status = "error"
+    dead_session_status = "dead"
+    not_started_session_status = "not_started"
+    starting_session_status = "starting"
+    busy_session_status = "busy"
+    fatal_error_suggestion = "fatal_error_suggestion"
 
     possible_session_status = [not_started_session_status, idle_session_status, starting_session_status,
                                busy_session_status, error_session_status, dead_session_status]
