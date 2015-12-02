@@ -32,24 +32,6 @@ class SparkKernelBase(IPythonKernel):
         # Disable warnings for test env in HDI
         requests.packages.urllib3.disable_warnings()
 
-        # try:
-        # Try to initialize altair
-        # from lightning.visualization import VisualizationLocal
-        # from IPython.core.getipython import get_ipython
-        # from IPython.display import display, Javascript, HTML
-        # ip = get_ipython()
-        # formatter = ip.display_formatter.formatters['text/html']
-        # js = VisualizationLocal.load_embed()
-        # display(HTML("<script>" + js + "</script>"))
-        # formatter.for_type(VisualizationLocal, lambda viz, kwds=None: viz.get_html())
-
-        # Use lightning here so that the graphic doesn't display later when magics are registered
-        # import altair.api as alt
-        # alt.use_renderer('lightning')
-        #     pass
-        # except:
-        #     self.logger.error("Could not initialize renderer or create dummy records")
-
     def get_configuration(self):
         try:
             username = get_configuration(self.username_conf_name)

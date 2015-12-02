@@ -9,15 +9,14 @@ import warnings
 
 from IPython.core.magic import (Magics, magics_class, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
-import altair.api as alt
 
 from .livyclientlib.sparkcontroller import SparkController
 from .livyclientlib.rawviewer import RawViewer
-from .livyclientlib.altairviewer import AltairViewer
 from .livyclientlib.log import Log
 from .livyclientlib.utils import get_magics_home_path, join_paths
 from .livyclientlib.configuration import get_configuration
 from .livyclientlib.constants import Constants
+from .livyclientlib.autovizviewer import AutoVizViewer
 
 
 @magics_class
@@ -27,10 +26,7 @@ class RemoteSparkMagics(Magics):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
 
-        # Suppress Altair pandas Future Warning
-        warnings.simplefilter(action="ignore", category=FutureWarning)
-
-        use_altair = get_configuration(Constants.use_altair, True) and not test
+        use_auto_viz = get_configuration(Constants.use_auto_viz, True) and not test
         self.interactive = get_configuration(Constants.display_info, False)
 
         self.logger = Log("RemoteSparkMagics")
@@ -53,9 +49,8 @@ class RemoteSparkMagics(Magics):
         except KeyError:
             self.logger.error("Could not read env vars for serialization.")
 
-        if use_altair:
-            alt.use_renderer('lightning')
-            self.viewer = AltairViewer()
+        if use_auto_viz:
+            self.viewer = AutoVizViewer()
         else:
             self.viewer = RawViewer()
 
@@ -82,8 +77,8 @@ class RemoteSparkMagics(Magics):
                Display the mode and available Livy endpoints.
            viewer
                Change how to display sql results: "auto" or "df"
-               "auto" will use Altair to create an automatic visualization.
-               "df" will display the results as pandas dataframes.
+               "auto" will create an automatic visualization for SQL queries.
+               "df" will display the SQL query results as pandas dataframes.
                e.g. `%spark viewer auto`
            add
                Add a Livy endpoint. First argument is the friendly name of the endpoint, second argument
@@ -115,7 +110,7 @@ class RemoteSparkMagics(Magics):
                 raise ValueError("Subcommand 'viewer' requires an argument. {}".format(usage))
             v = args.command[1].lower()
             if v == "auto":
-                self.viewer = AltairViewer()
+                self.viewer = AutoVizViewer()
             else:
                 self.viewer = RawViewer()
         # add

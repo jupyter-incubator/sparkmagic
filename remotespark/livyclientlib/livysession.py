@@ -134,19 +134,19 @@ class LivySession(object):
     def wait_for_status(self, status, seconds_to_wait):
         """Wait for session to be in a certain status. Sleep meanwhile. Calls done every status_sleep_seconds as
         indicated by the constructor."""
+        if seconds_to_wait <= 0.0:
+            raise LivyClientTimeoutError("Session {} did not reach {} status in time. Current status is {}."
+                                         .format(self.id, status, self.status))
         start_time = time()
         current_status = self.status
         if current_status == status:
             return
-        elif seconds_to_wait > 0:
-            self.logger.debug("Session {} in state {}. Sleeping {} seconds."
-                              .format(self.id, current_status, seconds_to_wait))
-            sleep(self._status_sleep_seconds)
-            elapsed = (time() - start_time)
-            return self.wait_for_status(status, seconds_to_wait - elapsed)
-        else:
-            raise LivyClientTimeoutError("Session {} did not reach {} status in time. Current status is {}."
-                                         .format(self.id, status, current_status))
+
+        self.logger.debug("Session {} in state {}. Sleeping {} seconds."
+                          .format(self.id, current_status, seconds_to_wait))
+        sleep(self._status_sleep_seconds)
+        elapsed = (time() - start_time)
+        return self.wait_for_status(status, seconds_to_wait - elapsed)
 
     def _statements_url(self):
         return "/sessions/{}/statements".format(self.id)
