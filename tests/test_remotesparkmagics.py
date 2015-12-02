@@ -3,7 +3,7 @@ from mock import MagicMock
 
 from remotespark.RemoteSparkMagics import RemoteSparkMagics
 from remotespark.livyclientlib.rawviewer import RawViewer
-from remotespark.livyclientlib.altairviewer import AltairViewer
+from remotespark.livyclientlib.autovizviewer import AutoVizViewer
 from remotespark.livyclientlib.constants import Constants
 
 
@@ -124,7 +124,7 @@ def test_viewer_command():
 
     magic.spark(command)
 
-    assert type(magic.viewer) == AltairViewer
+    assert type(magic.viewer) == AutoVizViewer
 
     command = "viewer df"
     magic.viewer = None
