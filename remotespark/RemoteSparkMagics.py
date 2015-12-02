@@ -26,9 +26,6 @@ class RemoteSparkMagics(Magics):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
 
-        # Suppress Altair pandas Future Warning
-        warnings.simplefilter(action="ignore", category=FutureWarning)
-
         use_auto_viz = get_configuration(Constants.use_auto_viz, True) and not test
         self.interactive = get_configuration(Constants.display_info, False)
 
@@ -80,8 +77,8 @@ class RemoteSparkMagics(Magics):
                Display the mode and available Livy endpoints.
            viewer
                Change how to display sql results: "auto" or "df"
-               "auto" will use Altair to create an automatic visualization.
-               "df" will display the results as pandas dataframes.
+               "auto" will create an automatic visualization for SQL queries.
+               "df" will display the SQL query results as pandas dataframes.
                e.g. `%spark viewer auto`
            add
                Add a Livy endpoint. First argument is the friendly name of the endpoint, second argument

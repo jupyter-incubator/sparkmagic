@@ -20,7 +20,7 @@ def _setup():
     global kernel, user_ev, pass_ev, url_ev
 
     kernel = TestSparkKernel()
-    kernel.use_altair = False
+    kernel.use_auto_viz = False
     kernel.username_conf_name = user_ev
     kernel.password_conf_name = pass_ev
     kernel.url_conf_name = url_ev
