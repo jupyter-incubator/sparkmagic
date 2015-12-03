@@ -68,23 +68,26 @@ class LivySession(object):
 
         self.logger.debug("Starting '{}' sql and hive session.".format(self.language))
 
-        try:
-            self.wait_for_status(Constants.idle_session_status, self._create_sql_context_timeout_seconds)
-            self.execute(self._get_sql_context_creation_command())
-            self.logger.debug("Started '{}' sql session.".format(self.language))
-        except LivyClientTimeoutError:
-            raise LivyClientTimeoutError("Failed to create the SQL context in time. Timed out after {} seconds."
-                                         .format(self._create_sql_context_timeout_seconds))
-
-        try:
-            self.wait_for_status(Constants.idle_session_status, self._create_sql_context_timeout_seconds)
-            self.execute(self._get_hive_context_creation_command())
-            self.logger.debug("Started '{}' hive session.".format(self.language))
-        except LivyClientTimeoutError:
-            raise LivyClientTimeoutError("Failed to create the Hive context in time. Timed out after {} seconds."
-                                         .format(self._create_sql_context_timeout_seconds))
+        self._create_context("sql")
+        self._create_context("hive")
 
         self._state.sql_context_created = True
+
+    def _create_context(self, context_type):
+        if context_type == "sql":
+            command = self._get_sql_context_creation_command()
+        elif context_type == "hive":
+            command = self._get_hive_context_creation_command()
+        else:
+            raise ValueError("Cannot create context of type {}.".format(context_type))
+
+        try:
+            self.wait_for_status(Constants.idle_session_status, self._create_sql_context_timeout_seconds)
+            self.execute(command)
+            self.logger.debug("Started '{}' {} session.".format(self.language, context_type))
+        except LivyClientTimeoutError:
+            raise LivyClientTimeoutError("Failed to create the {} context in time. Timed out after {} seconds."
+                                         .format(context_type, self._create_sql_context_timeout_seconds))
 
     @property
     def id(self):
