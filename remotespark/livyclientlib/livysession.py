@@ -68,15 +68,26 @@ class LivySession(object):
 
         self.logger.debug("Starting '{}' sql and hive session.".format(self.language))
 
-        self.wait_for_status(Constants.idle_session_status, self._create_sql_context_timeout_seconds)
-        self.execute(self._get_sql_context_creation_command())
-        self.logger.debug("Started '{}' sql session.".format(self.language))
-
-        self.wait_for_status(Constants.idle_session_status, self._create_sql_context_timeout_seconds)
-        self.execute(self._get_hive_context_creation_command())
-        self.logger.debug("Started '{}' hive session.".format(self.language))
+        self._create_context("sql")
+        self._create_context("hive")
 
         self._state.sql_context_created = True
+
+    def _create_context(self, context_type):
+        if context_type == "sql":
+            command = self._get_sql_context_creation_command()
+        elif context_type == "hive":
+            command = self._get_hive_context_creation_command()
+        else:
+            raise ValueError("Cannot create context of type {}.".format(context_type))
+
+        try:
+            self.wait_for_status(Constants.idle_session_status, self._create_sql_context_timeout_seconds)
+            self.execute(command)
+            self.logger.debug("Started '{}' {} session.".format(self.language, context_type))
+        except LivyClientTimeoutError:
+            raise LivyClientTimeoutError("Failed to create the {} context in time. Timed out after {} seconds."
+                                         .format(context_type, self._create_sql_context_timeout_seconds))
 
     @property
     def id(self):
@@ -134,14 +145,17 @@ class LivySession(object):
     def wait_for_status(self, status, seconds_to_wait):
         """Wait for session to be in a certain status. Sleep meanwhile. Calls done every status_sleep_seconds as
         indicated by the constructor."""
-        if seconds_to_wait <= 0.0:
-            raise LivyClientTimeoutError("Session {} did not reach {} status in time. Current status is {}."
-                                         .format(self.id, status, self.status))
-        start_time = time()
         current_status = self.status
         if current_status == status:
             return
 
+        if seconds_to_wait <= 0.0:
+            error = "Session {} did not reach {} status in time. Current status is {}."\
+                .format(self.id, status, current_status)
+            self.logger.error(error)
+            raise LivyClientTimeoutError(error)
+
+        start_time = time()
         self.logger.debug("Session {} in state {}. Sleeping {} seconds."
                           .format(self.id, current_status, seconds_to_wait))
         sleep(self._status_sleep_seconds)
