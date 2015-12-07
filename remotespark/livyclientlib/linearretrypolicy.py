@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 
-class LinearRetryPolicy:
+class LinearRetryPolicy(object):
     """Retry policy that always returns the same number of seconds to sleep between calls,
     takes all status codes 500 or above to be retriable, and retries a given maximum number of times."""
 
