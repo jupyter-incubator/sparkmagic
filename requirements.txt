@@ -5,3 +5,5 @@ requests
 pandas
 numpy
 ipykernel==4.1.1
+ipywidgets
+plotly
