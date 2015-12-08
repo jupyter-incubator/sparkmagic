@@ -79,13 +79,13 @@ class SparkKernelBase(IPythonKernel):
                            log_if_error="Failed to load the Spark magics library.")
         self.logger.debug("Loaded magics.")
 
+        self.already_ran_once = True
+
         add_endpoint_code = "%spark add {} {} {} skip".format(
             self.client_name, self.session_language, connection_string)
         self._execute_cell(add_endpoint_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to create a Livy session.")
         self.logger.debug("Added endpoint.")
-
-        self.already_ran_once = True
 
     def _get_configuration(self):
         try:
