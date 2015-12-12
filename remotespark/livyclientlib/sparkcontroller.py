@@ -4,6 +4,8 @@ Provides the %spark magic."""
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
+from IPython.core.getipython import get_ipython
+
 from .clientmanager import ClientManager
 from .log import Log
 from .livyclientfactory import LivyClientFactory
@@ -36,15 +38,15 @@ class SparkController(object):
 
         # Execute in context
         if context == Constants.context_name_sql:
-            res = client_to_use.execute_sql(cell)
+            result = client_to_use.execute_sql(cell)
         elif context == Constants.context_name_hive:
-            res = client_to_use.execute_hive(cell)
+            result = client_to_use.execute_hive(cell)
         elif context == Constants.context_name_spark:
-            res = client_to_use.execute(cell)
+            result = client_to_use.execute(cell)
         else:
             raise ValueError("Context '{}' specified is not known.")
 
-        return res
+        return result.render(get_ipython())
 
     def cleanup(self):
         self.client_manager.clean_up_all()

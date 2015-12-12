@@ -5,7 +5,7 @@ import pandas as pd
 import json
 
 from .pandaslivyclientbase import PandasLivyClientBase
-
+from .result import DataFrameResult
 
 class PandasPysparkLivyClient(PandasLivyClientBase):
     """Spark client for Livy endpoint in PySpark"""
@@ -15,7 +15,7 @@ class PandasPysparkLivyClient(PandasLivyClientBase):
 
     def get_records(self, context_name, command, max_take_rows):
         command = '{}.sql("{}").toJSON().take({})'.format(context_name, command, max_take_rows)
-        return self.execute(command)
+        return str(self.execute(command))
 
     def no_records(self, records_text):
         return records_text == "[]"
@@ -24,9 +24,10 @@ class PandasPysparkLivyClient(PandasLivyClientBase):
         records = list()
         columns = eval(columns_text)
 
-        return pd.DataFrame.from_records(records, columns=columns)
+        return DataFrameResult(pd.DataFrame.from_records(records,
+                                                         columns=columns))
 
     def get_data_dataframe(self, records_text):
         json_data = eval(records_text)
         json_array = "[{}]".format(",".join(json_data))
-        return pd.DataFrame(json.loads(json_array))
+        return DataFrameResult(pd.DataFrame(json.loads(json_array)))

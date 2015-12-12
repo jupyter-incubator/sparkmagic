@@ -31,7 +31,8 @@ class PandasLivyClientBase(LivyClient):
             return records_text
 
     def get_columns(self, context_name, command):
-        return self.execute(self.make_context_columns(context_name, command))
+        return str(self.execute(self.make_context_columns(context_name,
+                                                          command)))
 
     @staticmethod
     def make_context_columns(context_name, command):

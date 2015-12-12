@@ -108,3 +108,7 @@ def get_instance_id():
         raise ValueError("Tried to return empty instance ID.")
 
     return instance_id
+
+def write_to_iopub_socket(ipykernel, name, content):
+    ipykernel.send_response(ipykernel.iopub_socket, "stream",
+                            { "name": name, "text": content })

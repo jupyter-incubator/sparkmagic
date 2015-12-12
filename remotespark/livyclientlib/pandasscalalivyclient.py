@@ -6,6 +6,7 @@ import json
 import re
 
 from .pandaslivyclientbase import PandasLivyClientBase
+from .result import DataFrameResult
 
 
 class PandasScalaLivyClient(PandasLivyClientBase):
@@ -15,7 +16,7 @@ class PandasScalaLivyClient(PandasLivyClientBase):
 
     def get_records(self, context_name, command, max_take_rows):
         command = '{}.sql("{}").toJSON.take({}).foreach(println)'.format(context_name, command, max_take_rows)
-        return self.execute(command)
+        return str(self.execute(command))
 
     def no_records(self, records_text):
         return records_text == ""
@@ -40,8 +41,9 @@ class PandasScalaLivyClient(PandasLivyClientBase):
         # Convert the columns into an array of text
         columns = [s.strip() for s in captured_group.split(",")]
 
-        return pd.DataFrame.from_records(records, columns=columns)
+        return DataFrameResult(pd.DataFrame.from_records(records,
+                                                         columns=columns))
 
     def get_data_dataframe(self, records_text):
         json_array = "[{}]".format(",".join(records_text.split("\n")))
-        return pd.DataFrame(json.loads(json_array))
+        return DataFrameResult(pd.DataFrame(json.loads(json_array)))

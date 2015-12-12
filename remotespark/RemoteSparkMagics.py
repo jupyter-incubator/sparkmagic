@@ -11,13 +11,10 @@ from IPython.core.magic import (Magics, magics_class, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
 
 from .livyclientlib.sparkcontroller import SparkController
-from .livyclientlib.rawviewer import RawViewer
 from .livyclientlib.log import Log
 from .livyclientlib.utils import get_magics_home_path, join_paths
 from .livyclientlib.configuration import get_configuration
 from .livyclientlib.constants import Constants
-from .livyclientlib.autovizviewer import AutoVizViewer
-
 
 @magics_class
 class RemoteSparkMagics(Magics):
@@ -49,11 +46,6 @@ class RemoteSparkMagics(Magics):
         except KeyError:
             self.logger.error("Could not read env vars for serialization.")
 
-        if use_auto_viz:
-            self.viewer = AutoVizViewer()
-        else:
-            self.viewer = RawViewer()
-
         self.logger.debug("Initialized spark magics.")
 
     @magic_arguments()
@@ -75,11 +67,6 @@ class RemoteSparkMagics(Magics):
            -----------
            info
                Display the mode and available Livy endpoints.
-           viewer
-               Change how to display sql results: "auto" or "df"
-               "auto" will create an automatic visualization for SQL queries.
-               "df" will display the SQL query results as pandas dataframes.
-               e.g. `%spark viewer auto`
            add
                Add a Livy endpoint. First argument is the friendly name of the endpoint, second argument
                is the language, and third argument is the connection string. A fourth argument specifying if
@@ -104,15 +91,6 @@ class RemoteSparkMagics(Magics):
         if subcommand == "info":
             # Info is printed by default
             pass
-        # viewer
-        elif subcommand == "viewer":
-            if len(args.command) != 2:
-                raise ValueError("Subcommand 'viewer' requires an argument. {}".format(usage))
-            v = args.command[1].lower()
-            if v == "auto":
-                self.viewer = AutoVizViewer()
-            else:
-                self.viewer = RawViewer()
         # add
         elif subcommand == "add":
             if len(args.command) != 4 and len(args.command) != 5:
@@ -136,8 +114,9 @@ class RemoteSparkMagics(Magics):
             self.spark_controller.cleanup()
         # run
         elif len(subcommand) == 0:
-            result = self.spark_controller.run_cell(args.endpoint, args.context, cell)
-            return self.viewer.visualize(result, args.chart)
+            return self.spark_controller.run_cell(args.endpoint,
+                                                  args.context,
+                                                  cell)
         # error
         else:
             raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
