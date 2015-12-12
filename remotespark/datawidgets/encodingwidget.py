@@ -20,10 +20,9 @@ class EncodingWidget(w.FlexBox):
 
         self.widget = w.VBox()
 
-        children = list()
-        children.append(w.HTML('Encoding:', width='148px', height='32px'))
+        self.title = w.HTML('Encoding:', width='148px', height='32px')
 
-        # X
+        # X view
         def x_changed_callback(name, old_value, new_value):
             self.encoding.x = new_value
             return change_hook()
@@ -46,27 +45,25 @@ class EncodingWidget(w.FlexBox):
             self.encoding.y_aggregation = new_value
             return change_hook()
 
-        y_agg_view = w.Dropdown(options={"-": "none", "Avg": "avg"}, description="Op.", value="none")
+        y_agg_view = w.Dropdown(options={"-": "none", "Avg": "avg"},
+                                description="Func.",
+                                value="none")
         y_agg_view.on_trait_change(y_agg_changed_callback, 'value')
 
+        # Y view
         self.y_view = w.HBox()
         self.y_view.children = [y_column_view, y_agg_view]
 
-        children.append(self.x_view)
-        children.append(self.y_view)
-
+        children = [self.title, self.x_view, self.y_view]
         self.widget.children = children
 
         self.children = [self.widget]
 
-    def show_x(self):
-        self.x_view.visible = True
+    def show_x(self, boolean):
+        self.x_view.visible = boolean
 
-    def hide_x(self):
-        self.x_view.visible = False
+    def show_y(self, boolean):
+        self.y_view.visible = boolean
 
-    def show_y(self):
-        self.y_view.visible = True
-
-    def hide_y(self):
-        self.y_view.visible = False
+    def show_controls(self, boolean):
+        self.widget.visible = boolean
