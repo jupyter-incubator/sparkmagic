@@ -14,7 +14,7 @@ Every result can also be converted to a string with the str function."""
 from .utils import write_to_iopub_socket
 
 class Result(object):
-    def render(self, ipykernel):
+    def render(self, shell):
         raise NotImplementedError("Render method must be overridden by subclass")
 
     def __str__(self):
@@ -27,8 +27,8 @@ class SuccessResult(Result):
     def __str__(self):
         return self.success
 
-    def render(self, ipykernel):
-        write_to_iopub_socket(ipykernel, "stdout", self.success)
+    def render(self, shell):
+        shell.write(self.success)
         return None
 
 class ErrorResult(Result):
@@ -38,8 +38,8 @@ class ErrorResult(Result):
     def __str__(self):
         return self.error
         
-    def render(self, ipykernel):
-        write_to_iopub_socket(ipykernel, "stderr", self.error)
+    def render(self, shell):
+        shell.write_err(self.error)
         return None
 
 class DataFrameResult(Result):
@@ -49,5 +49,5 @@ class DataFrameResult(Result):
     def __str__(self):
         return str(self.df)
         
-    def render(self, ipykernel):
+    def render(self, shell):
         return self.df
