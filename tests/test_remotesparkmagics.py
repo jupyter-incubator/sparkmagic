@@ -2,24 +2,18 @@ from nose.tools import raises, with_setup
 from mock import MagicMock
 
 from remotespark.RemoteSparkMagics import RemoteSparkMagics
-from remotespark.livyclientlib.rawviewer import RawViewer
-from remotespark.livyclientlib.autovizviewer import AutoVizViewer
 from remotespark.livyclientlib.constants import Constants
 
 
 magic = None
 spark_controller = None
-viewer = None
-
 
 def _setup():
     global magic, spark_controller, viewer
     magic = RemoteSparkMagics(shell=None, test=True)
 
     spark_controller = MagicMock()
-    viewer = MagicMock
     magic.spark_controller = spark_controller
-    magic.viewer = viewer
 
 
 def _teardown():
@@ -103,8 +97,6 @@ def test_run_cell_command_parses():
     run_cell_method = MagicMock()
     run_cell_method.return_value = 1
     spark_controller.run_cell = run_cell_method
-    visualize_method = MagicMock()
-    viewer.visualize = visualize_method
 
     command = "-e"
     name = "endpoint_name"
@@ -114,21 +106,3 @@ def test_run_cell_command_parses():
     magic.spark(line, cell)
 
     run_cell_method.assert_called_once_with(name, Constants.context_name_spark, cell)
-    visualize_method.assert_called_once_with(1, "area")
-
-
-@with_setup(_setup, _teardown)
-def test_viewer_command():
-    command = "viewer auto"
-    magic.viewer = None
-
-    magic.spark(command)
-
-    assert type(magic.viewer) == AutoVizViewer
-
-    command = "viewer df"
-    magic.viewer = None
-
-    magic.spark(command)
-
-    assert type(magic.viewer) == RawViewer

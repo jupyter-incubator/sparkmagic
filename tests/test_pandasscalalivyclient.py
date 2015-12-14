@@ -4,6 +4,7 @@ from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
 from remotespark.livyclientlib.pandasscalalivyclient import PandasScalaLivyClient
+from remotespark.livyclientlib.result import Result, DataFrameResult
 
 
 mock_spark_session = None
@@ -44,15 +45,20 @@ def test_execute_sql_pandas_scala_livy():
     # desired pandas df
     records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12},
                {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0}]
-    desired_result = pd.DataFrame(records)
+    desired_df = pd.DataFrame(records)
 
     command = "command"
     result = client.execute_sql(command)
 
     execute_m.assert_called_with('sqlContext.sql("{}").toJSON.take({}).foreach(println)'.format(command, 10))
 
-    # Verify result is desired pandas df
-    assert_frame_equal(desired_result, result)
+    assert isinstance(result, Result)
+    assert isinstance(result, DataFrameResult)
+    mock_shell = MagicMock()
+    df = result.render(mock_shell)
+    assert not mock_shell.write.called
+    assert not mock_shell.write_err.called
+    assert_frame_equal(desired_df, df)
 
 
 @with_setup(_setup, _teardown)
@@ -68,15 +74,20 @@ def test_execute_sql_pandas_scala_livy_no_results():
 
     # pandas to return
     columns = ["buildingID", "date", "temp_diff"]
-    desired_result = pd.DataFrame.from_records(list(), columns=columns)
+    desired_df = pd.DataFrame.from_records(list(), columns=columns)
 
     result = client.execute_sql(command)
 
     # Verify basic calls were done
     execute_m.assert_called_with('sqlContext.sql("{}").columns'.format(command))
-
-    # Verify result is desired pandas dataframe
-    assert_frame_equal(desired_result, result)
+    
+    assert isinstance(result, Result)
+    assert isinstance(result, DataFrameResult)
+    mock_shell = MagicMock()
+    df = result.render(mock_shell)
+    assert not mock_shell.write.called
+    assert not mock_shell.write_err.called
+    assert_frame_equal(desired_df, df)
 
 
 @with_setup(_setup, _teardown)
