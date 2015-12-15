@@ -52,6 +52,8 @@ class AutoVizWidget(w.FlexBox):
         self.encoding_widget.show_x(self.renderer.display_x(self.encoding.chart_type))
         self.encoding_widget.show_y(self.renderer.display_y(self.encoding.chart_type))
         self.encoding_widget.show_controls(self.renderer.display_controls(self.encoding.chart_type))
+        self.encoding_widget.show_logarithmic_x_axis(self.renderer.display_logarithmic_x_axis(self.encoding.chart_type))
+        self.encoding_widget.show_logarithmic_y_axis(self.renderer.display_logarithmic_y_axis(self.encoding.chart_type))
 
     def _create_controls_widget(self):
         # Create types of viz hbox

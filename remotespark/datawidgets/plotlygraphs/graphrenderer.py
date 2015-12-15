@@ -28,6 +28,14 @@ class GraphRenderer(object):
         return GraphRenderer._get_graph(chart_type).display_y()
 
     @staticmethod
+    def display_logarithmic_x_axis(chart_type):
+        return GraphRenderer._get_graph(chart_type).display_logarithmic_x_axis()
+
+    @staticmethod
+    def display_logarithmic_y_axis(chart_type):
+        return GraphRenderer._get_graph(chart_type).display_logarithmic_y_axis()
+
+    @staticmethod
     def display_controls(chart_type):
         display_x = GraphRenderer.display_x(chart_type)
         display_y = GraphRenderer.display_y(chart_type)

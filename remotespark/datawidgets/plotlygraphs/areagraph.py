@@ -10,9 +10,3 @@ class AreaGraph(GraphBase):
     def _get_data(self, df, encoding):
         x_values, y_values = GraphBase._get_x_y_values(df, encoding)
         return [Scatter(x=x_values, y=y_values, fill="tonexty")]
-
-    def display_x(self):
-        return True
-
-    def display_y(self):
-        return True

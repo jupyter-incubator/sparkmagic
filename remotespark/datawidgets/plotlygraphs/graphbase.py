@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from plotly.graph_objs import Figure, Data
+from plotly.graph_objs import Figure, Data, Layout
 from plotly.offline import iplot
 
 
@@ -9,15 +9,36 @@ class GraphBase(object):
     def render(self, df, encoding, output):
         data = self._get_data(df, encoding)
 
+        type_x_axis = "-"
+        if encoding.logarithmic_x_axis:
+            type_x_axis = "log"
+
+        type_y_axis = "-"
+        if encoding.logarithmic_y_axis:
+            type_y_axis = "log"
+
+        layout = Layout(xaxis=dict(type=type_x_axis, rangemode="tozero", title=encoding.x),
+                        yaxis=dict(type=type_y_axis, rangemode="tozero", title=encoding.y))
+
         with output:
-            fig = Figure(data=Data(data))
+            fig = Figure(data=Data(data), layout=layout)
             iplot(fig, show_link=False)
 
-    def display_x(self):
-        raise NotImplementedError()
+    @staticmethod
+    def display_x():
+        return True
 
-    def display_y(self):
-        raise NotImplementedError()
+    @staticmethod
+    def display_y():
+        return True
+
+    @staticmethod
+    def display_logarithmic_x_axis():
+        return True
+
+    @staticmethod
+    def display_logarithmic_y_axis():
+        return True
 
     def _get_data(self, df, encoding):
         raise NotImplementedError()

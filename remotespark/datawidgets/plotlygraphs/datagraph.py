@@ -14,6 +14,14 @@ class DataGraph(object):
             iplot(table, show_link=False)
 
     @staticmethod
+    def display_logarithmic_x_axis():
+        return False
+
+    @staticmethod
+    def display_logarithmic_y_axis():
+        return False
+
+    @staticmethod
     def display_x():
         return False
 

@@ -60,13 +60,35 @@ class EncodingWidget(w.FlexBox):
         self.y_view = w.HBox()
         self.y_view.children = [y_column_view, y_agg_view]
 
-        children = [self.title, self.x_view, self.y_view]
+        # Logarithmic X axis
+        def logarithmic_x_callback(name, old_value, new_value):
+            self.encoding.logarithmic_x_axis = new_value
+            return change_hook()
+
+        self.logarithmic_x_axis = w.Checkbox(description="Log scale X", value=encoding.logarithmic_x_axis)
+        self.logarithmic_x_axis.on_trait_change(logarithmic_x_callback, "value")
+
+        # Logarithmic Y axis
+        def logarithmic_y_callback(name, old_value, new_value):
+            self.encoding.logarithmic_y_axis = new_value
+            return change_hook()
+
+        self.logarithmic_y_axis = w.Checkbox(description="Log scale Y", value=encoding.logarithmic_y_axis)
+        self.logarithmic_y_axis.on_trait_change(logarithmic_y_callback, "value")
+
+        children = [self.title, self.x_view, self.y_view, self.logarithmic_x_axis, self.logarithmic_y_axis]
         self.widget.children = children
 
         self.children = [self.widget]
 
     def show_x(self, boolean):
         self.x_view.visible = boolean
+
+    def show_logarithmic_x_axis(self, boolean):
+        self.logarithmic_x_axis.visible = boolean
+
+    def show_logarithmic_y_axis(self, boolean):
+        self.logarithmic_y_axis.visible = boolean
 
     def show_y(self, boolean):
         self.y_view.visible = boolean

@@ -11,8 +11,3 @@ class BarGraph(GraphBase):
         x_values, y_values = GraphBase._get_x_y_values(df, encoding)
         return [Bar(x=x_values, y=y_values)]
 
-    def display_x(self):
-        return True
-
-    def display_y(self):
-        return True
