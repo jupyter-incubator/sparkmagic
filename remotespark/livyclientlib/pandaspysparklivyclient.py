@@ -14,7 +14,7 @@ class PandasPysparkLivyClient(PandasLivyClientBase):
         super(PandasPysparkLivyClient, self).__init__(session, max_take_rows)
 
     def get_records(self, context_name, command, max_take_rows):
-        command = '{}.sql("{}").toJSON().take({})'.format(context_name, command, max_take_rows)
+        command = '{}.sql("""{}""").toJSON().take({})'.format(context_name, command, max_take_rows)
         return self.execute(command)
 
     def no_records(self, records_text):

@@ -49,7 +49,7 @@ def test_execute_sql_pandas_pyspark_livy():
     command = "command"
     result = client.execute_sql(command)
 
-    execute_m.assert_called_with('sqlContext.sql("{}").toJSON().take({})'.format(command, 10))
+    execute_m.assert_called_with('sqlContext.sql("""{}""").toJSON().take({})'.format(command, 10))
 
     # Verify result is desired pandas df
     assert_frame_equal(desired_result, result)
@@ -73,7 +73,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
     result = client.execute_sql(command)
 
     # Verify basic calls were done
-    execute_m.assert_called_with('sqlContext.sql("{}").columns'.format(command))
+    execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
 
     # Verify result is desired pandas dataframe
     assert_frame_equal(desired_result, result)
@@ -93,7 +93,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
     result = client.execute_sql(command)
 
     # Verify basic calls were done
-    execute_m.assert_called_with('sqlContext.sql("{}").columns'.format(command))
+    execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
 
     # Verify result is exception
     assert result == some_exception
@@ -109,7 +109,7 @@ def test_execute_sql_pandas_pyspark_livy_some_exception():
     result = client.execute_sql(command)
 
     # Verify basic calls were done
-    execute_m.assert_called_with('sqlContext.sql("{}").toJSON().take({})'.format(command, 10))
+    execute_m.assert_called_with('sqlContext.sql("""{}""").toJSON().take({})'.format(command, 10))
 
     # Verify result is desired pandas dataframe
     assert some_exception == result
