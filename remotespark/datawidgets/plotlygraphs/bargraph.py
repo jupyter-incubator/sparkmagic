@@ -8,7 +8,8 @@ from graphbase import GraphBase
 
 class BarGraph(GraphBase):
     def _get_data(self, df, encoding):
-        return [Bar(x=GraphBase._get_x_values(df, encoding), y=GraphBase._get_y_values(df, encoding))]
+        x_values, y_values = GraphBase._get_x_y_values(df, encoding)
+        return [Bar(x=x_values, y=y_values)]
 
     def display_x(self):
         return True

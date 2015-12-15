@@ -42,12 +42,18 @@ class EncodingWidget(w.FlexBox):
 
         # Y aggregator
         def y_agg_changed_callback(name, old_value, new_value):
-            self.encoding.y_aggregation = new_value
+            if new_value == "none":
+                self.encoding.y_aggregation = None
+            else:
+                self.encoding.y_aggregation = new_value
             return change_hook()
 
-        y_agg_view = w.Dropdown(options={"-": "none", "Avg": "avg"},
+        value_for_view = "none"
+        if encoding.y_aggregation is not None:
+            value_for_view = encoding.y_aggregation
+        y_agg_view = w.Dropdown(options={"-": "none", "Avg": "avg", "Min": "min", "Max": "max", "Sum": "sum"},
                                 description="Func.",
-                                value="none")
+                                value=value_for_view)
         y_agg_view.on_trait_change(y_agg_changed_callback, 'value')
 
         # Y view
