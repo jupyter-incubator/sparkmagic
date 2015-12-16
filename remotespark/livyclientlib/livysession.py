@@ -198,7 +198,8 @@ class LivySession(object):
                 if statement_output["status"] == "ok":
                     out = SuccessResult(statement_output["data"]["text/plain"])
                 elif statement_output["status"] == "error":
-                    out = ErrorResult(statement_output['evalue'])
+                    out = ErrorResult(statement_output["evalue"] + "\n" + \
+                                        "".join(statement_output["traceback"]))
 
         return out
 
