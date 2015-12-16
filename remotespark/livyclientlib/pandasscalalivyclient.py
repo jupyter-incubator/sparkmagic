@@ -15,7 +15,7 @@ class PandasScalaLivyClient(PandasLivyClientBase):
         super(PandasScalaLivyClient, self).__init__(session, max_take_rows)
 
     def get_records(self, context_name, command, max_take_rows):
-        command = '{}.sql("{}").toJSON.take({}).foreach(println)'.format(context_name, command, max_take_rows)
+        command = '{}.sql("""{}""").toJSON.take({}).foreach(println)'.format(context_name, command, max_take_rows)
         return str(self.execute(command))
 
     def no_records(self, records_text):

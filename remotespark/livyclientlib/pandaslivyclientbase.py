@@ -36,7 +36,7 @@ class PandasLivyClientBase(LivyClient):
 
     @staticmethod
     def make_context_columns(context_name, command):
-        return '{}.sql("{}").columns'.format(context_name, command)
+        return '{}.sql("""{}""").columns'.format(context_name, command)
 
     # Please override here down
     def get_records(self, context_name, command, max_take_rows):

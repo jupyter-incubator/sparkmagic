@@ -46,6 +46,7 @@ class SparkController(object):
         else:
             raise ValueError("Context '{}' specified is not known.")
 
+        print result
         return result.render(get_ipython())
 
     def cleanup(self):

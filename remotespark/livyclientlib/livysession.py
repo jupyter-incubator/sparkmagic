@@ -9,6 +9,7 @@ from .constants import Constants
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livysessionstate import LivySessionState
 from .configuration import get_configuration
+from .result import SuccessResult, ErrorResult
 
 
 class LivySession(object):
@@ -195,11 +196,11 @@ class LivySession(object):
                 
                 statement_output = statement["output"]
                 if statement_output["status"] == "ok":
-                    output = statement_output["data"]["text/plain"]
+                    out = SuccessResult(statement_output["data"]["text/plain"])
                 elif statement_output["status"] == "error":
-                    output = statement_output['evalue']
+                    out = ErrorResult(statement_output['evalue'])
 
-        return output
+        return out
 
     def _get_livy_kind(self):
         if self.language == Constants.lang_scala:
