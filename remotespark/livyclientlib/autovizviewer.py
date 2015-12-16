@@ -2,8 +2,6 @@
 # Distributed under the terms of the Modified BSD License.
 import pandas as pd
 
-from plotly.offline import init_notebook_mode, iplot
-
 from .log import Log
 from .configuration import get_configuration
 from .constants import Constants
@@ -13,7 +11,6 @@ class AutoVizViewer(object):
 
     def __init__(self):
         self.logger = Log("AutoVizViewer")
-        init_notebook_mode()
 
     """A viewer that returns results as they are."""
     def visualize(self, result, chart_type=None):
@@ -34,7 +31,5 @@ class AutoVizViewer(object):
         #     return result
         #
         # return result
-
-        iplot([{"x": [1, 2, 3], "y": [3, 1, 6]}])
 
         return None

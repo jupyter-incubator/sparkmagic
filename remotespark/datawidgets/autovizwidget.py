@@ -2,34 +2,51 @@
 # Distributed under the terms of the Modified BSD License.
 
 import pandas as pd
-import ipywidgets as w
+from ipywidgets import FlexBox
 from IPython.display import display
 
-from .plotlygraphs.graphrenderer import GraphRenderer
 from .encodingwidget import EncodingWidget
+from .ipywidgetfactory import IpyWidgetFactory
 
 
-class AutoVizWidget(w.FlexBox):
-    def __init__(self, df, encoding, nested_widget_mode=False, **kwargs):
+class IpythonDisplay(object):
+    @staticmethod
+    def display_to_ipython(to_display):
+        display(to_display)
+
+
+class AutoVizWidgetTest(FlexBox):
+    """This class should not be used by anyone outside of the project. People should use AutoVizWidget instead.
+    This class is here for testing purposes."""
+    def __init__(self, df, encoding, renderer, ipywidget_factory, encoding_widget, ipython_display,
+                 nested_widget_mode=False, testing=False, **kwargs):
         assert encoding is not None
         assert df is not None
         assert type(df) is pd.DataFrame
         assert len(df.columns) > 0
+        assert renderer is not None
+        assert ipywidget_factory is not None
 
         kwargs['orientation'] = 'vertical'
-        super(AutoVizWidget, self).__init__((), **kwargs)
+
+        if not testing:
+            super(AutoVizWidgetTest, self).__init__((), **kwargs)
+
+        self.ipywidget_factory = ipywidget_factory
+        self.encoding_widget = encoding_widget
 
         self.df = df
         self.encoding = encoding
-        self.renderer = GraphRenderer()
+        self.renderer = renderer
+        self.ipython_display = ipython_display
 
         # Widget that will become the only child of AutoVizWidget
-        self.widget = w.VBox()
+        self.widget = self.ipywidget_factory.get_vbox()
 
         # Create output area
-        self.to_display = w.Output()
+        self.to_display = self.ipywidget_factory.get_output()
         self.to_display.width = "800px"
-        self.output = w.HBox()
+        self.output = self.ipywidget_factory.get_hbox()
         self.output.children = [self.to_display]
 
         self.controls = self._create_controls_widget()
@@ -38,8 +55,8 @@ class AutoVizWidget(w.FlexBox):
             self.widget.children = [self.controls, self.output]
             self.children = [self.widget]
         else:
-            display(self.controls)
-            display(self.to_display)
+            self.ipython_display.display(self.controls)
+            self.ipython_display.display(self.to_display)
 
         self.on_render_viz()
 
@@ -59,19 +76,16 @@ class AutoVizWidget(w.FlexBox):
         # Create types of viz hbox
         viz_types_widget = self._create_viz_types_buttons()
 
-        # Create encoding widget
-        self.encoding_widget = EncodingWidget(self.df, self.encoding, self.on_render_viz)
-
-        controls = w.VBox()
+        controls = self.ipywidget_factory.get_vbox()
         controls.children = [viz_types_widget, self.encoding_widget]
 
         return controls
 
     def _create_viz_types_buttons(self):
-        hbox = w.HBox()
+        hbox = self.ipywidget_factory.get_hbox()
         children = list()
 
-        self.heading = w.HTML('Type:', width='80px', height='32px')
+        self.heading = self.ipywidget_factory.get_html('Type:', width='80px', height='32px')
         children.append(self.heading)
 
         self._create_type_button("Table", children)
@@ -91,8 +105,16 @@ class AutoVizWidget(w.FlexBox):
             self.encoding.chart_type = name.lower()
             return self.on_render_viz()
 
-        button = w.Button(description=name)
+        button = self.ipywidget_factory.get_button(description=name)
         button.padding = "10px"
         button.on_click(on_render)
 
         children.append(button)
+
+
+class AutoVizWidget(AutoVizWidgetTest):
+    def __init__(self, df, encoding, renderer, nested_widget_mode=False, **kwargs):
+        encoding_widget = EncodingWidget(self.df, self.encoding, self.on_render_viz)
+
+        super(AutoVizWidgetTest, self).__init__((df, encoding, renderer, IpyWidgetFactory(), encoding_widget,
+                                                 IpythonDisplay(), nested_widget_mode), **kwargs)
