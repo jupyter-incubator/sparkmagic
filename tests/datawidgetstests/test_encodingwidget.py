@@ -1,9 +1,9 @@
 from mock import MagicMock
 from nose.tools import with_setup
+import pandas as pd
 
 from remotespark.datawidgets.encodingwidget import EncodingWidgetTest
 from remotespark.datawidgets.encoding import Encoding
-import pandas as pd
 
 
 df = None

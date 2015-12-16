@@ -5,6 +5,7 @@ import pandas as pd
 from ipywidgets import FlexBox
 from IPython.display import display
 
+from .encoding import Encoding
 from .encodingwidget import EncodingWidget
 from .ipywidgetfactory import IpyWidgetFactory
 
@@ -88,13 +89,13 @@ class AutoVizWidgetTest(FlexBox):
         self.heading = self.ipywidget_factory.get_html('Type:', width='80px', height='32px')
         children.append(self.heading)
 
-        self._create_type_button("Table", children)
-        self._create_type_button("Pie", children)
+        self._create_type_button(Encoding.chart_type_table, children)
+        self._create_type_button(Encoding.chart_type_pie, children)
 
         if len(self.df.columns) > 1:
-            self._create_type_button("Line", children)
-            self._create_type_button("Area", children)
-            self._create_type_button("Bar", children)
+            self._create_type_button(Encoding.chart_type_line, children)
+            self._create_type_button(Encoding.chart_type_area, children)
+            self._create_type_button(Encoding.chart_type_bar, children)
 
         hbox.children = children
 
@@ -102,7 +103,7 @@ class AutoVizWidgetTest(FlexBox):
 
     def _create_type_button(self, name, children):
         def on_render(*args):
-            self.encoding.chart_type = name.lower()
+            self.encoding.chart_type = name
             return self.on_render_viz()
 
         button = self.ipywidget_factory.get_button(description=name)

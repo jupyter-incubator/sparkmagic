@@ -8,12 +8,14 @@ from .piegraph import PieGraph
 from .linegraph import LineGraph
 from .areagraph import AreaGraph
 from .bargraph import BarGraph
+from remotespark.datawidgets.encoding import Encoding
 
 
 class GraphRenderer(object):
 
-    def __init__(self):
-        init_notebook_mode()
+    def __init__(self, testing=False):
+        if not testing:
+            init_notebook_mode()
 
     @staticmethod
     def render(df, encoding, output):
@@ -43,15 +45,15 @@ class GraphRenderer(object):
 
     @staticmethod
     def _get_graph(chart_type):
-        if chart_type == "line":
+        if chart_type == Encoding.chart_type_line:
             graph = LineGraph()
-        elif chart_type == "area":
+        elif chart_type == Encoding.chart_type_area:
             graph = AreaGraph()
-        elif chart_type == "bar":
+        elif chart_type == Encoding.chart_type_bar:
             graph = BarGraph()
-        elif chart_type == "pie":
+        elif chart_type == Encoding.chart_type_pie:
             graph = PieGraph()
-        elif chart_type == "table":
+        elif chart_type == Encoding.chart_type_table:
             graph = DataGraph()
         else:
             raise ValueError("Cannot display chart of type {}".format(chart_type))

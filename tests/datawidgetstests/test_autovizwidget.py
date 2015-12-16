@@ -71,18 +71,18 @@ def test_create_viz_types_buttons():
                                encoding_widget, ipython_display, testing=True)
 
     # create_viz_types_buttons is called in the constructor, so no need to call it here.
-    assert call(description="Table") in ipywidget_factory.get_button.mock_calls
-    assert call(description="Pie") in ipywidget_factory.get_button.mock_calls
-    assert call(description="Line") not in ipywidget_factory.get_button.mock_calls
-    assert call(description="Area") not in ipywidget_factory.get_button.mock_calls
-    assert call(description="Bar") not in ipywidget_factory.get_button.mock_calls
+    assert call(description=Encoding.chart_type_table) in ipywidget_factory.get_button.mock_calls
+    assert call(description=Encoding.chart_type_pie) in ipywidget_factory.get_button.mock_calls
+    assert call(description=Encoding.chart_type_line) not in ipywidget_factory.get_button.mock_calls
+    assert call(description=Encoding.chart_type_area) not in ipywidget_factory.get_button.mock_calls
+    assert call(description=Encoding.chart_type_bar) not in ipywidget_factory.get_button.mock_calls
 
     widget = AutoVizWidgetTest(df, encoding, renderer, ipywidget_factory,
                                encoding_widget, ipython_display, testing=True)
 
     # create_viz_types_buttons is called in the constructor, so no need to call it here.
-    assert call(description="Table") in ipywidget_factory.get_button.mock_calls
-    assert call(description="Pie") in ipywidget_factory.get_button.mock_calls
-    assert call(description="Line") in ipywidget_factory.get_button.mock_calls
-    assert call(description="Area") in ipywidget_factory.get_button.mock_calls
-    assert call(description="Bar") in ipywidget_factory.get_button.mock_calls
+    assert call(description=Encoding.chart_type_table) in ipywidget_factory.get_button.mock_calls
+    assert call(description=Encoding.chart_type_pie) in ipywidget_factory.get_button.mock_calls
+    assert call(description=Encoding.chart_type_line) in ipywidget_factory.get_button.mock_calls
+    assert call(description=Encoding.chart_type_area) in ipywidget_factory.get_button.mock_calls
+    assert call(description=Encoding.chart_type_bar) in ipywidget_factory.get_button.mock_calls

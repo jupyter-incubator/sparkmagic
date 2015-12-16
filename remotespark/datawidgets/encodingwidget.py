@@ -5,6 +5,7 @@ import pandas as pd
 from ipywidgets import FlexBox
 
 from .ipywidgetfactory import IpyWidgetFactory
+from .encoding import Encoding
 
 
 class EncodingWidgetTest(FlexBox):
@@ -43,7 +44,11 @@ class EncodingWidgetTest(FlexBox):
         # Y aggregator
         value_for_view = self._get_value_for_aggregation(self.encoding.y_aggregation)
         self.y_agg_view = self.ipywidget_factory.get_dropdown(
-            options={"-": "none", "Avg": "avg", "Min": "min", "Max": "max", "Sum": "sum"},
+            options={"-": Encoding.y_agg_none,
+                     Encoding.y_agg_avg: Encoding.y_agg_avg,
+                     Encoding.y_agg_min: Encoding.y_agg_min,
+                     Encoding.y_agg_max: Encoding.y_agg_max,
+                     Encoding.y_agg_sum: Encoding.y_agg_sum},
             description="Func.",
             value=value_for_view)
         self.y_agg_view.on_trait_change(self._y_agg_changed_callback, 'value')
