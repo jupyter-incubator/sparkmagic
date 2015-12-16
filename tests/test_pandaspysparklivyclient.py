@@ -78,8 +78,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
     result = client.execute_sql(command)
 
     # Verify basic calls were done
-<<<<<<< HEAD
-    execute_m.assert_called_with('sqlContext.sql("{}").columns'.format(command))
+    execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
     
     assert isinstance(result, Result)
     assert isinstance(result, DataFrameResult)
@@ -88,13 +87,6 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
     assert not mock_shell.write.called
     assert not mock_shell.write_err.called
     assert_frame_equal(desired_df, df)
-=======
-    execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
-
-    # Verify result is desired pandas dataframe
-    assert_frame_equal(desired_result, result)
->>>>>>> master
-
 
 @with_setup(_setup, _teardown)
 def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
