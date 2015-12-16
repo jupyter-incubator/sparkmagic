@@ -11,8 +11,6 @@ or stderr.
 
 Every result can also be converted to a string with the str function."""
 
-from .utils import write_to_iopub_socket
-
 class Result(object):
     def render(self, shell):
         raise NotImplementedError("Render method must be overridden by subclass")
