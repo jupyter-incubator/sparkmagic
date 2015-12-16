@@ -1,4 +1,4 @@
-from mock import MagicMock, call
+from mock import MagicMock
 from nose.tools import with_setup
 
 from remotespark.datawidgets.encodingwidget import EncodingWidgetTest
