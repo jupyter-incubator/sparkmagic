@@ -3,7 +3,7 @@
 
 from plotly.graph_objs import Scatter
 
-from graphbase import GraphBase
+from .graphbase import GraphBase
 
 
 class LineGraph(GraphBase):
