@@ -20,14 +20,16 @@ class AutoVizViewer(object):
         if chart_type is None:
             chart_type = get_configuration(Constants.default_chart_type, "area")
 
-        columns = result.columns.values
+        # columns = result.columns.values
+        #
+        # # Always return table for show tables
+        # if "isTemporary" in columns and "name" in columns:
+        #     return result
+        #
+        # # Simply return dataframe if only 1 column is available
+        # if len(columns) <= 1 or chart_type == "table":
+        #     return result
+        #
+        # return result
 
-        # Always return table for show tables
-        if "isTemporary" in columns and "name" in columns:
-            return result
-
-        # Simply return dataframe if only 1 column is available
-        if len(columns) <= 1 or chart_type == "table":
-            return result
-
-        return result
+        return None
