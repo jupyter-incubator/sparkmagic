@@ -4,7 +4,7 @@ from mock import MagicMock, call
 
 from remotespark.livyclientlib.livysession import LivySession
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
-from remotespark.livyclientlib.utils import get_connection_string
+from remotespark.livyclientlib.utils import get_connection_string, get_instance_id
 from remotespark.livyclientlib.configuration import _t_config_hook
 
 class DummyResponse:
@@ -187,7 +187,8 @@ class TestLivySession:
         assert_equals(kind, session.language)
         assert_equals("starting", session._status)
         assert_equals("0", session.id)
-        http_client.post.assert_called_with("/sessions", [201], {"kind": "spark"})
+        http_client.post.assert_called_with(
+            "/sessions", [201], {"kind": "spark", "name": "remotesparkmagics_{}".format(get_instance_id())})
 
     def test_start_python_starts_session(self):
         kind = "python"
@@ -205,7 +206,8 @@ class TestLivySession:
         assert_equals(kind, session.language)
         assert_equals("starting", session._status)
         assert_equals("0", session.id)
-        http_client.post.assert_called_with("/sessions", [201], {"kind": "pyspark"})
+        http_client.post.assert_called_with(
+            "/sessions", [201],{"kind": "pyspark", "name": "remotesparkmagics_{}".format(get_instance_id())})
 
     def test_status_gets_latest(self):
         http_client = MagicMock()

@@ -9,6 +9,7 @@ from .constants import Constants
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livysessionstate import LivySessionState
 from .configuration import get_configuration
+from .utils import get_instance_id
 
 class LivySession(object):
     """Session that is livy specific."""
@@ -54,7 +55,8 @@ class LivySession(object):
         # TODO(aggftw): do a pass to make all contracts variables; i.e. not peppered in code
         self.logger.debug("Starting '{}' session.".format(self.language))
 
-        r = self._http_client.post("/sessions", [201], {"kind": self._get_livy_kind()})
+        app_name = "remotesparkmagics_{}".format(get_instance_id())
+        r = self._http_client.post("/sessions", [201], {"kind": self._get_livy_kind(), "name": app_name})
         self._state.session_id = str(r.json()["id"])
         self._status = str(r.json()["state"])
 
