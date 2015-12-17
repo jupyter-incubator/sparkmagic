@@ -20,8 +20,8 @@ class IpyWidgetFactory(object):
         return Button(**kwargs)
 
     @staticmethod
-    def get_html(**kwargs):
-        return HTML(**kwargs)
+    def get_html(value, **kwargs):
+        return HTML(value, **kwargs)
 
     @staticmethod
     def get_hbox(**kwargs):

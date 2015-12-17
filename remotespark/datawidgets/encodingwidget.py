@@ -119,4 +119,4 @@ class EncodingWidgetTest(FlexBox):
 
 class EncodingWidget(EncodingWidgetTest):
     def __init__(self, df, encoding, change_hook, **kwargs):
-        super(EncodingWidgetTest, self).__init__((df, encoding, change_hook, IpyWidgetFactory()), **kwargs)
+        super(EncodingWidget, self).__init__(df, encoding, change_hook, IpyWidgetFactory(), **kwargs)

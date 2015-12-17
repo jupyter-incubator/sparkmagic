@@ -56,8 +56,8 @@ class AutoVizWidgetTest(FlexBox):
             self.widget.children = [self.controls, self.output]
             self.children = [self.widget]
         else:
-            self.ipython_display.display(self.controls)
-            self.ipython_display.display(self.to_display)
+            self.ipython_display.display_to_ipython(self.controls)
+            self.ipython_display.display_to_ipython(self.to_display)
 
         self.on_render_viz()
 
@@ -115,7 +115,7 @@ class AutoVizWidgetTest(FlexBox):
 
 class AutoVizWidget(AutoVizWidgetTest):
     def __init__(self, df, encoding, renderer, nested_widget_mode=False, **kwargs):
-        encoding_widget = EncodingWidget(self.df, self.encoding, self.on_render_viz)
+        encoding_widget = EncodingWidget(df, encoding, self.on_render_viz)
 
-        super(AutoVizWidgetTest, self).__init__((df, encoding, renderer, IpyWidgetFactory(), encoding_widget,
-                                                 IpythonDisplay(), nested_widget_mode), **kwargs)
+        super(AutoVizWidget, self).__init__(df, encoding, renderer, IpyWidgetFactory(), encoding_widget,
+                                            IpythonDisplay(), nested_widget_mode, **kwargs)
