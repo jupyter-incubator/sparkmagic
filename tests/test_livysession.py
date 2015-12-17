@@ -7,7 +7,6 @@ from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutEr
 from remotespark.livyclientlib.utils import get_connection_string, get_instance_id
 from remotespark.livyclientlib.configuration import _t_config_hook
 
-
 class DummyResponse:
     def __init__(self, status_code, json_text):
         self._status_code = status_code
@@ -336,7 +335,8 @@ class TestLivySession:
         http_client.post.assert_called_with("/sessions/0/statements", [201], {"code": command})
         http_client.get.assert_called_with("/sessions/0/statements", [200])
         assert_equals(2, http_client.get.call_count)
-        assert_equals(self.pi_result, result)
+        assert result[0]
+        assert_equals(self.pi_result, result[1])
 
     def test_create_sql_hive_context_happens_once(self):
         kind = "scala"

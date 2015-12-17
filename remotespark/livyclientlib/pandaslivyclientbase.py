@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from .livyclient import LivyClient
-
+from .dataframeparseexception import DataFrameParseException
 
 class PandasLivyClientBase(LivyClient):
     """Spark client for Livy endpoint that produces pandas df for sql and hive commands."""
@@ -17,8 +17,10 @@ class PandasLivyClientBase(LivyClient):
         return self._execute_dataframe_helper("hiveContext", command)
 
     def _execute_dataframe_helper(self, context_name, command):
-        records_text = self.get_records(context_name, command, str(self.max_take_rows))
-
+        (success, records_text) = self.get_records(context_name, command,
+                                                   str(self.max_take_rows))
+        if not success:
+            raise DataFrameParseException(records_text)
         try:
             if self.no_records(records_text):
                 # If there are no records, show some columns at least.
@@ -26,12 +28,17 @@ class PandasLivyClientBase(LivyClient):
                 return self.get_columns_dataframe(records_text)
             else:
                 return self.get_data_dataframe(records_text)
-        except (ValueError, SyntaxError):
+        except (ValueError, SyntaxError) as e:
             self.logger.error("Could not convert sql results to pandas DF.")
-            return records_text
-
+            raise DataFrameParseException(records_text)
+            
     def get_columns(self, context_name, command):
-        return self.execute(self.make_context_columns(context_name, command))
+        (success, out) = self.execute(self.make_context_columns(context_name,
+                                                                command))
+        if success:
+            return out
+        else:
+            raise DataFrameParseException(out)
 
     @staticmethod
     def make_context_columns(context_name, command):

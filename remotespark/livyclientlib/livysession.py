@@ -11,7 +11,6 @@ from .livysessionstate import LivySessionState
 from .configuration import get_configuration
 from .utils import get_instance_id
 
-
 class LivySession(object):
     """Session that is livy specific."""
     # TODO(aggftw): make threadsafe
@@ -197,11 +196,11 @@ class LivySession(object):
                 
                 statement_output = statement["output"]
                 if statement_output["status"] == "ok":
-                    output = statement_output["data"]["text/plain"]
+                    out = (True, statement_output["data"]["text/plain"])
                 elif statement_output["status"] == "error":
-                    output = statement_output['evalue']
-
-        return output
+                    out = (False, statement_output["evalue"] + "\n" + \
+                                  "".join(statement_output["traceback"]))
+        return out
 
     def _get_livy_kind(self):
         if self.language == Constants.lang_scala:

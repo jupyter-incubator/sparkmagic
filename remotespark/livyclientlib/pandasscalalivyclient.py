@@ -7,7 +7,6 @@ import re
 
 from .pandaslivyclientbase import PandasLivyClientBase
 
-
 class PandasScalaLivyClient(PandasLivyClientBase):
     """Spark client for Livy endpoint in Scala"""
     def __init__(self, session, max_take_rows):

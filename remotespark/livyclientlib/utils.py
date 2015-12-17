@@ -108,3 +108,4 @@ def get_instance_id():
         raise ValueError("Tried to return empty instance ID.")
 
     return instance_id
+

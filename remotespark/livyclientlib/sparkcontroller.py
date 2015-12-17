@@ -11,7 +11,6 @@ from .filesystemreaderwriter import FileSystemReaderWriter
 from .clientmanagerstateserializer import ClientManagerStateSerializer
 from .constants import Constants
 
-
 class SparkController(object):
 
     def __init__(self, serialize_path=None):
@@ -24,27 +23,17 @@ class SparkController(object):
         else:
             self.client_manager = ClientManager()
 
-    def run_cell(self, client_name, context, cell):
-        context = context.lower()
+    def run_cell(self, cell, client_name = None):
+        client_to_use = self.get_client_by_name_or_default(client_name)
+        return client_to_use.execute(cell)
 
-        # Select client
-        if client_name is None:
-            client_to_use = self.client_manager.get_any_client()
-        else:
-            client_name = client_name.lower()
-            client_to_use = self.client_manager.get_client(client_name)
+    def run_cell_sql(self, cell, client_name = None):
+        client_to_use = self.get_client_by_name_or_default(client_name)
+        return client_to_use.execute_sql(cell)
 
-        # Execute in context
-        if context == Constants.context_name_sql:
-            res = client_to_use.execute_sql(cell)
-        elif context == Constants.context_name_hive:
-            res = client_to_use.execute_hive(cell)
-        elif context == Constants.context_name_spark:
-            res = client_to_use.execute(cell)
-        else:
-            raise ValueError("Context '{}' specified is not known.")
-
-        return res
+    def run_cell_hive(self, cell, client_name = None):
+        client_to_use = self.get_client_by_name_or_default(client_name)
+        return client_to_use.execute_hive(cell)
 
     def cleanup(self):
         self.client_manager.clean_up_all()
@@ -64,3 +53,11 @@ class SparkController(object):
 
     def get_client_keys(self):
         return self.client_manager.get_endpoints_list()
+
+    def get_client_by_name_or_default(self, client_name):
+        if client_name is None:
+            return self.client_manager.get_any_client()
+        else:
+            client_name = client_name.lower()
+            return self.client_manager.get_client(client_name)
+        

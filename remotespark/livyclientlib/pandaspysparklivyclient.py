@@ -6,7 +6,6 @@ import json
 
 from .pandaslivyclientbase import PandasLivyClientBase
 
-
 class PandasPysparkLivyClient(PandasLivyClientBase):
     """Spark client for Livy endpoint in PySpark"""
 
@@ -23,7 +22,6 @@ class PandasPysparkLivyClient(PandasLivyClientBase):
     def get_columns_dataframe(self, columns_text):
         records = list()
         columns = eval(columns_text)
-
         return pd.DataFrame.from_records(records, columns=columns)
 
     def get_data_dataframe(self, records_text):

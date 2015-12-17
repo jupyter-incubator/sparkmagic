@@ -80,40 +80,29 @@ def test_cleanup():
 def test_run_cell():
     default_client = MagicMock()
     chosen_client = MagicMock()
+    default_client.execute = chosen_client.execute = MagicMock(return_value=(True,""))
     client_manager.get_any_client = MagicMock(return_value=default_client)
     client_manager.get_client = MagicMock(return_value=chosen_client)
     name = "endpoint_name"
-    context = Constants.context_name_spark
     cell = "cell code"
 
-    controller.run_cell(name, context, cell)
+    controller.run_cell(cell, name)
     chosen_client.execute.assert_called_with(cell)
 
-    controller.run_cell(None, context, cell)
+    controller.run_cell(cell, None)
     default_client.execute.assert_called_with(cell)
 
-    context = Constants.context_name_sql
-
-    controller.run_cell(name, context, cell)
+    controller.run_cell_sql(cell, name)
     chosen_client.execute_sql.assert_called_with(cell)
 
-    controller.run_cell(None, context, cell)
+    controller.run_cell_sql(cell, None)
     default_client.execute_sql.assert_called_with(cell)
 
-    context = Constants.context_name_hive
-
-    controller.run_cell(name, context, cell)
+    controller.run_cell_hive(cell, name)
     chosen_client.execute_hive.assert_called_with(cell)
 
-    controller.run_cell(None, context, cell)
+    controller.run_cell_hive(cell, None)
     default_client.execute_hive.assert_called_with(cell)
-
-    try:
-        context = "not_supported"
-        controller.run_cell(None, context, cell)
-        assert False  # Should have thrown for invalid context name
-    except ValueError:
-        pass
 
 @with_setup(_setup, _teardown)
 def test_get_client_keys():

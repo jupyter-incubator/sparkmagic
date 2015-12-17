@@ -7,17 +7,16 @@ Provides the %spark magic."""
 from __future__ import print_function
 import warnings
 
+from IPython.core.getipython import get_ipython
 from IPython.core.magic import (Magics, magics_class, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
 
 from .livyclientlib.sparkcontroller import SparkController
-from .livyclientlib.rawviewer import RawViewer
 from .livyclientlib.log import Log
 from .livyclientlib.utils import get_magics_home_path, join_paths
 from .livyclientlib.configuration import get_configuration
 from .livyclientlib.constants import Constants
-from .livyclientlib.autovizviewer import AutoVizViewer
-
+from .livyclientlib.dataframeparseexception import DataFrameParseException
 
 @magics_class
 class RemoteSparkMagics(Magics):
@@ -26,12 +25,10 @@ class RemoteSparkMagics(Magics):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
 
-        use_auto_viz = get_configuration(Constants.use_auto_viz, True) and not test
         self.interactive = get_configuration(Constants.display_info, False)
-
         self.logger = Log("RemoteSparkMagics")
-
         self.spark_controller = SparkController()
+        self.ipython = get_ipython()
 
         try:
             should_serialize = get_configuration(Constants.serialize, False)
@@ -48,11 +45,6 @@ class RemoteSparkMagics(Magics):
                 self.logger.debug("Serialization NOT enabled.")
         except KeyError:
             self.logger.error("Could not read env vars for serialization.")
-
-        if use_auto_viz:
-            self.viewer = AutoVizViewer()
-        else:
-            self.viewer = RawViewer()
 
         self.logger.debug("Initialized spark magics.")
 
@@ -75,11 +67,6 @@ class RemoteSparkMagics(Magics):
            -----------
            info
                Display the mode and available Livy endpoints.
-           viewer
-               Change how to display sql results: "auto" or "df"
-               "auto" will create an automatic visualization for SQL queries.
-               "df" will display the SQL query results as pandas dataframes.
-               e.g. `%spark viewer auto`
            add
                Add a Livy endpoint. First argument is the friendly name of the endpoint, second argument
                is the language, and third argument is the connection string. A fourth argument specifying if
@@ -104,15 +91,6 @@ class RemoteSparkMagics(Magics):
         if subcommand == "info":
             # Info is printed by default
             pass
-        # viewer
-        elif subcommand == "viewer":
-            if len(args.command) != 2:
-                raise ValueError("Subcommand 'viewer' requires an argument. {}".format(usage))
-            v = args.command[1].lower()
-            if v == "auto":
-                self.viewer = AutoVizViewer()
-            else:
-                self.viewer = RawViewer()
         # add
         elif subcommand == "add":
             if len(args.command) != 4 and len(args.command) != 5:
@@ -136,8 +114,27 @@ class RemoteSparkMagics(Magics):
             self.spark_controller.cleanup()
         # run
         elif len(subcommand) == 0:
-            result = self.spark_controller.run_cell(args.endpoint, args.context, cell)
-            return self.viewer.visualize(result, args.chart)
+            if args.context == Constants.context_name_spark:
+                (success, out) = self.spark_controller.run_cell(cell,
+                                                                args.endpoint)
+                if success:
+                    self.ipython.write(out)
+                else:
+                    self.ipython.write_err(out)
+            elif args.context == Constants.context_name_sql:
+                try:
+                    return self.spark_controller.run_cell_sql(cell,
+                                                              args.endpoint)
+                except DataFrameParseException as e:
+                    self.ipython.write_err(e.out)
+            elif args.context == Constants.context_name_hive:
+                try:
+                    return self.spark_controller.run_cell_hive(cell,
+                                                              args.endpoint)
+                except DataFrameParseException as e:
+                    self.ipython.write_err(e.out)
+            else:
+                raise ValueError("Context '{}' not found".format(args.context))
         # error
         else:
             raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
