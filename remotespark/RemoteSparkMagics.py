@@ -114,9 +114,14 @@ class RemoteSparkMagics(Magics):
             self.spark_controller.cleanup()
         # run
         elif len(subcommand) == 0:
-            return self.spark_controller.run_cell(args.endpoint,
-                                                  args.context,
-                                                  cell)
+            if args.context == Constants.context_name_spark:
+                return self.spark_controller.run_cell(cell, args.endpoint)
+            elif args.context == Constants.context_name_sql:
+                return self.spark_controller.run_cell_sql(cell, args.endpoint)
+            elif args.context == Constants.context_name_hive:
+                return self.spark_controller.run_cell_hive(cell, args.endpoint)
+            else:
+                raise ValueError("Context '{}' not found".format(args.context))
         # error
         else:
             raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))

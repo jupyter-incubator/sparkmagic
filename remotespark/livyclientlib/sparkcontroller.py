@@ -12,13 +12,14 @@ from .livyclientfactory import LivyClientFactory
 from .filesystemreaderwriter import FileSystemReaderWriter
 from .clientmanagerstateserializer import ClientManagerStateSerializer
 from .constants import Constants
-
+from .dataframeparseexception import DataFrameParseException
 
 class SparkController(object):
 
     def __init__(self, serialize_path=None):
         self.logger = Log("SparkController")
         self.client_factory = LivyClientFactory()
+        self.ipython = get_ipython()
 
         if serialize_path is not None:
             serializer = ClientManagerStateSerializer(self.client_factory, FileSystemReaderWriter(serialize_path))
@@ -26,27 +27,27 @@ class SparkController(object):
         else:
             self.client_manager = ClientManager()
 
-    def run_cell(self, client_name, context, cell):
-        context = context.lower()
-
-        # Select client
-        if client_name is None:
-            client_to_use = self.client_manager.get_any_client()
+    def run_cell(self, cell, client_name = None):
+        client_to_use = self.get_client_by_name(client_name)
+        (success, out) = client_to_use.execute(cell)
+        if success:
+            self.ipython.write(out)
         else:
-            client_name = client_name.lower()
-            client_to_use = self.client_manager.get_client(client_name)
+            self.ipython.write_err(out)
 
-        # Execute in context
-        if context == Constants.context_name_sql:
-            result = client_to_use.execute_sql(cell)
-        elif context == Constants.context_name_hive:
-            result = client_to_use.execute_hive(cell)
-        elif context == Constants.context_name_spark:
-            result = client_to_use.execute(cell)
-        else:
-            raise ValueError("Context '{}' specified is not known.")
+    def run_cell_sql(self, cell, client_name = None):
+        client_to_use = self.get_client_by_name(client_name)
+        try:
+            return client_to_use.execute_sql(cell)
+        except DataFrameParseException as e:
+            self.ipython.write_err(e.out)
 
-        return result.render(get_ipython())
+    def run_cell_hive(self, cell, client_name = None):
+        client_to_use = self.get_client_by_name(client_name)
+        try:
+            return client_to_use.execute_hive(cell)
+        except DataFrameParseException as e:
+            self.ipython.write_err(e.out)
 
     def cleanup(self):
         self.client_manager.clean_up_all()
@@ -66,3 +67,11 @@ class SparkController(object):
 
     def get_client_keys(self):
         return self.client_manager.get_endpoints_list()
+
+    def get_client_by_name(self, client_name = None):
+        if client_name is None:
+            return self.client_manager.get_any_client()
+        else:
+            client_name = client_name.lower()
+            return self.client_manager.get_client(client_name)
+        

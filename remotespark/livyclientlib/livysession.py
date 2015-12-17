@@ -9,8 +9,6 @@ from .constants import Constants
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livysessionstate import LivySessionState
 from .configuration import get_configuration
-from .result import SuccessResult, ErrorResult
-
 
 class LivySession(object):
     """Session that is livy specific."""
@@ -196,11 +194,10 @@ class LivySession(object):
                 
                 statement_output = statement["output"]
                 if statement_output["status"] == "ok":
-                    out = SuccessResult(statement_output["data"]["text/plain"])
+                    out = (True, statement_output["data"]["text/plain"])
                 elif statement_output["status"] == "error":
-                    out = ErrorResult(statement_output["evalue"] + "\n" + \
-                                        "".join(statement_output["traceback"]))
-
+                    out = (False, statement_output["evalue"] + "\n" + \
+                                  "".join(statement_output["traceback"]))
         return out
 
     def _get_livy_kind(self):
