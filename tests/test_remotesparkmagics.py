@@ -95,7 +95,7 @@ def test_bad_command_throws_exception():
 @with_setup(_setup, _teardown)
 def test_run_cell_command_parses():
     run_cell_method = MagicMock()
-    run_cell_method.return_value = 1
+    run_cell_method.return_value = (True, "")
     spark_controller.run_cell = run_cell_method
 
     command = "-e"
@@ -103,6 +103,7 @@ def test_run_cell_command_parses():
     line = " ".join([command, name])
     cell = "cell code"
 
-    magic.spark(line, cell)
+    result = magic.spark(line, cell)
 
     run_cell_method.assert_called_once_with(cell, name)
+

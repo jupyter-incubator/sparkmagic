@@ -4,7 +4,6 @@
   "serialize_period_seconds": 3,
   "display_info": false,
 
-  "use_auto_viz": true,
   "default_chart_type": "area",
 
   "kernel_python_username": "",

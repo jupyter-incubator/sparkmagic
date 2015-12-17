@@ -28,13 +28,17 @@ class PandasLivyClientBase(LivyClient):
                 return self.get_columns_dataframe(records_text)
             else:
                 return self.get_data_dataframe(records_text)
-        except (ValueError, SyntaxError):
+        except (ValueError, SyntaxError) as e:
             self.logger.error("Could not convert sql results to pandas DF.")
             raise DataFrameParseException(records_text)
-
+            
     def get_columns(self, context_name, command):
-        return self.execute(self.make_context_columns(context_name,
-                                                          command))[1]
+        (success, out) = self.execute(self.make_context_columns(context_name,
+                                                                command))
+        if success:
+            return out
+        else:
+            raise DataFrameParseException(out)
 
     @staticmethod
     def make_context_columns(context_name, command):

@@ -19,7 +19,6 @@ class Constants:
     serialize_period_seconds = "serialize_period_seconds"
     display_info = "display_info"
 
-    use_auto_viz = "use_auto_viz"
     default_chart_type = "default_chart_type"
 
     kernel_python_username = "kernel_python_username"

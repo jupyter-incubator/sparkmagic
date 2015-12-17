@@ -7,6 +7,7 @@ Provides the %spark magic."""
 from __future__ import print_function
 import warnings
 
+from IPython.core.getipython import get_ipython
 from IPython.core.magic import (Magics, magics_class, line_cell_magic)
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
 
@@ -15,6 +16,7 @@ from .livyclientlib.log import Log
 from .livyclientlib.utils import get_magics_home_path, join_paths
 from .livyclientlib.configuration import get_configuration
 from .livyclientlib.constants import Constants
+from .livyclientlib.dataframeparseexception import DataFrameParseException
 
 @magics_class
 class RemoteSparkMagics(Magics):
@@ -23,12 +25,10 @@ class RemoteSparkMagics(Magics):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
 
-        use_auto_viz = get_configuration(Constants.use_auto_viz, True) and not test
         self.interactive = get_configuration(Constants.display_info, False)
-
         self.logger = Log("RemoteSparkMagics")
-
         self.spark_controller = SparkController()
+        self.ipython = get_ipython()
 
         try:
             should_serialize = get_configuration(Constants.serialize, False)
@@ -115,11 +115,24 @@ class RemoteSparkMagics(Magics):
         # run
         elif len(subcommand) == 0:
             if args.context == Constants.context_name_spark:
-                return self.spark_controller.run_cell(cell, args.endpoint)
+                (success, out) = self.spark_controller.run_cell(cell,
+                                                                args.endpoint)
+                if success:
+                    self.ipython.write(out)
+                else:
+                    self.ipython.write_err(out)
             elif args.context == Constants.context_name_sql:
-                return self.spark_controller.run_cell_sql(cell, args.endpoint)
+                try:
+                    return self.spark_controller.run_cell_sql(cell,
+                                                              args.endpoint)
+                except DataFrameParseException as e:
+                    self.ipython.write_err(e.out)
             elif args.context == Constants.context_name_hive:
-                return self.spark_controller.run_cell_hive(cell, args.endpoint)
+                try:
+                    return self.spark_controller.run_cell_hive(cell,
+                                                              args.endpoint)
+                except DataFrameParseException as e:
+                    self.ipython.write_err(e.out)
             else:
                 raise ValueError("Context '{}' not found".format(args.context))
         # error
