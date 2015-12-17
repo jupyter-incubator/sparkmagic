@@ -2,7 +2,7 @@ from mock import MagicMock
 from nose.tools import with_setup
 import pandas as pd
 
-from remotespark.datawidgets.encodingwidget import EncodingWidgetTest
+from remotespark.datawidgets.encodingwidget import EncodingWidget
 from remotespark.datawidgets.encoding import Encoding
 
 
@@ -36,7 +36,7 @@ def _teardown():
 
 @with_setup(_setup, _teardown)
 def test_value_for_aggregation():
-    widget = EncodingWidgetTest(df, encoding, change_hook, ipywidget_factory, testing=True)
+    widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
     assert widget._get_value_for_aggregation(None) == "none"
     assert widget._get_value_for_aggregation("avg") == "avg"
@@ -44,7 +44,7 @@ def test_value_for_aggregation():
 
 @with_setup(_setup, _teardown)
 def test_x_changed_callback():
-    widget = EncodingWidgetTest(df, encoding, change_hook, ipywidget_factory, testing=True)
+    widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
     widget._x_changed_callback("name", "old", "new")
 
@@ -54,7 +54,7 @@ def test_x_changed_callback():
 
 @with_setup(_setup, _teardown)
 def test_y_changed_callback():
-    widget = EncodingWidgetTest(df, encoding, change_hook, ipywidget_factory, testing=True)
+    widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
     widget._y_changed_callback("name", "old", "new")
 
@@ -64,7 +64,7 @@ def test_y_changed_callback():
 
 @with_setup(_setup, _teardown)
 def test_y_agg__changed_callback():
-    widget = EncodingWidgetTest(df, encoding, change_hook, ipywidget_factory, testing=True)
+    widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
     widget._y_agg_changed_callback("name", "old", "new")
 
@@ -74,7 +74,7 @@ def test_y_agg__changed_callback():
 
 @with_setup(_setup, _teardown)
 def test_log_x_changed_callback():
-    widget = EncodingWidgetTest(df, encoding, change_hook, ipywidget_factory, testing=True)
+    widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
     widget._logarithmic_x_callback("name", "old", "new")
 
@@ -84,7 +84,7 @@ def test_log_x_changed_callback():
 
 @with_setup(_setup, _teardown)
 def test_log_y_changed_callback():
-    widget = EncodingWidgetTest(df, encoding, change_hook, ipywidget_factory, testing=True)
+    widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
     widget._logarithmic_y_callback("name", "old", "new")
 

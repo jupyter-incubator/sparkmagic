@@ -8,6 +8,7 @@ from IPython.display import display
 from .encoding import Encoding
 from .encodingwidget import EncodingWidget
 from .ipywidgetfactory import IpyWidgetFactory
+from .plotlygraphs.graphrenderer import GraphRenderer
 
 
 class IpythonDisplay(object):
@@ -16,30 +17,37 @@ class IpythonDisplay(object):
         display(to_display)
 
 
-class AutoVizWidgetTest(FlexBox):
-    """This class should not be used by anyone outside of the project. People should use AutoVizWidget instead.
-    This class is here for testing purposes."""
-    def __init__(self, df, encoding, renderer, ipywidget_factory, encoding_widget, ipython_display,
+class AutoVizWidget(FlexBox):
+    def __init__(self, df, encoding, renderer=None, ipywidget_factory=None, encoding_widget=None, ipython_display=None,
                  nested_widget_mode=False, testing=False, **kwargs):
         assert encoding is not None
         assert df is not None
         assert type(df) is pd.DataFrame
         assert len(df.columns) > 0
-        assert renderer is not None
-        assert ipywidget_factory is not None
 
         kwargs['orientation'] = 'vertical'
 
         if not testing:
-            super(AutoVizWidgetTest, self).__init__((), **kwargs)
+            super(AutoVizWidget, self).__init__((), **kwargs)
 
+        if renderer is None:
+            renderer = GraphRenderer()
+        self.renderer = renderer
+
+        if ipywidget_factory is None:
+            ipywidget_factory = IpyWidgetFactory()
         self.ipywidget_factory = ipywidget_factory
+
+        if encoding_widget is None:
+            encoding_widget = EncodingWidget(df, encoding, self.on_render_viz)
         self.encoding_widget = encoding_widget
+
+        if ipython_display is None:
+            ipython_display = IpythonDisplay()
+        self.ipython_display = ipython_display
 
         self.df = df
         self.encoding = encoding
-        self.renderer = renderer
-        self.ipython_display = ipython_display
 
         # Widget that will become the only child of AutoVizWidget
         self.widget = self.ipywidget_factory.get_vbox()
@@ -111,11 +119,3 @@ class AutoVizWidgetTest(FlexBox):
         button.on_click(on_render)
 
         children.append(button)
-
-
-class AutoVizWidget(AutoVizWidgetTest):
-    def __init__(self, df, encoding, renderer, nested_widget_mode=False, **kwargs):
-        encoding_widget = EncodingWidget(df, encoding, self.on_render_viz)
-
-        super(AutoVizWidget, self).__init__(df, encoding, renderer, IpyWidgetFactory(), encoding_widget,
-                                            IpythonDisplay(), nested_widget_mode, **kwargs)

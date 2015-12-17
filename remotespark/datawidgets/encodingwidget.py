@@ -8,24 +8,24 @@ from .ipywidgetfactory import IpyWidgetFactory
 from .encoding import Encoding
 
 
-class EncodingWidgetTest(FlexBox):
-    """This class should not be used by anyone outside of the project. People should use EncodingWidget instead.
-    This class is here for testing purposes."""
-    def __init__(self, df, encoding, change_hook, ipywidget_factory, testing=False, **kwargs):
+class EncodingWidget(FlexBox):
+    def __init__(self, df, encoding, change_hook, ipywidget_factory=None, testing=False, **kwargs):
         assert encoding is not None
         assert df is not None
         assert type(df) is pd.DataFrame
         assert len(df.columns) > 0
-        assert ipywidget_factory is not None
 
         kwargs['orientation'] = 'vertical'
         if not testing:
-            super(EncodingWidgetTest, self).__init__((), **kwargs)
+            super(EncodingWidget, self).__init__((), **kwargs)
+
+        if ipywidget_factory is None:
+            ipywidget_factory = IpyWidgetFactory()
+        self.ipywidget_factory = ipywidget_factory
 
         self.df = df
         self.encoding = encoding
         self.change_hook = change_hook
-        self.ipywidget_factory = ipywidget_factory
 
         self.widget = self.ipywidget_factory.get_vbox()
 
@@ -115,8 +115,3 @@ class EncodingWidgetTest(FlexBox):
     def _logarithmic_y_callback(self, name, old_value, new_value):
             self.encoding.logarithmic_y_axis = new_value
             return self.change_hook()
-
-
-class EncodingWidget(EncodingWidgetTest):
-    def __init__(self, df, encoding, change_hook, **kwargs):
-        super(EncodingWidget, self).__init__(df, encoding, change_hook, IpyWidgetFactory(), **kwargs)
