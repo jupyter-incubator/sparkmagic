@@ -6,34 +6,36 @@
 import json
 
 from remotespark.utils.constants import Constants
-from remotespark.utils.utils import join_paths, get_magics_home_path, ensure_path_exists, ensure_file_exists
+from remotespark.utils.utils import join_paths, get_magics_home_path
+from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 
 _overrides = None
 
 
-def initialize():
+def initialize(fsrw_class = None):
     """Checks if the configuration is initialized. If so, initializes the
     global configuration object by reading from the configuration
     file, overwriting the current set of overrides if there is one"""
     global _overrides
     if _overrides is None:
-        load()
+        load(fsrw_class)
 
 
-def load():
+def load(fsrw_class = None):
     """Initializes the global configuration by reading from the configuration
     file, overwriting the current set of overrides if there is one"""
-    home_path = get_magics_home_path()
-    ensure_path_exists(home_path)
-    config_file = join_paths(home_path, Constants.config_json)
-    ensure_file_exists(config_file)
-    with open(config_file, "r+") as f:
-        config_text = f.readlines()
-        line = "".join(config_text).strip()
-        if line == "":
-            overrides = {}
-        else:
-            overrides = json.loads(line)
+    if fsrw_class is None:
+        fsrw_class = FileSystemReaderWriter
+    home_path = fsrw_class(get_magics_home_path())
+    home_path.ensure_path_exists()
+    config_file = fsrw_class(join_paths(home_path.path, Constants.config_json))
+    config_file.ensure_file_exists()
+    config_text = config_file.read_lines()
+    line = "".join(config_text).strip()
+    if line == "":
+        overrides = {}
+    else:
+        overrides = json.loads(line)
     override(overrides)
 
 
@@ -56,6 +58,9 @@ def _override(f):
             return _overrides[name]
         else:
             return f()
+    # Hack! We do this so that we can query the .__name__ of the function
+    # later to get the name of the configuration dynamically, e.g. for unit tests
+    ret.__name__ = f.__name__
     return ret
 
 # All of the functions below return the values of configurations. They are

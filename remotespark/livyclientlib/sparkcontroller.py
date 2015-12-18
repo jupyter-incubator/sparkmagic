@@ -1,10 +1,10 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
+from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 from remotespark.utils.log import Log
 from .clientmanager import ClientManager
 from .clientmanagerstateserializer import ClientManagerStateSerializer
-from .filesystemreaderwriter import FileSystemReaderWriter
 from .livyclientfactory import LivyClientFactory
 
 

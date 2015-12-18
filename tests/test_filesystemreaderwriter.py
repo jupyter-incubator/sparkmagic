@@ -1,6 +1,6 @@
 import os.path
 
-from remotespark.livyclientlib.filesystemreaderwriter import FileSystemReaderWriter
+from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 
 
 def test_read():
