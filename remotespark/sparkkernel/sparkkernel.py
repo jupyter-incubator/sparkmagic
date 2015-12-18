@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 from remotespark.sparkkernelbase import SparkKernelBase
-from remotespark.livyclientlib.constants import Constants
+from remotespark.utils.constants import Constants
 
 
 class SparkKernel(SparkKernelBase):
@@ -17,9 +17,7 @@ class SparkKernel(SparkKernelBase):
     banner = "Spark with automatic visualizations"
 
     # Required by Spark - Overridden
-    username_conf_name = Constants.kernel_scala_username
-    password_conf_name = Constants.kernel_scala_password
-    url_conf_name = Constants.kernel_scala_url
+    kernel_conf_name = Constants.lang_scala
     session_language = Constants.lang_scala
     client_name = "scala_jupyter_kernel"
 

@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 import os
 
-from .utils import expand_path
+from remotespark.utils.utils import expand_path
 
 
 class FileSystemReaderWriter(object):

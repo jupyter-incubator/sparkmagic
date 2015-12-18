@@ -1,6 +1,7 @@
-from remotespark.livyclientlib.log import Log
-from remotespark.livyclientlib.constants import Constants
 import logging
+
+from remotespark.utils.log import Log
+
 
 def test_log_init():
     logger = Log('something')

@@ -1,15 +1,14 @@
-from nose.tools import with_setup
 from mock import MagicMock, call
+from nose.tools import with_setup
 
 from remotespark.sparkkernelbase import SparkKernelBase
-from remotespark.livyclientlib.utils import get_connection_string
-from remotespark.livyclientlib.configuration import _t_config_hook
-
+import remotespark.utils.configuration as conf
+from remotespark.utils.utils import get_connection_string
 
 kernel = None
-user_ev = "USER"
-pass_ev = "PASS"
-url_ev = "URL"
+user_ev = "username"
+pass_ev = "password"
+url_ev = "url"
 send_error_mock = None
 execute_cell_mock = None
 do_shutdown_mock = None
@@ -24,6 +23,7 @@ def _setup():
 
     kernel = TestSparkKernel()
     kernel.use_auto_viz = False
+    kernel.kernel_conf_name = "python"
     kernel.username_conf_name = user_ev
     kernel.password_conf_name = pass_ev
     kernel.url_conf_name = url_ev
@@ -35,7 +35,7 @@ def _setup():
 
 
 def _teardown():
-    _t_config_hook({})
+    conf.load()
 
 
 @with_setup(_setup, _teardown)
@@ -44,14 +44,16 @@ def test_get_config():
     pwd = "p"
     url = "url"
 
-    config = {user_ev: usr, pass_ev: pwd, url_ev: url}
-    _t_config_hook(config)
+    config = { "kernel_python_credentials": {user_ev: usr, pass_ev: pwd, url_ev: url} }
+    conf.override(config)
 
     u, p, r = kernel._get_configuration()
 
     assert u == usr
     assert p == pwd
     assert r == url
+
+    conf.load()
 
 
 @with_setup(_setup, _teardown)
@@ -150,7 +152,7 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
     # Set up
     fatal_error = u"Error."
     message = "{}\nException details:\n\t\"{}\"".format(fatal_error, fatal_error)
-    stream_content = {"name": "stderr", "text": kernel.fatal_error_suggestion.format(message)}
+    stream_content = {"name": "stderr", "text": conf.fatal_error_suggestion().format(message)}
     code = "some spark code"
     reply_content = dict()
     reply_content[u"status"] = u"error"

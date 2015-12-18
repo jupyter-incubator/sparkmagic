@@ -8,12 +8,12 @@ from __future__ import print_function
 from IPython.core.magic import Magics, magics_class, line_cell_magic, needs_local_scope
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
-from .livyclientlib.sparkcontroller import SparkController
-from .livyclientlib.log import Log
-from .livyclientlib.utils import get_magics_home_path, join_paths
-from .livyclientlib.configuration import get_configuration
-from .livyclientlib.constants import Constants
+import remotespark.utils.configuration as conf
+from remotespark.utils.constants import Constants
+from remotespark.utils.log import Log
+from remotespark.utils.utils import get_magics_home_path, join_paths
 from .livyclientlib.dataframeparseexception import DataFrameParseException
+from .livyclientlib.sparkcontroller import SparkController
 
 
 @magics_class
@@ -26,7 +26,7 @@ class RemoteSparkMagics(Magics):
         self.spark_controller = SparkController()
 
         try:
-            should_serialize = get_configuration(Constants.serialize, False)
+            should_serialize = conf.serialize()
             if should_serialize:
                 self.logger.debug("Serialization enabled.")
 

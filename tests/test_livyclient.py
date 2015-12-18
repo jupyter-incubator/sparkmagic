@@ -1,8 +1,8 @@
 ﻿from mock import MagicMock, PropertyMock
 
 from remotespark.livyclientlib.livyclient import LivyClient
-from remotespark.livyclientlib.utils import get_connection_string
 from remotespark.livyclientlib.livysessionstate import LivySessionState
+from remotespark.utils.utils import get_connection_string
 
 
 def test_create_sql_context_automatically():

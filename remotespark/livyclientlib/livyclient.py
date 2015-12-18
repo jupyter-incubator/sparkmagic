@@ -1,9 +1,8 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from .log import Log
-from .configuration import get_configuration
-from .constants import Constants
+import remotespark.utils.configuration as conf
+from remotespark.utils.log import Log
 
 
 class LivyClient(object):
@@ -12,7 +11,7 @@ class LivyClient(object):
     def __init__(self, session):
         self.logger = Log("LivyClient")
 
-        execute_timeout_seconds = get_configuration(Constants.execute_timeout_seconds, 3600)
+        execute_timeout_seconds = conf.execute_timeout_seconds()
 
         self._session = session
         self._session.create_sql_context()

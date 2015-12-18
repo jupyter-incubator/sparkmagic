@@ -1,5 +1,7 @@
 import logging
-from .utils import join_paths, get_magics_home_path, get_instance_id, ensure_path_exists
+
+from remotespark.utils.utils import join_paths, get_magics_home_path, get_instance_id, ensure_path_exists
+
 
 class MagicsFileHandler(logging.FileHandler):
     """The default logging handler used by the magics; this behavior can be overriden by modifying the config file"""

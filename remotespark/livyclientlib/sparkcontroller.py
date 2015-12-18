@@ -1,12 +1,12 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
+from remotespark.utils.log import Log
 from .clientmanager import ClientManager
-from .log import Log
-from .livyclientfactory import LivyClientFactory
-from .filesystemreaderwriter import FileSystemReaderWriter
 from .clientmanagerstateserializer import ClientManagerStateSerializer
-from .constants import Constants
+from .filesystemreaderwriter import FileSystemReaderWriter
+from .livyclientfactory import LivyClientFactory
+
 
 class SparkController(object):
 
