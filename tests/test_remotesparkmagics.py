@@ -2,15 +2,20 @@ from nose.tools import raises, with_setup
 from mock import MagicMock
 
 from remotespark.RemoteSparkMagics import RemoteSparkMagics
-from remotespark.livyclientlib.constants import Constants
+from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 
 
 magic = None
 spark_controller = None
+shell = None
+
 
 def _setup():
-    global magic, spark_controller, viewer
-    magic = RemoteSparkMagics(shell=None, test=True)
+    global magic, spark_controller, shell
+
+    shell = MagicMock()
+    magic = RemoteSparkMagics(shell=None)
+    magic.shell = shell
 
     spark_controller = MagicMock()
     magic.spark_controller = spark_controller
@@ -95,7 +100,8 @@ def test_bad_command_throws_exception():
 @with_setup(_setup, _teardown)
 def test_run_cell_command_parses():
     run_cell_method = MagicMock()
-    run_cell_method.return_value = (True, "")
+    result_value = ""
+    run_cell_method.return_value = (True, result_value)
     spark_controller.run_cell = run_cell_method
 
     command = "-s"
@@ -106,4 +112,127 @@ def test_run_cell_command_parses():
     result = magic.spark(line, cell)
 
     run_cell_method.assert_called_once_with(cell, name)
+    assert result is None
+    shell.write.assert_called_once_with(result_value)
 
+
+@with_setup(_setup, _teardown)
+def test_run_cell_command_writes_to_err():
+    run_cell_method = MagicMock()
+    result_value = ""
+    run_cell_method.return_value = (False, result_value)
+    spark_controller.run_cell = run_cell_method
+
+    command = "-s"
+    name = "sessions_name"
+    line = " ".join([command, name])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    run_cell_method.assert_called_once_with(cell, name)
+    assert result is None
+    shell.write_err.assert_called_once_with(result_value)
+
+
+@with_setup(_setup, _teardown)
+def test_run_sql_command_parses():
+    run_cell_method = MagicMock()
+    run_cell_method.return_value = (True, "")
+    spark_controller.run_cell_sql = run_cell_method
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "sql"
+    line = " ".join([command, name, context, context_name])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    run_cell_method.assert_called_once_with(cell, name)
+    assert result is not None
+
+
+@with_setup(_setup, _teardown)
+def test_run_hive_command_parses():
+    run_cell_method = MagicMock()
+    run_cell_method.return_value = (True, "")
+    spark_controller.run_cell_hive = run_cell_method
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "hive"
+    line = " ".join([command, name, context, context_name])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    run_cell_method.assert_called_once_with(cell, name)
+    assert result is not None
+
+
+@with_setup(_setup, _teardown)
+def test_run_sql_command_returns_none_when_exception():
+    error_message = "error"
+    run_cell_method = MagicMock(side_effect=DataFrameParseException(error_message))
+    run_cell_method.return_value = (True, "")
+    spark_controller.run_cell_sql = run_cell_method
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "sql"
+    line = " ".join([command, name, context, context_name])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    run_cell_method.assert_called_once_with(cell, name)
+    assert result is None
+    shell.write_err.assert_called_once_with(error_message)
+
+
+@with_setup(_setup, _teardown)
+def test_run_hive_command_returns_none_when_exception():
+    error_message = "error"
+    run_cell_method = MagicMock(side_effect=DataFrameParseException(error_message))
+    run_cell_method.return_value = (True, "")
+    spark_controller.run_cell_hive = run_cell_method
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "hive"
+    line = " ".join([command, name, context, context_name])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    run_cell_method.assert_called_once_with(cell, name)
+    assert result is None
+    shell.write_err.assert_called_once_with(error_message)
+
+
+@with_setup(_setup, _teardown)
+def test_run_sql_command_stores_variable_in_user_ns():
+    shell.user_ns = user_ns = dict()
+    run_cell_method = MagicMock()
+    run_cell_method.return_value = (True, "")
+    spark_controller.run_cell_sql = run_cell_method
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "sql"
+    output = "-o"
+    output_name = "my_var"
+    line = " ".join([command, name, context, context_name, output, output_name])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    run_cell_method.assert_called_once_with(cell, name)
+    assert result is not None
+    assert result is user_ns[output_name]

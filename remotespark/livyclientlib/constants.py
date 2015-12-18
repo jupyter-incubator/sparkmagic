@@ -17,7 +17,6 @@ class Constants:
     serialize = "serialize"
     serialize_periodically = "serialize_periodically"
     serialize_period_seconds = "serialize_period_seconds"
-    display_info = "display_info"
 
     default_chart_type = "default_chart_type"
 

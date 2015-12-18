@@ -2,7 +2,6 @@
   "serialize": false,
   "serialize_periodically": false,
   "serialize_period_seconds": 3,
-  "display_info": false,
 
   "default_chart_type": "area",
 
