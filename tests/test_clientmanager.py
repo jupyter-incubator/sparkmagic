@@ -18,13 +18,13 @@ def test_deserialize_on_creation():
     serializer.deserialize_state.return_value = [("py", None), ("sc", None)]
     manager = ClientManager(serializer)
 
-    assert "py" in manager.get_endpoints_list()
-    assert "sc" in manager.get_endpoints_list()
+    assert "py" in manager.get_sessions_list()
+    assert "sc" in manager.get_sessions_list()
 
     serializer = MagicMock()
     manager = ClientManager(serializer)
 
-    assert len(manager.get_endpoints_list()) == 0
+    assert len(manager.get_sessions_list()) == 0
 
 
 def test_serialize_periodically():
@@ -82,7 +82,7 @@ def test_client_names_returned():
     manager.add_client("name0", client)
     manager.add_client("name1", client)
 
-    assert_equals({"name0", "name1"}, set(manager.get_endpoints_list()))
+    assert_equals({"name0", "name1"}, set(manager.get_sessions_list()))
 
 
 def test_get_any_client():

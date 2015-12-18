@@ -81,11 +81,11 @@ class SparkKernelBase(IPythonKernel):
 
         self.already_ran_once = True
 
-        add_endpoint_code = "%spark add {} {} {} skip".format(
+        add_session_code = "%spark add {} {} {} skip".format(
             self.client_name, self.session_language, connection_string)
-        self._execute_cell(add_endpoint_code, True, False, shutdown_if_error=True,
+        self._execute_cell(add_session_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to create a Livy session.")
-        self.logger.debug("Added endpoint.")
+        self.logger.debug("Added session.")
 
     def _get_configuration(self):
         try:

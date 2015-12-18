@@ -5,7 +5,7 @@ from .livyclient import LivyClient
 from .dataframeparseexception import DataFrameParseException
 
 class PandasLivyClientBase(LivyClient):
-    """Spark client for Livy endpoint that produces pandas df for sql and hive commands."""
+    """Spark client for Livy session that produces pandas df for sql and hive commands."""
     def __init__(self, session, max_take_rows):
         super(PandasLivyClientBase, self).__init__(session)
         self.max_take_rows = max_take_rows

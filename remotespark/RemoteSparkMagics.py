@@ -55,30 +55,40 @@ class RemoteSparkMagics(Magics):
                                              Constants.context_name_sql,
                                              Constants.context_name_hive,
                                              Constants.context_name_spark))
-    @argument("-e", "--endpoint", help="The name of the Livy endpoint to use. "
-                                       "If only one endpoint has been created, there's no need to specify one.")
+    @argument("-s", "--session", help="The name of the Livy session to use. "
+                                       "If only one session has been created, there's no need to specify one.")
     @argument("-t", "--chart", type=str, default="area", help='Chart type to use: table, area, line, bar.')
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @line_cell_magic
     def spark(self, line, cell=""):
-        """Magic to execute spark remotely.           
-           If invoked with no subcommand, the code will be executed against the specified endpoint.
+        """Magic to execute spark remotely.
+
+           This magic allows you to create a Livy Scala or Python session against a Livy endpoint. Every session can
+           be used to execute either Spark code or SparkSQL code by executing against the SQL context in the session.
+           When the SQL context is used, the result will be a Pandas dataframe of a sample of the results.
+
+           If invoked with no subcommand, the cell will be executed against the specified session.
            Subcommands
            -----------
            info
-               Display the mode and available Livy endpoints.
+               Display the mode and available Livy sessions.
            add
-               Add a Livy endpoint. First argument is the friendly name of the endpoint, second argument
-               is the language, and third argument is the connection string. A fourth argument specifying if
-               endpoint can be skipped if already present is optional: "skip" or empty.
+               Add a Livy session. First argument is the name of the session, second argument
+               is the language, and third argument is the connection string of the Livy endpoint.
+               A fourth argument specifying if session creation can be skipped if it already exists is optional:
+               "skip" or empty.
                e.g. `%%spark add test python url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword skip`
                or
                e.g. `%%spark add test python url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword`
+           run
+               Run Spark code against a session.
+               e.g. `%%spark -e testsession` will execute the cell code against the testsession previously created
+               e.g. `%%spark -e testsession -c sql` will execute the SQL code against the testsession previously created
            delete
-               Delete a Livy endpoint. Argument is the friendly name of the endpoint to be deleted.
+               Delete a Livy session. Argument is the name of the session to be deleted.
                e.g. `%%spark delete defaultlivy`
            cleanup
-               Delete all Livy endpoints. No arguments required.
+               Delete all Livy sessions created by the notebook. No arguments required.
                e.g. `%%spark cleanup`
         """
         usage = "Please look at usage of %spark by executing `%spark?`."
@@ -102,13 +112,13 @@ class RemoteSparkMagics(Magics):
                 skip = args.command[4].lower() == "skip"
             else:
                 skip = False
-            self.spark_controller.add_endpoint(name, language, connection_string, skip)
+            self.spark_controller.add_session(name, language, connection_string, skip)
         # delete
         elif subcommand == "delete":
             if len(args.command) != 2:
                 raise ValueError("Subcommand 'delete' requires an argument. {}".format(usage))
             name = args.command[1].lower()
-            self.spark_controller.delete_endpoint(name)
+            self.spark_controller.delete_session(name)
         # cleanup 
         elif subcommand == "cleanup":
             self.spark_controller.cleanup()
@@ -116,7 +126,7 @@ class RemoteSparkMagics(Magics):
         elif len(subcommand) == 0:
             if args.context == Constants.context_name_spark:
                 (success, out) = self.spark_controller.run_cell(cell,
-                                                                args.endpoint)
+                                                                args.session)
                 if success:
                     self.ipython.write(out)
                 else:
@@ -124,13 +134,13 @@ class RemoteSparkMagics(Magics):
             elif args.context == Constants.context_name_sql:
                 try:
                     return self.spark_controller.run_cell_sql(cell,
-                                                              args.endpoint)
+                                                              args.session)
                 except DataFrameParseException as e:
                     self.ipython.write_err(e.out)
             elif args.context == Constants.context_name_hive:
                 try:
                     return self.spark_controller.run_cell_hive(cell,
-                                                              args.endpoint)
+                                                              args.session)
                 except DataFrameParseException as e:
                     self.ipython.write_err(e.out)
             else:

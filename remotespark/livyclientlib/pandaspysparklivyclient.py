@@ -7,7 +7,7 @@ import json
 from .pandaslivyclientbase import PandasLivyClientBase
 
 class PandasPysparkLivyClient(PandasLivyClientBase):
-    """Spark client for Livy endpoint in PySpark"""
+    """Spark client for Livy session in PySpark"""
 
     def __init__(self, session, max_take_rows):
         super(PandasPysparkLivyClient, self).__init__(session, max_take_rows)
