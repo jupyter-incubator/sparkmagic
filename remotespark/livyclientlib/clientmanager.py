@@ -3,9 +3,8 @@
 
 from threading import Timer
 
-from .log import Log
-from .configuration import get_configuration
-from .constants import Constants
+import remotespark.utils.configuration as conf
+from remotespark.utils.log import Log
 
 
 class ClientManager(object):
@@ -16,8 +15,8 @@ class ClientManager(object):
         serialize_period = 3
 
         if serializer is not None:
-            serialize_periodically = get_configuration(Constants.serialize_periodically, True)
-            serialize_period = get_configuration(Constants.serialize_period_seconds, 3)
+            serialize_periodically = conf.serialize_periodically()
+            serialize_period = conf.serialize_period_seconds()
 
         self.logger = Log("ClientManager")
 

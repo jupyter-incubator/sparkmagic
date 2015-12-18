@@ -4,21 +4,22 @@
 import textwrap
 from time import sleep, time
 
-from .log import Log
-from .constants import Constants
+import remotespark.utils.configuration as conf
+from remotespark.utils.constants import Constants
+from remotespark.utils.log import Log
+from remotespark.utils.utils import get_instance_id
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livysessionstate import LivySessionState
-from .configuration import get_configuration
-from .utils import get_instance_id
+
 
 class LivySession(object):
     """Session that is livy specific."""
     # TODO(aggftw): make threadsafe
 
     def __init__(self, http_client, language, session_id, sql_created):
-        status_sleep_seconds = get_configuration(Constants.status_sleep_seconds, 2)
-        statement_sleep_seconds = get_configuration(Constants.statement_sleep_seconds, 2)
-        create_sql_context_timeout_seconds = get_configuration(Constants.create_sql_context_timeout_seconds, 60)
+        status_sleep_seconds = conf.status_sleep_seconds()
+        statement_sleep_seconds = conf.statement_sleep_seconds()
+        create_sql_context_timeout_seconds = conf.create_sql_context_timeout_seconds()
 
         assert status_sleep_seconds > 0
         assert statement_sleep_seconds > 0

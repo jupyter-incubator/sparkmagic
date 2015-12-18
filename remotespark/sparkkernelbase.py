@@ -1,21 +1,14 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
-from ipykernel.ipkernel import IPythonKernel
 import requests
+from ipykernel.ipkernel import IPythonKernel
 
-from remotespark.livyclientlib.log import Log
-from remotespark.livyclientlib.utils import get_connection_string
-from remotespark.livyclientlib.configuration import get_configuration
-from remotespark.livyclientlib.constants import Constants
+import remotespark.utils.configuration as conf
+from remotespark.utils.log import Log
+from remotespark.utils.utils import get_connection_string
 
 
 class SparkKernelBase(IPythonKernel):
-    fatal_error_suggestion = "The code failed because of a fatal error:\n\t{}.\n\nSome things to try:\n" \
-                             "a) Make sure Spark has enough available resources for Jupyter to create a Spark context."\
-                             "\nb) Contact your Jupyter administrator to make sure the Spark magics library is " \
-                             "configured correctly." \
-                             "\nc) Restart the kernel."
-
     # Required by Jupyter - Override
     implementation = None
     implementation_version = None
@@ -25,9 +18,7 @@ class SparkKernelBase(IPythonKernel):
     banner = None
 
     # Override
-    username_conf_name = None
-    password_conf_name = None
-    url_conf_name = None
+    kernel_conf_name = None
     session_language = None
     client_name = None
 
@@ -89,13 +80,14 @@ class SparkKernelBase(IPythonKernel):
 
     def _get_configuration(self):
         try:
-            username = get_configuration(self.username_conf_name)
-            password = get_configuration(self.password_conf_name)
-            url = get_configuration(self.url_conf_name)
-            return username, password, url
-        except KeyError:
-            message = "Please set configuration for '{}', '{}', '{} to initialize Kernel.".format(
-                self.username_conf_name, self.password_conf_name, self.url_conf_name)
+            credentials = getattr(conf, 'kernel_' + self.kernel_conf_name + '_credentials')()
+            ret = (credentials['username'], credentials['password'], credentials['url'])
+            for string in ret:
+                assert string
+            return ret
+        except (KeyError, AssertionError):
+            message = "Please set configuration for 'kernel_{}_credentials' to initialize Kernel.".format(
+                self.kernel_conf_name)
             self._abort_with_fatal_error(message)
 
     def _execute_cell(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False,
@@ -119,7 +111,7 @@ class SparkKernelBase(IPythonKernel):
     def _abort_with_fatal_error(self, message):
         self._fatal_error = message
 
-        error = get_configuration(Constants.fatal_error_suggestion, self.fatal_error_suggestion).format(message)
+        error = conf.fatal_error_suggestion().format(message)
         self.logger.error(error)
         self._send_error(error)
 

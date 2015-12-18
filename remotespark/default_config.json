@@ -5,13 +5,17 @@
 
   "default_chart_type": "area",
 
-  "kernel_python_username": "",
-  "kernel_python_password": "",
-  "kernel_python_url": "",
+  "kernel_python_credentials" : {
+    "username": "",
+    "password": "",
+    "url": ""
+  },
 
-  "kernel_scala_username": "",
-  "kernel_scala_password": "",
-  "kernel_scala_url": "",
+  "kernel_scala_credentials" : {
+    "username": "",
+    "password": "",
+    "url": ""
+  },
 
   "logging_config": {
     "version": 1,
@@ -23,7 +27,7 @@
     },
     "handlers": {
       "magicsHandler": { 
-        "class": "remotespark.livyclientlib.filehandler.MagicsFileHandler",
+        "class": "remotespark.utils.filehandler.MagicsFileHandler",
         "formatter": "magicsFormatter"
       }
     },

@@ -1,13 +1,13 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
-from .log import Log
-from .utils import get_connection_string_elements
+from remotespark.utils.constants import Constants
+from remotespark.utils.log import Log
+from remotespark.utils.utils import get_connection_string_elements
+from .linearretrypolicy import LinearRetryPolicy
+from .livyreliablehttpclient import LivyReliableHttpClient
 from .livysession import LivySession
 from .pandaspysparklivyclient import PandasPysparkLivyClient
 from .pandasscalalivyclient import PandasScalaLivyClient
-from .livyreliablehttpclient import LivyReliableHttpClient
-from .constants import Constants
-from .linearretrypolicy import LinearRetryPolicy
 
 
 class LivyClientFactory(object):
