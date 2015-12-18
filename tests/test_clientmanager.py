@@ -1,9 +1,11 @@
 ﻿import time
-from nose.tools import raises, assert_equals
-from mock import MagicMock
 
+from mock import MagicMock
+from nose.tools import raises, assert_equals
+
+import remotespark.utils.configuration as conf
 from remotespark.livyclientlib.clientmanager import ClientManager
-from remotespark.livyclientlib.configuration import _t_config_hook
+import remotespark.utils.configuration as conf
 
 
 @raises(ValueError)
@@ -28,7 +30,8 @@ def test_deserialize_on_creation():
 
 
 def test_serialize_periodically():
-    _t_config_hook({"serialize_period_seconds": 0.1})
+    conf.override({conf.serialize_period_seconds.__name__: 0.1,
+                   conf.serialize_periodically.__name__: True})
     serializer = MagicMock()
     ClientManager(serializer)
 
@@ -36,7 +39,7 @@ def test_serialize_periodically():
 
     assert serializer.serialize_state.call_count >= 1
 
-    _t_config_hook({})
+    conf.load()
 
 
 def test_get_client():

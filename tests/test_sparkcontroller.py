@@ -1,9 +1,7 @@
-from nose.tools import with_setup, assert_equals
 from mock import MagicMock
+from nose.tools import with_setup
 
-from remotespark.livyclientlib.constants import Constants
 from remotespark.livyclientlib.sparkcontroller import SparkController
-
 
 client_manager = None
 client_factory = None

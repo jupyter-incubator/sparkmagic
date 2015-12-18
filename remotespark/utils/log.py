@@ -2,14 +2,17 @@
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
-import logging, logging.config
 
-from .configuration import get_configuration
-from .constants import Constants
+import logging
+import logging.config
+
+import remotespark.utils.configuration as conf
+from remotespark.utils.constants import Constants
+
 
 class Log(object):
     """Logger for magics. A small wrapper class around the configured logger described in the configuration file"""
-    logging.config.dictConfig(get_configuration(Constants.logging_config))
+    logging.config.dictConfig(conf.logging_config())
 
     def __init__(self, caller_name):
         assert caller_name is not None

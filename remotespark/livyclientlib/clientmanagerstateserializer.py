@@ -2,9 +2,10 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
+
 from requests import ConnectionError
 
-from .log import Log
+from remotespark.utils.log import Log
 
 
 class ClientManagerStateSerializer(object):
