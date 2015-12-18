@@ -1,6 +1,3 @@
-"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
-Provides the %spark magic."""
-
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
@@ -38,12 +35,12 @@ class SparkController(object):
     def cleanup(self):
         self.client_manager.clean_up_all()
 
-    def delete_endpoint(self, name):
+    def delete_session(self, name):
         self.client_manager.delete_client(name)
 
-    def add_endpoint(self, name, language, connection_string, skip_if_exists):
-        if skip_if_exists and (name in self.client_manager.get_endpoints_list()):
-            self.logger.debug("Skipping {} because it already exists in list of endpoints.".format(name))
+    def add_session(self, name, language, connection_string, skip_if_exists):
+        if skip_if_exists and (name in self.client_manager.get_sessions_list()):
+            self.logger.debug("Skipping {} because it already exists in list of sessions.".format(name))
             return
 
         session = self.client_factory.create_session(language, connection_string, "-1", False)
@@ -52,7 +49,7 @@ class SparkController(object):
         self.client_manager.add_client(name, livy_client)
 
     def get_client_keys(self):
-        return self.client_manager.get_endpoints_list()
+        return self.client_manager.get_sessions_list()
 
     def get_client_by_name_or_default(self, client_name):
         if client_name is None:

@@ -7,7 +7,7 @@ from .constants import Constants
 
 
 class LivyClient(object):
-    """Spark client for Livy endpoint"""
+    """Spark client for Livy session"""
 
     def __init__(self, session):
         self.logger = Log("LivyClient")

@@ -11,7 +11,7 @@ from .linearretrypolicy import LinearRetryPolicy
 
 
 class LivyClientFactory(object):
-    """Spark client for Livy endpoint"""
+    """Spark client factory"""
 
     def __init__(self):
         self.logger = Log("LivyClientFactory")
