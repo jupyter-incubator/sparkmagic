@@ -5,11 +5,8 @@ Provides the %spark magic."""
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
-import warnings
-
-from IPython.core.getipython import get_ipython
-from IPython.core.magic import (Magics, magics_class, line_cell_magic)
-from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
+from IPython.core.magic import Magics, magics_class, line_cell_magic, needs_local_scope
+from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 from .livyclientlib.sparkcontroller import SparkController
 from .livyclientlib.log import Log
@@ -18,17 +15,15 @@ from .livyclientlib.configuration import get_configuration
 from .livyclientlib.constants import Constants
 from .livyclientlib.dataframeparseexception import DataFrameParseException
 
+
 @magics_class
 class RemoteSparkMagics(Magics):
-
-    def __init__(self, shell, data=None, test=False):
+    def __init__(self, shell, data=None):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell)
 
-        self.interactive = get_configuration(Constants.display_info, False)
         self.logger = Log("RemoteSparkMagics")
         self.spark_controller = SparkController()
-        self.ipython = get_ipython()
 
         try:
             should_serialize = get_configuration(Constants.serialize, False)
@@ -56,11 +51,13 @@ class RemoteSparkMagics(Magics):
                                              Constants.context_name_hive,
                                              Constants.context_name_spark))
     @argument("-s", "--session", help="The name of the Livy session to use. "
-                                       "If only one session has been created, there's no need to specify one.")
-    @argument("-t", "--chart", type=str, default="area", help='Chart type to use: table, area, line, bar.')
+                                      "If only one session has been created, there's no need to specify one.")
+    @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL or Hive "
+                                                             "query will be stored in variable of this name.")
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
+    @needs_local_scope
     @line_cell_magic
-    def spark(self, line, cell=""):
+    def spark(self, line, cell="", local_ns={}):
         """Magic to execute spark remotely.
 
            This magic allows you to create a Livy Scala or Python session against a Livy endpoint. Every session can
@@ -84,6 +81,8 @@ class RemoteSparkMagics(Magics):
                Run Spark code against a session.
                e.g. `%%spark -e testsession` will execute the cell code against the testsession previously created
                e.g. `%%spark -e testsession -c sql` will execute the SQL code against the testsession previously created
+               e.g. `%%spark -e testsession -c sql -o my_var` will execute the SQL code against the testsession previously
+                        created and store the pandas dataframe created in the my_var variable in the Python environment
            delete
                Delete a Livy session. Argument is the name of the session to be deleted.
                e.g. `%%spark delete defaultlivy`
@@ -99,8 +98,7 @@ class RemoteSparkMagics(Magics):
 
         # info
         if subcommand == "info":
-            # Info is printed by default
-            pass
+            self._print_info()
         # add
         elif subcommand == "add":
             if len(args.command) != 4 and len(args.command) != 5:
@@ -125,40 +123,35 @@ class RemoteSparkMagics(Magics):
         # run
         elif len(subcommand) == 0:
             if args.context == Constants.context_name_spark:
-                (success, out) = self.spark_controller.run_cell(cell,
-                                                                args.session)
+                (success, out) = self.spark_controller.run_cell(cell, args.session)
                 if success:
-                    self.ipython.write(out)
+                    self.shell.write(out)
                 else:
-                    self.ipython.write_err(out)
+                    self.shell.write_err(out)
             elif args.context == Constants.context_name_sql:
-                try:
-                    return self.spark_controller.run_cell_sql(cell,
-                                                              args.session)
-                except DataFrameParseException as e:
-                    self.ipython.write_err(e.out)
+                return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
+                                                                     args.session, args.output)
             elif args.context == Constants.context_name_hive:
-                try:
-                    return self.spark_controller.run_cell_hive(cell,
-                                                              args.session)
-                except DataFrameParseException as e:
-                    self.ipython.write_err(e.out)
+                return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
+                                                                     args.session, args.output)
             else:
                 raise ValueError("Context '{}' not found".format(args.context))
         # error
         else:
             raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
 
-        # Print info after any valid subcommand
-        if len(subcommand) > 0:
-            if len(cell) > 0:
-                print("Warning: Cell body not executed because subcommmand found.")
-                print(usage)
-            self._print_info()
+    def _execute_against_context_that_returns_df(self, method, cell, session, output_var):
+        try:
+            df = method(cell, session)
+            if output_var is not None:
+                self.shell.user_ns[output_var] = df
+            return df
+        except DataFrameParseException as e:
+            self.shell.write_err(e.out)
+            return None
 
     def _print_info(self):
-        if self.interactive:
-            print("Info for running Spark:\n\t{}\n".format(self.spark_controller.get_client_keys()))
+        print("Info for running Spark:\n\t{}\n".format(self.spark_controller.get_client_keys()))
 
         
 def load_ipython_extension(ip):
