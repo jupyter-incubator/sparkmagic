@@ -29,7 +29,7 @@ def test_deserialize_on_creation():
 
 
 def test_serialize_periodically():
-    conf.override({"serialize_period_seconds": 0.1})
+    conf.override({"serialize_period_seconds": 0.1, "serialize_periodically": True})
     serializer = MagicMock()
     ClientManager(serializer)
 

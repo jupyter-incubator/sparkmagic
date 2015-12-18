@@ -58,6 +58,7 @@ def test_get_config():
 
 @with_setup(_setup, _teardown)
 def test_get_config_not_set():
+    conf.override({})
     try:
         kernel._get_configuration()
 
@@ -65,6 +66,7 @@ def test_get_config_not_set():
         assert False
     except ValueError:
         assert send_error_mock.call_count == 1
+    conf.load()
 
 
 @with_setup(_setup, _teardown)

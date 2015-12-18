@@ -75,7 +75,7 @@ def serialize_periodically():
 
 @_override
 def serialize_period_seconds():
-    return False
+    return 3
 
 
 @_override
