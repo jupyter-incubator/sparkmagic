@@ -132,8 +132,6 @@ class RemoteSparkMagics(Magics):
             properties = copy.deepcopy(self.properties)
             properties["kind"] = self._get_livy_kind(language)
 
-            self.shell.write("Adding session {} with properties:\n\t{}\n".format(name, properties))
-
             self.spark_controller.add_session(name, connection_string, skip, properties)
         # delete
         elif subcommand == "delete":
@@ -182,7 +180,8 @@ class RemoteSparkMagics(Magics):
         {}
 """.format(self.spark_controller.get_client_keys(), self.properties))
 
-    def _get_livy_kind(self, language):
+    @staticmethod
+    def _get_livy_kind(language):
         if language == Constants.lang_scala:
             return Constants.session_kind_spark
         elif language == Constants.lang_python:
