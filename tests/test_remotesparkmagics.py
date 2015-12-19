@@ -1,7 +1,7 @@
 from mock import MagicMock
 from nose.tools import raises, with_setup
 
-from remotespark.RemoteSparkMagics import RemoteSparkMagics
+from remotespark.remotesparkmagics import RemoteSparkMagics
 from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 
 
