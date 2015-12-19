@@ -13,6 +13,7 @@ def test_configuration_initialize():
     s = "hello"
     config = { conf.fatal_error_suggestion.__name__: s }
     fsrw = MagicMock()
+    fsrw.path = ""
     read_lines = MagicMock(return_value=[json.dumps(config)])
     fsrw.read_lines = read_lines
     fsrw_class = MagicMock(return_value=fsrw)
@@ -36,6 +37,7 @@ def test_configuration_load():
     i = 1000
     config = { conf.statement_sleep_seconds.__name__: i }
     fsrw = MagicMock()
+    fsrw.path = ""
     read_lines = MagicMock(return_value=[json.dumps(config)])
     fsrw.read_lines = read_lines
     fsrw_class = MagicMock(return_value=fsrw)
@@ -50,6 +52,7 @@ def test_configuration_load_not_lazy():
     a = "whoops"
     config = { conf.default_chart_type.__name__: a }
     fsrw = MagicMock()
+    fsrw.path = ""
     read_lines = MagicMock(return_value=[json.dumps(config)])
     fsrw.read_lines = read_lines
     fsrw_class = MagicMock(return_value=fsrw)
