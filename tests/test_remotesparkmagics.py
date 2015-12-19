@@ -3,6 +3,7 @@ from nose.tools import raises, with_setup
 
 from remotespark.remotesparkmagics import RemoteSparkMagics
 from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
+import remotespark.utils.configuration as conf
 
 
 magic = None
@@ -12,6 +13,8 @@ shell = None
 
 def _setup():
     global magic, spark_controller, shell
+
+    conf.override({})
 
     shell = MagicMock()
     magic = RemoteSparkMagics(shell=None)
