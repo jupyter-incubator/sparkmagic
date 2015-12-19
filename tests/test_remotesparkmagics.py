@@ -38,7 +38,7 @@ def test_info_command_parses():
 
 @with_setup(_setup, _teardown)
 def test_add_sessions_command_parses():
-    # Do not skip
+    # Do not skip and python
     add_sessions_mock = MagicMock()
     spark_controller.add_session = add_sessions_mock
     command = "add"
@@ -49,20 +49,20 @@ def test_add_sessions_command_parses():
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with(name, language, connection_string, False)
+    add_sessions_mock.assert_called_once_with(name, connection_string, False, {"kind": "pyspark"})
 
-    # Skip
+    # Skip and scala - upper case
     add_sessions_mock = MagicMock()
     spark_controller.add_session = add_sessions_mock
     command = "add"
     name = "name"
-    language = "python"
+    language = "Scala"
     connection_string = "url=http://location:port;username=name;password=word"
     line = " ".join([command, name, language, connection_string, "skip"])
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with(name, language, connection_string, True)
+    add_sessions_mock.assert_called_once_with(name, connection_string, True, {"kind": "spark"})
 
 
 @with_setup(_setup, _teardown)

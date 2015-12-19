@@ -17,23 +17,24 @@ class LivyClientFactory(object):
         self.logger = Log("LivyClientFactory")
         self.max_results = 2500
 
-    def build_client(self, language, session):
+    def build_client(self, session):
         assert session is not None
+        kind = session.kind
 
-        if language == Constants.lang_python:
+        if kind == Constants.session_kind_pyspark:
             return PandasPysparkLivyClient(session, self.max_results)
-        elif language == Constants.lang_scala:
+        elif kind == Constants.session_kind_spark:
             return PandasScalaLivyClient(session, self.max_results)
         else:
-            raise ValueError("Language '{}' is not supported.".format(language))
+            raise ValueError("Kind '{}' is not supported.".format(kind))
 
     @staticmethod
-    def create_session(language, connection_string, session_id="-1", sql_created=False):
+    def create_session(connection_string, properties, session_id="-1", sql_created=False):
         cso = get_connection_string_elements(connection_string)
 
         retry_policy = LinearRetryPolicy(seconds_to_sleep=5, max_retries=5)
         http_client = LivyReliableHttpClient(cso.url, cso.username, cso.password, retry_policy)
 
-        session = LivySession(http_client, language, session_id, sql_created)
+        session = LivySession(http_client, session_id, sql_created, properties)
 
         return session

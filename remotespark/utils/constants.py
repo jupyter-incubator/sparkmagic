@@ -7,6 +7,7 @@ class Constants:
 
     session_kind_spark = "spark"
     session_kind_pyspark = "pyspark"
+    session_kinds_supported = [session_kind_spark, session_kind_pyspark]
 
     context_name_spark = "spark"
     context_name_sql = "sql"

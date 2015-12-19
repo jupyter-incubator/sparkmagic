@@ -7,6 +7,7 @@ Provides the %spark magic."""
 from __future__ import print_function
 from IPython.core.magic import Magics, magics_class, line_cell_magic, needs_local_scope
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
+import json
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
@@ -52,6 +53,11 @@ class RemoteSparkMagics(Magics):
                                              Constants.context_name_spark))
     @argument("-s", "--session", help="The name of the Livy session to use. "
                                       "If only one session has been created, there's no need to specify one.")
+    @argument("-p", "--properties", type=str, default="{}",
+              help="""If present, override the livy session properties sent to Livy on session creation.
+              Expected value is a JSON key-value string to be sent as part of the Request Body for the POST /sessions
+              endpoint in Livy.
+              e.g. {"driverMemory":"1000M", "executorCores":4}""")
     @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL or Hive "
                                                              "query will be stored in variable of this name.")
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
@@ -74,15 +80,18 @@ class RemoteSparkMagics(Magics):
                is the language, and third argument is the connection string of the Livy endpoint.
                A fourth argument specifying if session creation can be skipped if it already exists is optional:
                "skip" or empty.
-               e.g. `%%spark add test python url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword skip`
+               e.g. `%%spark add test python url=https://sparkcluster.net/livy;username=u;password=p skip`
                or
-               e.g. `%%spark add test python url=https://sparkcluster.example.net/livy;username=admin;password=MyPassword`
+               e.g. `%%spark add test python url=https://sparkcluster.net/livy;username=u;password=p`
+               or
+               e.g. `%%spark add test python url=https://sparkcluster.net/livy;username=u;password=p -p {"driverMemory":"1000M", "executorCores":4}`
            run
                Run Spark code against a session.
                e.g. `%%spark -e testsession` will execute the cell code against the testsession previously created
                e.g. `%%spark -e testsession -c sql` will execute the SQL code against the testsession previously created
-               e.g. `%%spark -e testsession -c sql -o my_var` will execute the SQL code against the testsession previously
-                        created and store the pandas dataframe created in the my_var variable in the Python environment
+               e.g. `%%spark -e testsession -c sql -o my_var` will execute the SQL code against the testsession
+                        previously created and store the pandas dataframe created in the my_var variable in the
+                        Python environment.
            delete
                Delete a Livy session. Argument is the name of the session to be deleted.
                e.g. `%%spark delete defaultlivy`
@@ -104,13 +113,15 @@ class RemoteSparkMagics(Magics):
             if len(args.command) != 4 and len(args.command) != 5:
                 raise ValueError("Subcommand 'add' requires three or four arguments. {}".format(usage))
             name = args.command[1].lower()
-            language = args.command[2]
+            language = args.command[2].lower()
             connection_string = args.command[3]
             if len(args.command) == 5:
                 skip = args.command[4].lower() == "skip"
             else:
                 skip = False
-            self.spark_controller.add_session(name, language, connection_string, skip)
+            properties = json.loads(args.properties)
+            properties["kind"] = self._get_livy_kind(language)
+            self.spark_controller.add_session(name, connection_string, skip, properties)
         # delete
         elif subcommand == "delete":
             if len(args.command) != 2:
@@ -152,6 +163,14 @@ class RemoteSparkMagics(Magics):
 
     def _print_info(self):
         print("Info for running Spark:\n\t{}\n".format(self.spark_controller.get_client_keys()))
+
+    def _get_livy_kind(self, language):
+        if language == Constants.lang_scala:
+            return Constants.session_kind_spark
+        elif language == Constants.lang_python:
+            return Constants.session_kind_pyspark
+        else:
+            raise ValueError("Cannot get session kind for {}.".format(language))
 
         
 def load_ipython_extension(ip):

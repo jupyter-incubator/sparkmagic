@@ -25,17 +25,17 @@ def _teardown():
 @with_setup(_setup, _teardown)
 def test_add_session():
     name = "name"
-    language = "python"
+    properties = {"kind": "spark"}
     connection_string = "url=http://location:port;username=name;password=word"
     client = "client"
     session = MagicMock()
     client_factory.create_session = MagicMock(return_value=session)
     client_factory.build_client = MagicMock(return_value=client)
 
-    controller.add_session(name, language, connection_string, False)
+    controller.add_session(name, connection_string, False, properties)
 
-    client_factory.create_session.assert_called_once_with(language, connection_string, "-1", False)
-    client_factory.build_client.assert_called_once_with(language, session)
+    client_factory.create_session.assert_called_once_with(connection_string, properties, "-1", False)
+    client_factory.build_client.assert_called_once_with(session)
     client_manager.add_client.assert_called_once_with(name, client)
     session.start.assert_called_once_with()
 

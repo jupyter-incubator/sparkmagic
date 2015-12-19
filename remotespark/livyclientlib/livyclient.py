@@ -34,8 +34,8 @@ class LivyClient(object):
         self._session.delete()
 
     @property
-    def language(self):
-        return self._session.language
+    def kind(self):
+        return self._session.kind
 
     @property
     def session_id(self):
