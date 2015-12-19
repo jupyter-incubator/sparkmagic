@@ -4,6 +4,7 @@ from mock import MagicMock, call
 from nose.tools import raises, assert_equals
 
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
+from remotespark.livyclientlib.livyunexpectederror import LivyUnexpectedError
 from remotespark.livyclientlib.livysession import LivySession
 import remotespark.utils.configuration as conf
 from remotespark.utils.utils import get_connection_string, get_instance_id
@@ -37,6 +38,7 @@ class TestLivySession:
                           'e4{HTTP/1.1}{0.0.0.0:37394}","15/09/04 16:23:01 INFO server.Server: Started @27514ms","' \
                           '15/09/04 16:23:01 INFO livy.WebServer: Starting server on 37394","Starting livy-repl on' \
                           ' http://10.0.0.11:37394"]}]}'
+    error_sessions_json = '{"from":0,"total":1,"sessions":[{"id":0,"state":"error","kind":"spark","log":[]}]}'
     busy_sessions_json = '{"from":0,"total":1,"sessions":[{"id":0,"state":"busy","kind":"spark","log":["16:23:01,151' \
                          ' |-INFO in ch.qos.logback.core.joran.action.AppenderAction - Naming appender as [STDOUT]",' \
                          '"16:23:01,213 |-INFO in ch.qos.logback.core.joran.action.NestedComplexPropertyIA - Assumin' \
@@ -228,7 +230,7 @@ class TestLivySession:
         assert_equals("idle", state)
         http_client.get.assert_called_with("/sessions", [200])
 
-    def test_wait_for_status_returns_when_in_state(self):
+    def test_wait_for_idle_returns_when_in_state(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         self.get_responses = [DummyResponse(200, self.busy_sessions_json),
@@ -244,13 +246,33 @@ class TestLivySession:
 
         session.start()
 
-        session.wait_for_status("idle", 30)
+        session.wait_for_idle(30)
 
         http_client.get.assert_called_with("/sessions", [200])
         assert_equals(2, http_client.get.call_count)
 
+    @raises(LivyUnexpectedError)
+    def test_wait_for_idle_throws_when_in_final_status(self):
+        http_client = MagicMock()
+        http_client.post.return_value = DummyResponse(201, self.session_create_json)
+        self.get_responses = [DummyResponse(200, self.busy_sessions_json),
+                              DummyResponse(200, self.busy_sessions_json),
+                              DummyResponse(200, self.error_sessions_json)]
+        http_client.get.side_effect = self._next_response_get
+
+        conf.override({
+            "status_sleep_seconds": 0.011,
+            "statement_sleep_seconds": 6000
+        })
+        session = LivySession(http_client, "scala", "-1", False)
+        conf.load()
+
+        session.start()
+
+        session.wait_for_idle(30)
+
     @raises(LivyClientTimeoutError)
-    def test_wait_for_status_times_out(self):
+    def test_wait_for_idle_times_out(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         self.get_responses = [DummyResponse(200, self.busy_sessions_json),
@@ -267,7 +289,7 @@ class TestLivySession:
 
         session.start()
 
-        session.wait_for_status("idle", 0.01)
+        session.wait_for_idle(0.01)
 
     def test_delete_session_when_active(self):
         http_client = MagicMock()
