@@ -9,6 +9,7 @@ from remotespark.utils.constants import Constants
 from remotespark.utils.log import Log
 from remotespark.utils.utils import get_instance_id
 from .livyclienttimeouterror import LivyClientTimeoutError
+from .livyunexpectedstatuserror import LivyUnexpectedStatusError
 from .livysessionstate import LivySessionState
 
 
@@ -84,7 +85,7 @@ class LivySession(object):
             raise ValueError("Cannot create context of type {}.".format(context_type))
 
         try:
-            self.wait_for_status(Constants.idle_session_status, self._create_sql_context_timeout_seconds)
+            self.wait_for_idle(self._create_sql_context_timeout_seconds)
             self.execute(command)
             self.logger.debug("Started '{}' {} session.".format(self.language, context_type))
         except LivyClientTimeoutError:
@@ -103,12 +104,12 @@ class LivySession(object):
     def language(self):
         return self._state.language
 
-    @property
-    def status(self):
-        status = self._get_latest_status()
+    def refresh_status(self):
+        (status, logs) = self._get_latest_status_and_logs()
 
         if status in Constants.possible_session_status:
             self._status = status
+            self._logs = logs
         else:
             raise ValueError("Status '{}' not supported by session.".format(status))
 
@@ -144,16 +145,24 @@ class LivySession(object):
             raise ValueError("Cannot delete session {} that is in state '{}'."
                              .format(self.id, self._status))
 
-    def wait_for_status(self, status, seconds_to_wait):
-        """Wait for session to be in a certain status. Sleep meanwhile. Calls done every status_sleep_seconds as
+    def wait_for_idle(self, seconds_to_wait):
+        """Wait for session to go to idle status. Sleep meanwhile. Calls done every status_sleep_seconds as
         indicated by the constructor."""
-        current_status = self.status
-        if current_status == status:
+
+        self.refresh_status()
+        current_status = self._status
+        if current_status == Constants.idle_session_status:
             return
 
+        if current_status in Constants.final_status:
+            error = "Session {} unexpectedly reached final status {}. See logs:\n{}"\
+                .format(self.id, current_status, "\n".join(self._logs))
+            self.logger.error(error)
+            raise LivyUnexpectedStatusError(error)
+
         if seconds_to_wait <= 0.0:
-            error = "Session {} did not reach {} status in time. Current status is {}."\
-                .format(self.id, status, current_status)
+            error = "Session {} did not reach idle status in time. Current status is {}."\
+                .format(self.id, current_status)
             self.logger.error(error)
             raise LivyClientTimeoutError(error)
 
@@ -162,12 +171,12 @@ class LivySession(object):
                           .format(self.id, current_status, seconds_to_wait))
         sleep(self._status_sleep_seconds)
         elapsed = (time() - start_time)
-        return self.wait_for_status(status, seconds_to_wait - elapsed)
+        return self.wait_for_idle(seconds_to_wait - elapsed)
 
     def _statements_url(self):
         return "/sessions/{}/statements".format(self.id)
 
-    def _get_latest_status(self):
+    def _get_latest_status_and_logs(self):
         """Get current session state. Network call."""
         r = self._http_client.get("/sessions", [200])
         sessions = r.json()["sessions"]
@@ -178,7 +187,7 @@ class LivySession(object):
                              .format(self.id, len(filtered_sessions)))
             
         session = filtered_sessions[0]
-        return session['state']
+        return (session['state'], session['log'])
     
     def _get_statement_output(self, statement_id):
         statement_running = True

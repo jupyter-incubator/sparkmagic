@@ -20,7 +20,7 @@ def test_execute_code():
     client.execute(command)
 
     mock_spark_session.create_sql_context.assert_called_with()
-    mock_spark_session.wait_for_status.assert_called_with("idle", 3600)
+    mock_spark_session.wait_for_idle.assert_called_with(3600)
     mock_spark_session.execute.assert_called_with(command)
 
 
@@ -32,7 +32,7 @@ def test_execute_sql():
     client.execute_sql(command)
 
     mock_spark_session.create_sql_context.assert_called_with()
-    mock_spark_session.wait_for_status.assert_called_with("idle", 3600)
+    mock_spark_session.wait_for_idle.assert_called_with(3600)
     mock_spark_session.execute.assert_called_with("sqlContext.sql(\"{}\").collect()".format(command))
 
 
@@ -44,7 +44,7 @@ def test_execute_hive():
     client.execute_hive(command)
 
     mock_spark_session.create_sql_context.assert_called_with()
-    mock_spark_session.wait_for_status.assert_called_with("idle", 3600)
+    mock_spark_session.wait_for_idle.assert_called_with(3600)
     mock_spark_session.execute.assert_called_with("hiveContext.sql(\"{}\").collect()".format(command))
 
 

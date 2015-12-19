@@ -21,7 +21,7 @@ class LivyClient(object):
         return self._session.get_state().to_dict()
 
     def execute(self, commands):
-        self._session.wait_for_status("idle", self._execute_timeout_seconds)
+        self._session.wait_for_idle(self._execute_timeout_seconds)
         return self._session.execute(commands)
 
     def execute_sql(self, command):
