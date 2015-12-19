@@ -8,6 +8,7 @@ from __future__ import print_function
 from IPython.core.magic import Magics, magics_class, line_cell_magic, needs_local_scope
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 import json
+import copy
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
@@ -42,6 +43,8 @@ class RemoteSparkMagics(Magics):
         except KeyError:
             self.logger.error("Could not read env vars for serialization.")
 
+        self.properties = conf.session_configs()
+
         self.logger.debug("Initialized spark magics.")
 
     @magic_arguments()
@@ -53,17 +56,12 @@ class RemoteSparkMagics(Magics):
                                              Constants.context_name_spark))
     @argument("-s", "--session", help="The name of the Livy session to use. "
                                       "If only one session has been created, there's no need to specify one.")
-    @argument("-p", "--properties", type=str, default="{}",
-              help="""If present, override the livy session properties sent to Livy on session creation.
-              Expected value is a JSON key-value string to be sent as part of the Request Body for the POST /sessions
-              endpoint in Livy.
-              e.g. {"driverMemory":"1000M", "executorCores":4}""")
     @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL or Hive "
                                                              "query will be stored in variable of this name.")
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @needs_local_scope
     @line_cell_magic
-    def spark(self, line, cell="", local_ns={}):
+    def spark(self, line, cell="", local_ns=None):
         """Magic to execute spark remotely.
 
            This magic allows you to create a Livy Scala or Python session against a Livy endpoint. Every session can
@@ -74,7 +72,7 @@ class RemoteSparkMagics(Magics):
            Subcommands
            -----------
            info
-               Display the mode and available Livy sessions.
+               Display the available Livy sessions and other configurations for sessions.
            add
                Add a Livy session. First argument is the name of the session, second argument
                is the language, and third argument is the connection string of the Livy endpoint.
@@ -83,8 +81,12 @@ class RemoteSparkMagics(Magics):
                e.g. `%%spark add test python url=https://sparkcluster.net/livy;username=u;password=p skip`
                or
                e.g. `%%spark add test python url=https://sparkcluster.net/livy;username=u;password=p`
-               or
-               e.g. `%%spark add test python url=https://sparkcluster.net/livy;username=u;password=p -p {"driverMemory":"1000M", "executorCores":4}`
+           config
+               Override the livy session properties sent to Livy on session creation. All session creations will
+               contain these config settings from then on.
+               Expected value is a JSON key-value string to be sent as part of the Request Body for the POST /sessions
+               endpoint in Livy.
+               e.g. `%%spark config {"driverMemory":"1000M", "executorCores":4}`
            run
                Run Spark code against a session.
                e.g. `%%spark -e testsession` will execute the cell code against the testsession previously created
@@ -108,19 +110,30 @@ class RemoteSparkMagics(Magics):
         # info
         if subcommand == "info":
             self._print_info()
+        # config
+        elif subcommand == "config":
+            # Would normally do " ".join(args.command[1:]) but parse_argstring removes quotes...
+            rest_of_line = user_input[7:]
+            self.properties = json.loads(rest_of_line)
         # add
         elif subcommand == "add":
             if len(args.command) != 4 and len(args.command) != 5:
                 raise ValueError("Subcommand 'add' requires three or four arguments. {}".format(usage))
+
             name = args.command[1].lower()
             language = args.command[2].lower()
             connection_string = args.command[3]
+
             if len(args.command) == 5:
                 skip = args.command[4].lower() == "skip"
             else:
                 skip = False
-            properties = json.loads(args.properties)
+
+            properties = copy.deepcopy(self.properties)
             properties["kind"] = self._get_livy_kind(language)
+
+            self.shell.write("Adding session {} with properties:\n\t{}\n".format(name, properties))
+
             self.spark_controller.add_session(name, connection_string, skip, properties)
         # delete
         elif subcommand == "delete":
@@ -162,7 +175,12 @@ class RemoteSparkMagics(Magics):
             return None
 
     def _print_info(self):
-        print("Info for running Spark:\n\t{}\n".format(self.spark_controller.get_client_keys()))
+        print("""Info for running Spark:
+    Sessions:
+        {}
+    Session configs:
+        {}
+""".format(self.spark_controller.get_client_keys(), self.properties))
 
     def _get_livy_kind(self, language):
         if language == Constants.lang_scala:

@@ -66,6 +66,24 @@ def test_add_sessions_command_parses():
 
 
 @with_setup(_setup, _teardown)
+def test_add_sessions_command_extra_properties():
+    magic.spark("config {\"extra\": \"yes\"}")
+    assert magic.properties == {"extra": "yes"}
+
+    add_sessions_mock = MagicMock()
+    spark_controller.add_session = add_sessions_mock
+    command = "add"
+    name = "name"
+    language = "scala"
+    connection_string = "url=http://location:port;username=name;password=word"
+    line = " ".join([command, name, language, connection_string])
+
+    magic.spark(line)
+
+    add_sessions_mock.assert_called_once_with(name, connection_string, False, {"kind": "spark", "extra": "yes"})
+
+
+@with_setup(_setup, _teardown)
 def test_delete_sessions_command_parses():
     mock_method = MagicMock()
     spark_controller.delete_session = mock_method
