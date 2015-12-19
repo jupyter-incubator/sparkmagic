@@ -19,6 +19,7 @@ def test_build_session_with_defaults():
     assert session.kind == kind
     assert session.id == "-1"
     assert session.started_sql_context is False
+    assert session.properties == properties
 
 
 def test_build_session():
@@ -32,6 +33,7 @@ def test_build_session():
     assert session.kind == kind
     assert session.id == "1"
     assert session.started_sql_context
+    assert session.properties == properties
 
 
 def test_can_build_all_clients():

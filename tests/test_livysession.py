@@ -175,6 +175,23 @@ class TestLivySession:
         http_client.post.assert_called_with(
             "/sessions", [201], {"kind": "pyspark"})
 
+    def test_start_passes_in_all_properties(self):
+        http_client = MagicMock()
+        http_client.post.return_value = DummyResponse(201, self.session_create_json)
+
+        conf.override({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        kind = Constants.session_kind_spark
+        properties = {"kind": kind, "extra": 1}
+        session = LivySession(http_client, "-1", False, properties)
+        session.start()
+        conf.load()
+
+        http_client.post.assert_called_with(
+            "/sessions", [201], properties)
+
     def test_status_gets_latest(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
