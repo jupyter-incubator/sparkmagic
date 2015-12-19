@@ -4,7 +4,7 @@ from mock import MagicMock, call
 from nose.tools import raises, assert_equals
 
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
-from remotespark.livyclientlib.livyunexpectederror import LivyUnexpectedError
+from remotespark.livyclientlib.livyunexpectedstatuserror import LivyUnexpectedStatusError
 from remotespark.livyclientlib.livysession import LivySession
 import remotespark.utils.configuration as conf
 from remotespark.utils.utils import get_connection_string, get_instance_id
@@ -224,8 +224,9 @@ class TestLivySession:
         session = LivySession(http_client, "scala", "-1", False)
         conf.load()
         session.start()
-    
-        state = session.status
+
+        session.refresh_status()
+        state = session._status
 
         assert_equals("idle", state)
         http_client.get.assert_called_with("/sessions", [200])
@@ -251,7 +252,7 @@ class TestLivySession:
         http_client.get.assert_called_with("/sessions", [200])
         assert_equals(2, http_client.get.call_count)
 
-    @raises(LivyUnexpectedError)
+    @raises(LivyUnexpectedStatusError)
     def test_wait_for_idle_throws_when_in_final_status(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
