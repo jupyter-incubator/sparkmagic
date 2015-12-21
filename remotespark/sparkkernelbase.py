@@ -9,6 +9,11 @@ from remotespark.utils.utils import get_connection_string
 
 
 class SparkKernelBase(IPythonKernel):
+    run_command = "run"
+    config_command = "config"
+    sql_command = "sql"
+    hive_command = "hive"
+
     def __init__(self, implementation, implementation_version, language, language_version, language_info,
                  kernel_conf_name, session_language, client_name, **kwargs):
         # Required by Jupyter - Override
@@ -32,7 +37,7 @@ class SparkKernelBase(IPythonKernel):
         # Disable warnings for test env in HDI
         requests.packages.urllib3.disable_warnings()
 
-        if "testing" not in kwargs.keys():
+        if not kwargs.get("testing", False):
             (username, password, url) = self._get_configuration()
             self.connection_string = get_connection_string(url, username, password)
             self._load_magics_extension()
@@ -44,26 +49,38 @@ class SparkKernelBase(IPythonKernel):
         if not self.session_started:
             self._start_session()
 
-        # Modify code by prepending spark magic text
-        if code.lower().startswith("%sql\n") or code.lower().startswith("%sql "):
-            code = "%%spark -c sql\n{}".format(code[5:])
-        elif code.lower().startswith("%%sql\n") or code.lower().startswith("%%sql "):
-            code = "%%spark -c sql\n{}".format(code[6:])
-        elif code.lower().startswith("%hive\n") or code.lower().startswith("%hive "):
-            code = "%%spark -c hive\n{}".format(code[6:])
-        elif code.lower().startswith("%%hive\n") or code.lower().startswith("%%hive "):
-            code = "%%spark -c hive\n{}".format(code[7:])
-        else:
-            code = "%%spark\n{}".format(code)
+        subcommand, flags, code_to_run = self._parse_user_command(code)
 
-        return self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
+        if subcommand == self.run_command:
+            code_to_run = "%%spark\n{}".format(code_to_run)
+        elif subcommand == self.sql_command:
+            code_to_run = "%%spark -c sql\n{}".format(code_to_run)
+        elif subcommand == self.hive_command:
+            code_to_run = "%%spark -c hive\n{}".format(code_to_run)
+        elif subcommand == self.config_command:
+            if self.session_started:
+                if "f" not in flags:
+                    raise KeyError("A session has already been started. In order to modify the Spark configuartion, "
+                                   "please provide the '-f' flag at the beginning of the config magic:\n\te.g. `%config"
+                                   " -f {}`\n\nNote that this will kill the current session and will create a new one "
+                                   "with the configuration provided. All previously run commands in the session will be"
+                                   " lost.")
+                else:
+                    self._delete_session()
+                    self._save_session_config(code_to_run, silent, store_history, user_expressions, allow_stdin)
+                    self._start_session()
+
+                    code_to_run = ""
+            else:
+                code_to_run = "%%spark config {}".format(code_to_run)
+        else:
+            raise KeyError("Magic '{}' not supported.".format(subcommand))
+
+        return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
 
     def do_shutdown(self, restart):
         # Cleanup
-        if self.session_started:
-            code = "%spark cleanup"
-            self._execute_cell_for_user(code, True, False)
-            self.session_started = False
+        self._delete_session()
 
         return self._do_shutdown_ipykernel(restart)
 
@@ -83,6 +100,16 @@ class SparkKernelBase(IPythonKernel):
                                log_if_error="Failed to create a Livy session.")
             self.logger.debug("Added session.")
 
+    def _delete_session(self):
+        if self.session_started:
+            code = "%spark cleanup"
+            self._execute_cell_for_user(code, True, False)
+            self.session_started = False
+
+    def _save_session_config(self, config_str, silent, store_history, user_expressions, allow_stdin):
+        code_to_run = "%%spark config {}".format(config_str)
+        self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
+
     def _get_configuration(self):
         try:
             credentials = getattr(conf, 'kernel_' + self.kernel_conf_name + '_credentials')()
@@ -94,6 +121,36 @@ class SparkKernelBase(IPythonKernel):
             message = "Please set configuration for 'kernel_{}_credentials' to initialize Kernel.".format(
                 self.kernel_conf_name)
             self._abort_with_fatal_error(message)
+
+    @staticmethod
+    def _parse_user_command(code):
+        # Normalize 2 signs to 1
+        if code.startswith("%%"):
+            code = code[1:]
+
+        # When no magic, return run command
+        if not code.startswith("%"):
+            code = "%run {}".format(code)
+
+        # Remove percentage sign
+        code = code[1:]
+
+        split_code = code.split(None, 1)
+        subcommand = split_code[0].lower()
+        flags = []
+        rest = split_code[1]
+
+        # Get all flags
+        flag_split = rest.split(None, 1)
+        while len(flag_split) >= 2 and flag_split[0].startswith("-"):
+            flags.append(flag_split[0][1:].lower())
+            rest = flag_split[1]
+            flag_split = rest.split(None, 1)
+
+        # flags to lower
+        flags = [i.lower() for i in flags]
+
+        return subcommand, flags, rest
 
     def _execute_cell(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False,
                       shutdown_if_error=False, log_if_error=None):
