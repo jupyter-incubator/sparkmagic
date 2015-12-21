@@ -69,6 +69,10 @@ def _override(f):
 # these functions return the default values described in their bodies.
 
 @_override
+def session_configs():
+    return {}
+
+@_override
 def serialize():
     return False
 

@@ -47,5 +47,10 @@
 
   "fatal_error_suggestion": "The code failed because of a fatal error:\n\t{}.\n\nSome things to try:\na) Make sure Spark has enough available resources for Jupyter to create a Spark context.\nb) Contact your Jupyter administrator to make sure the Spark magics library is configured correctly.\nc) Restart the kernel.",
 
-  "ignore_ssl_errors": false
+  "ignore_ssl_errors": false,
+
+  "session_configs": {
+    "driverMemory": "1000M",
+    "executorCores": 2
+  }
 }

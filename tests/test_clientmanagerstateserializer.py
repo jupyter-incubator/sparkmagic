@@ -27,7 +27,7 @@ def test_deserialize_not_emtpy():
       "name": "py",
       "id": "1",
       "sqlcontext": true,
-      "language": "python",
+      "kind": "pyspark",
       "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
       "version": "0.0.0"
     },
@@ -35,7 +35,7 @@ def test_deserialize_not_emtpy():
       "name": "sc",
       "id": "2",
       "sqlcontext": false,
-      "language": "scala",
+      "kind": "spark",
       "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
       "version": "0.0.0"
     }
@@ -50,17 +50,15 @@ def test_deserialize_not_emtpy():
 
     (name, client) = deserialized[0]
     assert name == "py"
-    client_factory.create_session.assert_any_call("python",
-                                                  "url=https://mysite.com/livy;username=user;password=pass",
-                                                  "1", True)
-    client_factory.build_client.assert_any_call("python", session)
+    client_factory.create_session.assert_any_call("url=https://mysite.com/livy;username=user;password=pass",
+                                                  "1", True, {"kind":"pyspark"})
+    client_factory.build_client.assert_any_call(session)
 
     (name, client) = deserialized[1]
     assert name == "sc"
-    client_factory.create_session.assert_any_call("scala",
-                                                  "url=https://mysite.com/livy;username=user;password=pass",
-                                                  "2", False)
-    client_factory.build_client.assert_any_call("scala", session)
+    client_factory.create_session.assert_any_call("url=https://mysite.com/livy;username=user;password=pass",
+                                                  "2", False, {"kind":"spark"})
+    client_factory.build_client.assert_any_call(session)
 
 
 def test_deserialize_not_emtpy_but_dead():
@@ -75,7 +73,7 @@ def test_deserialize_not_emtpy_but_dead():
       "name": "py",
       "id": "1",
       "sqlcontext": true,
-      "language": "python",
+      "kind": "pyspark",
       "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
       "version": "0.0.0"
     },
@@ -83,7 +81,7 @@ def test_deserialize_not_emtpy_but_dead():
       "name": "sc",
       "id": "2",
       "sqlcontext": false,
-      "language": "scala",
+      "kind": "spark",
       "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
       "version": "0.0.0"
     }
@@ -113,7 +111,7 @@ def test_deserialize_not_emtpy_but_error():
       "name": "py",
       "id": "1",
       "sqlcontext": true,
-      "language": "python",
+      "kind": "pyspark",
       "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
       "version": "0.0.0"
     },
@@ -121,7 +119,7 @@ def test_deserialize_not_emtpy_but_error():
       "name": "sc",
       "id": "2",
       "sqlcontext": false,
-      "language": "scala",
+      "kind": "spark",
       "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
       "version": "0.0.0"
     }
@@ -155,11 +153,11 @@ def test_serialize_not_empty():
     client_factory = MagicMock()
     reader_writer = MagicMock()
     client1 = MagicMock()
-    client1.serialize.return_value = {"id": "1", "sqlcontext": True, "language": "python",
+    client1.serialize.return_value = {"id": "1", "sqlcontext": True, "kind": "pyspark",
                                       "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
                                       "version": "0.0.0"}
     client2 = MagicMock()
-    client2.serialize.return_value = {"id": "2", "sqlcontext": False, "language": "scala",
+    client2.serialize.return_value = {"id": "2", "sqlcontext": False, "kind": "spark",
                                       "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
                                       "version": "0.0.0"}
     serializer = ClientManagerStateSerializer(client_factory, reader_writer)
@@ -169,9 +167,9 @@ def test_serialize_not_empty():
 
     # Verify write was called with following string
     expected_str = '{"clients": [{"name": "py", "connectionstring": "url=https://mysite.com/livy;username=user;p' \
-                   'assword=pass", "version": "0.0.0", "language": "python", "sqlcontext": true, "id": "1"}, {"n' \
+                   'assword=pass", "version": "0.0.0", "kind": "pyspark", "sqlcontext": true, "id": "1"}, {"n' \
                    'ame": "sc", "connectionstring": "url=https://mysite.com/livy;username=user;password=pass", "ve' \
-                   'rsion": "0.0.0", "language": "scala", "sqlcontext": false, "id": "2"}]}'
+                   'rsion": "0.0.0", "kind": "spark", "sqlcontext": false, "id": "2"}]}'
     expected_dict = json.loads(expected_str)
     call_list = reader_writer.overwrite_with_line.call_args_list
     assert len(call_list) == 1

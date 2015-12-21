@@ -38,14 +38,14 @@ class SparkController(object):
     def delete_session(self, name):
         self.client_manager.delete_client(name)
 
-    def add_session(self, name, language, connection_string, skip_if_exists):
+    def add_session(self, name, connection_string, skip_if_exists, properties):
         if skip_if_exists and (name in self.client_manager.get_sessions_list()):
             self.logger.debug("Skipping {} because it already exists in list of sessions.".format(name))
             return
 
-        session = self.client_factory.create_session(language, connection_string, "-1", False)
+        session = self.client_factory.create_session(connection_string, properties, "-1", False)
         session.start()
-        livy_client = self.client_factory.build_client(language, session)
+        livy_client = self.client_factory.build_client(session)
         self.client_manager.add_client(name, livy_client)
 
     def get_client_keys(self):
