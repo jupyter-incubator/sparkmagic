@@ -12,14 +12,22 @@ url_ev = "url"
 send_error_mock = None
 execute_cell_mock = None
 do_shutdown_mock = None
+conn_str = None
 
 
 class TestSparkKernel(SparkKernelBase):
-    client_name = "TestKernel"
+    def __init__(self):
+        kwargs = {"testing": True}
+        super(TestSparkKernel, self).__init__(None, None, None, None, None, None, None, "TestKernel", **kwargs)
 
 
 def _setup():
-    global kernel, user_ev, pass_ev, url_ev, send_error_mock, execute_cell_mock, do_shutdown_mock
+    global kernel, user_ev, pass_ev, url_ev, send_error_mock, execute_cell_mock, do_shutdown_mock, conn_str
+
+    usr = "u"
+    pwd = "p"
+    url = "url"
+    conn_str = get_connection_string(url, usr, pwd)
 
     kernel = TestSparkKernel()
     kernel.use_auto_viz = False
@@ -28,6 +36,7 @@ def _setup():
     kernel.password_conf_name = pass_ev
     kernel.url_conf_name = url_ev
     kernel.session_language = "python"
+    kernel.connection_string = conn_str
 
     kernel._ipython_send_error = send_error_mock = MagicMock()
     kernel._execute_cell_for_user = execute_cell_mock = MagicMock()
@@ -71,47 +80,34 @@ def test_get_config_not_set():
 
 @with_setup(_setup, _teardown)
 def test_initialize_magics():
-    # Set up
-    usr = "u"
-    pwd = "p"
-    url = "url"
-    conn_str = get_connection_string(url, usr, pwd)
+    kernel._load_magics_extension()
 
-    # Call method
-    assert not kernel.already_ran_once
-    kernel._initialize_magics(usr, pwd, url)
+    assert call("%load_ext remotespark", True, False, None, False) in execute_cell_mock.mock_calls
 
-    # Assertions
-    assert kernel.already_ran_once
-    expected = [call("%spark add TestKernel python {} skip".format(conn_str), True, False, None, False),
-                call("%load_ext remotespark", True, False, None, False)]
-    for kall in expected:
-        assert kall in execute_cell_mock.mock_calls
+
+@with_setup(_setup(), _teardown())
+def test_start_session():
+    assert not kernel.session_started
+
+    kernel._start_session()
+
+    assert kernel.session_started
+    assert call("%spark add TestKernel python {} skip".format(conn_str), True, False, None, False) \
+           in execute_cell_mock.mock_calls
 
 
 @with_setup(_setup, _teardown)
 def test_do_execute_initializes_magics_if_not_run():
-    # Set up
-    usr = "u"
-    pwd = "p"
-    url = "url"
-    conn_str = get_connection_string(url, usr, pwd)
-    config_mock = MagicMock()
-    config_mock.return_value = (usr, pwd, url)
-
-    kernel._get_configuration = config_mock
-
     code = "code"
 
     # Call method
-    assert not kernel.already_ran_once
+    assert not kernel.session_started
     kernel.do_execute(code, False)
 
     # Assertions
-    assert kernel.already_ran_once
+    assert kernel.session_started
     assert call("%spark add TestKernel python {} skip"
                 .format(conn_str), True, False, None, False) in execute_cell_mock.mock_calls
-    assert call("%load_ext remotespark", True, False, None, False) in execute_cell_mock.mock_calls
     assert call("%%spark\n{}".format(code), False, True, None, False) in execute_cell_mock.mock_calls
 
 
@@ -119,13 +115,13 @@ def test_do_execute_initializes_magics_if_not_run():
 def test_call_spark():
     # Set up
     code = "some spark code"
-    kernel.already_ran_once = True
+    kernel.session_started = True
 
     # Call method
     kernel.do_execute(code, False)
 
     # Assertions
-    assert kernel.already_ran_once
+    assert kernel.session_started
     execute_cell_mock.assert_called_once_with("%%spark\n{}".format(code), False, True, None, False)
 
 
@@ -180,14 +176,14 @@ def test_call_spark_sql_new_line():
         # Set up
         plain_code = "select tables"
         code = prepend + plain_code
-        kernel.already_ran_once = True
+        kernel.session_started = True
         execute_cell_mock.reset_mock()
 
         # Call method
         kernel.do_execute(code, False)
 
         # Assertions
-        assert kernel.already_ran_once
+        assert kernel.session_started
         execute_cell_mock.assert_called_once_with("%%spark -c sql\n{}".format(plain_code), False, True, None, False)
 
     _check("%sql ")
@@ -202,14 +198,14 @@ def test_call_spark_hive_new_line():
         # Set up
         plain_code = "select tables"
         code = prepend + plain_code
-        kernel.already_ran_once = True
+        kernel.session_started = True
         execute_cell_mock.reset_mock()
 
         # Call method
         kernel.do_execute(code, False)
 
         # Assertions
-        assert kernel.already_ran_once
+        assert kernel.session_started
         execute_cell_mock.assert_called_once_with("%%spark -c hive\n{}".format(plain_code), False, True, None, False)
 
     _check("%hive ")
@@ -223,21 +219,21 @@ def test_shutdown_cleans_up():
     # No restart
     kernel._execute_cell_for_user = ecfu_m = MagicMock()
     kernel._do_shutdown_ipykernel = dsi_m = MagicMock()
-    kernel.already_ran_once = True
+    kernel.session_started = True
 
     kernel.do_shutdown(False)
 
-    assert not kernel.already_ran_once
+    assert not kernel.session_started
     ecfu_m.assert_called_once_with("%spark cleanup", True, False)
     dsi_m.assert_called_once_with(False)
 
     # On restart
     kernel._execute_cell_for_user = ecfu_m = MagicMock()
     kernel._do_shutdown_ipykernel = dsi_m = MagicMock()
-    kernel.already_ran_once = True
+    kernel.session_started = True
 
     kernel.do_shutdown(True)
 
-    assert not kernel.already_ran_once
+    assert not kernel.session_started
     ecfu_m.assert_called_once_with("%spark cleanup", True, False)
     dsi_m.assert_called_once_with(True)

@@ -9,35 +9,40 @@ from remotespark.utils.utils import get_connection_string
 
 
 class SparkKernelBase(IPythonKernel):
-    # Required by Jupyter - Override
-    implementation = None
-    implementation_version = None
-    language = None
-    language_version = None
-    language_info = None
-    banner = None
+    def __init__(self, implementation, implementation_version, language, language_version, language_info,
+                 kernel_conf_name, session_language, client_name, **kwargs):
+        # Required by Jupyter - Override
+        self.implementation = implementation
+        self.implementation_version = implementation_version
+        self.language = language
+        self.language_version = language_version
+        self.language_info = language_info
 
-    # Override
-    kernel_conf_name = None
-    session_language = None
-    client_name = None
+        # Override
+        self.kernel_conf_name = kernel_conf_name
+        self.session_language = session_language
+        self.client_name = client_name
 
-    def __init__(self, **kwargs):
         super(SparkKernelBase, self).__init__(**kwargs)
+
         self.logger = Log(self.client_name)
-        self.already_ran_once = False
+        self.session_started = False
         self._fatal_error = None
 
         # Disable warnings for test env in HDI
         requests.packages.urllib3.disable_warnings()
 
+        if "testing" not in kwargs.keys():
+            (username, password, url) = self._get_configuration()
+            self.connection_string = get_connection_string(url, username, password)
+            self._load_magics_extension()
+
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         if self._fatal_error is not None:
             self._abort_with_fatal_error(self._fatal_error)
 
-        if not self.already_ran_once:
-            (username, password, url) = self._get_configuration()
-            self._initialize_magics(username, password, url)
+        if not self.session_started:
+            self._start_session()
 
         # Modify code by prepending spark magic text
         if code.lower().startswith("%sql\n") or code.lower().startswith("%sql "):
@@ -55,28 +60,28 @@ class SparkKernelBase(IPythonKernel):
 
     def do_shutdown(self, restart):
         # Cleanup
-        if self.already_ran_once:
+        if self.session_started:
             code = "%spark cleanup"
             self._execute_cell_for_user(code, True, False)
-            self.already_ran_once = False
+            self.session_started = False
 
         return self._do_shutdown_ipykernel(restart)
 
-    def _initialize_magics(self, username, password, url):
-        connection_string = get_connection_string(url, username, password)
-
+    def _load_magics_extension(self):
         register_magics_code = "%load_ext remotespark"
         self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to load the Spark magics library.")
         self.logger.debug("Loaded magics.")
 
-        self.already_ran_once = True
+    def _start_session(self):
+        if not self.session_started:
+            self.session_started = True
 
-        add_session_code = "%spark add {} {} {} skip".format(
-            self.client_name, self.session_language, connection_string)
-        self._execute_cell(add_session_code, True, False, shutdown_if_error=True,
-                           log_if_error="Failed to create a Livy session.")
-        self.logger.debug("Added session.")
+            add_session_code = "%spark add {} {} {} skip".format(
+                self.client_name, self.session_language, self.connection_string)
+            self._execute_cell(add_session_code, True, False, shutdown_if_error=True,
+                               log_if_error="Failed to create a Livy session.")
+            self.logger.debug("Added session.")
 
     def _get_configuration(self):
         try:
