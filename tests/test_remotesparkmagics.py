@@ -31,7 +31,7 @@ def _teardown():
 @with_setup(_setup, _teardown)
 def test_info_command_parses():
     print_info_mock = MagicMock()
-    magic._print_info = print_info_mock
+    magic._print_local_info = print_info_mock
     command = "info"
 
     magic.spark(command)
