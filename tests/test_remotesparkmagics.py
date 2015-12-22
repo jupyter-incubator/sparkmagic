@@ -14,7 +14,7 @@ shell = None
 def _setup():
     global magic, spark_controller, shell
 
-    conf.override({})
+    conf.override_all({})
 
     shell = MagicMock()
     magic = RemoteSparkMagics(shell=None)
@@ -70,8 +70,9 @@ def test_add_sessions_command_parses():
 
 @with_setup(_setup, _teardown)
 def test_add_sessions_command_extra_properties():
+    conf.override_all({})
     magic.spark("config {\"extra\": \"yes\"}")
-    assert magic.properties == {"extra": "yes"}
+    assert conf.session_configs() == {"extra": "yes"}
 
     add_sessions_mock = MagicMock()
     spark_controller.add_session = add_sessions_mock
@@ -84,6 +85,7 @@ def test_add_sessions_command_extra_properties():
     magic.spark(line)
 
     add_sessions_mock.assert_called_once_with(name, connection_string, False, {"kind": "spark", "extra": "yes"})
+    conf.load()
 
 
 @with_setup(_setup, _teardown)

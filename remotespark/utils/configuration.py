@@ -36,14 +36,21 @@ def load(fsrw_class = None):
         overrides = {}
     else:
         overrides = json.loads(line)
-    override(overrides)
+    override_all(overrides)
 
 
-def override(obj):
+def override_all(obj):
     """Given a dictionary representing the overrided defaults for this
     configuration, initialize the global configuration."""
     global _overrides
     _overrides = obj
+
+
+def override(config, value):
+    """Given a string representing a configuration and a value for that configuration,
+    override the configuration. Initialize the overrided configuration beforehand."""
+    initialize()
+    _overrides[config] = value
 
 
 def _override(f):

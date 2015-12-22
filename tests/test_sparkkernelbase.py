@@ -54,7 +54,7 @@ def test_get_config():
     url = "url"
 
     config = {"kernel_python_credentials": {user_ev: usr, pass_ev: pwd, url_ev: url}}
-    conf.override(config)
+    conf.override_all(config)
 
     u, p, r = kernel._get_configuration()
 
@@ -67,7 +67,7 @@ def test_get_config():
 
 @with_setup(_setup, _teardown)
 def test_get_config_not_set():
-    conf.override({})
+    conf.override_all({})
     try:
         kernel._get_configuration()
 
