@@ -76,6 +76,20 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
     assert_frame_equal(desired_df, df)
 
 @with_setup(_setup, _teardown)
+def test_execute_sql_pandas_pyspark_livy_bad_return():
+    global execute_responses
+
+    command = "command"
+    result_json = (True, "something bad happened")
+    execute_m.return_value = result_json
+
+    try:
+        client.execute_sql(command)
+        assert False
+    except DataFrameParseException:
+        pass
+
+@with_setup(_setup, _teardown)
 def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
     global execute_responses
 

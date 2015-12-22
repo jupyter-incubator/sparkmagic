@@ -21,17 +21,13 @@ class PandasLivyClientBase(LivyClient):
                                                    str(self.max_take_rows))
         if not success:
             raise DataFrameParseException(records_text)
-        try:
-            if self.no_records(records_text):
-                # If there are no records, show some columns at least.
-                records_text = self.get_columns(context_name, command)
-                return self.get_columns_dataframe(records_text)
-            else:
-                return self.get_data_dataframe(records_text)
-        except (ValueError, SyntaxError) as e:
-            self.logger.error("Could not convert sql results to pandas DF.")
-            raise DataFrameParseException(records_text)
-            
+        if self.no_records(records_text):
+            # If there are no records, show some columns at least.
+            records_text = self.get_columns(context_name, command)
+            return self.get_columns_dataframe(records_text)
+        else:
+            return self.get_data_dataframe(records_text)
+
     def get_columns(self, context_name, command):
         (success, out) = self.execute(self.make_context_columns(context_name,
                                                                 command))

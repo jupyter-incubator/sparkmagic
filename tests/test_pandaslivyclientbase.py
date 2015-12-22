@@ -60,7 +60,7 @@ def test_execute_sql_some_exception():
     client.get_records = MagicMock(return_value=records)
     client.no_records = MagicMock(return_value=no_records)
     client.get_columns_dataframe = MagicMock(return_value=result_columns)
-    client.get_data_dataframe = MagicMock(side_effect=ValueError)
+    client.get_data_dataframe = MagicMock(side_effect=DataFrameParseException)
 
     try:
         result = client.execute_sql(records)
@@ -107,7 +107,7 @@ def test_execute_hive_some_exception():
     client.get_records = MagicMock(return_value=records)
     client.no_records = MagicMock(return_value=no_records)
     client.get_columns_dataframe = MagicMock(return_value=result_columns)
-    client.get_data_dataframe = MagicMock(side_effect=ValueError)
+    client.get_data_dataframe = MagicMock(side_effect=DataFrameParseException)
 
     try:
         result = client.execute_hive(records)

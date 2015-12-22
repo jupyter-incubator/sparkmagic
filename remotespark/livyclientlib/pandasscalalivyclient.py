@@ -5,10 +5,13 @@ import pandas as pd
 import json
 import re
 
+from .dataframeparseexception import DataFrameParseException
 from .pandaslivyclientbase import PandasLivyClientBase
 
 class PandasScalaLivyClient(PandasLivyClientBase):
     """Spark client for Livy session in Scala"""
+    GET_DATA_RE = re.compile('Array\[String\] = Array\((.*)\)')
+
     def __init__(self, session, max_take_rows):
         super(PandasScalaLivyClient, self).__init__(session, max_take_rows)
 
@@ -20,27 +23,28 @@ class PandasScalaLivyClient(PandasLivyClientBase):
         return records_text == ""
 
     def get_columns_dataframe(self, columns_text):
-        records = list()
-
         # Columns will look something like this: 'res1: Array[String] = Array(tableName, isTemporary)'
         # We need to transform them into a list of strings: ["tableName", "isTemporary"]
-        m = re.search('Array\[String\] = Array\((.*)\)', columns_text)
+        m = re.search(self.GET_DATA_RE, columns_text)
 
         # If we failed to find the columns
         if m is None:
-            raise SyntaxError("Could not find columns in '{}'.".format(columns_text))
+            raise DataFrameParseException("Could not find columns in '{}'.".format(columns_text))
 
         captured_group = m.group(1)
 
         # If there are no columns
         if captured_group.strip() == "":
-            return "No data available."
+            raise DataFrameParseException("No data available in '{}'".format(columns_text))
 
         # Convert the columns into an array of text
         columns = [s.strip() for s in captured_group.split(",")]
 
-        return pd.DataFrame.from_records(records, columns=columns)
+        return pd.DataFrame.from_records([], columns=columns)
 
     def get_data_dataframe(self, records_text):
-        json_array = "[{}]".format(",".join(records_text.split("\n")))
-        return pd.DataFrame(json.loads(json_array))
+        json_array = records_text.split("\n")
+        try:
+            return pd.DataFrame([json.loads(s) for s in json_array])
+        except ValueError:
+            raise DataFrameParseException("Could not parse the object as JSON: '{}'".format(records_text))
