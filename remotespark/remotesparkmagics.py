@@ -43,8 +43,6 @@ class RemoteSparkMagics(Magics):
         except KeyError:
             self.logger.error("Could not read env vars for serialization.")
 
-        self.properties = conf.session_configs()
-
         self.logger.debug("Initialized spark magics.")
 
     @magic_arguments()
@@ -114,7 +112,7 @@ class RemoteSparkMagics(Magics):
         elif subcommand == "config":
             # Would normally do " ".join(args.command[1:]) but parse_argstring removes quotes...
             rest_of_line = user_input[7:]
-            self.properties = json.loads(rest_of_line)
+            conf.override(conf.session_configs.__name__, json.loads(rest_of_line))
         # add
         elif subcommand == "add":
             if len(args.command) != 4 and len(args.command) != 5:
@@ -129,7 +127,7 @@ class RemoteSparkMagics(Magics):
             else:
                 skip = False
 
-            properties = copy.deepcopy(self.properties)
+            properties = copy.deepcopy(conf.session_configs())
             properties["kind"] = self._get_livy_kind(language)
 
             self.spark_controller.add_session(name, connection_string, skip, properties)
@@ -178,7 +176,7 @@ class RemoteSparkMagics(Magics):
         {}
     Session configs:
         {}
-""".format(self.spark_controller.get_client_keys(), self.properties))
+""".format(self.spark_controller.get_client_keys(), conf.session_configs()))
 
     @staticmethod
     def _get_livy_kind(language):

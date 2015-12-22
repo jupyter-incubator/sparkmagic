@@ -27,7 +27,7 @@ def test_configuration_initialize():
 @with_setup(_setup)
 def test_configuration_initialize_lazy():
     """Tests that the initialize function has no behavior if the override dict is already initialized"""
-    conf.override({})
+    conf.override_all({})
     fsrw_class = MagicMock(side_effect=ValueError)
     conf.initialize(fsrw_class)
 
@@ -56,7 +56,7 @@ def test_configuration_load_not_lazy():
     read_lines = MagicMock(return_value=[json.dumps(config)])
     fsrw.read_lines = read_lines
     fsrw_class = MagicMock(return_value=fsrw)
-    conf.override({ conf.default_chart_type.__name__: "bar" })
+    conf.override_all({conf.default_chart_type.__name__: "bar"})
     conf.load(fsrw_class)
     assert conf._overrides is not None
     assert_equals(conf._overrides, config)
@@ -67,7 +67,7 @@ def test_configuration_load_not_lazy():
 def test_configuration_override():
     z = 1500
     config = { conf.status_sleep_seconds.__name__: z }
-    conf.override(config)
+    conf.override_all(config)
     assert_equals(conf._overrides, config)
     assert_equals(conf.status_sleep_seconds(), z)
 
@@ -76,7 +76,7 @@ def test_configuration_override():
 def test_configuration_decorator():
     def test_f():
         return 0
-    conf.override({test_f.__name__: -1})
+    conf.override_all({test_f.__name__: -1})
     test_f_decorated = conf._override(test_f)
     assert_not_equals(test_f_decorated(), test_f())
     assert_equals(test_f_decorated(), -1)
