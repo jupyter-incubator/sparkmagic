@@ -130,7 +130,7 @@ def test_execute_sql_pandas_pyspark_extract_strings():
                    (" ['aa\\'a',\n'q\\'']", ["aa'a", "q'"]),
                    ("['']", ['']),
                    ("['', '', 'abc', 'df\\'dd']", ['', '', 'abc', "df'dd"]),
-                   ("['a', 'bbbb', '\\'\\'\\'']", ['a', 'bbbb', "'''"])]:
+                   ("['a', 'bbbb', '\\'\\'\\'', '']", ['a', 'bbbb', "'''", ''])]:
         assert_equal(client._extract_strings_from_array(s), a)
 
 
