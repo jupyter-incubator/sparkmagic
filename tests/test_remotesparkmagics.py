@@ -89,7 +89,7 @@ def test_add_sessions_command_extra_properties():
 @with_setup(_setup, _teardown)
 def test_delete_sessions_command_parses():
     mock_method = MagicMock()
-    spark_controller.delete_session = mock_method
+    spark_controller.delete_session_by_name = mock_method
     command = "delete"
     name = "name"
     line = " ".join([command, name])

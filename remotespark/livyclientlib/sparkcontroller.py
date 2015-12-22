@@ -35,7 +35,7 @@ class SparkController(object):
     def cleanup(self):
         self.client_manager.clean_up_all()
 
-    def delete_session(self, name):
+    def delete_session_by_name(self, name):
         self.client_manager.delete_client(name)
 
     def add_session(self, name, connection_string, skip_if_exists, properties):
@@ -50,6 +50,9 @@ class SparkController(object):
 
     def get_client_keys(self):
         return self.client_manager.get_sessions_list()
+
+    def get_manager_sessions_str(self):
+        return self.client_manager.get_sessions_info()
 
     def get_client_by_name_or_default(self, client_name):
         if client_name is None:

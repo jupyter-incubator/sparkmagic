@@ -110,6 +110,7 @@ def test_delete_session():
 def test_set_config():
     def _check(prepend, session_started=False, key_error_expected=False):
         # Set up
+        kernel._show_user_error = MagicMock(side_effect=KeyError)
         properties = """{"extra": 2}"""
         code = prepend + properties
         kernel.session_started = session_started
@@ -126,7 +127,7 @@ def test_set_config():
             return
 
         assert session_started == kernel.session_started
-        assert call("%%spark config {}".format(properties), False, True, None, False) \
+        assert call("%spark config {}".format(properties), False, True, None, False) \
             in execute_cell_mock.mock_calls
 
         if session_started and not key_error_expected:
@@ -165,6 +166,7 @@ def test_magic_not_supported():
     # Set up
     code = "%alex some spark code"
     kernel.session_started = True
+    kernel._show_user_error = MagicMock(side_effect=KeyError)
 
     # Call method
     kernel.do_execute(code, False)
