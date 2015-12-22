@@ -1,5 +1,5 @@
 from mock import MagicMock
-from nose.tools import with_setup
+from nose.tools import with_setup, assert_equal
 from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
@@ -101,7 +101,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
     execute_m.side_effect = _next_response_execute
 
     try:
-        result = client.execute_sql(command)
+        client.execute_sql(command)
         assert False
     except DataFrameParseException as e:
         execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
@@ -116,8 +116,21 @@ def test_execute_sql_pandas_pyspark_livy_some_exception():
     execute_m.return_value = (False, some_exception)
 
     try:
-        result = client.execute_sql(command)
+        client.execute_sql(command)
         assert False
     except DataFrameParseException as e:
         execute_m.assert_called_with('sqlContext.sql("""{}""").toJSON().take({})'.format(command, 10))
         assert e.out == some_exception
+
+@with_setup(_setup, _teardown)
+def test_execute_sql_pandas_pyspark_extract_strings():
+    for (s, a) in [("[]", []),
+                   ("  ['afz']  ", ["afz"]),
+                   ("['zzz', 'aaa', 'fff']", ['zzz', 'aaa', 'fff']),
+                   (" ['aa\\'a',\n'q\\'']", ["aa'a", "q'"]),
+                   ("['']", ['']),
+                   ("['', '', 'abc', 'df\\'dd']", ['', '', 'abc', "df'dd"]),
+                   ("['a', 'bbbb', '\\'\\'\\'']", ['a', 'bbbb', "'''"])]:
+        assert_equal(client._extract_strings_from_array(s), a)
+
+

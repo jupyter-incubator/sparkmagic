@@ -10,8 +10,8 @@ from .dataframeparseexception import DataFrameParseException
 
 class PandasPysparkLivyClient(PandasLivyClientBase):
     """Spark client for Livy session in PySpark"""
-    GET_DATA_RE = re.compile("^\[\s*(('.*[^\\\\]',\s*)\s*('.*[^\\\\]')?)\s*\]$")
-    PARSE_FIELDS_RE = re.compile("'(.*?[^\\\\])'")
+    GET_DATA_RE = re.compile("^\[\s*(((''|'.*?[^\\\\]'),\s*)*\s*(''|'(.*?[^\\\\])'))?\s*\]$")
+    PARSE_FIELDS_RE = re.compile("''|'(.*?[^\\\\])'")
 
     def __init__(self, session, max_take_rows):
         super(PandasPysparkLivyClient, self).__init__(session, max_take_rows)
@@ -36,10 +36,22 @@ class PandasPysparkLivyClient(PandasLivyClientBase):
 
 
     def _extract_strings_from_array(self, s):
+        """This method consumes a string of the form
+           ['abc...', 'def...', 'xyz...', ...]
+           and returns all of the strings embedded inside the array as a list of
+           strings. That is, given a string that represents a list of single-quoted
+           strings, parse the array and return the list of strings. This method can
+           only handle single-quoted strings (not double-quoted) and it must handle
+           any list of any length, including 0. Furthermore it must support escaping
+           single-quotes using a backslash. Ignores newlines and leading and
+           trailing whitespace."""
         match = re.match(self.GET_DATA_RE, s.strip().replace('\n', ''))
         if match is not None:
             inside_brackets = match.group(1)
-            columns = list(re.findall(self.PARSE_FIELDS_RE, inside_brackets))
-            return [string.replace("\\'", "'") for string in columns]
+            if inside_brackets is None:
+                return []
+            else:
+                columns = list(re.findall(self.PARSE_FIELDS_RE, inside_brackets))
+                return [string.replace("\\'", "'") for string in columns]
         else:
             raise DataFrameParseException("Cannot parse dataframe data in text '{}'".format(s))
