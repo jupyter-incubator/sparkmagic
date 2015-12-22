@@ -65,6 +65,18 @@ def test_configuration_load_not_lazy():
 
 @with_setup(_setup)
 def test_configuration_override():
+    kpc = { 'username': 'U', 'password': 'P', 'url': 'L' }
+    overrides = { conf.kernel_python_credentials.__name__: kpc }
+    conf.override_all(overrides)
+    conf.override(conf.execute_timeout_seconds.__name__, 1)
+    assert_equals(conf._overrides, { conf.kernel_python_credentials.__name__: kpc,
+                                     conf.execute_timeout_seconds.__name__: 1 })
+    assert_equals(conf.execute_timeout_seconds(), 1)
+    assert_equals(conf.kernel_python_credentials(), kpc)
+
+
+@with_setup(_setup)
+def test_configuration_override_all():
     z = 1500
     config = { conf.status_sleep_seconds.__name__: z }
     conf.override_all(config)
