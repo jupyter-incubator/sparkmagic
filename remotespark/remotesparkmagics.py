@@ -138,7 +138,7 @@ class RemoteSparkMagics(Magics):
             if len(args.command) != 2:
                 raise ValueError("Subcommand 'delete' requires an argument. {}".format(usage))
             name = args.command[1].lower()
-            self.spark_controller.delete_session(name)
+            self.spark_controller.delete_session_by_name(name)
         # cleanup 
         elif subcommand == "cleanup":
             self.spark_controller.cleanup()
@@ -173,12 +173,13 @@ class RemoteSparkMagics(Magics):
             return None
 
     def _print_info(self):
+        sessions_info = ["\t\t{}".format(i) for i in self.spark_controller.get_manager_sessions_str()]
         print("""Info for running Spark:
     Sessions:
-        {}
+{}
     Session configs:
         {}
-""".format(self.spark_controller.get_client_keys(), self.properties))
+""".format("\n".join(sessions_info), self.properties))
 
     @staticmethod
     def _get_livy_kind(language):

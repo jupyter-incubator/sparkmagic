@@ -62,20 +62,23 @@ class SparkKernelBase(IPythonKernel):
 
             if self.session_started:
                 if "f" not in flags:
-                    raise KeyError("A session has already been started. In order to modify the Spark configuration, "
-                                   "please provide the '-f' flag at the beginning of the config magic:\n\te.g. `%config"
-                                   " -f {}`\n\nNote that this will kill the current session and will create a new one "
-                                   "with the configuration provided. All previously run commands in the session will be"
-                                   " lost.")
+                    self._show_user_error("A session has already been started. In order to modify the Spark configura"
+                                           "tion, please provide the '-f' flag at the beginning of the config magic:\n"
+                                           "\te.g. `%config -f {}`\n\nNote that this will kill the current session and"
+                                           " will create a new one with the configuration provided. All previously run "
+                                           "commands in the session will be lost.")
+                    code_to_run = ""
                 else:
                     restart_session = True
-
-            code_to_run = "%%spark config {}".format(code_to_run)
+                    code_to_run = "%spark config {}".format(code_to_run)
+            else:
+                code_to_run = "%spark config {}".format(code_to_run)
 
             return self._run_restarting_session(code_to_run, silent, store_history, user_expressions, allow_stdin,
                                                 restart_session)
         else:
-            raise KeyError("Magic '{}' not supported.".format(subcommand))
+            self._show_user_error("Magic '{}' not supported.".format(subcommand))
+            return self._run_without_session("", silent, store_history, user_expressions, allow_stdin)
 
     def do_shutdown(self, restart):
         # Cleanup
@@ -104,6 +107,9 @@ class SparkKernelBase(IPythonKernel):
             code = "%spark cleanup"
             self._execute_cell_for_user(code, True, False)
             self.session_started = False
+
+    def _run_without_session(self, code, silent, store_history, user_expressions, allow_stdin):
+        return self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
 
     def _run_starting_session(self, code, silent, store_history, user_expressions, allow_stdin):
         self._start_session()
@@ -178,6 +184,10 @@ class SparkKernelBase(IPythonKernel):
 
     def _do_shutdown_ipykernel(self, restart):
         return super(SparkKernelBase, self).do_shutdown(restart)
+
+    def _show_user_error(self, message):
+        self.logger.error(message)
+        self._send_error(message)
 
     def _abort_with_fatal_error(self, message):
         self._fatal_error = message
