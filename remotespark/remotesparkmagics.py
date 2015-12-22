@@ -207,7 +207,7 @@ class RemoteSparkMagics(Magics):
         print("""Info for endpoint:
     Sessions:
 {}
-""").format("\n".join(sessions_info))
+""".format("\n".join(sessions_info)))
 
     @staticmethod
     def _get_livy_kind(language):
