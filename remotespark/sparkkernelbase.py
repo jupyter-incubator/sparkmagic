@@ -46,37 +46,36 @@ class SparkKernelBase(IPythonKernel):
         if self._fatal_error is not None:
             self._abort_with_fatal_error(self._fatal_error)
 
-        if not self.session_started:
-            self._start_session()
-
         subcommand, flags, code_to_run = self._parse_user_command(code)
 
         if subcommand == self.run_command:
             code_to_run = "%%spark\n{}".format(code_to_run)
+            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
         elif subcommand == self.sql_command:
             code_to_run = "%%spark -c sql\n{}".format(code_to_run)
+            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
         elif subcommand == self.hive_command:
             code_to_run = "%%spark -c hive\n{}".format(code_to_run)
+            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
         elif subcommand == self.config_command:
+            restart_session = False
+
             if self.session_started:
                 if "f" not in flags:
-                    raise KeyError("A session has already been started. In order to modify the Spark configuartion, "
+                    raise KeyError("A session has already been started. In order to modify the Spark configuration, "
                                    "please provide the '-f' flag at the beginning of the config magic:\n\te.g. `%config"
                                    " -f {}`\n\nNote that this will kill the current session and will create a new one "
                                    "with the configuration provided. All previously run commands in the session will be"
                                    " lost.")
                 else:
-                    self._delete_session()
-                    self._save_session_config(code_to_run, silent, store_history, user_expressions, allow_stdin)
-                    self._start_session()
+                    restart_session = True
 
-                    code_to_run = ""
-            else:
-                code_to_run = "%%spark config {}".format(code_to_run)
+            code_to_run = "%%spark config {}".format(code_to_run)
+
+            return self._run_restarting_session(code_to_run, silent, store_history, user_expressions, allow_stdin,
+                                                restart_session)
         else:
             raise KeyError("Magic '{}' not supported.".format(subcommand))
-
-        return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
 
     def do_shutdown(self, restart):
         # Cleanup
@@ -106,9 +105,20 @@ class SparkKernelBase(IPythonKernel):
             self._execute_cell_for_user(code, True, False)
             self.session_started = False
 
-    def _save_session_config(self, config_str, silent, store_history, user_expressions, allow_stdin):
-        code_to_run = "%%spark config {}".format(config_str)
-        self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
+    def _run_starting_session(self, code, silent, store_history, user_expressions, allow_stdin):
+        self._start_session()
+        return self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
+
+    def _run_restarting_session(self, code, silent, store_history, user_expressions, allow_stdin, restart):
+        if restart:
+            self._delete_session()
+
+        res = self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
+
+        if restart:
+            self._start_session()
+
+        return res
 
     def _get_configuration(self):
         try:
@@ -122,15 +132,14 @@ class SparkKernelBase(IPythonKernel):
                 self.kernel_conf_name)
             self._abort_with_fatal_error(message)
 
-    @staticmethod
-    def _parse_user_command(code):
+    def _parse_user_command(self, code):
         # Normalize 2 signs to 1
         if code.startswith("%%"):
             code = code[1:]
 
         # When no magic, return run command
         if not code.startswith("%"):
-            code = "%run {}".format(code)
+            code = "%{} {}".format(self.run_command, code)
 
         # Remove percentage sign
         code = code[1:]
