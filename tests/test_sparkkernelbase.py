@@ -93,7 +93,7 @@ def test_start_session():
 
     assert kernel.session_started
     assert call("%spark add TestKernel python {} skip".format(conn_str), True, False, None, False) \
-           in execute_cell_mock.mock_calls
+        in execute_cell_mock.mock_calls
 
 
 @with_setup(_setup(), _teardown())
