@@ -1,5 +1,5 @@
 from mock import MagicMock, call
-from nose.tools import with_setup
+from nose.tools import with_setup, raises
 
 from remotespark.sparkkernelbase import SparkKernelBase
 import remotespark.utils.configuration as conf
@@ -53,7 +53,7 @@ def test_get_config():
     pwd = "p"
     url = "url"
 
-    config = { "kernel_python_credentials": {user_ev: usr, pass_ev: pwd, url_ev: url} }
+    config = {"kernel_python_credentials": {user_ev: usr, pass_ev: pwd, url_ev: url}}
     conf.override_all(config)
 
     u, p, r = kernel._get_configuration()
@@ -93,7 +93,56 @@ def test_start_session():
 
     assert kernel.session_started
     assert call("%spark add TestKernel python {} skip".format(conn_str), True, False, None, False) \
-           in execute_cell_mock.mock_calls
+        in execute_cell_mock.mock_calls
+
+
+@with_setup(_setup(), _teardown())
+def test_delete_session():
+    kernel.session_started = True
+
+    kernel._delete_session()
+
+    assert not kernel.session_started
+    assert call("%spark cleanup", True, False) in execute_cell_mock.mock_calls
+
+
+@with_setup(_setup, _teardown)
+def test_set_config():
+    def _check(prepend, session_started=False, key_error_expected=False):
+        # Set up
+        kernel._show_user_error = MagicMock(side_effect=KeyError)
+        properties = """{"extra": 2}"""
+        code = prepend + properties
+        kernel.session_started = session_started
+        execute_cell_mock.reset_mock()
+
+        # Call method
+        try:
+            kernel.do_execute(code, False)
+        except KeyError:
+            if not key_error_expected:
+                assert False
+
+            # When exception is expected, nothing to check
+            return
+
+        assert session_started == kernel.session_started
+        assert call("%spark config {}".format(properties), False, True, None, False) \
+            in execute_cell_mock.mock_calls
+
+        if session_started and not key_error_expected:
+            # This means -f must be present, so check that a restart happened
+            assert call("%spark cleanup", True, False) in execute_cell_mock.mock_calls
+            assert call("%spark add TestKernel python {} skip".format(conn_str), True, False, None, False) \
+                in execute_cell_mock.mock_calls
+
+    _check("%config ")
+    _check("%config\n")
+    _check("%%config ")
+    _check("%%config\n")
+    _check("%config -f ")
+    _check("%config ", True, True)
+    _check("%config -f ", True, False)
 
 
 @with_setup(_setup, _teardown)
@@ -109,6 +158,18 @@ def test_do_execute_initializes_magics_if_not_run():
     assert call("%spark add TestKernel python {} skip"
                 .format(conn_str), True, False, None, False) in execute_cell_mock.mock_calls
     assert call("%%spark\n{}".format(code), False, True, None, False) in execute_cell_mock.mock_calls
+
+
+@with_setup(_setup, _teardown)
+@raises(KeyError)
+def test_magic_not_supported():
+    # Set up
+    code = "%alex some spark code"
+    kernel.session_started = True
+    kernel._show_user_error = MagicMock(side_effect=KeyError)
+
+    # Call method
+    kernel.do_execute(code, False)
 
 
 @with_setup(_setup, _teardown)

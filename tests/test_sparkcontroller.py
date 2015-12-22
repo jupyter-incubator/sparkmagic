@@ -63,7 +63,7 @@ def test_add_session_skip():
 def test_delete_session():
     name = "name"
 
-    controller.delete_session(name)
+    controller.delete_session_by_name(name)
 
     client_manager.delete_client.assert_called_once_with(name)
 

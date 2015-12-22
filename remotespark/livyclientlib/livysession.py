@@ -52,6 +52,9 @@ class LivySession(object):
         self._state = LivySessionState(session_id, http_client.connection_string,
                                        kind, sql_created)
 
+    def __str__(self):
+        return "Session id: {}\tKind: {}\tState: {}".format(self.id, self.kind, self._status)
+
     def get_state(self):
         return self._state
 

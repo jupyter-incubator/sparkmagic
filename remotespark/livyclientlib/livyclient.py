@@ -17,6 +17,9 @@ class LivyClient(object):
         self._session.create_sql_context()
         self._execute_timeout_seconds = execute_timeout_seconds
 
+    def __str__(self):
+        return str(self._session)
+
     def serialize(self):
         return self._session.get_state().to_dict()
 
