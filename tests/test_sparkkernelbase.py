@@ -118,9 +118,9 @@ def test_set_config():
         # Call method
         try:
             kernel.do_execute(code, False)
-        except KeyError, e:
+        except KeyError:
             if not key_error_expected:
-                raise e
+                assert False
 
             # When exception is expected, nothing to check
             return
