@@ -7,7 +7,6 @@ from time import sleep
 import requests
 
 import remotespark.utils.configuration as conf
-from remotespark.utils.constants import Constants
 from remotespark.utils.log import Log
 from remotespark.utils.utils import get_connection_string
 

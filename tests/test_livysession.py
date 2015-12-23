@@ -19,6 +19,7 @@ class DummyResponse:
     def json(self):
         return json.loads(self._json_text)
 
+    @property
     def status_code(self):
         return self._status_code
 
