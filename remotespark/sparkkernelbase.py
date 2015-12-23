@@ -13,6 +13,11 @@ class SparkKernelBase(IPythonKernel):
     config_command = "config"
     sql_command = "sql"
     hive_command = "hive"
+    info_command = "info"
+    delete_command = "delete"
+    clean_up_command = "cleanup"
+
+    force_flag = "f"
 
     def __init__(self, implementation, implementation_version, language, language_version, language_info,
                  kernel_conf_name, session_language, client_name, **kwargs):
@@ -61,7 +66,7 @@ class SparkKernelBase(IPythonKernel):
             restart_session = False
 
             if self.session_started:
-                if "f" not in flags:
+                if self.force_flag not in flags:
                     self._show_user_error("A session has already been started. In order to modify the Spark configura"
                                            "tion, please provide the '-f' flag at the beginning of the config magic:\n"
                                            "\te.g. `%config -f {}`\n\nNote that this will kill the current session and"
@@ -76,6 +81,33 @@ class SparkKernelBase(IPythonKernel):
 
             return self._run_restarting_session(code_to_run, silent, store_history, user_expressions, allow_stdin,
                                                 restart_session)
+        elif subcommand == self.info_command:
+            code_to_run = "%spark info {}".format(self.connection_string)
+            return self._run_without_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
+        elif subcommand == self.delete_command:
+            if self.force_flag not in flags:
+                self._show_user_error("The session you are trying to delete could be this kernel's session. In order "
+                                      "to delete this session, please provide the '-f' flag at the beginning of the "
+                                      "delete magic:\n\te.g. `%delete -f id`\n\nAll previously run commands in the "
+                                      "session will be lost.")
+                code_to_run = ""
+            else:
+                self.session_started = False
+                code_to_run = "%spark delete {} {}".format(self.connection_string, code_to_run)
+
+            return self._run_without_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
+        elif subcommand == self.clean_up_command:
+            if self.force_flag not in flags:
+                self._show_user_error("The sessions you are trying to delete could be this kernel's session or other "
+                                      "people's sessions. In order to delete them, please provide the '-f' flag at the "
+                                      "beginning of the cleanup magic:\n\te.g. `%cleanup -f`\n\nAll previously run "
+                                      "commands in the sessions will be lost.")
+                code_to_run = ""
+            else:
+                self.session_started = False
+                code_to_run = "%spark cleanup {}".format(self.connection_string)
+
+            return self._run_without_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
         else:
             self._show_user_error("Magic '{}' not supported.".format(subcommand))
             return self._run_without_session("", silent, store_history, user_expressions, allow_stdin)
@@ -153,14 +185,21 @@ class SparkKernelBase(IPythonKernel):
         split_code = code.split(None, 1)
         subcommand = split_code[0].lower()
         flags = []
-        rest = split_code[1]
+        if len(split_code) > 1:
+            rest = split_code[1]
+        else:
+            rest = ""
 
         # Get all flags
         flag_split = rest.split(None, 1)
-        while len(flag_split) >= 2 and flag_split[0].startswith("-"):
-            flags.append(flag_split[0][1:].lower())
-            rest = flag_split[1]
-            flag_split = rest.split(None, 1)
+        while len(flag_split) >= 1 and flag_split[0].startswith("-"):
+            if len(flag_split) >= 2:
+                flags.append(flag_split[0][1:].lower())
+                rest = flag_split[1]
+                flag_split = rest.split(None, 1)
+            if len(flag_split) == 1:
+                flags.append(flag_split[0][1:].lower())
+                flag_split = [""]
 
         # flags to lower
         flags = [i.lower() for i in flags]

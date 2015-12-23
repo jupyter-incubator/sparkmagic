@@ -173,6 +173,82 @@ def test_magic_not_supported():
 
 
 @with_setup(_setup, _teardown)
+def test_info():
+    code = "%info"
+
+    # Call method
+    kernel.do_execute(code, False)
+
+    # Assertions
+    assert not kernel.session_started
+    assert call("%spark info {}".format(conn_str), False, True, None, False) in execute_cell_mock.mock_calls
+
+
+@with_setup(_setup, _teardown)
+def test_delete_force():
+    code = "%delete -f 9"
+    kernel.session_started = True
+    user_error = MagicMock()
+    kernel._show_user_error = user_error
+
+    # Call method
+    kernel.do_execute(code, False)
+
+    # Assertions
+    assert not kernel.session_started
+    assert call("%spark delete {} 9".format(conn_str), False, True, None, False) in execute_cell_mock.mock_calls
+    assert len(user_error.mock_calls) == 0
+
+
+@with_setup(_setup, _teardown)
+def test_delete_not_force():
+    code = "%delete 9"
+    kernel.session_started = True
+    user_error = MagicMock()
+    kernel._show_user_error = user_error
+
+    # Call method
+    kernel.do_execute(code, False)
+
+    # Assertions
+    assert kernel.session_started
+    assert not call("%spark delete {} 9".format(conn_str), False, True, None, False) in execute_cell_mock.mock_calls
+    assert len(user_error.mock_calls) == 1
+
+
+@with_setup(_setup, _teardown)
+def test_cleanup_force():
+    code = "%cleanup -f"
+    kernel.session_started = True
+    user_error = MagicMock()
+    kernel._show_user_error = user_error
+
+    # Call method
+    kernel.do_execute(code, False)
+
+    # Assertions
+    assert not kernel.session_started
+    assert call("%spark cleanup {}".format(conn_str), False, True, None, False) in execute_cell_mock.mock_calls
+    assert len(user_error.mock_calls) == 0
+
+
+@with_setup(_setup, _teardown)
+def test_cleanup_not_force():
+    code = "%cleanup"
+    kernel.session_started = True
+    user_error = MagicMock()
+    kernel._show_user_error = user_error
+
+    # Call method
+    kernel.do_execute(code, False)
+
+    # Assertions
+    assert kernel.session_started
+    assert not call("%spark cleanup {}".format(conn_str), False, True, None, False) in execute_cell_mock.mock_calls
+    assert len(user_error.mock_calls) == 1
+
+
+@with_setup(_setup, _teardown)
 def test_call_spark():
     # Set up
     code = "some spark code"
