@@ -2,5 +2,5 @@
 (i.e. when the query resulted in an error"""
 
 class DataFrameParseException(Exception):
-    def __init__(self, out):
+    def __init__(self, out=None):
         self.out = out

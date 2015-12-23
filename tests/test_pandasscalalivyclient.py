@@ -37,8 +37,8 @@ def _teardown():
 @with_setup(_setup, _teardown)
 def test_execute_sql_pandas_scala_livy():
     # result from livy
-    result_json = "{\"buildingID\":0,\"date\":\"6/1/13\",\"temp_diff\":12}\n" \
-                      "{\"buildingID\":1,\"date\":\"6/1/13\",\"temp_diff\":0}"
+    result_json = """{"buildingID":0,"date":"6/1/13","temp_diff":12}
+{"buildingID":1,"date":"6/1/13","temp_diff":0}"""
     execute_m.return_value = (True, result_json)
 
     # desired pandas df
@@ -60,7 +60,7 @@ def test_execute_sql_pandas_scala_livy_no_results():
     # Set up spark session to return empty JSON and then columns
     command = "command"
     result_json = ""
-    result_columns = "res1: Array[String] = Array(buildingID, date, temp_diff)"
+    result_columns = "buildingID\ndate\ntemp_diff"
     execute_responses = [(True, result_json), (True, result_columns)]
     execute_m.side_effect = _next_response_execute
 
@@ -71,9 +71,22 @@ def test_execute_sql_pandas_scala_livy_no_results():
     df = client.execute_sql(command)
 
     # Verify basic calls were done
-    execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
+    execute_m.assert_called_with('sqlContext.sql("""{}""").columns.foreach(println)'.format(command))
     assert_frame_equal(desired_df, df)
 
+@with_setup(_setup, _teardown)
+def test_execute_sql_pandas_pyspark_livy_bad_return():
+    global execute_responses
+
+    command = "command"
+    result_json = (True, "something bad happened")
+    execute_m.return_value = result_json
+
+    try:
+        client.execute_sql(command)
+        assert False
+    except DataFrameParseException:
+        pass
 
 @with_setup(_setup, _teardown)
 def test_execute_sql_pandas_scala_livy_no_results_exception_in_columns():
@@ -90,7 +103,7 @@ def test_execute_sql_pandas_scala_livy_no_results_exception_in_columns():
         result = client.execute_sql(command)
         assert False
     except DataFrameParseException as e:
-        execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
+        execute_m.assert_called_with('sqlContext.sql("""{}""").columns.foreach(println)'.format(command))
         assert e.out == some_exception
 
 

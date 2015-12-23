@@ -17,6 +17,8 @@ class Constants:
     lang_python = "python"
     lang_supported = [lang_scala, lang_python]
 
+    long_random_variable_name = "_yQeKOYBsFgLWWGWZJu3y"
+
     magics_logger_name = "magicsLogger"
 
     idle_session_status = "idle"

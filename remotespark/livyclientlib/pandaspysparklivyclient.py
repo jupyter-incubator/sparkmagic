@@ -3,28 +3,27 @@
 
 import pandas as pd
 import json
+import re
 
+from remotespark.utils.constants import Constants
 from .pandaslivyclientbase import PandasLivyClientBase
+from .dataframeparseexception import DataFrameParseException
 
 class PandasPysparkLivyClient(PandasLivyClientBase):
     """Spark client for Livy session in PySpark"""
 
-    def __init__(self, session, max_take_rows):
-        super(PandasPysparkLivyClient, self).__init__(session, max_take_rows)
+    def make_context_columns(self, context_name, command):
+        return 'for {} in {}.sql("""{}""").columns: print({})'.format(Constants.long_random_variable_name,
+                                                                      context_name, command,
+                                                                      Constants.long_random_variable_name)
+
 
     def get_records(self, context_name, command, max_take_rows):
-        command = '{}.sql("""{}""").toJSON().take({})'.format(context_name, command, max_take_rows)
+        command = 'for {} in {}.sql("""{}""").toJSON().take({}): print({})'.format(Constants.long_random_variable_name,
+                                                                                   context_name, command, max_take_rows,
+                                                                                   Constants.long_random_variable_name)
         return self.execute(command)
+
 
     def no_records(self, records_text):
         return records_text == "[]"
-
-    def get_columns_dataframe(self, columns_text):
-        records = list()
-        columns = eval(columns_text)
-        return pd.DataFrame.from_records(records, columns=columns)
-
-    def get_data_dataframe(self, records_text):
-        json_data = eval(records_text)
-        json_array = "[{}]".format(",".join(json_data))
-        return pd.DataFrame(json.loads(json_array))
