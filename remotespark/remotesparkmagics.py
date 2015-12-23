@@ -107,7 +107,15 @@ class RemoteSparkMagics(Magics):
 
         # info
         if subcommand == "info":
-            self._print_info()
+            if len(args.command) == 2:
+                connection_string = args.command[1]
+                info_sessions = self.spark_controller.get_all_sessions_endpoint_info(connection_string)
+                self._print_endpoint_info(info_sessions)
+            elif len(args.command) == 1:
+                self._print_local_info()
+            else:
+                raise ValueError("Subcommand 'info' requires no value or a connection string to show all sessions. "
+                                 "{}".format(usage))
         # config
         elif subcommand == "config":
             # Would normally do " ".join(args.command[1:]) but parse_argstring removes quotes...
@@ -133,13 +141,26 @@ class RemoteSparkMagics(Magics):
             self.spark_controller.add_session(name, connection_string, skip, properties)
         # delete
         elif subcommand == "delete":
-            if len(args.command) != 2:
-                raise ValueError("Subcommand 'delete' requires an argument. {}".format(usage))
-            name = args.command[1].lower()
-            self.spark_controller.delete_session_by_name(name)
+            if len(args.command) == 2:
+                name = args.command[1].lower()
+                self.spark_controller.delete_session_by_name(name)
+            elif len(args.command) == 3:
+                connection_string = args.command[1]
+                session_id = args.command[2]
+                self.spark_controller.delete_session_by_id(connection_string, session_id)
+            else:
+                raise ValueError("Subcommand 'delete' requires a session name, or a connection string and id. {}"
+                                 .format(usage))
         # cleanup 
         elif subcommand == "cleanup":
-            self.spark_controller.cleanup()
+            if len(args.command) == 2:
+                connection_string = args.command[1]
+                self.spark_controller.cleanup_endpoint(connection_string)
+            elif len(args.command) == 1:
+                self.spark_controller.cleanup()
+            else:
+                raise ValueError("Subcommand 'cleanup' requires no value or a connection string to clean up sessions. "
+                                 "{}".format(usage))
         # run
         elif len(subcommand) == 0:
             if args.context == Constants.context_name_spark:
@@ -170,8 +191,8 @@ class RemoteSparkMagics(Magics):
             self.shell.write_err(e.out)
             return None
 
-    def _print_info(self):
-        sessions_info = ["\t\t{}".format(i) for i in self.spark_controller.get_manager_sessions_str()]
+    def _print_local_info(self):
+        sessions_info = ["        {}".format(i) for i in self.spark_controller.get_manager_sessions_str()]
         print("""Info for running Spark:
     Sessions:
 {}
@@ -179,6 +200,13 @@ class RemoteSparkMagics(Magics):
         {}
 """.format("\n".join(sessions_info), conf.session_configs()))
 
+
+    def _print_endpoint_info(self, info_sessions):
+        sessions_info = ["        {}".format(i) for i in info_sessions]
+        print("""Info for endpoint:
+    Sessions:
+{}
+""".format("\n".join(sessions_info)))
 
     @staticmethod
     def _get_livy_kind(language):
