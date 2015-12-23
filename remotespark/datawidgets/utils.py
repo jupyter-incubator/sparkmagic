@@ -59,8 +59,11 @@ def select_x(data, order=None):
     Helper function that does a best effort of selecting an automatic x axis.
     Returns None if it cannot find x axis.
     """
-    assert data is not None
-    assert len(data) >= 1
+    if data is None:
+        return None
+
+    if len(data) < 1:
+        return None
 
     if order is None:
         order = ['T', 'O', 'N', 'Q']
@@ -84,8 +87,11 @@ def select_y(data, x_name, order=None, aggregator=None):
     It won't set the same axis that x is set to again.
     Returns None if it cannot find y axis.
     """
-    assert data is not None
-    assert len(data) >= 2
+    if data is None:
+        return None
+
+    if len(data) < 2:
+        return None
 
     if x_name is None:
         return None

@@ -1,6 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 from remotespark.utils.constants import Constants
+import remotespark.utils.configuration as conf
 from remotespark.utils.log import Log
 from remotespark.utils.utils import get_connection_string_elements
 from .linearretrypolicy import LinearRetryPolicy
@@ -15,7 +16,7 @@ class LivyClientFactory(object):
 
     def __init__(self):
         self.logger = Log("LivyClientFactory")
-        self.max_results = 2500
+        self.max_results = conf.max_results_sql()
 
     def build_client(self, session):
         assert session is not None

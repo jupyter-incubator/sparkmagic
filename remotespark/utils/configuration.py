@@ -170,3 +170,8 @@ def ignore_ssl_errors():
 @_override
 def use_auto_viz():
     return False
+
+
+@_override
+def max_results_sql():
+    return 800

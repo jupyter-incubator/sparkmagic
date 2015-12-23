@@ -54,5 +54,6 @@
     "executorCores": 2
   },
 
-  "use_auto_viz": true
+  "use_auto_viz": true,
+  "max_results_sql": 800
 }
