@@ -40,6 +40,18 @@ def test_info_command_parses():
 
 
 @with_setup(_setup, _teardown)
+def test_info_endpoint_command_parses():
+    print_info_mock = MagicMock()
+    magic._print_endpoint_info = print_info_mock
+    command = "info conn_str"
+    spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=None)
+
+    magic.spark(command)
+
+    print_info_mock.assert_called_once_with(None)
+
+
+@with_setup(_setup, _teardown)
 def test_add_sessions_command_parses():
     # Do not skip and python
     add_sessions_mock = MagicMock()
@@ -100,6 +112,17 @@ def test_delete_sessions_command_parses():
 
 
 @with_setup(_setup, _teardown)
+def test_delete_sessions_command_parses():
+    mock_method = MagicMock()
+    spark_controller.delete_session_by_id = mock_method
+    line = "delete conn_str 7"
+
+    magic.spark(line)
+
+    mock_method.assert_called_once_with("conn_str", "7")
+
+
+@with_setup(_setup, _teardown)
 def test_cleanup_command_parses():
     mock_method = MagicMock()
     spark_controller.cleanup = mock_method
@@ -108,6 +131,17 @@ def test_cleanup_command_parses():
     magic.spark(line)
 
     mock_method.assert_called_once_with()
+
+
+@with_setup(_setup, _teardown)
+def test_cleanup_endpoint_command_parses():
+    mock_method = MagicMock()
+    spark_controller.cleanup_endpoint = mock_method
+    line = "cleanup conn_str"
+
+    magic.spark(line)
+
+    mock_method.assert_called_once_with("conn_str")
 
 
 @raises(ValueError)
