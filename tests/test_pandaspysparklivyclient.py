@@ -3,6 +3,7 @@ from nose.tools import with_setup, assert_equal
 from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
+from remotespark.utils.constants import Constants
 from remotespark.livyclientlib.pandaspysparklivyclient import PandasPysparkLivyClient
 from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 
@@ -38,8 +39,8 @@ def _teardown():
 def test_execute_sql_pandas_pyspark_livy():
     # result from livy
     result_json = (True,
-                   """['{\"buildingID\":0,\"date\":\"6/1/13\",\"temp_diff\":12}',
-                   '{\"buildingID\":1,\"date\":\"6/1/13\",\"temp_diff\":0}']""")
+                   """{"buildingID":0,"date":"6/1/13","temp_diff":12}
+{"buildingID":1,"date":"6/1/13","temp_diff":0}""")
     execute_m.return_value = result_json
 
     # desired pandas df
@@ -50,7 +51,9 @@ def test_execute_sql_pandas_pyspark_livy():
     command = "command"
     df = client.execute_sql(command)
 
-    execute_m.assert_called_with('sqlContext.sql("""{}""").toJSON().take({})'.format(command, 10))
+    execute_m.assert_called_with('for {} in sqlContext.sql("""{}""").toJSON().take({}): print({})'\
+                                 .format(Constants.long_random_variable_name, command, 10,
+                                         Constants.long_random_variable_name))
     assert_frame_equal(desired_df, df)
 
 
@@ -61,19 +64,22 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
     # Set up spark session to return empty JSON and then columns
     command = "command"
     result_json = "[]"
-    result_columns = "['buildingID', 'date', 'temp_diff']"
+    result_columns = "buildingID\ndate\ntemp_diff"
     execute_responses = [(True, result_json), (True, result_columns)]
     execute_m.side_effect = _next_response_execute
 
     # pandas to return
-    columns = eval(result_columns)
-    desired_df = pd.DataFrame.from_records(list(), columns=columns)
+    columns = ['buildingID', 'date', 'temp_diff']
+    desired_df = pd.DataFrame.from_records([], columns=columns)
 
     df = client.execute_sql(command)
 
     # Verify basic calls were done
-    execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
+    execute_m.assert_called_with('for {} in sqlContext.sql("""{}""").columns: print({})'\
+                                 .format(Constants.long_random_variable_name, command,
+                                         Constants.long_random_variable_name))
     assert_frame_equal(desired_df, df)
+
 
 @with_setup(_setup, _teardown)
 def test_execute_sql_pandas_pyspark_livy_bad_return():
@@ -88,6 +94,7 @@ def test_execute_sql_pandas_pyspark_livy_bad_return():
         assert False
     except DataFrameParseException:
         pass
+
 
 @with_setup(_setup, _teardown)
 def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
@@ -104,7 +111,9 @@ def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
         client.execute_sql(command)
         assert False
     except DataFrameParseException as e:
-        execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
+        execute_m.assert_called_with('for {} in sqlContext.sql("""{}""").columns: print({})'\
+                                     .format(Constants.long_random_variable_name, command,
+                                             Constants.long_random_variable_name))
         assert e.out == some_exception
 
 
@@ -119,19 +128,11 @@ def test_execute_sql_pandas_pyspark_livy_some_exception():
         client.execute_sql(command)
         assert False
     except DataFrameParseException as e:
-        execute_m.assert_called_with('sqlContext.sql("""{}""").toJSON().take({})'.format(command, 10))
+        execute_m.assert_called_with('for {} in sqlContext.sql("""{}""").toJSON().take({}): print({})'\
+                                     .format(Constants.long_random_variable_name, command, 10,
+                                             Constants.long_random_variable_name))
         assert e.out == some_exception
 
-@with_setup(_setup, _teardown)
-def test_execute_sql_pandas_pyspark_extract_strings():
-    for (s, a) in [("[]", []),
-                   ("  ['afz']  ", ["afz"]),
-                   ("['zzz', 'aaa', 'fff']", ['zzz', 'aaa', 'fff']),
-                   (" ['aa\\'a',\n'q\\'']", ["aa'a", "q'"]),
-                   ("['']", ['']),
-                   ("['', '', 'abc', 'df\\'dd']", ['', '', 'abc', "df'dd"]),
-                   ("['a', 'bbbb', '\\'\\'\\'', '']", ['a', 'bbbb', "'''", '']),
-                   ("['adfadf', 'asdf', 'asdf']", ['adfadf', 'asdf', 'asdf'])]:
-        assert_equal(client._extract_strings_from_array(s), a)
+
 
 

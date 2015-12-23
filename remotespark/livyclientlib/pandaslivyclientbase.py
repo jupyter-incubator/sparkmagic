@@ -1,6 +1,8 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
+import pandas as pd
+import json
 from .livyclient import LivyClient
 from .dataframeparseexception import DataFrameParseException
 
@@ -28,6 +30,7 @@ class PandasLivyClientBase(LivyClient):
         else:
             return self.get_data_dataframe(records_text)
 
+
     def get_columns(self, context_name, command):
         (success, out) = self.execute(self.make_context_columns(context_name,
                                                                 command))
@@ -36,19 +39,27 @@ class PandasLivyClientBase(LivyClient):
         else:
             raise DataFrameParseException(out)
 
-    @staticmethod
-    def make_context_columns(context_name, command):
-        return '{}.sql("""{}""").columns'.format(context_name, command)
+
+    def get_columns_dataframe(self, columns_text):
+        return pd.DataFrame.from_records([], columns=columns_text.split('\n'))
+
+
+    def get_data_dataframe(self, records_text):
+        strings = records_text.split('\n')
+        try:
+            return pd.DataFrame([json.loads(s) for s in strings])
+        except ValueError:
+            raise DataFrameParseException("Cannot parse object as JSON: '{}'".format(strings))
+
 
     # Please override here down
+    def make_context_columns(self, context_name, command):
+        raise NotImplementedError()
+
+
     def get_records(self, context_name, command, max_take_rows):
         raise NotImplementedError()
 
+
     def no_records(self, records_text):
-        raise NotImplementedError()
-
-    def get_columns_dataframe(self, columns_text):
-        raise NotImplementedError()
-
-    def get_data_dataframe(self, records_text):
         raise NotImplementedError()

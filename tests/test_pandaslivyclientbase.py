@@ -47,6 +47,7 @@ def test_execute_sql_no_results():
     client.no_records = MagicMock(return_value=no_records)
     client.get_columns_dataframe = MagicMock(return_value=result_columns)
     client.get_data_dataframe = MagicMock(return_value=result_data)
+    client.make_context_columns = MagicMock()
 
     result = client.execute_sql(records)
     assert_frame_equal(result, result_columns)
@@ -94,6 +95,7 @@ def test_execute_hive_no_results():
     client.no_records = MagicMock(return_value=no_records)
     client.get_columns_dataframe = MagicMock(return_value=result_columns)
     client.get_data_dataframe = MagicMock(return_value=result_data)
+    client.make_context_columns = MagicMock()
 
     result = client.execute_hive(records)
     assert_frame_equal(result, result_columns)
