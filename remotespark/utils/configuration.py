@@ -12,7 +12,7 @@ from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 _overrides = None
 
 
-def initialize(fsrw_class = None):
+def initialize(fsrw_class=None):
     """Checks if the configuration is initialized. If so, initializes the
     global configuration object by reading from the configuration
     file, overwriting the current set of overrides if there is one"""
@@ -21,7 +21,7 @@ def initialize(fsrw_class = None):
         load(fsrw_class)
 
 
-def load(fsrw_class = None):
+def load(fsrw_class=None):
     """Initializes the global configuration by reading from the configuration
     file, overwriting the current set of overrides if there is one"""
     if fsrw_class is None:
@@ -63,14 +63,17 @@ def _override(f):
     ret.__name__ = f.__name__
     return ret
 
+
 # All of the functions below return the values of configurations. They are
 # all marked with the _override decorator, which returns the overridden
 # value of that configuration if there is any such configuration. Otherwise,
 # these functions return the default values described in their bodies.
 
+
 @_override
 def session_configs():
     return {}
+
 
 @_override
 def serialize():
@@ -161,4 +164,9 @@ c) Restart the kernel."""
 
 @_override
 def ignore_ssl_errors():
+    return False
+
+
+@_override
+def use_auto_viz():
     return False
