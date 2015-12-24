@@ -374,3 +374,12 @@ def test_shutdown_cleans_up():
     assert not kernel.session_started
     ecfu_m.assert_called_once_with("%spark cleanup", True, False)
     dsi_m.assert_called_once_with(True)
+
+
+@with_setup(_setup, _teardown)
+def test_register_auto_viz():
+    kernel._register_auto_viz()
+
+    assert call("from remotespark.datawidgets.utils import display_dataframe\nip = get_ipython()\nip.display_formatter"
+                ".ipython_display_formatter.for_type_by_name('pandas.core.frame', 'DataFrame', display_dataframe)",
+                True, False, None, False) in execute_cell_mock.mock_calls

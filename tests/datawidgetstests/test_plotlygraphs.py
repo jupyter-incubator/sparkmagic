@@ -4,6 +4,7 @@ from remotespark.datawidgets.plotlygraphs.graphbase import GraphBase
 from remotespark.datawidgets.plotlygraphs.piegraph import PieGraph
 from remotespark.datawidgets.plotlygraphs.datagraph import DataGraph
 from remotespark.datawidgets.encoding import Encoding
+from remotespark.datawidgets.invalidencodingerror import InvalidEncodingError
 
 
 def test_graph_base_display_methods():
@@ -47,6 +48,14 @@ def test_graphbase_get_x_y_values():
     xs, yx = GraphBase._get_x_y_values(df, encoding)
     assert xs == [u'6/1/13', u'6/1/13', u'6/1/14', u'6/1/15', u'6/1/16', u'6/1/17']
     assert yx == [12, 0, 11, 5, 19, 32]
+
+    try:
+        encoding = Encoding(chart_type=Encoding.chart_type_line, x="buildingID", y="date",
+                            y_aggregation=Encoding.y_agg_avg)
+        GraphBase._get_x_y_values(df, encoding)
+        assert False
+    except InvalidEncodingError:
+        pass
 
 
 def test_pie_graph_display_methods():
