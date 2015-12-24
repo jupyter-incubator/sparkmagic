@@ -46,6 +46,8 @@ class SparkKernelBase(IPythonKernel):
             (username, password, url) = self._get_configuration()
             self.connection_string = get_connection_string(url, username, password)
             self._load_magics_extension()
+            if conf.use_auto_viz():
+                self._register_auto_viz()
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         if self._fatal_error is not None:
@@ -123,6 +125,14 @@ class SparkKernelBase(IPythonKernel):
         self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to load the Spark magics library.")
         self.logger.debug("Loaded magics.")
+
+    def _register_auto_viz(self):
+        register_auto_viz_code = """from remotespark.datawidgets.utils import display_dataframe
+ip = get_ipython()
+ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.frame', 'DataFrame', display_dataframe)"""
+        self._execute_cell(register_auto_viz_code, True, False, shutdown_if_error=True,
+                           log_if_error="Failed to register auto viz for notebook.")
+        self.logger.debug("Registered auto viz.")
 
     def _start_session(self):
         if not self.session_started:

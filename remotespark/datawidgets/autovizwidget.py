@@ -47,6 +47,7 @@ class AutoVizWidget(FlexBox):
         self.ipython_display = ipython_display
 
         self.df = df
+
         self.encoding = encoding
 
         # Widget that will become the only child of AutoVizWidget

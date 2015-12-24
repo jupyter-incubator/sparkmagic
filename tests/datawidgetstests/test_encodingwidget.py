@@ -1,4 +1,4 @@
-from mock import MagicMock
+from mock import MagicMock, call
 from nose.tools import with_setup
 import pandas as pd
 
@@ -32,6 +32,34 @@ def _setup():
 
 def _teardown():
     pass
+
+
+@with_setup(_setup, _teardown)
+def test_encoding_with_all_none_doesnt_throw():
+    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12},
+               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0},
+               {u'buildingID': 2, u'date': u'6/1/14', u'temp_diff': 11},
+               {u'buildingID': 0, u'date': u'6/1/15', u'temp_diff': 5},
+               {u'buildingID': 1, u'date': u'6/1/16', u'temp_diff': 19},
+               {u'buildingID': 2, u'date': u'6/1/17', u'temp_diff': 32}]
+    df = pd.DataFrame(records)
+
+    encoding = Encoding()
+
+    ipywidget_factory = MagicMock()
+
+    EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
+
+    assert call(description='X', value=None, options={'date': 'date', 'temp_diff': 'temp_diff', '-': None,
+                                                      'buildingID': 'buildingID'}) \
+        in ipywidget_factory.get_dropdown.mock_calls
+    assert call(description='Y', value=None, options={'date': 'date', 'temp_diff': 'temp_diff', '-': None,
+                                                      'buildingID': 'buildingID'}) \
+        in ipywidget_factory.get_dropdown.mock_calls
+    assert call(description='Func.', value='none', options={'Max': 'Max', 'Sum': 'Sum', 'Avg': 'Avg',
+                                                            '-': 'None', 'Min': 'Min'}) \
+        in ipywidget_factory.get_dropdown.mock_calls
+
 
 
 @with_setup(_setup, _teardown)

@@ -5,11 +5,23 @@ from plotly.graph_objs import Figure, Data, Layout
 from plotly.offline import iplot
 
 from remotespark.datawidgets.encoding import Encoding
+from remotespark.datawidgets.invalidencodingerror import InvalidEncodingError
 
 
 class GraphBase(object):
     def render(self, df, encoding, output):
-        data = self._get_data(df, encoding)
+        if encoding.x == None or encoding.y == None:
+            with output:
+                print("\n\n\nPlease select an X and Y axis.")
+                return
+
+        try:
+            data = self._get_data(df, encoding)
+        except InvalidEncodingError:
+            with output:
+                print("\n\n\nY column '{}' is not valid with aggregation function '{}'. Please select a different  "
+                      "combination.".format(encoding.y, encoding.y_aggregation))
+                return
 
         type_x_axis = self._get_type_axis(encoding.logarithmic_x_axis)
         type_y_axis = self._get_type_axis(encoding.logarithmic_y_axis)
@@ -86,6 +98,9 @@ class GraphBase(object):
             raise ValueError("Y aggregation '{}' not supported.".format(y_aggregation))
 
         df_transformed = df_transformed.reset_index()
+
+        if y_column not in df_transformed.columns:
+            raise InvalidEncodingError("Column selected for y_column is not valid after aggregation.")
 
         x_values = df_transformed[x_column].tolist()
         y_values = df_transformed[y_column].tolist()

@@ -32,12 +32,16 @@ class EncodingWidget(FlexBox):
         self.title = self.ipywidget_factory.get_html('Encoding:', width='148px', height='32px')
 
         # X view
-        self.x_view = self.ipywidget_factory.get_dropdown(options={str(i): str(i) for i in self.df.columns},
+        options_x_view = {str(i): str(i) for i in self.df.columns}
+        options_x_view["-"] = None
+        self.x_view = self.ipywidget_factory.get_dropdown(options=options_x_view,
                                                           description="X", value=self.encoding.x)
         self.x_view.on_trait_change(self._x_changed_callback, 'value')
 
         # Y
-        y_column_view = self.ipywidget_factory.get_dropdown(options={str(i): str(i) for i in self.df.columns},
+        options_y_view = {str(i): str(i) for i in self.df.columns}
+        options_y_view["-"] = None
+        y_column_view = self.ipywidget_factory.get_dropdown(options=options_y_view,
                                                             description="Y", value=self.encoding.y)
         y_column_view.on_trait_change(self._y_changed_callback, 'value')
 
