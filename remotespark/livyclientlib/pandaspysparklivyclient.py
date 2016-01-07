@@ -26,4 +26,4 @@ class PandasPysparkLivyClient(PandasLivyClientBase):
 
 
     def no_records(self, records_text):
-        return records_text == "[]"
+        return records_text == ""
