@@ -1,9 +1,11 @@
 ﻿import time
-from nose.tools import raises, assert_equals
-from mock import MagicMock
 
+from mock import MagicMock
+from nose.tools import raises, assert_equals
+
+import remotespark.utils.configuration as conf
 from remotespark.livyclientlib.clientmanager import ClientManager
-from remotespark.livyclientlib.configuration import _t_config_hook
+import remotespark.utils.configuration as conf
 
 
 @raises(ValueError)
@@ -18,17 +20,18 @@ def test_deserialize_on_creation():
     serializer.deserialize_state.return_value = [("py", None), ("sc", None)]
     manager = ClientManager(serializer)
 
-    assert "py" in manager.get_endpoints_list()
-    assert "sc" in manager.get_endpoints_list()
+    assert "py" in manager.get_sessions_list()
+    assert "sc" in manager.get_sessions_list()
 
     serializer = MagicMock()
     manager = ClientManager(serializer)
 
-    assert len(manager.get_endpoints_list()) == 0
+    assert len(manager.get_sessions_list()) == 0
 
 
 def test_serialize_periodically():
-    _t_config_hook({"serialize_period_seconds": 0.1})
+    conf.override_all({conf.serialize_period_seconds.__name__: 0.1,
+                       conf.serialize_periodically.__name__: True})
     serializer = MagicMock()
     ClientManager(serializer)
 
@@ -36,7 +39,7 @@ def test_serialize_periodically():
 
     assert serializer.serialize_state.call_count >= 1
 
-    _t_config_hook({})
+    conf.load()
 
 
 def test_get_client():
@@ -82,7 +85,7 @@ def test_client_names_returned():
     manager.add_client("name0", client)
     manager.add_client("name1", client)
 
-    assert_equals({"name0", "name1"}, set(manager.get_endpoints_list()))
+    assert_equals({"name0", "name1"}, set(manager.get_sessions_list()))
 
 
 def test_get_any_client():

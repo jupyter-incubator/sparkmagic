@@ -1,28 +1,30 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from .log import Log
-from .configuration import get_configuration
-from .constants import Constants
+import remotespark.utils.configuration as conf
+from remotespark.utils.log import Log
 
 
 class LivyClient(object):
-    """Spark client for Livy endpoint"""
+    """Spark client for Livy session"""
 
     def __init__(self, session):
         self.logger = Log("LivyClient")
 
-        execute_timeout_seconds = get_configuration(Constants.execute_timeout_seconds, 3600)
+        execute_timeout_seconds = conf.execute_timeout_seconds()
 
         self._session = session
         self._session.create_sql_context()
         self._execute_timeout_seconds = execute_timeout_seconds
 
+    def __str__(self):
+        return str(self._session)
+
     def serialize(self):
         return self._session.get_state().to_dict()
 
     def execute(self, commands):
-        self._session.wait_for_status("idle", self._execute_timeout_seconds)
+        self._session.wait_for_idle(self._execute_timeout_seconds)
         return self._session.execute(commands)
 
     def execute_sql(self, command):
@@ -35,8 +37,8 @@ class LivyClient(object):
         self._session.delete()
 
     @property
-    def language(self):
-        return self._session.language
+    def kind(self):
+        return self._session.kind
 
     @property
     def session_id(self):

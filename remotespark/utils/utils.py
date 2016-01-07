@@ -9,6 +9,8 @@ from collections import namedtuple
 import os
 import uuid
 
+from .filesystemreaderwriter import FileSystemReaderWriter
+
 
 first_run = True
 instance_id = None
@@ -19,7 +21,7 @@ def get_connection_string(url, username, password):
        
     Parameters
     ----------
-       
+
     url : string
         The endpoint to hit.
     username : string
@@ -72,24 +74,10 @@ def join_paths(p1, p2):
     return os.path.join(p1, p2)
 
 
-def ensure_path_exists(path):
-    try:
-        os.makedirs(path)
-    except OSError:
-        if not os.path.isdir(path):
-            raise
-
-
-def ensure_file_exists(path):
-    if not os.path.exists(path):
-        open(path, 'w').close()
-
-
 def get_magics_home_path():
     path = expand_path("~/.sparkmagic/")
-
-    ensure_path_exists(path)
-
+    p = FileSystemReaderWriter(path)
+    p.ensure_path_exists()
     return path
 
 
@@ -108,3 +96,4 @@ def get_instance_id():
         raise ValueError("Tried to return empty instance ID.")
 
     return instance_id
+

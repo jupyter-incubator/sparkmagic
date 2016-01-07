@@ -3,9 +3,8 @@
 
 from threading import Timer
 
-from .log import Log
-from .configuration import get_configuration
-from .constants import Constants
+import remotespark.utils.configuration as conf
+from remotespark.utils.log import Log
 
 
 class ClientManager(object):
@@ -16,8 +15,8 @@ class ClientManager(object):
         serialize_period = 3
 
         if serializer is not None:
-            serialize_periodically = get_configuration(Constants.serialize_periodically, True)
-            serialize_period = get_configuration(Constants.serialize_period_seconds, 3)
+            serialize_periodically = conf.serialize_periodically()
+            serialize_period = conf.serialize_period_seconds()
 
         self.logger = Log("ClientManager")
 
@@ -41,12 +40,15 @@ class ClientManager(object):
     def _serialize_state(self):
         self._serializer.serialize_state(self._livy_clients)
 
-    def get_endpoints_list(self):
+    def get_sessions_list(self):
         return list(self._livy_clients.keys())
 
+    def get_sessions_info(self):
+        return ["Name: {}\t{}".format(k, str(self._livy_clients[k])) for k in self._livy_clients.keys()]
+
     def add_client(self, name, livy_client):
-        if name in self.get_endpoints_list():
-            raise ValueError("Endpoint with name '{}' already exists. Please delete the endpoint"
+        if name in self.get_sessions_list():
+            raise ValueError("Session with name '{}' already exists. Please delete the session"
                              " first if you intend to replace it.".format(name))
 
         self._livy_clients[name] = livy_client
@@ -54,34 +56,34 @@ class ClientManager(object):
     def get_any_client(self):
         number_of_sessions = len(self._livy_clients)
         if number_of_sessions == 1:
-            key = self.get_endpoints_list()[0]
+            key = self.get_sessions_list()[0]
             return self._livy_clients[key]
         elif number_of_sessions == 0:
             raise AssertionError("You need to have at least 1 client created to execute commands.")
         else:
-            raise AssertionError("Please specify the client to use. Possible endpoints are {}".format(
-                self.get_endpoints_list()))
+            raise AssertionError("Please specify the client to use. Possible sessions are {}".format(
+                self.get_sessions_list()))
         
     def get_client(self, name):
-        if name in self.get_endpoints_list():
+        if name in self.get_sessions_list():
             return self._livy_clients[name]
-        raise ValueError("Could not find '{}' endpoint in list of saved endpoints. Possible endpoints are {}".format(
-            name, self.get_endpoints_list()))
+        raise ValueError("Could not find '{}' session in list of saved sessions. Possible sessions are {}".format(
+            name, self.get_sessions_list()))
 
     def delete_client(self, name):
-        self._remove_endpoint(name)
+        self._remove_session(name)
     
     def clean_up_all(self):
-        for name in self.get_endpoints_list():
-            self._remove_endpoint(name)
+        for name in self.get_sessions_list():
+            self._remove_session(name)
 
         if self._serializer is not None:
             self._serialize_state()
 
-    def _remove_endpoint(self, name):
-        if name in self.get_endpoints_list():
+    def _remove_session(self, name):
+        if name in self.get_sessions_list():
             self._livy_clients[name].close_session()
             del self._livy_clients[name]
         else:
-            raise ValueError("Could not find '{}' endpoint in list of saved endpoints. Possible endpoints are {}"
-                             .format(name, self.get_endpoints_list()))
+            raise ValueError("Could not find '{}' session in list of saved sessions. Possible sessions are {}"
+                             .format(name, self.get_sessions_list()))

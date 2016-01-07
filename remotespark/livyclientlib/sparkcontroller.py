@@ -1,15 +1,11 @@
-"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
-Provides the %spark magic."""
-
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
+from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
+from remotespark.utils.log import Log
 from .clientmanager import ClientManager
-from .log import Log
-from .livyclientfactory import LivyClientFactory
-from .filesystemreaderwriter import FileSystemReaderWriter
 from .clientmanagerstateserializer import ClientManagerStateSerializer
-from .constants import Constants
+from .livyclientfactory import LivyClientFactory
 
 
 class SparkController(object):
@@ -24,43 +20,68 @@ class SparkController(object):
         else:
             self.client_manager = ClientManager()
 
-    def run_cell(self, client_name, context, cell):
-        context = context.lower()
+    def run_cell(self, cell, client_name=None):
+        client_to_use = self.get_client_by_name_or_default(client_name)
+        return client_to_use.execute(cell)
 
-        # Select client
-        if client_name is None:
-            client_to_use = self.client_manager.get_any_client()
-        else:
-            client_name = client_name.lower()
-            client_to_use = self.client_manager.get_client(client_name)
+    def run_cell_sql(self, cell, client_name=None):
+        client_to_use = self.get_client_by_name_or_default(client_name)
+        return client_to_use.execute_sql(cell)
 
-        # Execute in context
-        if context == Constants.context_name_sql:
-            res = client_to_use.execute_sql(cell)
-        elif context == Constants.context_name_hive:
-            res = client_to_use.execute_hive(cell)
-        elif context == Constants.context_name_spark:
-            res = client_to_use.execute(cell)
-        else:
-            raise ValueError("Context '{}' specified is not known.")
+    def run_cell_hive(self, cell, client_name=None):
+        client_to_use = self.get_client_by_name_or_default(client_name)
+        return client_to_use.execute_hive(cell)
 
-        return res
+    def get_all_sessions_endpoint(self, connection_string):
+        http_client = self.client_factory.create_http_client(connection_string)
+        r = http_client.get("/sessions", [200])
+        sessions = r.json()["sessions"]
+        session_list = [self.client_factory.create_session(connection_string, {"kind": s["kind"]}, s["id"])
+                        for s in sessions]
+        for s in session_list:
+            s.refresh_status()
+        return session_list
+
+    def get_all_sessions_endpoint_info(self, connection_string):
+        sessions = self.get_all_sessions_endpoint(connection_string)
+        return [str(s) for s in sessions]
 
     def cleanup(self):
         self.client_manager.clean_up_all()
 
-    def delete_endpoint(self, name):
+    def cleanup_endpoint(self, connection_string):
+        for session in self.get_all_sessions_endpoint(connection_string):
+            session.delete()
+
+    def delete_session_by_name(self, name):
         self.client_manager.delete_client(name)
 
-    def add_endpoint(self, name, language, connection_string, skip_if_exists):
-        if skip_if_exists and (name in self.client_manager.get_endpoints_list()):
-            self.logger.debug("Skipping {} because it already exists in list of endpoints.".format(name))
+    def delete_session_by_id(self, connection_string, session_id):
+        http_client = self.client_factory.create_http_client(connection_string)
+        r = http_client.get("/sessions/{}".format(session_id), [200, 404])
+        if r.status_code != 404:
+            session = self.client_factory.create_session(connection_string, {"kind": r.json()["kind"]}, session_id, False)
+            session.delete()
+
+    def add_session(self, name, connection_string, skip_if_exists, properties):
+        if skip_if_exists and (name in self.client_manager.get_sessions_list()):
+            self.logger.debug("Skipping {} because it already exists in list of sessions.".format(name))
             return
 
-        session = self.client_factory.create_session(language, connection_string, "-1", False)
+        session = self.client_factory.create_session(connection_string, properties, "-1", False)
         session.start()
-        livy_client = self.client_factory.build_client(language, session)
+        livy_client = self.client_factory.build_client(session)
         self.client_manager.add_client(name, livy_client)
 
     def get_client_keys(self):
-        return self.client_manager.get_endpoints_list()
+        return self.client_manager.get_sessions_list()
+
+    def get_manager_sessions_str(self):
+        return self.client_manager.get_sessions_info()
+
+    def get_client_by_name_or_default(self, client_name):
+        if client_name is None:
+            return self.client_manager.get_any_client()
+        else:
+            client_name = client_name.lower()
+            return self.client_manager.get_client(client_name)

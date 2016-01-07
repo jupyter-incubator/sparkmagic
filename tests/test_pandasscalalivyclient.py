@@ -4,7 +4,7 @@ from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
 from remotespark.livyclientlib.pandasscalalivyclient import PandasScalaLivyClient
-
+from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 
 mock_spark_session = None
 client = None
@@ -37,22 +37,20 @@ def _teardown():
 @with_setup(_setup, _teardown)
 def test_execute_sql_pandas_scala_livy():
     # result from livy
-    result_json = "{\"buildingID\":0,\"date\":\"6/1/13\",\"temp_diff\":12}\n" \
-                      "{\"buildingID\":1,\"date\":\"6/1/13\",\"temp_diff\":0}"
-    execute_m.return_value = result_json
+    result_json = """{"buildingID":0,"date":"6/1/13","temp_diff":12}
+{"buildingID":1,"date":"6/1/13","temp_diff":0}"""
+    execute_m.return_value = (True, result_json)
 
     # desired pandas df
     records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12},
                {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0}]
-    desired_result = pd.DataFrame(records)
+    desired_df = pd.DataFrame(records)
 
     command = "command"
-    result = client.execute_sql(command)
+    df = client.execute_sql(command)
 
     execute_m.assert_called_with('sqlContext.sql("""{}""").toJSON.take({}).foreach(println)'.format(command, 10))
-
-    # Verify result is desired pandas df
-    assert_frame_equal(desired_result, result)
+    assert_frame_equal(desired_df, df)
 
 
 @with_setup(_setup, _teardown)
@@ -62,22 +60,33 @@ def test_execute_sql_pandas_scala_livy_no_results():
     # Set up spark session to return empty JSON and then columns
     command = "command"
     result_json = ""
-    result_columns = "res1: Array[String] = Array(buildingID, date, temp_diff)"
-    execute_responses = [result_json, result_columns]
+    result_columns = "buildingID\ndate\ntemp_diff"
+    execute_responses = [(True, result_json), (True, result_columns)]
     execute_m.side_effect = _next_response_execute
 
     # pandas to return
     columns = ["buildingID", "date", "temp_diff"]
-    desired_result = pd.DataFrame.from_records(list(), columns=columns)
+    desired_df = pd.DataFrame.from_records(list(), columns=columns)
 
-    result = client.execute_sql(command)
+    df = client.execute_sql(command)
 
     # Verify basic calls were done
-    execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
+    execute_m.assert_called_with('sqlContext.sql("""{}""").columns.foreach(println)'.format(command))
+    assert_frame_equal(desired_df, df)
 
-    # Verify result is desired pandas dataframe
-    assert_frame_equal(desired_result, result)
+@with_setup(_setup, _teardown)
+def test_execute_sql_pandas_pyspark_livy_bad_return():
+    global execute_responses
 
+    command = "command"
+    result_json = (True, "something bad happened")
+    execute_m.return_value = result_json
+
+    try:
+        client.execute_sql(command)
+        assert False
+    except DataFrameParseException:
+        pass
 
 @with_setup(_setup, _teardown)
 def test_execute_sql_pandas_scala_livy_no_results_exception_in_columns():
@@ -87,16 +96,15 @@ def test_execute_sql_pandas_scala_livy_no_results_exception_in_columns():
     command = "command"
     result_json = ""
     some_exception = "some exception"
-    execute_responses = [result_json, some_exception]
+    execute_responses = [(True, result_json), (False, some_exception)]
     execute_m.side_effect = _next_response_execute
 
-    result = client.execute_sql(command)
-
-    # Verify basic calls were done
-    execute_m.assert_called_with('sqlContext.sql("""{}""").columns'.format(command))
-
-    # Verify result is exception
-    assert result == some_exception
+    try:
+        result = client.execute_sql(command)
+        assert False
+    except DataFrameParseException as e:
+        execute_m.assert_called_with('sqlContext.sql("""{}""").columns.foreach(println)'.format(command))
+        assert e.out == some_exception
 
 
 @with_setup(_setup, _teardown)
@@ -104,12 +112,11 @@ def test_execute_sql_pandas_scala_livy_some_exception():
     # Set up spark session to return empty JSON and then columns
     command = "command"
     some_exception = "some awful exception"
-    execute_m.return_value = some_exception
+    execute_m.return_value = (False, some_exception)
 
-    result = client.execute_sql(command)
-
-    # Verify basic calls were done
-    execute_m.assert_called_with('sqlContext.sql("""{}""").toJSON.take({}).foreach(println)'.format(command, 10))
-
-    # Verify result is desired pandas dataframe
-    assert some_exception == result
+    try:
+        result = client.execute_sql(command)
+        assert False
+    except DataFrameParseException as e:
+        execute_m.assert_called_with('sqlContext.sql("""{}""").toJSON.take({}).foreach(println)'.format(command, 10))
+        assert e.out == some_exception

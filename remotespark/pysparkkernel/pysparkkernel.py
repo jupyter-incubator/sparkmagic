@@ -1,27 +1,27 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 from remotespark.sparkkernelbase import SparkKernelBase
-from remotespark.livyclientlib.constants import Constants
+from remotespark.utils.constants import Constants
 
 
 class PySparkKernel(SparkKernelBase):
-    # Required by Jupyter - Overridden
-    implementation = 'PySpark'
-    implementation_version = '1.0'
-    language = 'no-op'
-    language_version = '0.1'
-    language_info = {
-        'name': 'pyspark',
-        'mimetype': 'text/x-python'
-    }
-    banner = "PySpark with automatic visualizations"
+    def __init__(self, **kwargs):
+        implementation = 'PySpark'
+        implementation_version = '1.0'
+        language = 'no-op'
+        language_version = '0.1'
+        language_info = {
+            'name': 'pyspark',
+            'mimetype': 'text/x-python'
+        }
 
-    # Required by Spark - Overridden
-    username_conf_name = Constants.kernel_python_username
-    password_conf_name = Constants.kernel_python_password
-    url_conf_name = Constants.kernel_python_url
-    session_language = Constants.lang_python
-    client_name = "python_jupyter_kernel"
+        kernel_conf_name = Constants.lang_python
+        session_language = Constants.lang_python
+        client_name = "python_jupyter_kernel"
+
+        super(PySparkKernel, self).__init__(implementation, implementation_version, language, language_version,
+                                            language_info, kernel_conf_name, session_language, client_name, **kwargs)
+
 
 
 if __name__ == '__main__':

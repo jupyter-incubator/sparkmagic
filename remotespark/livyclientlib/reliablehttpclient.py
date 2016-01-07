@@ -2,13 +2,13 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
-import requests
 from time import sleep
 
-from .utils import get_connection_string
-from .configuration import get_configuration
-from .constants import Constants
-from .log import Log
+import requests
+
+import remotespark.utils.configuration as conf
+from remotespark.utils.log import Log
+from remotespark.utils.utils import get_connection_string
 
 
 class ReliableHttpClient(object):
@@ -24,7 +24,7 @@ class ReliableHttpClient(object):
 
         self._do_not_authenticate = self._username == "" and self._password == ""
 
-        self.verify_ssl = not get_configuration(Constants.ignore_ssl_errors, False)
+        self.verify_ssl = not conf.ignore_ssl_errors()
         if self.verify_ssl:
             self.logger.debug("ATTENTION: Will ignore SSL errors. This might render you vulnerable to attacks.")
 

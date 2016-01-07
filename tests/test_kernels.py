@@ -1,14 +1,23 @@
 from remotespark.pysparkkernel.pysparkkernel import PySparkKernel
 from remotespark.sparkkernel.sparkkernel import SparkKernel
-from remotespark.livyclientlib.constants import Constants
+from remotespark.utils.constants import Constants
+
+
+class TestPyparkKernel(PySparkKernel):
+    def __init__(self):
+        kwargs = {"testing": True}
+        super(TestPyparkKernel, self).__init__(**kwargs)
+
+
+class TestSparkKernel(SparkKernel):
+    def __init__(self):
+        kwargs = {"testing": True}
+        super(TestSparkKernel, self).__init__(**kwargs)
 
 
 def test_pyspark_kernel_configs():
-    kernel = PySparkKernel()
-
-    assert kernel.username_conf_name == Constants.kernel_python_username
-    assert kernel.password_conf_name == Constants.kernel_python_password
-    assert kernel.url_conf_name == Constants.kernel_python_url
+    kernel = TestPyparkKernel()
+    assert kernel.kernel_conf_name == Constants.lang_python
     assert kernel.session_language == Constants.lang_python
     assert kernel.client_name == "python_jupyter_kernel"
 
@@ -19,15 +28,12 @@ def test_pyspark_kernel_configs():
         'name': 'pyspark',
         'mimetype': 'text/x-python'
     }
-    assert kernel.banner == "PySpark with automatic visualizations"
 
 
 def test_spark_kernel_configs():
-    kernel = SparkKernel()
+    kernel = TestSparkKernel()
 
-    assert kernel.username_conf_name == Constants.kernel_scala_username
-    assert kernel.password_conf_name == Constants.kernel_scala_password
-    assert kernel.url_conf_name == Constants.kernel_scala_url
+    assert kernel.kernel_conf_name == Constants.lang_scala
     assert kernel.session_language == Constants.lang_scala
     assert kernel.client_name == "scala_jupyter_kernel"
 
@@ -38,4 +44,3 @@ def test_spark_kernel_configs():
         'name': 'spark',
         'mimetype': 'text/x-python'
     }
-    assert kernel.banner == "Spark with automatic visualizations"

@@ -1,8 +1,9 @@
 ﻿from mock import MagicMock, PropertyMock
 
 from remotespark.livyclientlib.livyclient import LivyClient
-from remotespark.livyclientlib.utils import get_connection_string
 from remotespark.livyclientlib.livysessionstate import LivySessionState
+from remotespark.utils.utils import get_connection_string
+from remotespark.utils.constants import Constants
 
 
 def test_create_sql_context_automatically():
@@ -20,7 +21,7 @@ def test_execute_code():
     client.execute(command)
 
     mock_spark_session.create_sql_context.assert_called_with()
-    mock_spark_session.wait_for_status.assert_called_with("idle", 3600)
+    mock_spark_session.wait_for_idle.assert_called_with(3600)
     mock_spark_session.execute.assert_called_with(command)
 
 
@@ -32,7 +33,7 @@ def test_execute_sql():
     client.execute_sql(command)
 
     mock_spark_session.create_sql_context.assert_called_with()
-    mock_spark_session.wait_for_status.assert_called_with("idle", 3600)
+    mock_spark_session.wait_for_idle.assert_called_with(3600)
     mock_spark_session.execute.assert_called_with("sqlContext.sql(\"{}\").collect()".format(command))
 
 
@@ -44,7 +45,7 @@ def test_execute_hive():
     client.execute_hive(command)
 
     mock_spark_session.create_sql_context.assert_called_with()
-    mock_spark_session.wait_for_status.assert_called_with("idle", 3600)
+    mock_spark_session.wait_for_idle.assert_called_with(3600)
     mock_spark_session.execute.assert_called_with("hiveContext.sql(\"{}\").collect()".format(command))
 
 
@@ -55,7 +56,7 @@ def test_serialize():
     connection_string = get_connection_string(url, username, password)
     http_client = MagicMock()
     http_client.connection_string = connection_string
-    kind = "scala"
+    kind = Constants.session_kind_spark
     session_id = "-1"
     sql_created = False
     session = MagicMock()
@@ -67,7 +68,7 @@ def test_serialize():
 
     assert serialized["connectionstring"] == connection_string
     assert serialized["id"] == "-1"
-    assert serialized["language"] == kind
+    assert serialized["kind"] == kind
     assert serialized["sqlcontext"] == sql_created
     assert serialized["version"] == "0.0.0"
     assert len(serialized.keys()) == 5
@@ -82,16 +83,16 @@ def test_close_session():
     mock_spark_session.delete.assert_called_once_with()
 
 
-def test_language():
-    lang = "python"
+def test_kind():
+    kind = "pyspark"
     mock_spark_session = MagicMock()
-    language_mock = PropertyMock(return_value=lang)
-    type(mock_spark_session).language = language_mock
+    language_mock = PropertyMock(return_value=kind)
+    type(mock_spark_session).kind = language_mock
     client = LivyClient(mock_spark_session)
 
-    l = client.language
+    l = client.kind
 
-    assert l == lang
+    assert l == kind
 
 
 def test_session_id():
