@@ -20,5 +20,3 @@ class PandasScalaLivyClient(PandasLivyClientBase):
         return self.execute(command)
 
 
-    def no_records(self, records_text):
-        return records_text == ""

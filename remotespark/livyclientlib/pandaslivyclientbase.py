@@ -62,4 +62,4 @@ class PandasLivyClientBase(LivyClient):
 
 
     def no_records(self, records_text):
-        raise NotImplementedError()
+        return records_text == ""
