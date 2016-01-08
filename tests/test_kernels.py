@@ -26,7 +26,9 @@ def test_pyspark_kernel_configs():
     assert kernel.language_version == '0.1'
     assert kernel.language_info == {
         'name': 'pyspark',
-        'mimetype': 'text/x-python'
+        'mimetype': 'text/x-python',
+        'codemirror_mode': {'name': 'python'},
+        'pygments_lexer': 'python2'
     }
 
 
