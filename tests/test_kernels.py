@@ -44,5 +44,6 @@ def test_spark_kernel_configs():
     assert kernel.language_version == '0.1'
     assert kernel.language_info == {
         'name': 'scala',
-        'mimetype': 'text/x-scala'
+        'mimetype': 'text/x-scala',
+        'pygments_lexer': 'scala'
     }
