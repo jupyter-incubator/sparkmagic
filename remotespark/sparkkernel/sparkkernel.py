@@ -11,8 +11,8 @@ class SparkKernel(SparkKernelBase):
         language = 'no-op'
         language_version = '0.1'
         language_info = {
-            'name': 'spark',
-            'mimetype': 'text/x-python'
+            'name': 'scala',
+            'mimetype': 'text/x-scala'
         }
 
         kernel_conf_name = Constants.lang_scala
