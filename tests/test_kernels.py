@@ -1,6 +1,7 @@
 from remotespark.pysparkkernel.pysparkkernel import PySparkKernel
 from remotespark.sparkkernel.sparkkernel import SparkKernel
 from remotespark.utils.constants import Constants
+from nose.tools import assert_equal
 
 
 class TestPyparkKernel(PySparkKernel):
@@ -24,10 +25,12 @@ def test_pyspark_kernel_configs():
     assert kernel.implementation == 'PySpark'
     assert kernel.language == 'no-op'
     assert kernel.language_version == '0.1'
-    assert kernel.language_info == {
+    assert_equal (kernel.language_info, {
         'name': 'pyspark',
-        'mimetype': 'text/x-python'
-    }
+        'mimetype': 'text/x-python',
+        'codemirror_mode': {'name': 'python'},
+        'pygments_lexer': 'python2'
+    })
 
 
 def test_spark_kernel_configs():
