@@ -63,7 +63,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
 
     # Set up spark session to return empty JSON and then columns
     command = "command"
-    result_json = "[]"
+    result_json = ""
     result_columns = "buildingID\ndate\ntemp_diff"
     execute_responses = [(True, result_json), (True, result_columns)]
     execute_m.side_effect = _next_response_execute
@@ -102,7 +102,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
 
     # Set up spark session to return empty JSON and then columns
     command = "command"
-    result_json = "[]"
+    result_json = ""
     some_exception = "some exception"
     execute_responses = [(True, result_json), (False, some_exception)]
     execute_m.side_effect = _next_response_execute
