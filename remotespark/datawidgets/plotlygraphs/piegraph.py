@@ -9,7 +9,7 @@ class PieGraph(object):
     @staticmethod
     def render(df, encoding, output):
         series = df.groupby([encoding.x]).size()
-        data = [Pie(values=list(series.values), labels=series.index.tolist())]
+        data = [Pie(values=series.values.tolist(), labels=series.index.tolist())]
 
         with output:
             fig = Figure(data=Data(data))
