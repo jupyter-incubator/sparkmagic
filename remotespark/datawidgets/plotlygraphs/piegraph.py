@@ -8,7 +8,8 @@ from plotly.offline import iplot
 class PieGraph(object):
     @staticmethod
     def render(df, encoding, output):
-        data = [Pie(values=PieGraph._get_x_values(df, encoding))]
+        series = df.groupby([encoding.x]).size()
+        data = [Pie(values=series.values.tolist(), labels=series.index.tolist())]
 
         with output:
             fig = Figure(data=Data(data))
