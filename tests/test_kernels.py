@@ -43,6 +43,7 @@ def test_spark_kernel_configs():
     assert kernel.language == 'no-op'
     assert kernel.language_version == '0.1'
     assert kernel.language_info == {
-        'name': 'spark',
-        'mimetype': 'text/x-python'
+        'name': 'scala',
+        'mimetype': 'text/x-scala',
+        'pygments_lexer': 'scala'
     }
