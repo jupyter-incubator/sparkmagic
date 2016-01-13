@@ -1,6 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
+from remotespark import MessagePrinter
 from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 from remotespark.utils.log import Log
 from .clientmanager import ClientManager
@@ -70,7 +71,10 @@ class SparkController(object):
 
         session = self.client_factory.create_session(connection_string, properties, "-1", False)
         session.start()
-        livy_client = self.client_factory.build_client(session)
+
+        msg_printer = MessagePrinter.MessagePrinter()
+
+        livy_client = self.client_factory.build_client(session, msg_printer)
         self.client_manager.add_client(name, livy_client)
 
     def get_client_keys(self):

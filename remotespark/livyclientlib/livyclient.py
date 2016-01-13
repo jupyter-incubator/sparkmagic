@@ -8,13 +8,13 @@ from remotespark.utils.log import Log
 class LivyClient(object):
     """Spark client for Livy session"""
 
-    def __init__(self, session):
+    def __init__(self, session, msg_printer):
         self.logger = Log("LivyClient")
 
         execute_timeout_seconds = conf.execute_timeout_seconds()
 
         self._session = session
-        self._session.create_sql_context()
+        self._session.create_sql_context(msg_printer)
         self._execute_timeout_seconds = execute_timeout_seconds
 
     def __str__(self):

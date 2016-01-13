@@ -3,6 +3,8 @@
 import requests
 from ipykernel.ipkernel import IPythonKernel
 
+from remotespark import MessagePrinter
+
 import remotespark.utils.configuration as conf
 from remotespark.utils.log import Log
 from remotespark.utils.utils import get_connection_string
@@ -54,16 +56,17 @@ class SparkKernelBase(IPythonKernel):
             self._abort_with_fatal_error(self._fatal_error)
 
         subcommand, flags, code_to_run = self._parse_user_command(code)
+        msg_printer = MessagePrinter.MessagePrinter()
 
         if subcommand == self.run_command:
             code_to_run = "%%spark\n{}".format(code_to_run)
-            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
+            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin, msg_printer)
         elif subcommand == self.sql_command:
             code_to_run = "%%spark -c sql\n{}".format(code_to_run)
-            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
+            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin, msg_printer)
         elif subcommand == self.hive_command:
             code_to_run = "%%spark -c hive\n{}".format(code_to_run)
-            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
+            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin, msg_printer)
         elif subcommand == self.config_command:
             restart_session = False
 
@@ -134,9 +137,10 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
                            log_if_error="Failed to register auto viz for notebook.")
         self.logger.debug("Registered auto viz.")
 
-    def _start_session(self):
+    def _start_session(self, msg_printer):
         if not self.session_started:
             self.session_started = True
+            msg_printer.print_message('Starting Livy Session')
 
             add_session_code = "%spark add {} {} {} skip".format(
                 self.client_name, self.session_language, self.connection_string)
@@ -153,18 +157,18 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
     def _run_without_session(self, code, silent, store_history, user_expressions, allow_stdin):
         return self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
 
-    def _run_starting_session(self, code, silent, store_history, user_expressions, allow_stdin):
-        self._start_session()
+    def _run_starting_session(self, code, silent, store_history, user_expressions, allow_stdin, msg_printer):
+        self._start_session(msg_printer)
         return self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
 
-    def _run_restarting_session(self, code, silent, store_history, user_expressions, allow_stdin, restart):
+    def _run_restarting_session(self, code, silent, store_history, user_expressions, allow_stdin, restart, msg_printer):
         if restart:
             self._delete_session()
 
         res = self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
 
         if restart:
-            self._start_session()
+            self._start_session(msg_printer)
 
         return res
 

@@ -8,8 +8,8 @@ from .dataframeparseexception import DataFrameParseException
 
 class PandasLivyClientBase(LivyClient):
     """Spark client for Livy session that produces pandas df for sql and hive commands."""
-    def __init__(self, session, max_take_rows):
-        super(PandasLivyClientBase, self).__init__(session)
+    def __init__(self, session, msg_printer, max_take_rows):
+        super(PandasLivyClientBase, self).__init__(session, msg_printer)
         self.max_take_rows = max_take_rows
 
     def execute_sql(self, command):

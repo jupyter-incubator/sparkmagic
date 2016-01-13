@@ -3,7 +3,7 @@
 
 import textwrap
 from time import sleep, time
-
+from IPython import get_ipython
 import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
 from remotespark.utils.log import Log
@@ -68,16 +68,20 @@ class LivySession(object):
 
         self.logger.debug("Session '{}' started.".format(self.kind))
 
-    def create_sql_context(self):
+    def create_sql_context(self, msg_printer):
         """Create a sqlContext object on the session. Object will be accessible via variable 'sqlContext'."""
         if self.started_sql_context:
             return
 
         self.logger.debug("Starting '{}' sql and hive session.".format(self.kind))
 
+        msg_printer.print_message('Creating SQL Context...')
         self._create_context(Constants.context_name_sql)
+
+        msg_printer.print_message('Creating Hive Context...')
         self._create_context(Constants.context_name_hive)
 
+        msg_printer.print_message('Contexts have been created successfully!')
         self._state.sql_context_created = True
 
     def _create_context(self, context_type):
@@ -154,7 +158,7 @@ class LivySession(object):
         Parameters:
             seconds_to_wait : number of seconds to wait before giving up.
         """
-
+        #get_ipython().write('Testing\n')
         self.refresh_status()
         current_status = self._status
         if current_status == Constants.idle_session_status:
