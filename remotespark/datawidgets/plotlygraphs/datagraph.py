@@ -3,7 +3,7 @@
 
 import pandas as pd
 
-from remotespark.datawidgets.ipythondisplay import IpythonDisplay
+from remotespark.utils.ipythondisplay import IpythonDisplay
 
 
 class DataGraph(object):
