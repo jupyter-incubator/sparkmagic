@@ -1,17 +1,39 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from plotly.tools import FigureFactory as FigFac
-from plotly.offline import iplot
+import pandas as pd
+
+from remotespark.utils.ipythondisplay import IpythonDisplay
 
 
 class DataGraph(object):
-    @staticmethod
-    def render(df, encoding, output):
-        table = FigFac.create_table(df)
+    """This does not use the table version of plotly because it freezes up the browser for >60 rows. Instead, we use
+    pandas df HTML representation."""
+    def __init__(self, display=None):
+        if display is None:
+            self.display = IpythonDisplay()
+        else:
+            self.display = display
 
+    def render(self, df, encoding, output):
         with output:
-            iplot(table, show_link=False)
+            max_rows = pd.get_option("display.max_rows")
+            max_cols = pd.get_option("display.max_columns")
+            show_dimensions = pd.get_option("display.show_dimensions")
+
+            # This will hide the index column for pandas df.
+            self.display.html_to_ipython("""
+<style>
+    table.dataframe.hideme thead th:first-child {
+        display: none;
+    }
+    table.dataframe.hideme tbody th {
+        display: none;
+    }
+</style>
+""")
+            self.display.html_to_ipython(df.to_html(max_rows=max_rows, max_cols=max_cols,
+                                                      show_dimensions=show_dimensions, notebook=True, classes="hideme"))
 
     @staticmethod
     def display_logarithmic_x_axis():
