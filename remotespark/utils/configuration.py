@@ -176,7 +176,7 @@ def ignore_ssl_errors():
 
 @_override
 def use_auto_viz():
-    return False
+    return True
 
 
 @_override
