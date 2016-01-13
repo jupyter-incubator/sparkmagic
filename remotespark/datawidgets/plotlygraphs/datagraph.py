@@ -7,18 +7,22 @@ from remotespark.datawidgets.ipythondisplay import IpythonDisplay
 
 
 class DataGraph(object):
-    """This does not use the table version of plotly because it freezes up the browser for 60 rows. Instead, we use
+    """This does not use the table version of plotly because it freezes up the browser for >60 rows. Instead, we use
     pandas df HTML representation."""
+    def __init__(self, display=None):
+        if display is None:
+            self.display = IpythonDisplay()
+        else:
+            self.display = display
 
-    @staticmethod
-    def render(df, encoding, output):
+    def render(self, df, encoding, output):
         with output:
             max_rows = pd.get_option("display.max_rows")
             max_cols = pd.get_option("display.max_columns")
             show_dimensions = pd.get_option("display.show_dimensions")
 
             # This will hide the index column for pandas df.
-            IpythonDisplay.html_to_ipython("""
+            self.display.html_to_ipython("""
 <style>
     table.dataframe.hideme thead th:first-child {
         display: none;
@@ -28,7 +32,7 @@ class DataGraph(object):
     }
 </style>
 """)
-            IpythonDisplay.html_to_ipython(df.to_html(max_rows=max_rows, max_cols=max_cols,
+            self.display.html_to_ipython(df.to_html(max_rows=max_rows, max_cols=max_cols,
                                                       show_dimensions=show_dimensions, notebook=True, classes="hideme"))
 
     @staticmethod
