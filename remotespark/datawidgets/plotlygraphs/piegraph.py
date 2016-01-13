@@ -13,20 +13,18 @@ class PieGraph(object):
         values, labels = PieGraph._get_x_values_labels(df, encoding)
         max_slices_pie_graph = conf.max_slices_pie_graph()
 
-        # There's performance issues with a large amount of slices.
-        # 1500 rows crash the browser.
-        # 500 rows take ~15 s.
-        # 100 rows is almost automatic.
-        if len(values) > max_slices_pie_graph:
-            with output:
-                print("There's {} values in your pie graph, which would render the graph non-responsive and \n"
-                      "would convey very little information. Please select another X with at most {}\n"
-                      "possible values."
+        with output:
+            # There's performance issues with a large amount of slices.
+            # 1500 rows crash the browser.
+            # 500 rows take ~15 s.
+            # 100 rows is almost automatic.
+            if len(values) > max_slices_pie_graph:
+                print("There's {} values in your pie graph, which would render the graph unresponsive.\n"
+                      "Please select another X with at most {} possible values."
                       .format(len(values), max_slices_pie_graph))
-        else:
-            data = [Pie(values=values, labels=labels)]
+            else:
+                data = [Pie(values=values, labels=labels)]
 
-            with output:
                 fig = Figure(data=Data(data))
                 iplot(fig, show_link=False)
 
