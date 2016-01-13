@@ -3,18 +3,12 @@
 
 import pandas as pd
 from ipywidgets import FlexBox
-from IPython.display import display
 
+from remotespark.utils.ipythondisplay import IpythonDisplay
 from .encoding import Encoding
 from .encodingwidget import EncodingWidget
 from .ipywidgetfactory import IpyWidgetFactory
 from .plotlygraphs.graphrenderer import GraphRenderer
-
-
-class IpythonDisplay(object):
-    @staticmethod
-    def display_to_ipython(to_display):
-        display(to_display)
 
 
 class AutoVizWidget(FlexBox):
@@ -74,13 +68,13 @@ class AutoVizWidget(FlexBox):
         # self.controls.children
         self.to_display.clear_output()
 
-        self.renderer.render(self.df, self.encoding, self.to_display)
-
         self.encoding_widget.show_x(self.renderer.display_x(self.encoding.chart_type))
         self.encoding_widget.show_y(self.renderer.display_y(self.encoding.chart_type))
         self.encoding_widget.show_controls(self.renderer.display_controls(self.encoding.chart_type))
         self.encoding_widget.show_logarithmic_x_axis(self.renderer.display_logarithmic_x_axis(self.encoding.chart_type))
         self.encoding_widget.show_logarithmic_y_axis(self.renderer.display_logarithmic_y_axis(self.encoding.chart_type))
+
+        self.renderer.render(self.df, self.encoding, self.to_display)
 
     def _create_controls_widget(self):
         # Create types of viz hbox

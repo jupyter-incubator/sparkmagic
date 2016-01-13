@@ -176,9 +176,14 @@ def ignore_ssl_errors():
 
 @_override
 def use_auto_viz():
-    return False
+    return True
 
 
 @_override
 def max_results_sql():
-    return 800
+    return 2500
+
+
+@_override
+def max_slices_pie_graph():
+    return 100
