@@ -7,7 +7,8 @@ class Constants:
 
     session_kind_spark = "spark"
     session_kind_pyspark = "pyspark"
-    session_kinds_supported = [session_kind_spark, session_kind_pyspark]
+    session_kind_sparkr = "sparkr"
+    session_kinds_supported = [session_kind_spark, session_kind_pyspark, session_kind_sparkr]
 
     context_name_spark = "spark"
     context_name_sql = "sql"
@@ -15,7 +16,8 @@ class Constants:
 
     lang_scala = "scala"
     lang_python = "python"
-    lang_supported = [lang_scala, lang_python]
+    lang_r = "r"
+    lang_supported = [lang_scala, lang_python, lang_r]
 
     long_random_variable_name = "_yQeKOYBsFgLWWGWZJu3y"
 
