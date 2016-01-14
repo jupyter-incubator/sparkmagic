@@ -53,7 +53,7 @@ def test_get_config():
     pwd = "p"
     url = "url"
 
-    config = {"kernel_python_credentials": {user_ev: usr, pass_ev: pwd, url_ev: url}}
+    config = {conf.kernel_python_credentials.__name__: {user_ev: usr, pass_ev: pwd, url_ev: url}}
     conf.override_all(config)
 
     u, p, r = kernel._get_configuration()
@@ -65,16 +65,21 @@ def test_get_config():
     conf.load()
 
 
+# We check that the kernel goes into error state when configuration
+# is not set properly
 @with_setup(_setup, _teardown)
 def test_get_config_not_set():
     conf.override_all({})
-    try:
-        kernel._get_configuration()
+    kernel._get_configuration()
+    assert kernel._fatal_error
+    conf.load()
 
-        # Above should have thrown because env var not set
-        assert False
-    except ValueError:
-        assert send_error_mock.call_count == 1
+
+@with_setup(_setup, _teardown)
+def test_get_config_not_set():
+    conf.override_all({conf.kernel_python_credentials.__name__: {user_ev: '', pass_ev: '', url_ev: ''}})
+    kernel._get_configuration()
+    assert kernel._fatal_error
     conf.load()
 
 
