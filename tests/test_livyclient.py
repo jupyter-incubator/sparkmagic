@@ -6,16 +6,23 @@ from remotespark.utils.utils import get_connection_string
 from remotespark.utils.constants import Constants
 
 
-def test_create_sql_context_automatically():
+def test_doesnt_create_sql_context_automatically():
     mock_spark_session = MagicMock()
     LivyClient(mock_spark_session)
+    assert not mock_spark_session.create_sql_context.called
 
+
+def test_start_creates_sql_context():
+    mock_spark_session = MagicMock()
+    client = LivyClient(mock_spark_session)
+    client.start()
     mock_spark_session.create_sql_context.assert_called_with()
 
 
 def test_execute_code():
     mock_spark_session = MagicMock()
     client = LivyClient(mock_spark_session)
+    client.start()
     command = "command"
 
     client.execute(command)
@@ -28,6 +35,7 @@ def test_execute_code():
 def test_execute_sql():
     mock_spark_session = MagicMock()
     client = LivyClient(mock_spark_session)
+    client.start()
     command = "command"
 
     client.execute_sql(command)
@@ -40,6 +48,7 @@ def test_execute_sql():
 def test_execute_hive():
     mock_spark_session = MagicMock()
     client = LivyClient(mock_spark_session)
+    client.start()
     command = "command"
 
     client.execute_hive(command)
@@ -63,6 +72,7 @@ def test_serialize():
     session.get_state.return_value = LivySessionState(session_id, connection_string, kind, sql_created)
 
     client = LivyClient(session)
+    client.start()
 
     serialized = client.serialize()
 
@@ -77,6 +87,7 @@ def test_serialize():
 def test_close_session():
     mock_spark_session = MagicMock()
     client = LivyClient(mock_spark_session)
+    client.start()
 
     client.close_session()
 
@@ -89,6 +100,7 @@ def test_kind():
     language_mock = PropertyMock(return_value=kind)
     type(mock_spark_session).kind = language_mock
     client = LivyClient(mock_spark_session)
+    client.start()
 
     l = client.kind
 
@@ -101,6 +113,7 @@ def test_session_id():
     session_id_mock = PropertyMock(return_value=session_id)
     type(mock_spark_session).id = session_id_mock
     client = LivyClient(mock_spark_session)
+    client.start()
 
     i = client.session_id
 
