@@ -228,6 +228,8 @@ class LivySession(object):
         elif self.kind == Constants.session_kind_pyspark:
             sql_context_command = "from pyspark.sql import SQLContext\nfrom pyspark.sql.types import *\n" \
                                   "sqlContext = SQLContext(sc)"
+        elif self.kind == Constants.session_kind_sparkr:
+            sql_context_command = "sqlContext <- sparkRSQL.init(sc)"
         else:
             raise ValueError("Do not know how to create sqlContext in session of kind {}.".format(self.kind))
 
@@ -238,6 +240,8 @@ class LivySession(object):
             hive_context_command = "val hiveContext = new org.apache.spark.sql.hive.HiveContext(sc)"
         elif self.kind == Constants.session_kind_pyspark:
             hive_context_command = "from pyspark.sql import HiveContext\nhiveContext = HiveContext(sc)"
+        elif self.kind == Constants.session_kind_sparkr:
+            hive_context_command = "hiveContext <- sparkRHive.init(sc)"
         else:
             raise ValueError("Do not know how to create hiveContext in session of kind {}.".format(self.kind))
 
