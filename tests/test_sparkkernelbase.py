@@ -9,7 +9,6 @@ kernel = None
 user_ev = "username"
 pass_ev = "password"
 url_ev = "url"
-send_error_mock = None
 execute_cell_mock = None
 do_shutdown_mock = None
 conn_str = None
@@ -22,7 +21,7 @@ class TestSparkKernel(SparkKernelBase):
 
 
 def _setup():
-    global kernel, user_ev, pass_ev, url_ev, send_error_mock, execute_cell_mock, do_shutdown_mock, conn_str
+    global kernel, user_ev, pass_ev, url_ev, execute_cell_mock, do_shutdown_mock, conn_str
 
     usr = "u"
     pwd = "p"
@@ -38,7 +37,6 @@ def _setup():
     kernel.session_language = "python"
     kernel.connection_string = conn_str
 
-    kernel._ipython_send_error = send_error_mock = MagicMock()
     kernel._execute_cell_for_user = execute_cell_mock = MagicMock()
     kernel._do_shutdown_ipykernel = do_shutdown_mock = MagicMock()
 
@@ -284,7 +282,6 @@ def test_execute_throws_if_fatal_error_happened():
         # Assertions
         assert kernel._fatal_error == fatal_error
         assert execute_cell_mock.call_count == 0
-        assert send_error_mock.call_count == 1
 
 
 @with_setup(_setup, _teardown)
@@ -309,7 +306,6 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
         # Assertions
         assert kernel._fatal_error == message
         assert execute_cell_mock.call_count == 1
-        send_error_mock.assert_called_once_with(stream_content)
 
 
 @with_setup(_setup, _teardown)

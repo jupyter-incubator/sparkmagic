@@ -1,6 +1,7 @@
 from mock import MagicMock
 from nose.tools import raises
 
+from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.livyclientlib.livyclientfactory import LivyClientFactory
 from remotespark.livyclientlib.pandaspysparklivyclient import PandasPysparkLivyClient
 from remotespark.livyclientlib.pandasscalalivyclient import PandasScalaLivyClient
@@ -13,8 +14,9 @@ def test_build_session_with_defaults():
     connection_string = get_connection_string("url", "user", "pass")
     kind = Constants.session_kind_pyspark
     properties = {"kind": kind}
+    ipython_display = IpythonDisplay()
 
-    session = factory.create_session(connection_string, properties)
+    session = factory.create_session(ipython_display, connection_string, properties)
 
     assert session.kind == kind
     assert session.id == "-1"
@@ -27,8 +29,9 @@ def test_build_session():
     connection_string = get_connection_string("url", "user", "pass")
     kind = Constants.session_kind_pyspark
     properties = {"kind": kind}
+    ipython_display = IpythonDisplay()
 
-    session = factory.create_session(connection_string, properties, "1", True)
+    session = factory.create_session(ipython_display, connection_string, properties, "1", True)
 
     assert session.kind == kind
     assert session.id == "1"

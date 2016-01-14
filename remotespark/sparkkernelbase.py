@@ -248,7 +248,7 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
 
     def _show_user_error(self, message):
         self.logger.error(message)
-        self._ipython_display.send_error(message, self.send_response, self.iopub_socket)
+        self._ipython_display.send_error(message)
 
     def _queue_fatal_error(self, message):
         """Queues up a fatal error to be thrown when the next cell is executed; does not
@@ -265,5 +265,5 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
         """Throws an error that has already been queued."""
         error = conf.fatal_error_suggestion().format(self._fatal_error)
         self.logger.error(error)
-        self._ipython_display.send_error(error, self.send_response, self.iopub_socket)
+        self._ipython_display.send_error(error)
         raise ValueError(self._fatal_error)

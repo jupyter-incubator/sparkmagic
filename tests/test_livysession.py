@@ -3,6 +3,7 @@
 from mock import MagicMock, call
 from nose.tools import raises, assert_equals
 
+from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
 from remotespark.livyclientlib.livyunexpectedstatuserror import LivyUnexpectedStatusError
 from remotespark.livyclientlib.livysession import LivySession
@@ -56,7 +57,9 @@ class TestLivySession:
         if http_client is None:
             http_client = MagicMock()
 
-        return LivySession(http_client, session_id, sql_created, {"kind": kind})
+        ipython_display = MagicMock()
+
+        return LivySession(ipython_display, http_client, session_id, sql_created, {"kind": kind})
 
     @raises(AssertionError)
     def test_constructor_throws_status_sleep_seconds(self):
@@ -186,7 +189,9 @@ class TestLivySession:
         })
         kind = Constants.session_kind_spark
         properties = {"kind": kind, "extra": 1}
-        session = LivySession(http_client, "-1", False, properties)
+
+        ipython_display = MagicMock()
+        session = LivySession(ipython_display, http_client, "-1", False, properties)
         session.start()
         conf.load()
 
