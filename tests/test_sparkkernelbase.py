@@ -12,6 +12,7 @@ url_ev = "url"
 execute_cell_mock = None
 do_shutdown_mock = None
 conn_str = None
+ipython_display = None
 
 
 class TestSparkKernel(SparkKernelBase):
@@ -21,7 +22,7 @@ class TestSparkKernel(SparkKernelBase):
 
 
 def _setup():
-    global kernel, user_ev, pass_ev, url_ev, execute_cell_mock, do_shutdown_mock, conn_str
+    global kernel, user_ev, pass_ev, url_ev, execute_cell_mock, do_shutdown_mock, conn_str, ipython_display
 
     usr = "u"
     pwd = "p"
@@ -39,6 +40,7 @@ def _setup():
 
     kernel._execute_cell_for_user = execute_cell_mock = MagicMock()
     kernel._do_shutdown_ipykernel = do_shutdown_mock = MagicMock()
+    kernel._ipython_display = ipython_display = MagicMock()
 
 
 def _teardown():
@@ -282,6 +284,7 @@ def test_execute_throws_if_fatal_error_happened():
         # Assertions
         assert kernel._fatal_error == fatal_error
         assert execute_cell_mock.call_count == 0
+        assert ipython_display.send_error.call_count == 1
 
 
 @with_setup(_setup, _teardown)
@@ -306,6 +309,7 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
         # Assertions
         assert kernel._fatal_error == message
         assert execute_cell_mock.call_count == 1
+        assert ipython_display.send_error.call_count == 1
 
 
 @with_setup(_setup, _teardown)

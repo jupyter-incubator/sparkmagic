@@ -9,16 +9,19 @@ import remotespark.utils.configuration as conf
 magic = None
 spark_controller = None
 shell = None
+ipython_display = None
 
 
 def _setup():
-    global magic, spark_controller, shell
+    global magic, spark_controller, shell, ipython_display
 
     conf.override_all({})
 
     shell = MagicMock()
+    ipython_display = MagicMock()
     magic = RemoteSparkMagics(shell=None)
     magic.shell = shell
+    magic.ipython_display = ipython_display
 
     spark_controller = MagicMock()
     magic.spark_controller = spark_controller
@@ -170,7 +173,7 @@ def test_run_cell_command_parses():
 
     run_cell_method.assert_called_once_with(cell, name)
     assert result is None
-    shell.write.assert_called_once_with(result_value)
+    ipython_display.write.assert_called_once_with(result_value)
 
 
 @with_setup(_setup, _teardown)
@@ -189,7 +192,7 @@ def test_run_cell_command_writes_to_err():
 
     run_cell_method.assert_called_once_with(cell, name)
     assert result is None
-    shell.write_err.assert_called_once_with(result_value)
+    ipython_display.send_error.assert_called_once_with(result_value)
 
 
 @with_setup(_setup, _teardown)
@@ -248,7 +251,7 @@ def test_run_sql_command_returns_none_when_exception():
 
     run_cell_method.assert_called_once_with(cell, name)
     assert result is None
-    shell.write_err.assert_called_once_with(error_message)
+    ipython_display.send_error.assert_called_once_with(error_message)
 
 
 @with_setup(_setup, _teardown)
@@ -269,7 +272,7 @@ def test_run_hive_command_returns_none_when_exception():
 
     run_cell_method.assert_called_once_with(cell, name)
     assert result is None
-    shell.write_err.assert_called_once_with(error_message)
+    ipython_display.send_error.assert_called_once_with(error_message)
 
 
 @with_setup(_setup, _teardown)

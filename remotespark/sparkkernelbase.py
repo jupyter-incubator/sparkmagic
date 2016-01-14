@@ -36,8 +36,8 @@ class SparkKernelBase(IPythonKernel):
 
         super(SparkKernelBase, self).__init__(**kwargs)
 
-        self.logger = Log(self.client_name)
-        self.session_started = False
+        self._logger = Log(self.client_name)
+        self._session_started = False
         self._fatal_error = None
         self._ipython_display = IpythonDisplay()
 
@@ -75,7 +75,7 @@ class SparkKernelBase(IPythonKernel):
         elif subcommand == self.config_command:
             restart_session = False
 
-            if self.session_started:
+            if self._session_started:
                 if self.force_flag not in flags:
                     self._show_user_error("A session has already been started. In order to modify the Spark configura"
                                            "tion, please provide the '-f' flag at the beginning of the config magic:\n"
@@ -102,7 +102,7 @@ class SparkKernelBase(IPythonKernel):
                                       "session will be lost.")
                 code_to_run = ""
             else:
-                self.session_started = False
+                self._session_started = False
                 code_to_run = "%spark delete {} {}".format(self.connection_string, code_to_run)
 
             return self._run_without_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
@@ -114,7 +114,7 @@ class SparkKernelBase(IPythonKernel):
                                       "commands in the sessions will be lost.")
                 code_to_run = ""
             else:
-                self.session_started = False
+                self._session_started = False
                 code_to_run = "%spark cleanup {}".format(self.connection_string)
 
             return self._run_without_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
@@ -132,7 +132,7 @@ class SparkKernelBase(IPythonKernel):
         register_magics_code = "%load_ext remotespark"
         self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to load the Spark magics library.")
-        self.logger.debug("Loaded magics.")
+        self._logger.debug("Loaded magics.")
 
     def _register_auto_viz(self):
         register_auto_viz_code = """from remotespark.datawidgets.utils import display_dataframe
@@ -140,24 +140,24 @@ ip = get_ipython()
 ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.frame', 'DataFrame', display_dataframe)"""
         self._execute_cell(register_auto_viz_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to register auto viz for notebook.")
-        self.logger.debug("Registered auto viz.")
+        self._logger.debug("Registered auto viz.")
 
     def _start_session(self):
-        if not self.session_started:
-            self.session_started = True
+        if not self._session_started:
+            self._session_started = True
             self._ipython_display.writeln('Starting Livy Session')
 
             add_session_code = "%spark add {} {} {} skip".format(
                 self.client_name, self.session_language, self.connection_string)
             self._execute_cell(add_session_code, True, False, shutdown_if_error=True,
                                log_if_error="Failed to create a Livy session.")
-            self.logger.debug("Added session.")
+            self._logger.debug("Added session.")
 
     def _delete_session(self):
-        if self.session_started:
+        if self._session_started:
             code = "%spark cleanup"
             self._execute_cell_for_user(code, True, False)
-            self.session_started = False
+            self._session_started = False
 
     def _run_without_session(self, code, silent, store_history, user_expressions, allow_stdin):
         return self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
@@ -247,7 +247,7 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
         return super(SparkKernelBase, self).do_shutdown(restart)
 
     def _show_user_error(self, message):
-        self.logger.error(message)
+        self._logger.error(message)
         self._ipython_display.send_error(message)
 
     def _queue_fatal_error(self, message):
@@ -264,6 +264,6 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
     def _repeat_fatal_error(self):
         """Throws an error that has already been queued."""
         error = conf.fatal_error_suggestion().format(self._fatal_error)
-        self.logger.error(error)
+        self._logger.error(error)
         self._ipython_display.send_error(error)
         raise ValueError(self._fatal_error)

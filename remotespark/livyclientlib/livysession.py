@@ -66,6 +66,7 @@ class LivySession(object):
         self._state.session_id = str(r.json()["id"])
         self._status = str(r.json()["state"])
 
+        self.ipython_display.writeln("Creating SparkContext as 'sc'")
         self.logger.debug("Session '{}' started.".format(self.kind))
 
     def create_sql_context(self):
@@ -75,10 +76,10 @@ class LivySession(object):
 
         self.logger.debug("Starting '{}' sql and hive session.".format(self.kind))
 
-        self.ipython_display.writeln('Creating SqlContext as \'sqlContext\'')
+        self.ipython_display.writeln("Creating SqlContext as 'sqlContext'")
         self._create_context(Constants.context_name_sql)
 
-        self.ipython_display.writeln('Creating HiveContext as \'hiveContext\'')
+        self.ipython_display.writeln("Creating HiveContext as 'hiveContext'")
         self._create_context(Constants.context_name_hive)
 
         self._state.sql_context_created = True

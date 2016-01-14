@@ -351,6 +351,8 @@ class TestLivySession:
     def test_create_sql_hive_context_happens_once(self):
         kind = Constants.session_kind_spark
         http_client = MagicMock()
+        ipython_display = MagicMock()
+
         self.post_responses = [DummyResponse(201, self.session_create_json),
                                DummyResponse(201, self.post_statement_json),
                                DummyResponse(201, self.post_statement_json)]
@@ -366,6 +368,7 @@ class TestLivySession:
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session(kind=kind, http_client=http_client)
+        session.ipython_display = ipython_display
         conf.load()
         session.start()
 
@@ -373,6 +376,7 @@ class TestLivySession:
         http_client.reset_mock()
 
         session.create_sql_context()
+        assert ipython_display.writeln.call_count == 3
 
         # Second call should not issue a post request
         session.create_sql_context()

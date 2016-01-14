@@ -168,9 +168,9 @@ class RemoteSparkMagics(Magics):
             if args.context == Constants.context_name_spark:
                 (success, out) = self.spark_controller.run_cell(cell, args.session)
                 if success:
-                    self.shell.write(out)
+                    self.ipython_display.write(out)
                 else:
-                    self.shell.write_err(out)
+                    self.ipython_display.send_error(out)
             elif args.context == Constants.context_name_sql:
                 return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
                                                                      args.session, args.output)
@@ -190,7 +190,7 @@ class RemoteSparkMagics(Magics):
                 self.shell.user_ns[output_var] = df
             return df
         except DataFrameParseException as e:
-            self.shell.write_err(e.out)
+            self.ipython_display.send_error(e.out)
             return None
 
     def _print_local_info(self):
