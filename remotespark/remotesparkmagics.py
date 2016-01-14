@@ -12,6 +12,7 @@ import copy
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
+from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.utils.log import Log
 from remotespark.utils.utils import get_magics_home_path, join_paths
 from .livyclientlib.dataframeparseexception import DataFrameParseException
@@ -25,7 +26,8 @@ class RemoteSparkMagics(Magics):
         super(RemoteSparkMagics, self).__init__(shell)
 
         self.logger = Log("RemoteSparkMagics")
-        self.spark_controller = SparkController()
+        self.ipython_display = IpythonDisplay()
+        self.spark_controller = SparkController(self.ipython_display)
 
         try:
             should_serialize = conf.serialize()

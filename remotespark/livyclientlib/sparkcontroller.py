@@ -1,7 +1,6 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from remotespark import MessagePrinter
 from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 from remotespark.utils.log import Log
 from .clientmanager import ClientManager
@@ -11,8 +10,9 @@ from .livyclientfactory import LivyClientFactory
 
 class SparkController(object):
 
-    def __init__(self, serialize_path=None):
+    def __init__(self, ipython_display, serialize_path=None):
         self.logger = Log("SparkController")
+        self.ipython_display = ipython_display
         self.client_factory = LivyClientFactory()
 
         if serialize_path is not None:
@@ -37,7 +37,7 @@ class SparkController(object):
         http_client = self.client_factory.create_http_client(connection_string)
         r = http_client.get("/sessions", [200])
         sessions = r.json()["sessions"]
-        session_list = [self.client_factory.create_session(connection_string, {"kind": s["kind"]}, s["id"])
+        session_list = [self.client_factory.create_session(self.ipython_display, connection_string, {"kind": s["kind"]}, s["id"])
                         for s in sessions]
         for s in session_list:
             s.refresh_status()
@@ -61,7 +61,7 @@ class SparkController(object):
         http_client = self.client_factory.create_http_client(connection_string)
         r = http_client.get("/sessions/{}".format(session_id), [200, 404])
         if r.status_code != 404:
-            session = self.client_factory.create_session(connection_string, {"kind": r.json()["kind"]}, session_id, False)
+            session = self.client_factory.create_session(self.ipython_display, connection_string, {"kind": r.json()["kind"]}, session_id, False)
             session.delete()
 
     def add_session(self, name, connection_string, skip_if_exists, properties):
@@ -69,12 +69,10 @@ class SparkController(object):
             self.logger.debug("Skipping {} because it already exists in list of sessions.".format(name))
             return
 
-        session = self.client_factory.create_session(connection_string, properties, "-1", False)
+        session = self.client_factory.create_session(self.ipython_display, connection_string, properties, "-1", False)
         session.start()
 
-        msg_printer = MessagePrinter.MessagePrinter()
-
-        livy_client = self.client_factory.build_client(session, msg_printer)
+        livy_client = self.client_factory.build_client(session)
         self.client_manager.add_client(name, livy_client)
 
     def get_client_keys(self):

@@ -18,22 +18,22 @@ class LivyClientFactory(object):
         self.logger = Log("LivyClientFactory")
         self.max_results = conf.max_results_sql()
 
-    def build_client(self, session, msg_printer):
+    def build_client(self, session):
         assert session is not None
         kind = session.kind
 
         if kind == Constants.session_kind_pyspark:
-            return PandasPysparkLivyClient(session, msg_printer, self.max_results)
+            return PandasPysparkLivyClient(session, self.max_results)
         elif kind == Constants.session_kind_spark:
-            return PandasScalaLivyClient(session, msg_printer, self.max_results)
+            return PandasScalaLivyClient(session, self.max_results)
         else:
             raise ValueError("Kind '{}' is not supported.".format(kind))
 
     @staticmethod
-    def create_session(connection_string, properties, session_id="-1", sql_created=False):
+    def create_session(ipython_display, connection_string, properties, session_id="-1", sql_created=False):
         http_client = LivyClientFactory.create_http_client(connection_string)
 
-        session = LivySession(http_client, session_id, sql_created, properties)
+        session = LivySession(ipython_display, http_client, session_id, sql_created, properties)
 
         return session
 

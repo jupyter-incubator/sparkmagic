@@ -2,8 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 import requests
 from ipykernel.ipkernel import IPythonKernel
-
-from remotespark import MessagePrinter
+from remotespark.utils.ipythondisplay import IpythonDisplay
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.log import Log
@@ -40,6 +39,7 @@ class SparkKernelBase(IPythonKernel):
         self.logger = Log(self.client_name)
         self.session_started = False
         self._fatal_error = None
+        self._ipython_display = IpythonDisplay()
 
         # Disable warnings for test env in HDI
         requests.packages.urllib3.disable_warnings()
@@ -56,17 +56,16 @@ class SparkKernelBase(IPythonKernel):
             self._abort_with_fatal_error(self._fatal_error)
 
         subcommand, flags, code_to_run = self._parse_user_command(code)
-        msg_printer = MessagePrinter.MessagePrinter()
 
         if subcommand == self.run_command:
             code_to_run = "%%spark\n{}".format(code_to_run)
-            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin, msg_printer)
+            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
         elif subcommand == self.sql_command:
             code_to_run = "%%spark -c sql\n{}".format(code_to_run)
-            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin, msg_printer)
+            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
         elif subcommand == self.hive_command:
             code_to_run = "%%spark -c hive\n{}".format(code_to_run)
-            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin, msg_printer)
+            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
         elif subcommand == self.config_command:
             restart_session = False
 
@@ -137,10 +136,10 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
                            log_if_error="Failed to register auto viz for notebook.")
         self.logger.debug("Registered auto viz.")
 
-    def _start_session(self, msg_printer):
+    def _start_session(self):
         if not self.session_started:
             self.session_started = True
-            msg_printer.print_message('Starting Livy Session')
+            self._ipython_display.writeln('Starting Livy Session')
 
             add_session_code = "%spark add {} {} {} skip".format(
                 self.client_name, self.session_language, self.connection_string)
@@ -157,11 +156,11 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
     def _run_without_session(self, code, silent, store_history, user_expressions, allow_stdin):
         return self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
 
-    def _run_starting_session(self, code, silent, store_history, user_expressions, allow_stdin, msg_printer):
-        self._start_session(msg_printer)
+    def _run_starting_session(self, code, silent, store_history, user_expressions, allow_stdin):
+        self._start_session()
         return self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
 
-    def _run_restarting_session(self, code, silent, store_history, user_expressions, allow_stdin, restart, msg_printer):
+    def _run_restarting_session(self, code, silent, store_history, user_expressions, allow_stdin, restart):
         if restart:
             self._delete_session()
 
@@ -240,20 +239,12 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
 
     def _show_user_error(self, message):
         self.logger.error(message)
-        self._send_error(message)
+        self._ipython_display.send_error(message, self.send_response, self.iopub_socket)
 
     def _abort_with_fatal_error(self, message):
         self._fatal_error = message
 
         error = conf.fatal_error_suggestion().format(message)
         self.logger.error(error)
-        self._send_error(error)
-
+        self._ipython_display.send_error(error, self.send_response, self.iopub_socket)
         raise ValueError(message)
-
-    def _send_error(self, error):
-        stream_content = {"name": "stderr", "text": error}
-        self._ipython_send_error(stream_content)
-
-    def _ipython_send_error(self, stream_content):
-        self.send_response(self.iopub_socket, "stream", stream_content)
