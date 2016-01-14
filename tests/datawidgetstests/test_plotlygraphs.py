@@ -16,12 +16,12 @@ def test_graph_base_display_methods():
 
 
 def test_graphbase_get_x_y_values():
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12},
-               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0},
-               {u'buildingID': 2, u'date': u'6/1/14', u'temp_diff': 11},
-               {u'buildingID': 0, u'date': u'6/1/15', u'temp_diff': 5},
-               {u'buildingID': 1, u'date': u'6/1/16', u'temp_diff': 19},
-               {u'buildingID': 2, u'date': u'6/1/17', u'temp_diff': 32}]
+    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12, u"str": "str"},
+               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0, u"str": "str"},
+               {u'buildingID': 2, u'date': u'6/1/14', u'temp_diff': 11, u"str": "str"},
+               {u'buildingID': 0, u'date': u'6/1/15', u'temp_diff': 5, u"str": "str"},
+               {u'buildingID': 1, u'date': u'6/1/16', u'temp_diff': 19, u"str": "str"},
+               {u'buildingID': 2, u'date': u'6/1/17', u'temp_diff': 32, u"str": "str"}]
     df = pd.DataFrame(records)
     expected_xs = [u'6/1/13', u'6/1/14', u'6/1/15', u'6/1/16', u'6/1/17']
 
@@ -52,6 +52,14 @@ def test_graphbase_get_x_y_values():
 
     try:
         encoding = Encoding(chart_type=Encoding.chart_type_line, x="buildingID", y="date",
+                            y_aggregation=Encoding.y_agg_avg)
+        GraphBase._get_x_y_values(df, encoding)
+        assert False
+    except InvalidEncodingError:
+        pass
+
+    try:
+        encoding = Encoding(chart_type=Encoding.chart_type_line, x="date", y="str",
                             y_aggregation=Encoding.y_agg_avg)
         GraphBase._get_x_y_values(df, encoding)
         assert False
