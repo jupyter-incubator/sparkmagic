@@ -45,7 +45,13 @@ class SparkKernelBase(IPythonKernel):
         requests.packages.urllib3.disable_warnings()
 
         if not kwargs.get("testing", False):
-            (username, password, url) = self._get_configuration()
+            configuration = self._get_configuration()
+            if not configuration:
+                # _get_configuration() sets the error for us so we can just return now.
+                # The kernel is not in a good state and all do_execute calls will
+                # fail with the fatal error.
+                return
+            (username, password, url) = configuration
             self.connection_string = get_connection_string(url, username, password)
             self._load_magics_extension()
             if conf.use_auto_viz():
@@ -53,7 +59,7 @@ class SparkKernelBase(IPythonKernel):
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         if self._fatal_error is not None:
-            self._abort_with_fatal_error(self._fatal_error)
+            self._repeat_fatal_error()
 
         subcommand, flags, code_to_run = self._parse_user_command(code)
 
@@ -167,21 +173,24 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
         res = self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
 
         if restart:
-            self._start_session(msg_printer)
+            self._start_session()
 
         return res
 
     def _get_configuration(self):
+        """Returns (username, password, url). If there is an error (missing configuration),
+           returns False."""
         try:
             credentials = getattr(conf, 'kernel_' + self.kernel_conf_name + '_credentials')()
             ret = (credentials['username'], credentials['password'], credentials['url'])
-            for string in ret:
-                assert string
+            # The URL has to be set in the configuration.
+            assert(ret[2])
             return ret
         except (KeyError, AssertionError):
-            message = "Please set configuration for 'kernel_{}_credentials' to initialize Kernel.".format(
+            message = "Please set configuration for 'kernel_{}_credentials' to initialize Kernel".format(
                 self.kernel_conf_name)
-            self._abort_with_fatal_error(message)
+            self._queue_fatal_error(message)
+            return False
 
     def _parse_user_command(self, code):
         # Normalize 2 signs to 1
@@ -241,10 +250,20 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
         self.logger.error(message)
         self._ipython_display.send_error(message, self.send_response, self.iopub_socket)
 
-    def _abort_with_fatal_error(self, message):
+    def _queue_fatal_error(self, message):
+        """Queues up a fatal error to be thrown when the next cell is executed; does not
+        raise an error immediately. We use this for errors that happen on kernel startup,
+        since IPython crashes if we throw an exception in the __init__ method."""
         self._fatal_error = message
 
-        error = conf.fatal_error_suggestion().format(message)
+    def _abort_with_fatal_error(self, message):
+        """Queues up a fatal error and throws it immediately."""
+        self._queue_fatal_error(message)
+        self._repeat_fatal_error()
+
+    def _repeat_fatal_error(self):
+        """Throws an error that has already been queued."""
+        error = conf.fatal_error_suggestion().format(self._fatal_error)
         self.logger.error(error)
         self._ipython_display.send_error(error, self.send_response, self.iopub_socket)
-        raise ValueError(message)
+        raise ValueError(self._fatal_error)
