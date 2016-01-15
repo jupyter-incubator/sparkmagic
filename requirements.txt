@@ -1,9 +1,9 @@
-ipython==4.0
+ipython==4.0.2
 nose
 mock
 requests
 pandas
 numpy
-ipykernel==4.1.1
+ipykernel==4.2.2
 ipywidgets
-plotly
+plotly==1.9.4
