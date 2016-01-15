@@ -87,11 +87,14 @@ class RemoteSparkMagics(Magics):
                e.g. `%%spark config {"driverMemory":"1000M", "executorCores":4}`
            run
                Run Spark code against a session.
-               e.g. `%%spark -e testsession` will execute the cell code against the testsession previously created
-               e.g. `%%spark -e testsession -c sql` will execute the SQL code against the testsession previously created
-               e.g. `%%spark -e testsession -c sql -o my_var` will execute the SQL code against the testsession
+               e.g. `%%spark -s testsession` will execute the cell code against the testsession previously created
+               e.g. `%%spark -s testsession -c sql` will execute the SQL code against the testsession previously created
+               e.g. `%%spark -s testsession -c sql -o my_var` will execute the SQL code against the testsession
                         previously created and store the pandas dataframe created in the my_var variable in the
                         Python environment.
+           logs
+               Returns the logs for a given session.
+               e.g. `%%spark logs -s testsession` will return the logs for the testsession previously created
            delete
                Delete a Livy session. Argument is the name of the session to be deleted.
                e.g. `%%spark delete defaultlivy`
@@ -149,7 +152,7 @@ class RemoteSparkMagics(Magics):
                 session_id = args.command[2]
                 self.spark_controller.delete_session_by_id(connection_string, session_id)
             else:
-                raise ValueError("Subcommand 'delete' requires a session name, or a connection string and id. {}"
+                raise ValueError("Subcommand 'delete' requires a session name or a connection string and id. {}"
                                  .format(usage))
         # cleanup 
         elif subcommand == "cleanup":
@@ -159,7 +162,18 @@ class RemoteSparkMagics(Magics):
             elif len(args.command) == 1:
                 self.spark_controller.cleanup()
             else:
-                raise ValueError("Subcommand 'cleanup' requires no value or a connection string to clean up sessions. "
+                raise ValueError("Subcommand 'cleanup' requires no further values or a connection string to clean up "
+                                 "sessions. "
+                                 "{}".format(usage))
+        elif subcommand == "logs":
+            if len(args.command) == 1:
+                (success, out) = self.spark_controller.get_logs(args.session)
+                if success:
+                    self.shell.write(out)
+                else:
+                    self.shell.write_err(out)
+            else:
+                raise ValueError("Subcommand 'logs' requires no further values."
                                  "{}".format(usage))
         # run
         elif len(subcommand) == 0:

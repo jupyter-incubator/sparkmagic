@@ -20,6 +20,10 @@ class SparkController(object):
         else:
             self.client_manager = ClientManager()
 
+    def get_logs(self, client_name=None):
+        client_to_use = self.get_client_by_name_or_default(client_name)
+        return client_to_use.get_logs()
+
     def run_cell(self, cell, client_name=None):
         client_to_use = self.get_client_by_name_or_default(client_name)
         return client_to_use.execute(cell)
@@ -39,7 +43,7 @@ class SparkController(object):
         session_list = [self.client_factory.create_session(connection_string, {"kind": s["kind"]}, s["id"])
                         for s in sessions]
         for s in session_list:
-            s.refresh_status()
+            s._refresh_status()
         return session_list
 
     def get_all_sessions_endpoint_info(self, connection_string):
