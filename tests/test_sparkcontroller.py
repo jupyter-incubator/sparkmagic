@@ -43,7 +43,7 @@ def test_add_session():
     name = "name"
     properties = {"kind": "spark"}
     connection_string = "url=http://location:port;username=name;password=word"
-    client = "client"
+    client = MagicMock()
     session = MagicMock()
     client_factory.create_session = MagicMock(return_value=session)
     client_factory.build_client = MagicMock(return_value=client)
@@ -53,6 +53,7 @@ def test_add_session():
     client_factory.create_session.assert_called_once_with(ipython_display, connection_string, properties, "-1", False)
     client_factory.build_client.assert_called_once_with(session)
     client_manager.add_client.assert_called_once_with(name, client)
+    client.start.assert_called_once_with()
     session.start.assert_called_once_with()
 
 

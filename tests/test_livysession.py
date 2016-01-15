@@ -160,6 +160,25 @@ class TestLivySession:
         http_client.post.assert_called_with(
             "/sessions", [201], {"kind": "spark"})
 
+    def test_start_r_starts_session(self):
+        http_client = MagicMock()
+        http_client.post.return_value = DummyResponse(201, self.session_create_json)
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        kind = Constants.session_kind_sparkr
+        session = self._create_session(kind=kind, http_client=http_client)
+        session.start()
+        conf.load()
+
+        assert_equals(kind, session.kind)
+        assert_equals("starting", session._status)
+        assert_equals("0", session.id)
+        http_client.post.assert_called_with(
+            "/sessions", [201], {"kind": "sparkr"})
+
     def test_start_python_starts_session(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
@@ -491,3 +510,13 @@ class TestLivySession:
         assert serialized["sqlcontext"] == False
         assert serialized["version"] == "0.0.0"
         assert len(serialized.keys()) == 5
+
+    def test_get_sql_context_creation_command_all_langs(self):
+        for kind in Constants.session_kinds_supported:
+            session = self._create_session(kind=kind)
+            session._get_sql_context_creation_command()
+
+    def test_get_hive_context_creation_command_all_langs(self):
+        for kind in Constants.session_kinds_supported:
+            session = self._create_session(kind=kind)
+            session._get_hive_context_creation_command()

@@ -9,6 +9,7 @@ from .livyreliablehttpclient import LivyReliableHttpClient
 from .livysession import LivySession
 from .pandaspysparklivyclient import PandasPysparkLivyClient
 from .pandasscalalivyclient import PandasScalaLivyClient
+from .pandasrlivyclient import PandasRLivyClient
 
 
 class LivyClientFactory(object):
@@ -26,6 +27,8 @@ class LivyClientFactory(object):
             return PandasPysparkLivyClient(session, self.max_results)
         elif kind == Constants.session_kind_spark:
             return PandasScalaLivyClient(session, self.max_results)
+        elif kind == Constants.session_kind_sparkr:
+            return PandasRLivyClient(session, self.max_results)
         else:
             raise ValueError("Kind '{}' is not supported.".format(kind))
 

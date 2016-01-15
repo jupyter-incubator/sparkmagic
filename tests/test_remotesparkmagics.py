@@ -4,6 +4,7 @@ from nose.tools import raises, with_setup
 from remotespark.remotesparkmagics import RemoteSparkMagics
 from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 import remotespark.utils.configuration as conf
+from remotespark.utils.constants import Constants
 
 
 magic = None
@@ -296,3 +297,8 @@ def test_run_sql_command_stores_variable_in_user_ns():
     run_cell_method.assert_called_once_with(cell, name)
     assert result is not None
     assert result is user_ns[output_name]
+
+
+def test_get_livy_kind_covers_all_langs():
+    for lang in Constants.lang_supported:
+        RemoteSparkMagics._get_livy_kind(lang)

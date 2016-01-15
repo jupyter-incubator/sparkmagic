@@ -216,6 +216,8 @@ class RemoteSparkMagics(Magics):
             return Constants.session_kind_spark
         elif language == Constants.lang_python:
             return Constants.session_kind_pyspark
+        elif language == Constants.lang_r:
+            return Constants.session_kind_sparkr
         else:
             raise ValueError("Cannot get session kind for {}.".format(language))
 
