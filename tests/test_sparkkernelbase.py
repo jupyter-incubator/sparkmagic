@@ -388,3 +388,21 @@ def test_register_auto_viz():
     assert call("from remotespark.datawidgets.utils import display_dataframe\nip = get_ipython()\nip.display_formatter"
                 ".ipython_display_formatter.for_type_by_name('pandas.core.frame', 'DataFrame', display_dataframe)",
                 True, False, None, False) in execute_cell_mock.mock_calls
+
+
+@with_setup(_setup(), _teardown())
+def test_logs_magic():
+    kernel._session_started = True
+
+    kernel.do_execute("%logs", False)
+
+    assert call("%spark logs", False, True, None, False) in execute_cell_mock.mock_calls
+
+
+@with_setup(_setup(), _teardown())
+def test_logs_magic_prints_without_session():
+    kernel._session_started = False
+
+    kernel.do_execute("%logs", False)
+
+    assert call("print('No logs yet.')", False, True, None, False) in execute_cell_mock.mock_calls

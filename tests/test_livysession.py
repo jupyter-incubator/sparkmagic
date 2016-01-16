@@ -31,14 +31,14 @@ class TestLivySession:
         self.pi_result = "Pi is roughly 3.14336"
 
         self.session_create_json = '{"id":0,"state":"starting","kind":"spark","log":[]}'
-        self.ready_sessions_json = '{"from":0,"total":1,"sessions":[{"id":0,"state":"idle","kind":"spark","log":[""]}]}'
-        self.error_sessions_json = '{"from":0,"total":1,"sessions":[{"id":0,"state":"error","kind":"spark","log":' \
-                                   '[""]}]}'
-        self.busy_sessions_json = '{"from":0,"total":1,"sessions":[{"id":0,"state":"busy","kind":"spark","log":[""]}]}'
+        self.ready_sessions_json = '{"id":0,"state":"idle","kind":"spark","log":[""]}'
+        self.error_sessions_json = '{"id":0,"state":"error","kind":"spark","log":[""]}'
+        self.busy_sessions_json = '{"id":0,"state":"busy","kind":"spark","log":[""]}'
         self.post_statement_json = '{"id":0,"state":"running","output":null}'
         self.running_statement_json = '{"total_statements":1,"statements":[{"id":0,"state":"running","output":null}]}'
         self.ready_statement_json = '{"total_statements":1,"statements":[{"id":0,"state":"available","output":{"statu' \
                                     's":"ok","execution_count":0,"data":{"text/plain":"Pi is roughly 3.14336"}}}]}'
+        self.log_json = '{"id":6,"from":0,"total":212,"log":["hi","hi"]}'
 
         self.get_responses = []
         self.post_responses = []
@@ -217,7 +217,7 @@ class TestLivySession:
         http_client.post.assert_called_with(
             "/sessions", [201], properties)
 
-    def test_status_gets_latest(self):
+    def test_status_gets_latest_status(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         http_client.get.return_value = DummyResponse(200, self.ready_sessions_json)
@@ -229,11 +229,28 @@ class TestLivySession:
         conf.load()
         session.start()
 
-        session.refresh_status()
+        session._refresh_status()
         state = session._status
 
         assert_equals("idle", state)
-        http_client.get.assert_called_with("/sessions", [200])
+        http_client.get.assert_called_with("/sessions/0", [200])
+
+    def test_logs_gets_latest_logs(self):
+        http_client = MagicMock()
+        http_client.post.return_value = DummyResponse(201, self.session_create_json)
+        http_client.get.return_value = DummyResponse(200, self.log_json)
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = self._create_session(http_client=http_client)
+        conf.load()
+        session.start()
+
+        logs = session.logs
+
+        assert_equals("hi\nhi", logs)
+        http_client.get.assert_called_with("/sessions/0/log?from=0", [200])
 
     def test_wait_for_idle_returns_when_in_state(self):
         http_client = MagicMock()
@@ -253,7 +270,7 @@ class TestLivySession:
 
         session.wait_for_idle(30)
 
-        http_client.get.assert_called_with("/sessions", [200])
+        http_client.get.assert_called_with("/sessions/0", [200])
         assert_equals(2, http_client.get.call_count)
 
     @raises(LivyUnexpectedStatusError)
@@ -262,7 +279,8 @@ class TestLivySession:
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         self.get_responses = [DummyResponse(200, self.busy_sessions_json),
                               DummyResponse(200, self.busy_sessions_json),
-                              DummyResponse(200, self.error_sessions_json)]
+                              DummyResponse(200, self.error_sessions_json),
+                              DummyResponse(200, self.log_json)]
         http_client.get.side_effect = self._next_response_get
 
         conf.override_all({

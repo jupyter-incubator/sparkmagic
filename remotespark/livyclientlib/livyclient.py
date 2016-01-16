@@ -22,6 +22,12 @@ class LivyClient(object):
     def serialize(self):
         return self._session.get_state().to_dict()
 
+    def get_logs(self):
+        try:
+            return True, self._session.logs
+        except ValueError as err:
+            return False, "{}".format(err)
+
     def execute(self, commands):
         self._session.wait_for_idle(self._execute_timeout_seconds)
         return self._session.execute(commands)

@@ -112,16 +112,10 @@ class LivySession(object):
     def kind(self):
         return self._state.kind
 
-    def refresh_status(self):
-        (status, logs) = self._get_latest_status_and_logs()
-
-        if status in Constants.possible_session_status:
-            self._status = status
-            self._logs = logs
-        else:
-            raise ValueError("Status '{}' not supported by session.".format(status))
-
-        return self._status
+    @property
+    def logs(self):
+        self._refresh_logs()
+        return self._logs
 
     @property
     def http_client(self):
@@ -158,14 +152,14 @@ class LivySession(object):
         Parameters:
             seconds_to_wait : number of seconds to wait before giving up.
         """
-        self.refresh_status()
+        self._refresh_status()
         current_status = self._status
         if current_status == Constants.idle_session_status:
             return
 
         if current_status in Constants.final_status:
             error = "Session {} unexpectedly reached final status {}. See logs:\n{}"\
-                .format(self.id, current_status, "\n".join(self._logs))
+                .format(self.id, current_status, "\n".join(self.logs))
             self.logger.error(error)
             raise LivyUnexpectedStatusError(error)
 
@@ -185,18 +179,31 @@ class LivySession(object):
     def _statements_url(self):
         return "/sessions/{}/statements".format(self.id)
 
-    def _get_latest_status_and_logs(self):
-        """Get current session state. Network call."""
-        r = self._http_client.get("/sessions", [200])
-        sessions = r.json()["sessions"]
-        filtered_sessions = [s for s in sessions if s["id"] == int(self.id)]
+    def _refresh_status(self):
+        status = self._get_latest_status()
+
+        if status in Constants.possible_session_status:
+            self._status = status
+        else:
+            raise ValueError("Status '{}' not supported by session.".format(status))
+
+        return self._status
+
+    def _refresh_logs(self):
+        self._logs = self._get_latest_logs()
+
+    def _get_latest_status(self):
+        r = self._http_client.get("/sessions/{}".format(self.id), [200])
+        session = r.json()
                     
-        if len(filtered_sessions) != 1:
-            raise ValueError("Expected one session of id {} and got {} sessions."
-                             .format(self.id, len(filtered_sessions)))
-            
-        session = filtered_sessions[0]
-        return session['state'], session['log']
+        return session['state']
+
+    def _get_latest_logs(self):
+        r = self._http_client.get("/sessions/{}/log?from=0".format(self.id), [200])
+        log_array = r.json()['log']
+        logs = "\n".join(log_array)
+
+        return logs
     
     def _get_statement_output(self, statement_id):
         statement_running = True
