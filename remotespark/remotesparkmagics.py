@@ -168,6 +168,7 @@ class RemoteSparkMagics(Magics):
                 else:
                     raise ValueError("Subcommand 'cleanup' requires no further values or a connection string to clean up "
                                      "sessions.\n{}".format(usage))
+            # logs
             elif subcommand == "logs":
                 if len(args.command) == 1:
                     (success, out) = self.spark_controller.get_logs(args.session)

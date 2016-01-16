@@ -304,3 +304,33 @@ def test_run_sql_command_stores_variable_in_user_ns():
 def test_get_livy_kind_covers_all_langs():
     for lang in Constants.lang_supported:
         RemoteSparkMagics._get_livy_kind(lang)
+
+
+@with_setup(_setup, _teardown)
+def test_logs_subcommand():
+    get_logs_method = MagicMock()
+    result_value = ""
+    get_logs_method.return_value = (True, result_value)
+    spark_controller.get_logs = get_logs_method
+
+    command = "logs -s"
+    name = "sessions_name"
+    line = " ".join([command, name])
+    cell = "cell code"
+
+    # Could get results
+    result = magic.spark(line, cell)
+
+    get_logs_method.assert_called_once_with(name)
+    assert result is None
+    ipython_display.write.assert_called_once_with(result_value)
+
+    # Could not get results
+    get_logs_method.reset_mock()
+    get_logs_method.return_value = (False, result_value)
+
+    result = magic.spark(line, cell)
+
+    get_logs_method.assert_called_once_with(name)
+    assert result is None
+    ipython_display.send_error.assert_called_once_with(result_value)

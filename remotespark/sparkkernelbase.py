@@ -79,10 +79,10 @@ class SparkKernelBase(IPythonKernel):
             if self._session_started:
                 if self.force_flag not in flags:
                     self._show_user_error("A session has already been started. In order to modify the Spark configura"
-                                           "tion, please provide the '-f' flag at the beginning of the config magic:\n"
-                                           "\te.g. `%config -f {}`\n\nNote that this will kill the current session and"
-                                           " will create a new one with the configuration provided. All previously run "
-                                           "commands in the session will be lost.")
+                                          "tion, please provide the '-f' flag at the beginning of the config magic:\n"
+                                          "\te.g. `%config -f {}`\n\nNote that this will kill the current session and"
+                                          " will create a new one with the configuration provided. All previously run "
+                                          "commands in the session will be lost.")
                     code_to_run = ""
                 else:
                     restart_session = True
@@ -120,8 +120,8 @@ class SparkKernelBase(IPythonKernel):
 
             return self._run_without_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
         elif subcommand == self.logs_command:
-            if self.session_started:
-                code_to_run = "%%spark logs"
+            if self._session_started:
+                code_to_run = "%spark logs"
             else:
                 code_to_run = "print('No logs yet.')"
             return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
@@ -152,7 +152,6 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
     def _start_session(self):
         if not self._session_started:
             self._session_started = True
-            self._ipython_display.writeln('Starting Livy Session')
 
             add_session_code = "%spark add {} {} {} skip".format(
                 self.client_name, self.session_language, self.connection_string)

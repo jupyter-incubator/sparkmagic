@@ -38,7 +38,7 @@ class TestLivySession:
         self.running_statement_json = '{"total_statements":1,"statements":[{"id":0,"state":"running","output":null}]}'
         self.ready_statement_json = '{"total_statements":1,"statements":[{"id":0,"state":"available","output":{"statu' \
                                     's":"ok","execution_count":0,"data":{"text/plain":"Pi is roughly 3.14336"}}}]}'
-        self.log_json = '{"id":6,"from":0,"total":212,"log":[""]}'
+        self.log_json = '{"id":6,"from":0,"total":212,"log":["hi","hi"]}'
 
         self.get_responses = []
         self.post_responses = []
@@ -217,7 +217,7 @@ class TestLivySession:
         http_client.post.assert_called_with(
             "/sessions", [201], properties)
 
-    def test_status_gets_latest(self):
+    def test_status_gets_latest_status(self):
         http_client = MagicMock()
         http_client.post.return_value = DummyResponse(201, self.session_create_json)
         http_client.get.return_value = DummyResponse(200, self.ready_sessions_json)
@@ -234,6 +234,23 @@ class TestLivySession:
 
         assert_equals("idle", state)
         http_client.get.assert_called_with("/sessions/0", [200])
+
+    def test_logs_gets_latest_logs(self):
+        http_client = MagicMock()
+        http_client.post.return_value = DummyResponse(201, self.session_create_json)
+        http_client.get.return_value = DummyResponse(200, self.log_json)
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = self._create_session(http_client=http_client)
+        conf.load()
+        session.start()
+
+        logs = session.logs
+
+        assert_equals("hi\nhi", logs)
+        http_client.get.assert_called_with("/sessions/0/log?from=0", [200])
 
     def test_wait_for_idle_returns_when_in_state(self):
         http_client = MagicMock()

@@ -179,3 +179,13 @@ def test_delete_session_by_id_non_existent():
 
     assert len(create_session_method.mock_calls) == 0
     assert len(session.delete.mock_calls) == 0
+
+
+@with_setup(_setup, _teardown)
+def test_get_logs():
+    chosen_client = MagicMock()
+    controller.get_client_by_name_or_default = MagicMock(return_value=chosen_client)
+
+    controller.get_logs()
+
+    chosen_client.get_logs.assert_called_with()

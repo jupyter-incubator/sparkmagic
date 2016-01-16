@@ -118,3 +118,27 @@ def test_session_id():
     i = client.session_id
 
     assert i == session_id
+
+
+def test_get_logs_returns_session_logs():
+    logs = "hi"
+    mock_spark_session = MagicMock()
+    mock_spark_session.logs = logs
+    client = LivyClient(mock_spark_session)
+
+    res, logs_r = client.get_logs()
+
+    assert res
+    assert logs_r == logs
+
+
+def test_get_logs_returns_false_with_value_error():
+    err = "err"
+    mock_spark_session = MagicMock()
+    type(mock_spark_session).logs = PropertyMock(side_effect=ValueError(err))
+    client = LivyClient(mock_spark_session)
+
+    res, logs_r = client.get_logs()
+
+    assert not res
+    assert logs_r == err
