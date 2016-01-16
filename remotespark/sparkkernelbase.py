@@ -19,6 +19,7 @@ class SparkKernelBase(IPythonKernel):
     clean_up_command = "cleanup"
     logs_command = "logs"
 
+    output_flag = "o"
     force_flag = "f"
 
     def __init__(self, implementation, implementation_version, language, language_version, language_info,
@@ -68,7 +69,26 @@ class SparkKernelBase(IPythonKernel):
             code_to_run = "%%spark\n{}".format(code_to_run)
             return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
         elif subcommand == self.sql_command:
-            code_to_run = "%%spark -c sql\n{}".format(code_to_run)
+            if self.output_flag not in flags:
+                output_var = ""
+            else:
+                ouput_error = "If -o flag is present, please place the query on the second line. Variable name " \
+                              "should come after the -o flag and be a valid python variable name."
+
+                # First line of code_to_run should be variable name
+                split_code = code_to_run.split("\n", 1)
+
+                if len(split_code) != 2:
+                    raise SyntaxError(ouput_error)
+
+                var_name = split_code[0].strip()
+
+                if var_name.find(" ") != -1:
+                    raise SyntaxError(ouput_error)
+
+                code_to_run = split_code[1]
+                output_var = " -o {}".format(var_name)
+            code_to_run = "%%spark -c sql{}\n{}".format(output_var, code_to_run)
             return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
         elif subcommand == self.hive_command:
             code_to_run = "%%spark -c hive\n{}".format(code_to_run)
