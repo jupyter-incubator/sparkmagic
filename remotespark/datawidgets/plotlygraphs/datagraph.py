@@ -22,7 +22,7 @@ class DataGraph(object):
             show_dimensions = pd.get_option("display.show_dimensions")
 
             # This will hide the index column for pandas df.
-            self.display.html_to_ipython("""
+            self.display.html("""
 <style>
     table.dataframe.hideme thead th:first-child {
         display: none;
@@ -32,8 +32,8 @@ class DataGraph(object):
     }
 </style>
 """)
-            self.display.html_to_ipython(df.to_html(max_rows=max_rows, max_cols=max_cols,
-                                                      show_dimensions=show_dimensions, notebook=True, classes="hideme"))
+            self.display.html(df.to_html(max_rows=max_rows, max_cols=max_cols,
+                                         show_dimensions=show_dimensions, notebook=True, classes="hideme"))
 
     @staticmethod
     def display_logarithmic_x_axis():
