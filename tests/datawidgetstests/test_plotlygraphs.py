@@ -104,7 +104,7 @@ def test_data_graph_render():
     data = DataGraph(display)
     data.render(df, encoding, MagicMock())
 
-    assert display.html_to_ipython.call_count == 2
+    assert display.html.call_count == 2
 
 
 def test_data_graph_display_methods():

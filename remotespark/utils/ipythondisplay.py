@@ -10,7 +10,7 @@ class IpythonDisplay(object):
         display(to_display)
 
     def html(self, to_display):
-        IpythonDisplay.display(HTML(to_display))
+        self.display(HTML(to_display))
 
     def write(self, msg):
         self._ipython_shell.write(msg)
