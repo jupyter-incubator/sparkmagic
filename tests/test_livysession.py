@@ -3,6 +3,7 @@
 from mock import MagicMock, call
 from nose.tools import raises, assert_equals
 
+from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
 from remotespark.livyclientlib.livyunexpectedstatuserror import LivyUnexpectedStatusError
 from remotespark.livyclientlib.livysession import LivySession
@@ -56,7 +57,9 @@ class TestLivySession:
         if http_client is None:
             http_client = MagicMock()
 
-        return LivySession(http_client, session_id, sql_created, {"kind": kind})
+        ipython_display = MagicMock()
+
+        return LivySession(ipython_display, http_client, session_id, sql_created, {"kind": kind})
 
     @raises(AssertionError)
     def test_constructor_throws_status_sleep_seconds(self):
@@ -205,7 +208,9 @@ class TestLivySession:
         })
         kind = Constants.session_kind_spark
         properties = {"kind": kind, "extra": 1}
-        session = LivySession(http_client, "-1", False, properties)
+
+        ipython_display = MagicMock()
+        session = LivySession(ipython_display, http_client, "-1", False, properties)
         session.start()
         conf.load()
 
@@ -365,6 +370,8 @@ class TestLivySession:
     def test_create_sql_hive_context_happens_once(self):
         kind = Constants.session_kind_spark
         http_client = MagicMock()
+        ipython_display = MagicMock()
+
         self.post_responses = [DummyResponse(201, self.session_create_json),
                                DummyResponse(201, self.post_statement_json),
                                DummyResponse(201, self.post_statement_json)]
@@ -380,6 +387,7 @@ class TestLivySession:
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session(kind=kind, http_client=http_client)
+        session.ipython_display = ipython_display
         conf.load()
         session.start()
 
@@ -387,6 +395,7 @@ class TestLivySession:
         http_client.reset_mock()
 
         session.create_sql_context()
+        assert ipython_display.writeln.call_count == 3
 
         # Second call should not issue a post request
         session.create_sql_context()

@@ -33,10 +33,10 @@ class LivyClientFactory(object):
             raise ValueError("Kind '{}' is not supported.".format(kind))
 
     @staticmethod
-    def create_session(connection_string, properties, session_id="-1", sql_created=False):
+    def create_session(ipython_display, connection_string, properties, session_id="-1", sql_created=False):
         http_client = LivyClientFactory.create_http_client(connection_string)
 
-        session = LivySession(http_client, session_id, sql_created, properties)
+        session = LivySession(ipython_display, http_client, session_id, sql_created, properties)
 
         return session
 
