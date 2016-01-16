@@ -67,6 +67,7 @@ class RemoteSparkMagics(Magics):
            When the SQL context is used, the result will be a Pandas dataframe of a sample of the results.
 
            If invoked with no subcommand, the cell will be executed against the specified session.
+
            Subcommands
            -----------
            info
@@ -108,92 +109,93 @@ class RemoteSparkMagics(Magics):
 
         subcommand = args.command[0].lower()
 
-        # info
-        if subcommand == "info":
-            if len(args.command) == 2:
-                connection_string = args.command[1]
-                info_sessions = self.spark_controller.get_all_sessions_endpoint_info(connection_string)
-                self._print_endpoint_info(info_sessions)
-            elif len(args.command) == 1:
-                self._print_local_info()
-            else:
-                raise ValueError("Subcommand 'info' requires no value or a connection string to show all sessions. "
-                                 "{}".format(usage))
-        # config
-        elif subcommand == "config":
-            # Would normally do " ".join(args.command[1:]) but parse_argstring removes quotes...
-            rest_of_line = user_input[7:]
-            conf.override(conf.session_configs.__name__, json.loads(rest_of_line))
-        # add
-        elif subcommand == "add":
-            if len(args.command) != 4 and len(args.command) != 5:
-                raise ValueError("Subcommand 'add' requires three or four arguments. {}".format(usage))
+        try:
+            # info
+            if subcommand == "info":
+                if len(args.command) == 2:
+                    connection_string = args.command[1]
+                    info_sessions = self.spark_controller.get_all_sessions_endpoint_info(connection_string)
+                    self._print_endpoint_info(info_sessions)
+                elif len(args.command) == 1:
+                    self._print_local_info()
+                else:
+                    raise ValueError("Subcommand 'info' requires no value or a connection string to show all sessions.\n"
+                                     "{}".format(usage))
+            # config
+            elif subcommand == "config":
+                # Would normally do " ".join(args.command[1:]) but parse_argstring removes quotes...
+                rest_of_line = user_input[7:]
+                conf.override(conf.session_configs.__name__, json.loads(rest_of_line))
+            # add
+            elif subcommand == "add":
+                if len(args.command) != 4 and len(args.command) != 5:
+                    raise ValueError("Subcommand 'add' requires three or four arguments.\n{}".format(usage))
 
-            name = args.command[1].lower()
-            language = args.command[2].lower()
-            connection_string = args.command[3]
-
-            if len(args.command) == 5:
-                skip = args.command[4].lower() == "skip"
-            else:
-                skip = False
-
-            properties = copy.deepcopy(conf.session_configs())
-            properties["kind"] = self._get_livy_kind(language)
-
-            self.spark_controller.add_session(name, connection_string, skip, properties)
-        # delete
-        elif subcommand == "delete":
-            if len(args.command) == 2:
                 name = args.command[1].lower()
-                self.spark_controller.delete_session_by_name(name)
-            elif len(args.command) == 3:
-                connection_string = args.command[1]
-                session_id = args.command[2]
-                self.spark_controller.delete_session_by_id(connection_string, session_id)
-            else:
-                raise ValueError("Subcommand 'delete' requires a session name or a connection string and id. {}"
-                                 .format(usage))
-        # cleanup 
-        elif subcommand == "cleanup":
-            if len(args.command) == 2:
-                connection_string = args.command[1]
-                self.spark_controller.cleanup_endpoint(connection_string)
-            elif len(args.command) == 1:
-                self.spark_controller.cleanup()
-            else:
-                raise ValueError("Subcommand 'cleanup' requires no further values or a connection string to clean up "
-                                 "sessions. "
-                                 "{}".format(usage))
-        elif subcommand == "logs":
-            if len(args.command) == 1:
-                (success, out) = self.spark_controller.get_logs(args.session)
-                if success:
-                    self.shell.write(out)
+                language = args.command[2].lower()
+                connection_string = args.command[3]
+
+                if len(args.command) == 5:
+                    skip = args.command[4].lower() == "skip"
                 else:
-                    self.shell.write_err(out)
-            else:
-                raise ValueError("Subcommand 'logs' requires no further values."
-                                 "{}".format(usage))
-        # run
-        elif len(subcommand) == 0:
-            if args.context == Constants.context_name_spark:
-                (success, out) = self.spark_controller.run_cell(cell, args.session)
-                if success:
-                    self.shell.write(out)
+                    skip = False
+
+                properties = copy.deepcopy(conf.session_configs())
+                properties["kind"] = self._get_livy_kind(language)
+
+                self.spark_controller.add_session(name, connection_string, skip, properties)
+            # delete
+            elif subcommand == "delete":
+                if len(args.command) == 2:
+                    name = args.command[1].lower()
+                    self.spark_controller.delete_session_by_name(name)
+                elif len(args.command) == 3:
+                    connection_string = args.command[1]
+                    session_id = args.command[2]
+                    self.spark_controller.delete_session_by_id(connection_string, session_id)
                 else:
-                    self.shell.write_err(out)
-            elif args.context == Constants.context_name_sql:
-                return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                                     args.session, args.output)
-            elif args.context == Constants.context_name_hive:
-                return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
-                                                                     args.session, args.output)
+                    raise ValueError("Subcommand 'delete' requires a session name or a connection string and id.\n{}"
+                                     .format(usage))
+            # cleanup
+            elif subcommand == "cleanup":
+                if len(args.command) == 2:
+                    connection_string = args.command[1]
+                    self.spark_controller.cleanup_endpoint(connection_string)
+                elif len(args.command) == 1:
+                    self.spark_controller.cleanup()
+                else:
+                    raise ValueError("Subcommand 'cleanup' requires no further values or a connection string to clean up "
+                                     "sessions.\n{}".format(usage))
+            elif subcommand == "logs":
+                if len(args.command) == 1:
+                    (success, out) = self.spark_controller.get_logs(args.session)
+                    if success:
+                        self.shell.write(out)
+                    else:
+                        self.shell.write_err(out)
+                else:
+                    raise ValueError("Subcommand 'logs' requires no further values.\n{}".format(usage))
+            # run
+            elif len(subcommand) == 0:
+                if args.context == Constants.context_name_spark:
+                    (success, out) = self.spark_controller.run_cell(cell, args.session)
+                    if success:
+                        self.shell.write(out)
+                    else:
+                        self.shell.write_err(out)
+                elif args.context == Constants.context_name_sql:
+                    return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
+                                                                         args.session, args.output)
+                elif args.context == Constants.context_name_hive:
+                    return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
+                                                                         args.session, args.output)
+                else:
+                    raise ValueError("Context '{}' not found".format(args.context))
+            # error
             else:
-                raise ValueError("Context '{}' not found".format(args.context))
-        # error
-        else:
-            raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
+                raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
+        except ValueError as err:
+            self.shell.write_err("{}".format(err))
 
     def _execute_against_context_that_returns_df(self, method, cell, session, output_var):
         try:
