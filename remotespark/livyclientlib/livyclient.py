@@ -10,15 +10,14 @@ class LivyClient(object):
 
     def __init__(self, session):
         self.logger = Log("LivyClient")
-
-        execute_timeout_seconds = conf.execute_timeout_seconds()
-
         self._session = session
-        self._session.create_sql_context()
-        self._execute_timeout_seconds = execute_timeout_seconds
+        self._execute_timeout_seconds = conf.execute_timeout_seconds()
 
     def __str__(self):
         return str(self._session)
+
+    def start(self):
+        self._session.create_sql_context()
 
     def serialize(self):
         return self._session.get_state().to_dict()

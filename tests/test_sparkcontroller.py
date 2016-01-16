@@ -7,6 +7,7 @@ from remotespark.livyclientlib.sparkcontroller import SparkController
 client_manager = None
 client_factory = None
 controller = None
+ipython_display = None
 
 
 class DummyResponse:
@@ -23,11 +24,12 @@ class DummyResponse:
 
 
 def _setup():
-    global client_manager, client_factory, controller
+    global client_manager, client_factory, controller, ipython_display
 
     client_manager = MagicMock()
     client_factory = MagicMock()
-    controller = SparkController()
+    ipython_display = MagicMock()
+    controller = SparkController(ipython_display)
     controller.client_manager = client_manager
     controller.client_factory = client_factory
 
@@ -41,16 +43,17 @@ def test_add_session():
     name = "name"
     properties = {"kind": "spark"}
     connection_string = "url=http://location:port;username=name;password=word"
-    client = "client"
+    client = MagicMock()
     session = MagicMock()
     client_factory.create_session = MagicMock(return_value=session)
     client_factory.build_client = MagicMock(return_value=client)
 
     controller.add_session(name, connection_string, False, properties)
 
-    client_factory.create_session.assert_called_once_with(connection_string, properties, "-1", False)
+    client_factory.create_session.assert_called_once_with(ipython_display, connection_string, properties, "-1", False)
     client_factory.build_client.assert_called_once_with(session)
     client_manager.add_client.assert_called_once_with(name, client)
+    client.start.assert_called_once_with()
     session.start.assert_called_once_with()
 
 
@@ -159,7 +162,7 @@ def test_delete_session_by_id_existent():
 
     controller.delete_session_by_id("conn_str", "0")
 
-    create_session_method.assert_called_once_with("conn_str", {"kind": "spark"}, "0", False)
+    create_session_method.assert_called_once_with(ipython_display, "conn_str", {"kind": "spark"}, "0", False)
     session.delete.assert_called_once_with()
 
 

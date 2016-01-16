@@ -12,6 +12,7 @@ import copy
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
+from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.utils.log import Log
 from remotespark.utils.utils import get_magics_home_path, join_paths
 from .livyclientlib.dataframeparseexception import DataFrameParseException
@@ -25,7 +26,8 @@ class RemoteSparkMagics(Magics):
         super(RemoteSparkMagics, self).__init__(shell)
 
         self.logger = Log("RemoteSparkMagics")
-        self.spark_controller = SparkController()
+        self.ipython_display = IpythonDisplay()
+        self.spark_controller = SparkController(self.ipython_display)
 
         try:
             should_serialize = conf.serialize()
@@ -37,7 +39,7 @@ class RemoteSparkMagics(Magics):
 
                 self.logger.debug("Will serialize to {}.".format(path_to_serialize))
 
-                self.spark_controller = SparkController(serialize_path=path_to_serialize)
+                self.spark_controller = SparkController(self.ipython_display, serialize_path=path_to_serialize)
             else:
                 self.logger.debug("Serialization NOT enabled.")
         except KeyError:
@@ -170,9 +172,9 @@ class RemoteSparkMagics(Magics):
                 if len(args.command) == 1:
                     (success, out) = self.spark_controller.get_logs(args.session)
                     if success:
-                        self.shell.write(out)
+                        self.ipython_display.write(out)
                     else:
-                        self.shell.write_err(out)
+                        self.ipython_display.send_error(out)
                 else:
                     raise ValueError("Subcommand 'logs' requires no further values.\n{}".format(usage))
             # run
@@ -180,9 +182,9 @@ class RemoteSparkMagics(Magics):
                 if args.context == Constants.context_name_spark:
                     (success, out) = self.spark_controller.run_cell(cell, args.session)
                     if success:
-                        self.shell.write(out)
+                        self.ipython_display.write(out)
                     else:
-                        self.shell.write_err(out)
+                        self.ipython_display.send_error(out)
                 elif args.context == Constants.context_name_sql:
                     return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
                                                                          args.session, args.output)
@@ -195,7 +197,7 @@ class RemoteSparkMagics(Magics):
             else:
                 raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
         except ValueError as err:
-            self.shell.write_err("{}".format(err))
+            self.ipython_display.send_error("{}".format(err))
 
     def _execute_against_context_that_returns_df(self, method, cell, session, output_var):
         try:
@@ -204,7 +206,7 @@ class RemoteSparkMagics(Magics):
                 self.shell.user_ns[output_var] = df
             return df
         except DataFrameParseException as e:
-            self.shell.write_err(e.out)
+            self.ipython_display.send_error(e.out)
             return None
 
     def _print_local_info(self):
