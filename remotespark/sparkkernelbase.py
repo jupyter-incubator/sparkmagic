@@ -16,6 +16,7 @@ class SparkKernelBase(IPythonKernel):
     info_command = "info"
     delete_command = "delete"
     clean_up_command = "cleanup"
+    logs_command = "logs"
 
     force_flag = "f"
 
@@ -116,6 +117,12 @@ class SparkKernelBase(IPythonKernel):
                 code_to_run = "%spark cleanup {}".format(self.connection_string)
 
             return self._run_without_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
+        elif subcommand == self.logs_command:
+            if self.session_started:
+                code_to_run = "%%spark logs"
+            else:
+                code_to_run = "print('No logs yet.')"
+            return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
         else:
             self._show_user_error("Magic '{}' not supported.".format(subcommand))
             return self._run_without_session("", silent, store_history, user_expressions, allow_stdin)
