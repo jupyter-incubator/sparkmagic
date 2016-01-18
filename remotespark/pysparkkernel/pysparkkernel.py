@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
-from remotespark.sparkkernelbase import SparkKernelBase
 from remotespark.utils.constants import Constants
+from remotespark.wrapperkernel.sparkkernelbase import SparkKernelBase
 
 
 class PySparkKernel(SparkKernelBase):

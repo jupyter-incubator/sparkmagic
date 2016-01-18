@@ -1,9 +1,9 @@
 from mock import MagicMock, call
 from nose.tools import with_setup, raises
 
-from remotespark.sparkkernelbase import SparkKernelBase
 import remotespark.utils.configuration as conf
 from remotespark.utils.utils import get_connection_string
+from remotespark.wrapperkernel.sparkkernelbase import SparkKernelBase
 
 kernel = None
 user_ev = "username"
