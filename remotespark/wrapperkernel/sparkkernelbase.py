@@ -67,7 +67,7 @@ class SparkKernelBase(IPythonKernel):
                 transformer.get_code_to_execute(self._session_started, self.connection_string,
                                                 force, output_var, command)
         except SyntaxError as se:
-            self._show_user_error(se)
+            self._show_user_error("{}".format(se))
         else:
             # Execute instructions
             if error_to_show is not None:
