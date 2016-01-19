@@ -50,7 +50,7 @@ class UserCommandParser(object):
 
         # When no magic, add run command
         if not first_line.startswith("%"):
-            first_line = "%{} {}".format(UserCommandParser.run_command, code)
+            first_line = "%{} {}".format(UserCommandParser.run_command, first_line)
 
         # Remove percentage sign
         first_line = first_line[1:]
