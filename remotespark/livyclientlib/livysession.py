@@ -5,7 +5,6 @@ import textwrap
 from time import sleep, time
 import remotespark.utils.configuration as conf
 
-from IPython import get_ipython
 from remotespark.utils.constants import Constants
 from remotespark.utils.log import Log
 from .livyclienttimeouterror import LivyClientTimeoutError
