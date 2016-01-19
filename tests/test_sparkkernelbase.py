@@ -129,6 +129,7 @@ def test_returns_right_transformer():
     assert type(kernel._get_code_transformer(UserCommandParser.clean_up_command)) is CleanUpTransformer
     assert type(kernel._get_code_transformer(UserCommandParser.logs_command)) is LogsTransformer
     assert type(kernel._get_code_transformer("whatever")) is NotSupportedTransformer
+    assert type(kernel._get_code_transformer(UserCommandParser.local_command)) is PythonTransformer
 
 
 @with_setup(_setup, _teardown)
