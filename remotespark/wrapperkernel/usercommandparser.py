@@ -12,6 +12,7 @@ class UserCommandParser(object):
     delete_command = "delete"
     clean_up_command = "cleanup"
     logs_command = "logs"
+    local_command = "local"
 
     def __init__(self):
         """Code can have a magic or no magic specified (specified with %word sign). If no magic is specified, %run will
