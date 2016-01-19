@@ -1,5 +1,4 @@
-from mock import MagicMock, call
-from nose.tools import with_setup, raises, assert_equals
+from nose.tools import with_setup, assert_equals
 
 from remotespark.wrapperkernel.codetransformers import *
 from remotespark.utils.constants import Constants
@@ -98,6 +97,20 @@ def test_sql_transformer():
         transformer.get_code_to_execute(True, conn, False, None, code)
 
     assert_equals("%%spark -c sql\n{}".format(code), code_to_run)
+    assert error_to_show is None
+    assert_equals(begin_action, Constants.start_session_action)
+    assert_equals(end_action, Constants.do_nothing_action)
+    assert_equals(deletes_session, False)
+
+
+@with_setup(_setup, _teardown)
+def test_sql_transformer_output_var():
+    transformer = SqlTransformer("command")
+
+    code_to_run, error_to_show, begin_action, end_action, deletes_session = \
+        transformer.get_code_to_execute(True, conn, False, "my_var", code)
+
+    assert_equals("%%spark -c sql -o my_var\n{}".format(code), code_to_run)
     assert error_to_show is None
     assert_equals(begin_action, Constants.start_session_action)
     assert_equals(end_action, Constants.do_nothing_action)

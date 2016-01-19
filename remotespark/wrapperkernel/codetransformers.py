@@ -67,10 +67,14 @@ class ContextOutputVariableTransformer(UserCodeTransformerBase):
 
     def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = None
-        code_to_run = "%%spark -c {}\n{}".format(self.context_name, command)
         begin_action = Constants.start_session_action
         end_action = Constants.do_nothing_action
         deletes_session = False
+
+        if output_var is None:
+            code_to_run = "%%spark -c {}\n{}".format(self.context_name, command)
+        else:
+            code_to_run = "%%spark -c {} -o {}\n{}".format(self.context_name, output_var, command)
 
         return code_to_run, error_to_show, begin_action, end_action, deletes_session
 

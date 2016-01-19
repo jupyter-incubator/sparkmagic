@@ -1,5 +1,4 @@
-from mock import MagicMock, call
-from nose.tools import with_setup, raises, assert_equals
+from nose.tools import with_setup, assert_equals
 
 from remotespark.wrapperkernel.usercommandparser import UserCommandParser
 
