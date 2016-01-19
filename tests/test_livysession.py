@@ -413,7 +413,7 @@ class TestLivySession:
         http_client.reset_mock()
 
         session.create_sql_context()
-        assert ipython_display.writeln.call_count == 3
+        assert ipython_display.writeln_and_flush.call_count == 3
 
         # Second call should not issue a post request
         session.create_sql_context()

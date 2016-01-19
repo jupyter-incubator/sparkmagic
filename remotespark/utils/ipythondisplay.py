@@ -1,5 +1,6 @@
 from IPython.core.display import display, HTML
 from IPython import get_ipython
+import sys
 
 
 class IpythonDisplay(object):
@@ -17,6 +18,10 @@ class IpythonDisplay(object):
 
     def writeln(self, msg):
         self.write("{}\n".format(msg))
+
+    def writeln_and_flush(self, msg):
+        self.writeln(msg)
+        sys.stdout.flush()
 
     def send_error(self, error):
         self._ipython_shell.write_err(error)
