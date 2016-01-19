@@ -159,7 +159,7 @@ class LivySession(object):
 
         if current_status in Constants.final_status:
             error = "Session {} unexpectedly reached final status {}. See logs:\n{}"\
-                .format(self.id, current_status, "\n".join(self.logs))
+                .format(self.id, current_status, self.logs)
             self.logger.error(error)
             raise LivyUnexpectedStatusError(error)
 
