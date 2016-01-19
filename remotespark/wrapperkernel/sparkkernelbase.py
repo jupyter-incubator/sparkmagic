@@ -62,38 +62,44 @@ class SparkKernelBase(IPythonKernel):
         transformer = self._get_code_transformer(subcommand)
 
         # Get instructions
-        code_to_run, error_to_show, begin_action, end_action, deletes_session = \
-            transformer.get_code_to_execute(self._session_started, self.connection_string, force, output_var, command)
-
-        # Execute instructions
-        if error_to_show is not None:
-            self._show_user_error(error_to_show)
-            return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
-
-        if begin_action == Constants.delete_session_action:
-            self._delete_session()
-        elif begin_action == Constants.start_session_action:
-            self._start_session()
-        elif begin_action == Constants.do_nothing_action:
-            pass
+        try:
+            code_to_run, error_to_show, begin_action, end_action, deletes_session = \
+                transformer.get_code_to_execute(self._session_started, self.connection_string,
+                                                force, output_var, command)
+        except SyntaxError as se:
+            self._show_user_error(se)
         else:
-            raise ValueError("Begin action {} not supported.".format(begin_action))
+            # Execute instructions
+            if error_to_show is not None:
+                self._show_user_error(error_to_show)
+                return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
 
-        res = self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
+            if begin_action == Constants.delete_session_action:
+                self._delete_session()
+            elif begin_action == Constants.start_session_action:
+                self._start_session()
+            elif begin_action == Constants.do_nothing_action:
+                pass
+            else:
+                raise ValueError("Begin action {} not supported.".format(begin_action))
 
-        if end_action == Constants.delete_session_action:
-            self._delete_session()
-        elif end_action == Constants.start_session_action:
-            self._start_session()
-        elif end_action == Constants.do_nothing_action:
-            pass
-        else:
-            raise ValueError("End action {} not supported.".format(end_action))
+            res = self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
 
-        if deletes_session:
-            self._session_started = False
+            if end_action == Constants.delete_session_action:
+                self._delete_session()
+            elif end_action == Constants.start_session_action:
+                self._start_session()
+            elif end_action == Constants.do_nothing_action:
+                pass
+            else:
+                raise ValueError("End action {} not supported.".format(end_action))
 
-        return res
+            if deletes_session:
+                self._session_started = False
+
+            return res
+
+        return self._execute_cell("", silent, store_history, user_expressions, allow_stdin)
 
     def do_shutdown(self, restart):
         # Cleanup

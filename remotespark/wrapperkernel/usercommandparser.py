@@ -24,7 +24,8 @@ class UserCommandParser(object):
         We could have a choice between option above or having to specify value for -f, like:
             valid:      %delete -f True 9
             invalid:    %delete -f 9
-        I went with the first option above since it's less verbose.
+        I went with the first option above since it's less verbose. For second option:
+            parser.add_argument("-f", "--force", default=False, type=bool)
 
         Anything in the first line that ends up in ns.command below will be merged with the subsequent lines.
         """
