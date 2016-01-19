@@ -113,11 +113,13 @@ def test_delete_session():
 
 @with_setup(_setup, _teardown)
 def test_set_config():
-    def _check(prepend, _session_started=False, key_error_expected=False):
+    def _check(prepend, _session_started=False, key_error_expected=False, force=False):
         # Set up
         kernel._show_user_error = MagicMock(side_effect=KeyError)
-        properties = """{"extra": 2}"""
+        properties = '{"extra": 2}'
         code = prepend + properties
+        if force:
+            code = "{} -f".format(code)
         kernel._session_started = _session_started
         execute_cell_mock.reset_mock()
 
@@ -145,9 +147,9 @@ def test_set_config():
     _check("%config\n")
     _check("%%config ")
     _check("%%config\n")
-    _check("%config -f ")
+    _check("%config ", force=True)
     _check("%config ", True, True)
-    _check("%config -f ", True, False)
+    _check("%config ", True, False, force=True)
 
 
 @with_setup(_setup, _teardown)
@@ -191,7 +193,7 @@ def test_info():
 
 @with_setup(_setup, _teardown)
 def test_delete_force():
-    code = "%delete -f 9"
+    code = "%delete 9 -f"
     kernel._session_started = True
     user_error = MagicMock()
     kernel._show_user_error = user_error

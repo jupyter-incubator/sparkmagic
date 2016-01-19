@@ -33,6 +33,8 @@ class SparkKernelBase(IPythonKernel):
         self._fatal_error = None
         self._ipython_display = IpythonDisplay()
 
+        self.user_command_parser = UserCommandParser()
+
         # Disable warnings for test env in HDI
         requests.packages.urllib3.disable_warnings()
 
@@ -54,14 +56,14 @@ class SparkKernelBase(IPythonKernel):
             self._repeat_fatal_error()
 
         # Parse command
-        subcommand, flags, command = UserCommandParser.parse_user_command(code)
+        subcommand, force, output_var, command = self.user_command_parser.parse_user_command(code)
 
         # Get transformer
         transformer = self._get_code_transformer(subcommand)
 
         # Get instructions
         code_to_run, error_to_show, begin_action, end_action, deletes_session = \
-            transformer.get_code_to_execute(self._session_started, self.connection_string, flags, command)
+            transformer.get_code_to_execute(self._session_started, self.connection_string, force, output_var, command)
 
         # Execute instructions
         if error_to_show is not None:

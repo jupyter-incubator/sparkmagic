@@ -2,19 +2,18 @@
 # Distributed under the terms of the Modified BSD License.
 
 from remotespark.utils.constants import Constants
-from remotespark.wrapperkernel.usercommandparser import UserCommandParser
 
 
 class UserCodeTransformerBase(object):
     def __init__(self, subcommand):
         self.name = subcommand
 
-    def get_code_to_execute(self, session_started, connection_string, flags, command):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         raise NotImplementedError()
 
 
 class NotSupportedTransformer(UserCodeTransformerBase):
-    def get_code_to_execute(self, session_started, connection_string, flags, command):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = "Magic '{}' not supported.".format(self.name)
         code_to_run = ""
         begin_action = Constants.do_nothing_action
@@ -25,14 +24,14 @@ class NotSupportedTransformer(UserCodeTransformerBase):
 
 
 class ConfigTransformer(UserCodeTransformerBase):
-    def get_code_to_execute(self, session_started, connection_string, flags, command):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = None
         begin_action = Constants.do_nothing_action
         end_action = Constants.do_nothing_action
         deletes_session = False
 
         if session_started:
-            if UserCommandParser.force_flag not in flags:
+            if not force:
                 error_to_show = "A session has already been started. In order to modify the Spark configura" \
                                 "tion, please provide the '-f' flag at the beginning of the config magic:\n" \
                                 "\te.g. `%config -f {}`\n\nNote that this will kill the current session and" \
@@ -50,7 +49,7 @@ class ConfigTransformer(UserCodeTransformerBase):
 
 
 class SparkTransformer(UserCodeTransformerBase):
-    def get_code_to_execute(self, session_started, connection_string, flags, command):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = None
         code_to_run = "%%spark\n{}".format(command)
         begin_action = Constants.start_session_action
@@ -61,7 +60,7 @@ class SparkTransformer(UserCodeTransformerBase):
 
 
 class SqlTransformer(UserCodeTransformerBase):
-    def get_code_to_execute(self, session_started, connection_string, flags, command):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = None
         code_to_run = "%%spark -c sql\n{}".format(command)
         begin_action = Constants.start_session_action
@@ -72,7 +71,7 @@ class SqlTransformer(UserCodeTransformerBase):
 
 
 class HiveTransformer(UserCodeTransformerBase):
-    def get_code_to_execute(self, session_started, connection_string, flags, command):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = None
         code_to_run = "%%spark -c hive\n{}".format(command)
         begin_action = Constants.start_session_action
@@ -83,7 +82,7 @@ class HiveTransformer(UserCodeTransformerBase):
 
 
 class InfoTransformer(UserCodeTransformerBase):
-    def get_code_to_execute(self, session_started, connection_string, flags, command):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = None
         code_to_run = "%spark info {}".format(connection_string)
         begin_action = Constants.do_nothing_action
@@ -94,13 +93,13 @@ class InfoTransformer(UserCodeTransformerBase):
 
 
 class DeleteSessionTransformer(UserCodeTransformerBase):
-    def get_code_to_execute(self, session_started, connection_string, flags, command):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = None
         begin_action = Constants.do_nothing_action
         end_action = Constants.do_nothing_action
         deletes_session = False
 
-        if UserCommandParser.force_flag not in flags:
+        if not force:
             error_to_show = "The session you are trying to delete could be this kernel's session. In order " \
                             "to delete this session, please provide the '-f' flag at the beginning of the " \
                             "delete magic:\n\te.g. `%delete -f id`\n\nAll previously run commands in the " \
@@ -114,13 +113,13 @@ class DeleteSessionTransformer(UserCodeTransformerBase):
 
 
 class CleanUpTransformer(UserCodeTransformerBase):
-    def get_code_to_execute(self, session_started, connection_string, flags, command):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = None
         begin_action = Constants.do_nothing_action
         end_action = Constants.do_nothing_action
         deletes_session = False
 
-        if UserCommandParser.force_flag not in flags:
+        if not force:
             error_to_show = "The sessions you are trying to delete could be this kernel's session or other " \
                             "people's sessions. In order to delete them, please provide the '-f' flag at the " \
                             "beginning of the cleanup magic:\n\te.g. `%cleanup -f`\n\nAll previously run " \
@@ -134,7 +133,7 @@ class CleanUpTransformer(UserCodeTransformerBase):
 
 
 class LogsTransformer(UserCodeTransformerBase):
-    def get_code_to_execute(self, session_started, connection_string, flags, command):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = None
         begin_action = Constants.do_nothing_action
         end_action = Constants.do_nothing_action
