@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 
-class Constants:
+class Constants(object):
     config_json = "config.json"
 
     session_kind_spark = "spark"
@@ -34,3 +34,6 @@ class Constants:
                                busy_session_status, error_session_status, dead_session_status]
     final_status = [dead_session_status, error_session_status]
 
+    delete_session_action = "delete"
+    start_session_action = "start"
+    do_nothing_action = "nothing"

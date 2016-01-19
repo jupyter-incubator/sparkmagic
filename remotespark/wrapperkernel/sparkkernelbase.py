@@ -7,20 +7,11 @@ from remotespark.utils.ipythondisplay import IpythonDisplay
 import remotespark.utils.configuration as conf
 from remotespark.utils.log import Log
 from remotespark.utils.utils import get_connection_string
+from .usercommandparser import UserCommandParser
+from .codetransformers import *
 
 
 class SparkKernelBase(IPythonKernel):
-    run_command = "run"
-    config_command = "config"
-    sql_command = "sql"
-    hive_command = "hive"
-    info_command = "info"
-    delete_command = "delete"
-    clean_up_command = "cleanup"
-    logs_command = "logs"
-
-    force_flag = "f"
-
     def __init__(self, implementation, implementation_version, language, language_version, language_info,
                  kernel_conf_name, session_language, client_name, **kwargs):
         # Required by Jupyter - Override
@@ -42,6 +33,8 @@ class SparkKernelBase(IPythonKernel):
         self._fatal_error = None
         self._ipython_display = IpythonDisplay()
 
+        self.user_command_parser = UserCommandParser()
+
         # Disable warnings for test env in HDI
         requests.packages.urllib3.disable_warnings()
 
@@ -62,78 +55,78 @@ class SparkKernelBase(IPythonKernel):
         if self._fatal_error is not None:
             self._repeat_fatal_error()
 
-        subcommand, flags, code_to_run = self._parse_user_command(code)
+        # Parse command
+        subcommand, force, output_var, command = self.user_command_parser.parse_user_command(code)
 
-        if subcommand == self.run_command:
-            code_to_run = "%%spark\n{}".format(code_to_run)
-            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
-        elif subcommand == self.sql_command:
-            code_to_run = "%%spark -c sql\n{}".format(code_to_run)
-            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
-        elif subcommand == self.hive_command:
-            code_to_run = "%%spark -c hive\n{}".format(code_to_run)
-            return self._run_starting_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
-        elif subcommand == self.config_command:
-            restart_session = False
+        # Get transformer
+        transformer = self._get_code_transformer(subcommand)
 
-            if self._session_started:
-                if self.force_flag not in flags:
-                    self._show_user_error("A session has already been started. In order to modify the Spark configura"
-                                          "tion, please provide the '-f' flag at the beginning of the config magic:\n"
-                                          "\te.g. `%config -f {}`\n\nNote that this will kill the current session and"
-                                          " will create a new one with the configuration provided. All previously run "
-                                          "commands in the session will be lost.")
-                    code_to_run = ""
-                else:
-                    restart_session = True
-                    code_to_run = "%spark config {}".format(code_to_run)
-            else:
-                code_to_run = "%spark config {}".format(code_to_run)
-
-            return self._run_restarting_session(code_to_run, silent, store_history, user_expressions, allow_stdin,
-                                                restart_session)
-        elif subcommand == self.info_command:
-            code_to_run = "%spark info {}".format(self.connection_string)
-            return self._run_without_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
-        elif subcommand == self.delete_command:
-            if self.force_flag not in flags:
-                self._show_user_error("The session you are trying to delete could be this kernel's session. In order "
-                                      "to delete this session, please provide the '-f' flag at the beginning of the "
-                                      "delete magic:\n\te.g. `%delete -f id`\n\nAll previously run commands in the "
-                                      "session will be lost.")
-                code_to_run = ""
-            else:
-                self._session_started = False
-                code_to_run = "%spark delete {} {}".format(self.connection_string, code_to_run)
-
-            return self._run_without_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
-        elif subcommand == self.clean_up_command:
-            if self.force_flag not in flags:
-                self._show_user_error("The sessions you are trying to delete could be this kernel's session or other "
-                                      "people's sessions. In order to delete them, please provide the '-f' flag at the "
-                                      "beginning of the cleanup magic:\n\te.g. `%cleanup -f`\n\nAll previously run "
-                                      "commands in the sessions will be lost.")
-                code_to_run = ""
-            else:
-                self._session_started = False
-                code_to_run = "%spark cleanup {}".format(self.connection_string)
-
-            return self._run_without_session(code_to_run, silent, store_history, user_expressions, allow_stdin)
-        elif subcommand == self.logs_command:
-            if self._session_started:
-                code_to_run = "%spark logs"
-            else:
-                code_to_run = "print('No logs yet.')"
-            return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
+        # Get instructions
+        try:
+            code_to_run, error_to_show, begin_action, end_action, deletes_session = \
+                transformer.get_code_to_execute(self._session_started, self.connection_string,
+                                                force, output_var, command)
+        except SyntaxError as se:
+            self._show_user_error("{}".format(se))
         else:
-            self._show_user_error("Magic '{}' not supported.".format(subcommand))
-            return self._run_without_session("", silent, store_history, user_expressions, allow_stdin)
+            # Execute instructions
+            if error_to_show is not None:
+                self._show_user_error(error_to_show)
+                return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
+
+            if begin_action == Constants.delete_session_action:
+                self._delete_session()
+            elif begin_action == Constants.start_session_action:
+                self._start_session()
+            elif begin_action == Constants.do_nothing_action:
+                pass
+            else:
+                raise ValueError("Begin action {} not supported.".format(begin_action))
+
+            res = self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
+
+            if end_action == Constants.delete_session_action:
+                self._delete_session()
+            elif end_action == Constants.start_session_action:
+                self._start_session()
+            elif end_action == Constants.do_nothing_action:
+                pass
+            else:
+                raise ValueError("End action {} not supported.".format(end_action))
+
+            if deletes_session:
+                self._session_started = False
+
+            return res
+
+        return self._execute_cell("", silent, store_history, user_expressions, allow_stdin)
 
     def do_shutdown(self, restart):
         # Cleanup
         self._delete_session()
 
         return self._do_shutdown_ipykernel(restart)
+
+    @staticmethod
+    def _get_code_transformer(subcommand):
+        if subcommand == UserCommandParser.run_command:
+            return SparkTransformer(subcommand)
+        elif subcommand == UserCommandParser.sql_command:
+            return SqlTransformer(subcommand)
+        elif subcommand == UserCommandParser.hive_command:
+            return HiveTransformer(subcommand)
+        elif subcommand == UserCommandParser.config_command:
+            return ConfigTransformer(subcommand)
+        elif subcommand == UserCommandParser.info_command:
+            return InfoTransformer(subcommand)
+        elif subcommand == UserCommandParser.delete_command:
+            return DeleteSessionTransformer(subcommand)
+        elif subcommand == UserCommandParser.clean_up_command:
+            return CleanUpTransformer(subcommand)
+        elif subcommand == UserCommandParser.logs_command:
+            return LogsTransformer(subcommand)
+        else:
+            return NotSupportedTransformer(subcommand)
 
     def _load_magics_extension(self):
         register_magics_code = "%load_ext remotespark"
@@ -165,74 +158,22 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
             self._execute_cell_for_user(code, True, False)
             self._session_started = False
 
-    def _run_without_session(self, code, silent, store_history, user_expressions, allow_stdin):
-        return self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
-
-    def _run_starting_session(self, code, silent, store_history, user_expressions, allow_stdin):
-        self._start_session()
-        return self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
-
-    def _run_restarting_session(self, code, silent, store_history, user_expressions, allow_stdin, restart):
-        if restart:
-            self._delete_session()
-
-        res = self._execute_cell(code, silent, store_history, user_expressions, allow_stdin)
-
-        if restart:
-            self._start_session()
-
-        return res
-
     def _get_configuration(self):
         """Returns (username, password, url). If there is an error (missing configuration),
            returns False."""
         try:
             credentials = getattr(conf, 'kernel_' + self.kernel_conf_name + '_credentials')()
             ret = (credentials['username'], credentials['password'], credentials['url'])
+
             # The URL has to be set in the configuration.
             assert(ret[2])
+
             return ret
         except (KeyError, AssertionError):
             message = "Please set configuration for 'kernel_{}_credentials' to initialize Kernel".format(
                 self.kernel_conf_name)
             self._queue_fatal_error(message)
             return False
-
-    def _parse_user_command(self, code):
-        # Normalize 2 signs to 1
-        if code.startswith("%%"):
-            code = code[1:]
-
-        # When no magic, return run command
-        if not code.startswith("%"):
-            code = "%{} {}".format(self.run_command, code)
-
-        # Remove percentage sign
-        code = code[1:]
-
-        split_code = code.split(None, 1)
-        subcommand = split_code[0].lower()
-        flags = []
-        if len(split_code) > 1:
-            rest = split_code[1]
-        else:
-            rest = ""
-
-        # Get all flags
-        flag_split = rest.split(None, 1)
-        while len(flag_split) >= 1 and flag_split[0].startswith("-"):
-            if len(flag_split) >= 2:
-                flags.append(flag_split[0][1:].lower())
-                rest = flag_split[1]
-                flag_split = rest.split(None, 1)
-            if len(flag_split) == 1:
-                flags.append(flag_split[0][1:].lower())
-                flag_split = [""]
-
-        # flags to lower
-        flags = [i.lower() for i in flags]
-
-        return subcommand, flags, rest
 
     def _execute_cell(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False,
                       shutdown_if_error=False, log_if_error=None):

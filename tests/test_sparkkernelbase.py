@@ -1,9 +1,11 @@
 from mock import MagicMock, call
-from nose.tools import with_setup, raises
+from nose.tools import with_setup
 
-from remotespark.sparkkernelbase import SparkKernelBase
 import remotespark.utils.configuration as conf
 from remotespark.utils.utils import get_connection_string
+from remotespark.wrapperkernel.sparkkernelbase import SparkKernelBase
+from remotespark.wrapperkernel.usercommandparser import UserCommandParser
+from remotespark.wrapperkernel.codetransformers import *
 
 kernel = None
 user_ev = "username"
@@ -13,6 +15,7 @@ execute_cell_mock = None
 do_shutdown_mock = None
 conn_str = None
 ipython_display = None
+parser = None
 
 
 class TestSparkKernel(SparkKernelBase):
@@ -22,7 +25,7 @@ class TestSparkKernel(SparkKernelBase):
 
 
 def _setup():
-    global kernel, user_ev, pass_ev, url_ev, execute_cell_mock, do_shutdown_mock, conn_str, ipython_display
+    global kernel, user_ev, pass_ev, url_ev, execute_cell_mock, do_shutdown_mock, conn_str, ipython_display, parser
 
     usr = "u"
     pwd = "p"
@@ -41,6 +44,10 @@ def _setup():
     kernel._execute_cell_for_user = execute_cell_mock = MagicMock()
     kernel._do_shutdown_ipykernel = do_shutdown_mock = MagicMock()
     kernel._ipython_display = ipython_display = MagicMock()
+
+    parser = MagicMock()
+    parser.parse_user_command.return_value = (UserCommandParser.run_command, False, None, "my code")
+    kernel.user_command_parser = parser
 
 
 def _teardown():
@@ -76,7 +83,7 @@ def test_get_config_not_set():
 
 
 @with_setup(_setup, _teardown)
-def test_get_config_not_set():
+def test_get_config_not_set_empty_strings():
     conf.override_all({conf.kernel_python_credentials.__name__: {user_ev: '', pass_ev: '', url_ev: ''}})
     kernel._get_configuration()
     assert kernel._fatal_error
@@ -112,159 +119,255 @@ def test_delete_session():
 
 
 @with_setup(_setup, _teardown)
-def test_set_config():
-    def _check(prepend, _session_started=False, key_error_expected=False):
-        # Set up
-        kernel._show_user_error = MagicMock(side_effect=KeyError)
-        properties = """{"extra": 2}"""
-        code = prepend + properties
-        kernel._session_started = _session_started
-        execute_cell_mock.reset_mock()
-
-        # Call method
-        try:
-            kernel.do_execute(code, False)
-        except KeyError:
-            if not key_error_expected:
-                assert False
-
-            # When exception is expected, nothing to check
-            return
-
-        assert _session_started == kernel._session_started
-        assert call("%spark config {}".format(properties), False, True, None, False) \
-            in execute_cell_mock.mock_calls
-
-        if _session_started and not key_error_expected:
-            # This means -f must be present, so check that a restart happened
-            assert call("%spark cleanup", True, False) in execute_cell_mock.mock_calls
-            assert call("%spark add TestKernel python {} skip".format(conn_str), True, False, None, False) \
-                in execute_cell_mock.mock_calls
-
-    _check("%config ")
-    _check("%config\n")
-    _check("%%config ")
-    _check("%%config\n")
-    _check("%config -f ")
-    _check("%config ", True, True)
-    _check("%config -f ", True, False)
+def test_returns_right_transformer():
+    assert type(kernel._get_code_transformer(UserCommandParser.run_command)) is SparkTransformer
+    assert type(kernel._get_code_transformer(UserCommandParser.sql_command)) is SqlTransformer
+    assert type(kernel._get_code_transformer(UserCommandParser.hive_command)) is HiveTransformer
+    assert type(kernel._get_code_transformer(UserCommandParser.config_command)) is ConfigTransformer
+    assert type(kernel._get_code_transformer(UserCommandParser.info_command)) is InfoTransformer
+    assert type(kernel._get_code_transformer(UserCommandParser.delete_command)) is DeleteSessionTransformer
+    assert type(kernel._get_code_transformer(UserCommandParser.clean_up_command)) is CleanUpTransformer
+    assert type(kernel._get_code_transformer(UserCommandParser.logs_command)) is LogsTransformer
+    assert type(kernel._get_code_transformer("whatever")) is NotSupportedTransformer
 
 
 @with_setup(_setup, _teardown)
-def test_do_execute_initializes_magics_if_not_run():
-    code = "code"
+def test_instructions_from_parser_are_passed_to_transformer():
+    code_to_run = "my code"
 
-    # Call method
-    assert not kernel._session_started
-    kernel.do_execute(code, False)
+    transformer = MagicMock()
+    transformer.get_code_to_execute = MagicMock(side_effect=SyntaxError)
+    kernel._get_code_transformer = MagicMock(return_value=transformer)
+    parser.parse_user_command.return_value = (UserCommandParser.run_command, False, None, code_to_run)
 
-    # Assertions
+    kernel._session_started = True
+
+    kernel._show_user_error = MagicMock()
+
+    # Execute
+    kernel.do_execute(code_to_run, False)
+
+    # Assert
+    transformer.get_code_to_execute.assert_called_with(True, kernel.connection_string, False, None, code_to_run)
+    kernel._show_user_error.assert_called_with("None")
+    assert call("", False, True, None, False) in execute_cell_mock.mock_calls
+
+
+@with_setup(_setup, _teardown)
+def test_instructions_from_transformer_are_executed_code():
+    code_to_run = "my code"
+    error_to_show = None
+    begin_action = Constants.do_nothing_action
+    end_action = Constants.do_nothing_action
+    deletes_session = False
+
+    transformer = MagicMock()
+    transformer.get_code_to_execute.return_value = (code_to_run, error_to_show, begin_action, end_action,
+                                                    deletes_session)
+    kernel._get_code_transformer = MagicMock(return_value=transformer)
+    kernel._show_user_error = MagicMock()
+    kernel._start_session = MagicMock()
+    kernel._delete_session = MagicMock()
+
+    kernel._session_started = True
+
+    # Execute
+    kernel.do_execute(code_to_run, False)
+
+    # Assert
+    assert not kernel._show_user_error.called
+    assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
+    assert not kernel._start_session.called
+    assert not kernel._delete_session.called
     assert kernel._session_started
-    assert call("%spark add TestKernel python {} skip"
-                .format(conn_str), True, False, None, False) in execute_cell_mock.mock_calls
-    assert call("%%spark\n{}".format(code), False, True, None, False) in execute_cell_mock.mock_calls
 
 
 @with_setup(_setup, _teardown)
-@raises(KeyError)
-def test_magic_not_supported():
-    # Set up
-    code = "%alex some spark code"
+def test_instructions_from_transformer_are_executed_error():
+    code_to_run = ""
+    error_to_show = "error!"
+    begin_action = Constants.do_nothing_action
+    end_action = Constants.do_nothing_action
+    deletes_session = False
+
+    transformer = MagicMock()
+    transformer.get_code_to_execute.return_value = (code_to_run, error_to_show, begin_action, end_action,
+                                                    deletes_session)
+    kernel._get_code_transformer = MagicMock(return_value=transformer)
+    kernel._show_user_error = MagicMock()
+    kernel._start_session = MagicMock()
+    kernel._delete_session = MagicMock()
+
     kernel._session_started = True
-    kernel._show_user_error = MagicMock(side_effect=KeyError)
 
-    # Call method
-    kernel.do_execute(code, False)
+    # Execute
+    kernel.do_execute(code_to_run, False)
 
-
-@with_setup(_setup, _teardown)
-def test_info():
-    code = "%info"
-
-    # Call method
-    kernel.do_execute(code, False)
-
-    # Assertions
-    assert not kernel._session_started
-    assert call("%spark info {}".format(conn_str), False, True, None, False) in execute_cell_mock.mock_calls
-
-
-@with_setup(_setup, _teardown)
-def test_delete_force():
-    code = "%delete -f 9"
-    kernel._session_started = True
-    user_error = MagicMock()
-    kernel._show_user_error = user_error
-
-    # Call method
-    kernel.do_execute(code, False)
-
-    # Assertions
-    assert not kernel._session_started
-    assert call("%spark delete {} 9".format(conn_str), False, True, None, False) in execute_cell_mock.mock_calls
-    assert len(user_error.mock_calls) == 0
-
-
-@with_setup(_setup, _teardown)
-def test_delete_not_force():
-    code = "%delete 9"
-    kernel._session_started = True
-    user_error = MagicMock()
-    kernel._show_user_error = user_error
-
-    # Call method
-    kernel.do_execute(code, False)
-
-    # Assertions
+    # Assert
+    kernel._show_user_error.assert_called_with(error_to_show)
+    assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
+    assert not kernel._start_session.called
+    assert not kernel._delete_session.called
     assert kernel._session_started
-    assert not call("%spark delete {} 9".format(conn_str), False, True, None, False) in execute_cell_mock.mock_calls
-    assert len(user_error.mock_calls) == 1
 
 
 @with_setup(_setup, _teardown)
-def test_cleanup_force():
-    code = "%cleanup -f"
+def test_instructions_from_transformer_are_executed_deletes_session():
+    code_to_run = "my code"
+    error_to_show = None
+    begin_action = Constants.do_nothing_action
+    end_action = Constants.do_nothing_action
+    deletes_session = True
+
+    transformer = MagicMock()
+    transformer.get_code_to_execute.return_value = (code_to_run, error_to_show, begin_action, end_action,
+                                                    deletes_session)
+    kernel._get_code_transformer = MagicMock(return_value=transformer)
+    kernel._show_user_error = MagicMock()
+    kernel._start_session = MagicMock()
+    kernel._delete_session = MagicMock()
+
     kernel._session_started = True
-    user_error = MagicMock()
-    kernel._show_user_error = user_error
 
-    # Call method
-    kernel.do_execute(code, False)
+    # Execute
+    kernel.do_execute(code_to_run, False)
 
-    # Assertions
+    # Assert
+    assert not kernel._show_user_error.called
+    assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
+    assert not kernel._start_session.called
+    assert not kernel._delete_session.called
     assert not kernel._session_started
-    assert call("%spark cleanup {}".format(conn_str), False, True, None, False) in execute_cell_mock.mock_calls
-    assert len(user_error.mock_calls) == 0
 
 
 @with_setup(_setup, _teardown)
-def test_cleanup_not_force():
-    code = "%cleanup"
-    kernel._session_started = True
-    user_error = MagicMock()
-    kernel._show_user_error = user_error
+def test_instructions_from_transformer_are_executed_begin_start():
+    code_to_run = "my code"
+    error_to_show = None
+    begin_action = Constants.start_session_action
+    end_action = Constants.do_nothing_action
+    deletes_session = False
 
-    # Call method
-    kernel.do_execute(code, False)
+    transformer = MagicMock()
+    transformer.get_code_to_execute.return_value = (code_to_run, error_to_show, begin_action, end_action,
+                                                    deletes_session)
+    kernel._get_code_transformer = MagicMock(return_value=transformer)
+    kernel._show_user_error = MagicMock()
+    kernel._start_session = MagicMock()
+    kernel._delete_session = MagicMock()
 
-    # Assertions
-    assert kernel._session_started
-    assert not call("%spark cleanup {}".format(conn_str), False, True, None, False) in execute_cell_mock.mock_calls
-    assert len(user_error.mock_calls) == 1
+    # Execute
+    kernel.do_execute(code_to_run, False)
+
+    # Assert
+    assert not kernel._show_user_error.called
+    assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
+    kernel._start_session.assert_called_with()
+    assert not kernel._delete_session.called
 
 
 @with_setup(_setup, _teardown)
-def test_call_spark():
-    # Set up
-    code = "some spark code"
-    kernel._session_started = True
+def test_instructions_from_transformer_are_executed_begin_delete():
+    code_to_run = "my code"
+    error_to_show = None
+    begin_action = Constants.delete_session_action
+    end_action = Constants.do_nothing_action
+    deletes_session = False
 
-    # Call method
-    kernel.do_execute(code, False)
+    transformer = MagicMock()
+    transformer.get_code_to_execute.return_value = (code_to_run, error_to_show, begin_action, end_action,
+                                                    deletes_session)
+    kernel._get_code_transformer = MagicMock(return_value=transformer)
+    kernel._show_user_error = MagicMock()
+    kernel._start_session = MagicMock()
+    kernel._delete_session = MagicMock()
 
-    # Assertions
-    assert kernel._session_started
-    execute_cell_mock.assert_called_once_with("%%spark\n{}".format(code), False, True, None, False)
+    # Execute
+    kernel.do_execute(code_to_run, False)
+
+    # Assert
+    assert not kernel._show_user_error.called
+    assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
+    assert not kernel._start_session.called
+    kernel._delete_session.assert_called_with()
+
+
+@with_setup(_setup, _teardown)
+def test_instructions_from_transformer_are_executed_end_start():
+    code_to_run = "my code"
+    error_to_show = None
+    begin_action = Constants.do_nothing_action
+    end_action = Constants.start_session_action
+    deletes_session = False
+
+    transformer = MagicMock()
+    transformer.get_code_to_execute.return_value = (code_to_run, error_to_show, begin_action, end_action,
+                                                    deletes_session)
+    kernel._get_code_transformer = MagicMock(return_value=transformer)
+    kernel._show_user_error = MagicMock()
+    kernel._start_session = MagicMock()
+    kernel._delete_session = MagicMock()
+
+    # Execute
+    kernel.do_execute(code_to_run, False)
+
+    # Assert
+    assert not kernel._show_user_error.called
+    assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
+    kernel._start_session.assert_called_with()
+    assert not kernel._delete_session.called
+
+
+@with_setup(_setup, _teardown)
+def test_instructions_from_transformer_are_executed_end_delete():
+    code_to_run = "my code"
+    error_to_show = None
+    begin_action = Constants.do_nothing_action
+    end_action = Constants.delete_session_action
+    deletes_session = False
+
+    transformer = MagicMock()
+    transformer.get_code_to_execute.return_value = (code_to_run, error_to_show, begin_action, end_action,
+                                                    deletes_session)
+    kernel._get_code_transformer = MagicMock(return_value=transformer)
+    kernel._show_user_error = MagicMock()
+    kernel._start_session = MagicMock()
+    kernel._delete_session = MagicMock()
+
+    # Execute
+    kernel.do_execute(code_to_run, False)
+
+    # Assert
+    assert not kernel._show_user_error.called
+    assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
+    assert not kernel._start_session.called
+    kernel._delete_session.assert_called_with()
+
+
+@with_setup(_setup, _teardown)
+def test_instructions_from_transformer_are_executed_begin_start_end_delete():
+    code_to_run = "my code"
+    error_to_show = None
+    begin_action = Constants.start_session_action
+    end_action = Constants.delete_session_action
+    deletes_session = False
+
+    transformer = MagicMock()
+    transformer.get_code_to_execute.return_value = (code_to_run, error_to_show, begin_action, end_action,
+                                                    deletes_session)
+    kernel._get_code_transformer = MagicMock(return_value=transformer)
+    kernel._show_user_error = MagicMock()
+    kernel._start_session = MagicMock()
+    kernel._delete_session = MagicMock()
+
+    # Execute
+    kernel.do_execute(code_to_run, False)
+
+    # Assert
+    assert not kernel._show_user_error.called
+    assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
+    kernel._start_session.assert_called_with()
+    kernel._delete_session.assert_called_with()
 
 
 @with_setup(_setup, _teardown)
@@ -292,7 +395,6 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
     # Set up
     fatal_error = u"Error."
     message = "{}\nException details:\n\t\"{}\"".format(fatal_error, fatal_error)
-    stream_content = {"name": "stderr", "text": conf.fatal_error_suggestion().format(message)}
     code = "some spark code"
     reply_content = dict()
     reply_content[u"status"] = u"error"
@@ -310,50 +412,6 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
         assert kernel._fatal_error == message
         assert execute_cell_mock.call_count == 1
         assert ipython_display.send_error.call_count == 1
-
-
-@with_setup(_setup, _teardown)
-def test_call_spark_sql_new_line():
-    def _check(prepend):
-        # Set up
-        plain_code = "select tables"
-        code = prepend + plain_code
-        kernel._session_started = True
-        execute_cell_mock.reset_mock()
-
-        # Call method
-        kernel.do_execute(code, False)
-
-        # Assertions
-        assert kernel._session_started
-        execute_cell_mock.assert_called_once_with("%%spark -c sql\n{}".format(plain_code), False, True, None, False)
-
-    _check("%sql ")
-    _check("%sql\n")
-    _check("%%sql ")
-    _check("%%sql\n")
-
-
-@with_setup(_setup, _teardown)
-def test_call_spark_hive_new_line():
-    def _check(prepend):
-        # Set up
-        plain_code = "select tables"
-        code = prepend + plain_code
-        kernel._session_started = True
-        execute_cell_mock.reset_mock()
-
-        # Call method
-        kernel.do_execute(code, False)
-
-        # Assertions
-        assert kernel._session_started
-        execute_cell_mock.assert_called_once_with("%%spark -c hive\n{}".format(plain_code), False, True, None, False)
-
-    _check("%hive ")
-    _check("%hive\n")
-    _check("%%hive ")
-    _check("%%hive\n")
 
 
 @with_setup(_setup, _teardown)
@@ -388,21 +446,3 @@ def test_register_auto_viz():
     assert call("from remotespark.datawidgets.utils import display_dataframe\nip = get_ipython()\nip.display_formatter"
                 ".ipython_display_formatter.for_type_by_name('pandas.core.frame', 'DataFrame', display_dataframe)",
                 True, False, None, False) in execute_cell_mock.mock_calls
-
-
-@with_setup(_setup(), _teardown())
-def test_logs_magic():
-    kernel._session_started = True
-
-    kernel.do_execute("%logs", False)
-
-    assert call("%spark logs", False, True, None, False) in execute_cell_mock.mock_calls
-
-
-@with_setup(_setup(), _teardown())
-def test_logs_magic_prints_without_session():
-    kernel._session_started = False
-
-    kernel.do_execute("%logs", False)
-
-    assert call("print('No logs yet.')", False, True, None, False) in execute_cell_mock.mock_calls
