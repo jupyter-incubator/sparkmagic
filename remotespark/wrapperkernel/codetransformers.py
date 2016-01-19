@@ -59,10 +59,15 @@ class SparkTransformer(UserCodeTransformerBase):
         return code_to_run, error_to_show, begin_action, end_action, deletes_session
 
 
-class SqlTransformer(UserCodeTransformerBase):
+class ContextOutputVariableTransformer(UserCodeTransformerBase):
+    def __init__(self, subcommand):
+        super(ContextOutputVariableTransformer, self).__init__(subcommand)
+
+        self.context_name = None
+
     def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
         error_to_show = None
-        code_to_run = "%%spark -c sql\n{}".format(command)
+        code_to_run = "%%spark -c {}\n{}".format(self.context_name, command)
         begin_action = Constants.start_session_action
         end_action = Constants.do_nothing_action
         deletes_session = False
@@ -70,15 +75,18 @@ class SqlTransformer(UserCodeTransformerBase):
         return code_to_run, error_to_show, begin_action, end_action, deletes_session
 
 
-class HiveTransformer(UserCodeTransformerBase):
-    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
-        error_to_show = None
-        code_to_run = "%%spark -c hive\n{}".format(command)
-        begin_action = Constants.start_session_action
-        end_action = Constants.do_nothing_action
-        deletes_session = False
+class SqlTransformer(ContextOutputVariableTransformer):
+    def __init__(self, subcommand):
+        super(SqlTransformer, self).__init__(subcommand)
 
-        return code_to_run, error_to_show, begin_action, end_action, deletes_session
+        self.context_name = Constants.context_name_sql
+
+
+class HiveTransformer(ContextOutputVariableTransformer):
+    def __init__(self, subcommand):
+        super(HiveTransformer, self).__init__(subcommand)
+
+        self.context_name = Constants.context_name_hive
 
 
 class InfoTransformer(UserCodeTransformerBase):
