@@ -52,7 +52,8 @@ class EncodingWidget(FlexBox):
                      Encoding.y_agg_avg: Encoding.y_agg_avg,
                      Encoding.y_agg_min: Encoding.y_agg_min,
                      Encoding.y_agg_max: Encoding.y_agg_max,
-                     Encoding.y_agg_sum: Encoding.y_agg_sum},
+                     Encoding.y_agg_sum: Encoding.y_agg_sum,
+                     Encoding.y_agg_count: Encoding.y_agg_count},
             description="Func.",
             value=value_for_view)
         self.y_agg_view.on_trait_change(self._y_agg_changed_callback, 'value')

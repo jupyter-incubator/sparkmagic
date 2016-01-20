@@ -15,7 +15,8 @@ class Encoding(object):
     y_agg_max = "Max"
     y_agg_sum = "Sum"
     y_agg_none = "None"
-    supported_y_agg = [y_agg_avg, y_agg_min, y_agg_max, y_agg_sum, y_agg_none]
+    y_agg_count = "Count"
+    supported_y_agg = [y_agg_avg, y_agg_min, y_agg_max, y_agg_sum, y_agg_none, y_agg_count]
 
     def __init__(self, chart_type=None, x=None, y=None, y_aggregation=None,
                  logarithmic_x_axis=False, logarithmic_y_axis=False):
