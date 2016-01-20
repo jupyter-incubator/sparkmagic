@@ -15,13 +15,12 @@ class IpythonDisplay(object):
 
     def write(self, msg):
         self._ipython_shell.write(msg)
+        sys.flush()
 
     def writeln(self, msg):
         self.write("{}\n".format(msg))
 
-    def writeln_and_flush(self, msg):
-        self.writeln(msg)
-        sys.stdout.flush()
 
     def send_error(self, error):
         self._ipython_shell.write_err(error)
+        sys.stderr.flush()
