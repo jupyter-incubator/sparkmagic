@@ -57,7 +57,7 @@ def test_encoding_with_all_none_doesnt_throw():
                                                       'buildingID': 'buildingID'}) \
         in ipywidget_factory.get_dropdown.mock_calls
     assert call(description='Func.', value='none', options={'Max': 'Max', 'Sum': 'Sum', 'Avg': 'Avg',
-                                                            '-': 'None', 'Min': 'Min'}) \
+                                                            '-': 'None', 'Min': 'Min', 'Count': 'Count'}) \
         in ipywidget_factory.get_dropdown.mock_calls
 
 

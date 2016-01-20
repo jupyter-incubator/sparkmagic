@@ -157,3 +157,14 @@ class LogsTransformer(UserCodeTransformerBase):
             code_to_run = "print('No logs yet.')"
 
         return code_to_run, error_to_show, begin_action, end_action, deletes_session
+
+
+class PythonTransformer(UserCodeTransformerBase):
+    def get_code_to_execute(self, session_started, connection_string, force, output_var, command):
+        error_to_show = None
+        code_to_run = command
+        begin_action = Constants.do_nothing_action
+        end_action = Constants.do_nothing_action
+        deletes_session = False
+
+        return code_to_run, error_to_show, begin_action, end_action, deletes_session

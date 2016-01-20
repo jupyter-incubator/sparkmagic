@@ -227,3 +227,17 @@ def test_logs_transformer_no_session():
     assert_equals(begin_action, Constants.do_nothing_action)
     assert_equals(end_action, Constants.do_nothing_action)
     assert_equals(deletes_session, False)
+
+
+@with_setup(_setup, _teardown)
+def test_python_transformer():
+    transformer = PythonTransformer("command")
+
+    code_to_run, error_to_show, begin_action, end_action, deletes_session = \
+        transformer.get_code_to_execute(False, conn, False, None, code)
+
+    assert_equals(code, code_to_run)
+    assert error_to_show is None
+    assert_equals(begin_action, Constants.do_nothing_action)
+    assert_equals(end_action, Constants.do_nothing_action)
+    assert_equals(deletes_session, False)

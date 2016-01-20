@@ -3,6 +3,7 @@
 
 from mock import patch, PropertyMock, MagicMock
 from nose.tools import raises, assert_equals, with_setup
+import requests
 
 from remotespark.livyclientlib.linearretrypolicy import LinearRetryPolicy
 from remotespark.livyclientlib.reliablehttpclient import ReliableHttpClient
@@ -89,7 +90,7 @@ def test_get_will_retry():
         result = client.get("r", [200])
 
         assert_equals(200, result.status_code)
-        retry_policy.should_retry.assert_called_once_with(500, 0)
+        retry_policy.should_retry.assert_called_once_with(500, False, 0)
         retry_policy.seconds_to_sleep.assert_called_once_with(0)
 
 
@@ -135,7 +136,7 @@ def test_post_will_retry():
         result = client.post("r", [200], {})
 
         assert_equals(200, result.status_code)
-        retry_policy.should_retry.assert_called_once_with(500, 0)
+        retry_policy.should_retry.assert_called_once_with(500, False, 0)
         retry_policy.seconds_to_sleep.assert_called_once_with(0)
 
 
@@ -181,8 +182,27 @@ def test_delete_will_retry():
         result = client.delete("r", [200])
 
         assert_equals(200, result.status_code)
-        retry_policy.should_retry.assert_called_once_with(500, 0)
+        retry_policy.should_retry.assert_called_once_with(500, False, 0)
         retry_policy.seconds_to_sleep.assert_called_once_with(0)
+
+
+@with_setup(_setup, _teardown)
+def test_will_retry_error_no():
+    global sequential_values, retry_policy
+    retry_policy = MagicMock()
+    retry_policy.should_retry.return_value = False
+    retry_policy.seconds_to_sleep.return_value = 0.01
+
+    with patch('requests.get') as patched_get:
+        patched_get.side_effect = requests.exceptions.ConnectionError()
+        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+
+        try:
+            client.get("r", [200])
+            assert False
+        except ValueError:
+            retry_policy.should_retry.assert_called_once_with(None, True, 0)
+
 
 @with_setup(_setup, _teardown)
 def test_compose_serialize():

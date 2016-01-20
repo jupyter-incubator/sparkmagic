@@ -12,6 +12,7 @@ class UserCommandParser(object):
     delete_command = "delete"
     clean_up_command = "cleanup"
     logs_command = "logs"
+    local_command = "local"
 
     def __init__(self):
         """Code can have a magic or no magic specified (specified with %word sign). If no magic is specified, %run will
@@ -49,7 +50,7 @@ class UserCommandParser(object):
 
         # When no magic, add run command
         if not first_line.startswith("%"):
-            first_line = "%{} {}".format(UserCommandParser.run_command, code)
+            first_line = "%{} {}".format(UserCommandParser.run_command, first_line)
 
         # Remove percentage sign
         first_line = first_line[1:]

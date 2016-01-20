@@ -34,6 +34,23 @@ def test_magics_parser_capital_letter():
 
 
 @with_setup(_setup, _teardown)
+def test_magics_parser_multiple_lines_command():
+    user_command = """hvacText = sc.textFile("path")
+hvacSchema = StructType([StructField("date", StringType(), False),StructField("time", StringType(), False),StructField("targettemp", IntegerType(), False),StructField("actualtemp", IntegerType(), False),StructField("buildingID", StringType(), False)])
+hvac = hvacText.map(lambda s: s.split(",")).filter(lambda s: s[0] != "Date").map(lambda s:(str(s[0]), str(s[1]), int(s[2]), int(s[3]), str(s[6]) ))
+hvacdf = sqlContext.createDataFrame(hvac,hvacSchema)
+hvacdf.registerTempTable("hvac")
+data = sqlContext.sql("select buildingID, (targettemp - actualtemp) as temp_diff, date from hvac where date = \"6/1/13\"")
+data"""
+
+    subcommand, force, output_var, command = parser.parse_user_command(user_command)
+    assert_equals("run", subcommand)
+    assert_equals(False, force)
+    assert output_var is None
+    assert_equals(user_command, command)
+
+
+@with_setup(_setup, _teardown)
 def test_magics_parser_single_percentage():
     subcommand, force, output_var, command = parser.parse_user_command('%config')
     assert_equals("config", subcommand)

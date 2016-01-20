@@ -95,6 +95,8 @@ class GraphBase(object):
                 df_transformed = df_grouped.max()
             elif y_aggregation == Encoding.y_agg_sum:
                 df_transformed = df_grouped.sum()
+            elif y_aggregation == Encoding.y_agg_count:
+                df_transformed = df_grouped.count()
             else:
                 raise ValueError("Y aggregation '{}' not supported.".format(y_aggregation))
         except DataError as d_err:

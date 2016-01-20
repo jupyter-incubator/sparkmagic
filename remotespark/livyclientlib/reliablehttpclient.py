@@ -53,25 +53,34 @@ class ReliableHttpClient(object):
 
     def _send_request_helper(self, url, accepted_status_codes, function, data, retry_count):
 
-        if self._do_not_authenticate:
-            if data is None:
-                r = function(url, headers=self._headers, verify=self.verify_ssl)
+        try:
+            if self._do_not_authenticate:
+                if data is None:
+                    r = function(url, headers=self._headers, verify=self.verify_ssl)
+                else:
+                    r = function(url, headers=self._headers, data=json.dumps(data), verify=self.verify_ssl)
             else:
-                r = function(url, headers=self._headers, data=json.dumps(data), verify=self.verify_ssl)
-        else:
-            if data is None:
-                r = function(url, headers=self._headers, auth=(self._username, self._password),
-                             verify=self.verify_ssl)
-            else:
-                r = function(url, headers=self._headers, auth=(self._username, self._password), data=json.dumps(data),
-                             verify=self.verify_ssl)
+                if data is None:
+                    r = function(url, headers=self._headers, auth=(self._username, self._password),
+                                 verify=self.verify_ssl)
+                else:
+                    r = function(url, headers=self._headers, auth=(self._username, self._password), data=json.dumps(data),
+                                 verify=self.verify_ssl)
+        except requests.exceptions.RequestException as e:
+            error = True
+            r = None
+            status = None
 
-        status = r.status_code
-        if status not in accepted_status_codes:
-            if self._retry_policy.should_retry(status, retry_count):
+            self.logger.error("Request to '{}' failed with '{}'".format(url, e))
+        else:
+            error = False
+            status = r.status_code
+
+        if error or status not in accepted_status_codes:
+            if self._retry_policy.should_retry(status, error, retry_count):
                 sleep(self._retry_policy.seconds_to_sleep(retry_count))
                 return self._send_request_helper(url, accepted_status_codes, function, data, retry_count + 1)
             else:
-                raise ValueError("Invalid status code '{}' from {}"
-                                 .format(status, url))
+                raise ValueError("Invalid status code '{}' or error '{}' from {}"
+                                 .format(status, error, url))
         return r

@@ -125,6 +125,8 @@ class SparkKernelBase(IPythonKernel):
             return CleanUpTransformer(subcommand)
         elif subcommand == UserCommandParser.logs_command:
             return LogsTransformer(subcommand)
+        elif subcommand == UserCommandParser.local_command:
+            return PythonTransformer(subcommand)
         else:
             return NotSupportedTransformer(subcommand)
 
