@@ -66,17 +66,17 @@ class ReliableHttpClient(object):
                 else:
                     r = function(url, headers=self._headers, auth=(self._username, self._password), data=json.dumps(data),
                                  verify=self.verify_ssl)
-        except requests.exceptions.ConnectionError as e:
-            error, message = self._get_reason_from_connection_error(e)
+        except requests.exceptions.RequestException as e:
+            error = True
             r = None
             status = None
 
-            self.logger.error("Request to '{}' failed with errno '{}' and message '{}'".format(url, error, message))
+            self.logger.error("Request to '{}' failed with '{}'".format(url, e))
         else:
-            error = None
+            error = False
             status = r.status_code
 
-        if (error is not None) or (status not in accepted_status_codes):
+        if error or status not in accepted_status_codes:
             if self._retry_policy.should_retry(status, error, retry_count):
                 sleep(self._retry_policy.seconds_to_sleep(retry_count))
                 return self._send_request_helper(url, accepted_status_codes, function, data, retry_count + 1)
@@ -84,8 +84,3 @@ class ReliableHttpClient(object):
                 raise ValueError("Invalid status code '{}' or error '{}' from {}"
                                  .format(status, error, url))
         return r
-
-    @staticmethod
-    def _get_reason_from_connection_error(e):
-        reason = e.args[0].reason
-        return reason.error, reason.message
