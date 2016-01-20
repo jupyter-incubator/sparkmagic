@@ -10,6 +10,11 @@ import remotespark.utils.configuration as conf
 class PieGraph(object):
     @staticmethod
     def render(df, encoding, output):
+        if encoding.x is None:
+            with output:
+                print("\n\n\nPlease select an X axis.")
+                return
+
         values, labels = PieGraph._get_x_values_labels(df, encoding)
         max_slices_pie_graph = conf.max_slices_pie_graph()
 
