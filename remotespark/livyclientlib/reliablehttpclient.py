@@ -25,7 +25,7 @@ class ReliableHttpClient(object):
         self._do_not_authenticate = self._username == "" and self._password == ""
 
         self.verify_ssl = not conf.ignore_ssl_errors()
-        if self.verify_ssl:
+        if not self.verify_ssl:
             self.logger.debug("ATTENTION: Will ignore SSL errors. This might render you vulnerable to attacks.")
 
     @property
