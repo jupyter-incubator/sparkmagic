@@ -2,7 +2,6 @@ from remotespark.utils.ipythondisplay import IpythonDisplay
 from mock import MagicMock, patch
 import sys
 
-
 def test_stdout_flush():
     ipython_shell = MagicMock()
     ipython_display = IpythonDisplay()
