@@ -90,7 +90,7 @@ def test_get_will_retry():
         result = client.get("r", [200])
 
         assert_equals(200, result.status_code)
-        retry_policy.should_retry.assert_called_once_with(500, None, 0)
+        retry_policy.should_retry.assert_called_once_with(500, False, 0)
         retry_policy.seconds_to_sleep.assert_called_once_with(0)
 
 
@@ -136,7 +136,7 @@ def test_post_will_retry():
         result = client.post("r", [200], {})
 
         assert_equals(200, result.status_code)
-        retry_policy.should_retry.assert_called_once_with(500, None, 0)
+        retry_policy.should_retry.assert_called_once_with(500, False, 0)
         retry_policy.seconds_to_sleep.assert_called_once_with(0)
 
 
@@ -182,7 +182,7 @@ def test_delete_will_retry():
         result = client.delete("r", [200])
 
         assert_equals(200, result.status_code)
-        retry_policy.should_retry.assert_called_once_with(500, None, 0)
+        retry_policy.should_retry.assert_called_once_with(500, False, 0)
         retry_policy.seconds_to_sleep.assert_called_once_with(0)
 
 
@@ -196,13 +196,12 @@ def test_will_retry_error_no():
     with patch('requests.get') as patched_get:
         patched_get.side_effect = requests.exceptions.ConnectionError()
         client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
-        client._get_reason_from_connection_error = MagicMock(return_value=(10060, "A connection attempt failed"))
 
         try:
             client.get("r", [200])
             assert False
         except ValueError:
-            retry_policy.should_retry.assert_called_once_with(None, 10060, 0)
+            retry_policy.should_retry.assert_called_once_with(None, True, 0)
 
 
 @with_setup(_setup, _teardown)
