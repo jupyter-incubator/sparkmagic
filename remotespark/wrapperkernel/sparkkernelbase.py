@@ -29,6 +29,7 @@ class SparkKernelBase(IPythonKernel):
         super(SparkKernelBase, self).__init__(**kwargs)
 
         self._logger = Log(self.client_name)
+        self._never_started = True
         self._session_started = False
         self._fatal_error = None
         self._ipython_display = IpythonDisplay()
@@ -148,11 +149,19 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
         if not self._session_started:
             self._session_started = True
 
-            add_session_code = "%spark add {} {} {} skip".format(
-                self.client_name, self.session_language, self.connection_string)
+            add_session_code = self._get_start_session_code()
             self._execute_cell(add_session_code, True, False, shutdown_if_error=True,
                                log_if_error="Failed to create a Livy session.")
             self._logger.debug("Added session.")
+
+    def _get_start_session_code(self):
+        if self._never_started:
+            self._never_started = False
+            return "%spark add {} {} {}".format(
+                self.client_name, self.session_language, self.connection_string)
+        else:
+            return "%spark delete {}\n%spark add {} {} {}".format(
+                self.client_name, self.client_name, self.session_language, self.connection_string)
 
     def _delete_session(self):
         if self._session_started:
