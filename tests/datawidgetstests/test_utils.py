@@ -29,7 +29,8 @@ def _teardown():
 
 @with_setup(_setup, _teardown)
 def test_on_render_viz():
-    utils.coerce_pandas_df_to_numeric_datetime(df)
+    df["date"] = pd.to_datetime(df["date"])
+    df["mystr2"] = pd.to_numeric(df["mystr2"])
 
     assert utils.infer_vegalite_type(df["buildingID"]) == "Q"
     assert utils.infer_vegalite_type(df["date"]) == "T"

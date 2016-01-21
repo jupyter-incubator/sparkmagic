@@ -6,6 +6,7 @@ import pandas as pd
 from remotespark.livyclientlib.pandasscalalivyclient import PandasScalaLivyClient
 from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 
+
 mock_spark_session = None
 client = None
 execute_m = None
@@ -42,9 +43,11 @@ def test_execute_sql_pandas_scala_livy():
     execute_m.return_value = (True, result_json)
 
     # desired pandas df
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12},
-               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0}]
+    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': u'12'},
+               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': u'0'}]
     desired_df = pd.DataFrame(records)
+    desired_df["date"] = pd.to_datetime(desired_df["date"])
+    desired_df["temp_diff"] = pd.to_numeric(desired_df["temp_diff"])
 
     command = "command"
     df = client.execute_sql(command)
