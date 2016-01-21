@@ -102,14 +102,26 @@ def get_instance_id():
 
 def coerce_pandas_df_to_numeric_datetime(df):
     for column_name in df.columns:
-        if df[column_name].dtype == np.dtype("object"):
+        coerced = False
+
+        if not coerced and df[column_name].dtype == np.dtype("object"):
             try:
                 df[column_name] = pd.to_datetime(df[column_name], errors="raise")
+                coerced = True
             except:
                 pass
 
-        if df[column_name].dtype == np.dtype("object"):
+        if not coerced and df[column_name].dtype == np.dtype("object"):
             try:
                 df[column_name] = pd.to_numeric(df[column_name], errors="raise")
+                coerced = True
             except:
                 pass
+
+        # TODO: To be uncommented when https://github.com/pydata/pandas/issues/12108 is fixed
+        # if not coerced and df[column_name].nunique() < SOME_NUMBER:
+        #     try:
+        #         df[column_name] = df[column_name].astype('category')
+        #         coerced = True
+        #     except:
+        #         pass
