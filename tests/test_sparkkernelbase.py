@@ -149,7 +149,7 @@ def test_parse_user_command_parser_exception():
     # Assert
     assert ret is execute_cell_mock.return_value
     kernel._show_user_error.assert_called_with("None")
-    assert call("None", False, False, None, False) in execute_cell_mock.mock_calls
+    assert call("None", False, True, None, False) in execute_cell_mock.mock_calls
 
 
 @with_setup(_setup, _teardown)
