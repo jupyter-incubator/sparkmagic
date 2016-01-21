@@ -220,7 +220,7 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
     def _throw_internal_error(self, e):
         self._logger.error("ENCOUNTERED AN INTERNAL ERROR: {}".format(e))
         self._ipython_display.send_error("An internal error was encountered. "
-                                         "Please file an issue at https://github.com/jupyter-incubator/sparkmagic.")
+                                         "Please file an issue at https://github.com/jupyter-incubator/sparkmagic")
 
     def _queue_fatal_error(self, message):
         """Queues up a fatal error to be thrown when the next cell is executed; does not
