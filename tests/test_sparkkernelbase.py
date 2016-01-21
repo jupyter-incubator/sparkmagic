@@ -72,16 +72,6 @@ def test_get_config():
     conf.load()
 
 
-# We check that the kernel goes into error state when configuration
-# is not set properly
-@with_setup(_setup, _teardown)
-def test_get_config_not_set():
-    conf.override_all({})
-    kernel._get_configuration()
-    assert kernel._fatal_error
-    conf.load()
-
-
 @with_setup(_setup, _teardown)
 def test_get_config_not_set_empty_strings():
     conf.override_all({conf.kernel_python_credentials.__name__: {user_ev: '', pass_ev: '', url_ev: ''}})

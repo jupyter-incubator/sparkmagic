@@ -104,12 +104,12 @@ def default_chart_type():
 
 @_override
 def kernel_python_credentials():
-    return {'username': '', 'password': '', 'url': ''}
+    return {'username': '', 'password': '', 'url': 'http://localhost:8998'}
 
 
 @_override
 def kernel_scala_credentials():
-    return {'username': '', 'password': '', 'url': ''}
+    return {'username': '', 'password': '', 'url': 'http://localhost:8998'}
 
 
 @_override

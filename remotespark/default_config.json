@@ -8,13 +8,13 @@
   "kernel_python_credentials" : {
     "username": "",
     "password": "",
-    "url": ""
+    "url": "http://localhost:8998"
   },
 
   "kernel_scala_credentials" : {
     "username": "",
     "password": "",
-    "url": ""
+    "url": "http://localhost:8998"
   },
 
   "logging_config": {
