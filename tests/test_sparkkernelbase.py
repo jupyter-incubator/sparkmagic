@@ -41,7 +41,7 @@ def _setup():
     kernel.session_language = "python"
     kernel.connection_string = conn_str
 
-    kernel._execute_cell_for_user = execute_cell_mock = MagicMock()
+    kernel._execute_cell_for_user = execute_cell_mock = MagicMock(return_value={'test':'ing', 'a':'b', 'status':'ok'})
     kernel._do_shutdown_ipykernel = do_shutdown_mock = MagicMock()
     kernel._ipython_display = ipython_display = MagicMock()
 
@@ -144,9 +144,10 @@ def test_parse_user_command_parser_exception():
     kernel._show_user_error = MagicMock()
 
     # Execute
-    kernel.do_execute(code_to_run, False)
+    ret = kernel.do_execute(code_to_run, False)
 
     # Assert
+    assert ret is execute_cell_mock.return_value
     kernel._show_user_error.assert_called_with("None")
     assert call("", False, True, None, False) in execute_cell_mock.mock_calls
 
@@ -170,9 +171,10 @@ def test_instructions_from_transformer_are_executed_code():
     kernel._session_started = True
 
     # Execute
-    kernel.do_execute(code_to_run, False)
+    ret = kernel.do_execute(code_to_run, False)
 
     # Assert
+    assert ret is execute_cell_mock.return_value
     assert not kernel._show_user_error.called
     assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
     assert not kernel._start_session.called
@@ -199,10 +201,11 @@ def test_instructions_from_transformer_are_executed_error():
     kernel._session_started = True
 
     # Execute
-    kernel.do_execute(code_to_run, False)
+    ret = kernel.do_execute(code_to_run, False)
 
     # Assert
     kernel._show_user_error.assert_called_with(error_to_show)
+    assert ret is execute_cell_mock.return_value
     assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
     assert not kernel._start_session.called
     assert not kernel._delete_session.called
@@ -228,9 +231,10 @@ def test_instructions_from_transformer_are_executed_deletes_session():
     kernel._session_started = True
 
     # Execute
-    kernel.do_execute(code_to_run, False)
+    ret = kernel.do_execute(code_to_run, False)
 
     # Assert
+    assert ret is execute_cell_mock.return_value
     assert not kernel._show_user_error.called
     assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
     assert not kernel._start_session.called
@@ -255,9 +259,10 @@ def test_instructions_from_transformer_are_executed_begin_start():
     kernel._delete_session = MagicMock()
 
     # Execute
-    kernel.do_execute(code_to_run, False)
+    ret = kernel.do_execute(code_to_run, False)
 
     # Assert
+    assert ret is execute_cell_mock.return_value
     assert not kernel._show_user_error.called
     assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
     kernel._start_session.assert_called_with()
@@ -281,9 +286,10 @@ def test_instructions_from_transformer_are_executed_begin_delete():
     kernel._delete_session = MagicMock()
 
     # Execute
-    kernel.do_execute(code_to_run, False)
+    ret = kernel.do_execute(code_to_run, False)
 
     # Assert
+    assert ret is execute_cell_mock.return_value
     assert not kernel._show_user_error.called
     assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
     assert not kernel._start_session.called
@@ -307,9 +313,10 @@ def test_instructions_from_transformer_are_executed_end_start():
     kernel._delete_session = MagicMock()
 
     # Execute
-    kernel.do_execute(code_to_run, False)
+    ret = kernel.do_execute(code_to_run, False)
 
     # Assert
+    assert ret is execute_cell_mock.return_value
     assert not kernel._show_user_error.called
     assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
     kernel._start_session.assert_called_with()
@@ -333,9 +340,10 @@ def test_instructions_from_transformer_are_executed_end_delete():
     kernel._delete_session = MagicMock()
 
     # Execute
-    kernel.do_execute(code_to_run, False)
+    ret = kernel.do_execute(code_to_run, False)
 
     # Assert
+    assert ret is execute_cell_mock.return_value
     assert not kernel._show_user_error.called
     assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
     assert not kernel._start_session.called
@@ -359,9 +367,10 @@ def test_instructions_from_transformer_are_executed_begin_start_end_delete():
     kernel._delete_session = MagicMock()
 
     # Execute
-    kernel.do_execute(code_to_run, False)
+    ret = kernel.do_execute(code_to_run, False)
 
     # Assert
+    assert ret is execute_cell_mock.return_value
     assert not kernel._show_user_error.called
     assert call(code_to_run, False, True, None, False) in execute_cell_mock.mock_calls
     kernel._start_session.assert_called_with()
@@ -375,8 +384,9 @@ def test_execute_throws_if_fatal_error_happened():
     code = "some spark code"
     kernel._fatal_error = fatal_error
 
-    kernel.do_execute(code, False)
+    ret = kernel.do_execute(code, False)
 
+    assert ret is execute_cell_mock.return_value
     assert kernel._fatal_error == fatal_error
     assert execute_cell_mock.called_once_with("", False)
     assert ipython_display.send_error.call_count == 1
@@ -390,8 +400,9 @@ def test_execute_alerts_user_if_an_unexpected_error_happens():
     transformer.get_code_to_execute = MagicMock(side_effect=ValueError)
     kernel._get_code_transformer = MagicMock(return_value=transformer)
 
-    kernel.do_execute(code, False)
+    ret = kernel.do_execute(code, False)
 
+    assert ret is execute_cell_mock.return_value
     assert execute_cell_mock.called_once_with("", False)
     assert ipython_display.send_error.call_count == 1
 
@@ -407,8 +418,9 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
     reply_content[u"evalue"] = fatal_error
     execute_cell_mock.return_value = reply_content
 
-    kernel._execute_cell(code, False, shutdown_if_error=True, log_if_error=fatal_error)
+    ret = kernel._execute_cell(code, False, shutdown_if_error=True, log_if_error=fatal_error)
 
+    assert ret is execute_cell_mock.return_value
     assert kernel._fatal_error == message
     assert execute_cell_mock.called_once_with("", False)
     assert ipython_display.send_error.call_count == 1

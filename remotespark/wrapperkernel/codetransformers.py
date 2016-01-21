@@ -114,8 +114,7 @@ class DeleteSessionTransformer(UserCodeTransformerBase):
         if not force:
             error_to_show = "The session you are trying to delete could be this kernel's session. In order " \
                             "to delete this session, please provide the '-f' flag at the beginning of the " \
-                            "delete magic:\n\te.g. `%delete -f id`\n\nAll previously run commands in the " \
-                            "session will be lost."
+                            "delete magic:\n\te.g. `%delete id -f`"
             code_to_run = ""
         else:
             deletes_session = True
@@ -134,8 +133,7 @@ class CleanUpTransformer(UserCodeTransformerBase):
         if not force:
             error_to_show = "The sessions you are trying to delete could be this kernel's session or other " \
                             "people's sessions. In order to delete them, please provide the '-f' flag at the " \
-                            "beginning of the cleanup magic:\n\te.g. `%cleanup -f`\n\nAll previously run " \
-                            "commands in the sessions will be lost."
+                            "beginning of the cleanup magic:\n\te.g. `%cleanup -f`"
             code_to_run = ""
         else:
             deletes_session = True
