@@ -8,6 +8,8 @@
 from collections import namedtuple
 import os
 import uuid
+import pandas as pd
+import numpy as np
 
 from .filesystemreaderwriter import FileSystemReaderWriter
 
@@ -97,3 +99,21 @@ def get_instance_id():
 
     return instance_id
 
+
+def coerce_pandas_df_to_numeric_datetime(df):
+    for column_name in df.columns:
+        coerced = False
+
+        if not coerced and df[column_name].dtype == np.dtype("object"):
+            try:
+                df[column_name] = pd.to_datetime(df[column_name], errors="raise")
+                coerced = True
+            except ValueError:
+                pass
+
+        if not coerced and df[column_name].dtype == np.dtype("object"):
+            try:
+                df[column_name] = pd.to_numeric(df[column_name], errors="raise")
+                coerced = True
+            except ValueError:
+                pass

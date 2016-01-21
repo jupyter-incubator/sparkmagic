@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 
 from .encoding import Encoding
 from .autovizwidget import AutoVizWidget
@@ -113,23 +112,7 @@ def select_y(data, x_name, order=None, aggregator=None):
     return chosen_y
 
 
-def coerce_pandas_df_to_numeric_datetime(df):
-    for column_name in df.columns:
-        if df[column_name].dtype == np.dtype("object"):
-            try:
-                df[column_name] = pd.to_datetime(df[column_name], errors="raise")
-            except:
-                pass
-
-        if df[column_name].dtype == np.dtype("object"):
-            try:
-                df[column_name] = pd.to_numeric(df[column_name], errors="raise")
-            except:
-                pass
-
-
 def display_dataframe(df):
-    coerce_pandas_df_to_numeric_datetime(df)
     selected_x = select_x(df)
     selected_y = select_y(df, selected_x)
     encoding = Encoding(chart_type=Encoding.chart_type_table, x=selected_x, y=selected_y,

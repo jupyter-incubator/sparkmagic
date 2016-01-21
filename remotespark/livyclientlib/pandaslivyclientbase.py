@@ -3,8 +3,10 @@
 
 import pandas as pd
 import json
+
 from .livyclient import LivyClient
 from .dataframeparseexception import DataFrameParseException
+from remotespark.utils.utils import coerce_pandas_df_to_numeric_datetime
 
 class PandasLivyClientBase(LivyClient):
     """Spark client for Livy session that produces pandas df for sql and hive commands."""
@@ -47,7 +49,9 @@ class PandasLivyClientBase(LivyClient):
     def get_data_dataframe(self, records_text):
         strings = records_text.split('\n')
         try:
-            return pd.DataFrame([json.loads(s) for s in strings])
+            df = pd.DataFrame([json.loads(s) for s in strings])
+            coerce_pandas_df_to_numeric_datetime(df)
+            return df
         except ValueError:
             raise DataFrameParseException("Cannot parse object as JSON: '{}'".format(strings))
 
