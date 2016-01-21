@@ -104,8 +104,19 @@ def test_start_session():
     kernel._start_session()
 
     assert kernel._session_started
-    assert call("%spark add TestKernel python {} skip".format(conn_str), True, False, None, False) \
+    assert call("%spark add TestKernel python {}".format(conn_str), True, False, None, False) \
         in execute_cell_mock.mock_calls
+    assert call("%spark delete TestKernel\n%spark add TestKernel python {} skip"
+                .format(conn_str), True, False, None, False) not in execute_cell_mock.mock_calls
+
+    # Mark it not started out of bound. This is done by some transformers like cleanup and delete.
+    kernel._session_started = False
+
+    kernel._start_session()
+
+    assert kernel._session_started
+    assert call("%spark delete TestKernel\n%spark add TestKernel python {}"
+                .format(conn_str), True, False, None, False) in execute_cell_mock.mock_calls
 
 
 @with_setup(_setup(), _teardown())
