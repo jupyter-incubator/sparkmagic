@@ -1,5 +1,5 @@
 from mock import MagicMock, call
-from nose.tools import with_setup
+from nose.tools import with_setup, assert_equals
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.utils import get_connection_string
@@ -134,23 +134,19 @@ def test_returns_right_transformer():
 
 
 @with_setup(_setup, _teardown)
-def test_instructions_from_parser_are_passed_to_transformer():
+def test_parse_user_command_parser_exception():
     code_to_run = "my code"
 
-    transformer = MagicMock()
-    transformer.get_code_to_execute = MagicMock(side_effect=SyntaxError)
-    kernel._get_code_transformer = MagicMock(return_value=transformer)
-    parser.parse_user_command.return_value = (UserCommandParser.run_command, False, None, code_to_run)
-
+    user_command_parser = MagicMock()
+    user_command_parser.parse_user_command = MagicMock(side_effect=SyntaxError)
+    kernel.user_command_parser = user_command_parser
     kernel._session_started = True
-
     kernel._show_user_error = MagicMock()
 
     # Execute
     kernel.do_execute(code_to_run, False)
 
     # Assert
-    transformer.get_code_to_execute.assert_called_with(True, kernel.connection_string, False, None, code_to_run)
     kernel._show_user_error.assert_called_with("None")
     assert call("", False, True, None, False) in execute_cell_mock.mock_calls
 
@@ -379,17 +375,25 @@ def test_execute_throws_if_fatal_error_happened():
     code = "some spark code"
     kernel._fatal_error = fatal_error
 
-    # Call method
-    try:
-        kernel.do_execute(code, False)
+    kernel.do_execute(code, False)
 
-        # Fail if not thrown
-        assert False
-    except ValueError:
-        # Assertions
-        assert kernel._fatal_error == fatal_error
-        assert execute_cell_mock.call_count == 0
-        assert ipython_display.send_error.call_count == 1
+    assert kernel._fatal_error == fatal_error
+    assert execute_cell_mock.called_once_with("", False)
+    assert ipython_display.send_error.call_count == 1
+
+
+@with_setup(_setup, _teardown)
+def test_execute_alerts_user_if_an_unexpected_error_happens():
+    code = "yo"
+
+    transformer = MagicMock()
+    transformer.get_code_to_execute = MagicMock(side_effect=ValueError)
+    kernel._get_code_transformer = MagicMock(return_value=transformer)
+
+    kernel.do_execute(code, False)
+
+    assert execute_cell_mock.called_once_with("", False)
+    assert ipython_display.send_error.call_count == 1
 
 
 @with_setup(_setup, _teardown)
@@ -403,17 +407,11 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
     reply_content[u"evalue"] = fatal_error
     execute_cell_mock.return_value = reply_content
 
-    # Call method
-    try:
-        kernel._execute_cell(code, False, shutdown_if_error=True, log_if_error=fatal_error)
+    kernel._execute_cell(code, False, shutdown_if_error=True, log_if_error=fatal_error)
 
-        # Fail if not thrown
-        assert False
-    except ValueError:
-        # Assertions
-        assert kernel._fatal_error == message
-        assert execute_cell_mock.call_count == 1
-        assert ipython_display.send_error.call_count == 1
+    assert kernel._fatal_error == message
+    assert execute_cell_mock.called_once_with("", False)
+    assert ipython_display.send_error.call_count == 1
 
 
 @with_setup(_setup, _teardown)

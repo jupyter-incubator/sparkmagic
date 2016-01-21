@@ -54,59 +54,64 @@ class SparkKernelBase(IPythonKernel):
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         if self._fatal_error is not None:
-            self._repeat_fatal_error()
-
-        # Parse command
-        subcommand, force, output_var, command = self.user_command_parser.parse_user_command(code)
-
-        # Get transformer
-        transformer = self._get_code_transformer(subcommand)
-
-        # Get instructions
+            return self._repeat_fatal_error()
         try:
-            code_to_run, error_to_show, begin_action, end_action, deletes_session = \
-                transformer.get_code_to_execute(self._session_started, self.connection_string,
-                                                force, output_var, command)
-        except SyntaxError as se:
-            self._show_user_error("{}".format(se))
-        else:
-            # Execute instructions
-            if error_to_show is not None:
-                self._show_user_error(error_to_show)
-                return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
-
-            if begin_action == Constants.delete_session_action:
-                self._delete_session()
-            elif begin_action == Constants.start_session_action:
-                self._start_session()
-            elif begin_action == Constants.do_nothing_action:
-                pass
-            else:
-                raise ValueError("Begin action {} not supported.".format(begin_action))
-
-            res = self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
-
-            if end_action == Constants.delete_session_action:
-                self._delete_session()
-            elif end_action == Constants.start_session_action:
-                self._start_session()
-            elif end_action == Constants.do_nothing_action:
-                pass
-            else:
-                raise ValueError("End action {} not supported.".format(end_action))
-
-            if deletes_session:
-                self._session_started = False
-
-            return res
-
-        return self._execute_cell("", silent, store_history, user_expressions, allow_stdin)
+            return self._do_execute(code, silent, store_history, user_expressions, allow_stdin)
+        except Exception as e:
+            self._throw_internal_error(e)
+            return self._complete_cell()
 
     def do_shutdown(self, restart):
         # Cleanup
         self._delete_session()
 
         return self._do_shutdown_ipykernel(restart)
+
+    def _do_execute(self, code, silent, store_history, user_expressions, allow_stdin):
+        # Parse command
+        try:
+            subcommand, force, output_var, command = self.user_command_parser.parse_user_command(code)
+        except SyntaxError as se:
+            self._show_user_error("{}".format(se))
+            self._complete_cell(silent, store_history, user_expressions, allow_stdin)
+
+        # Get transformer
+        transformer = self._get_code_transformer(subcommand)
+
+        # Get instructions
+        code_to_run, error_to_show, begin_action, end_action, deletes_session = \
+            transformer.get_code_to_execute(self._session_started, self.connection_string,
+                                            force, output_var, command)
+
+        # Execute instructions
+        if error_to_show is not None:
+            self._show_user_error(error_to_show)
+            return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
+
+        if begin_action == Constants.delete_session_action:
+            self._delete_session()
+        elif begin_action == Constants.start_session_action:
+            self._start_session()
+        elif begin_action == Constants.do_nothing_action:
+            pass
+        else:
+            raise ValueError("Begin action {} not supported.".format(begin_action))
+
+        res = self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
+
+        if end_action == Constants.delete_session_action:
+            self._delete_session()
+        elif end_action == Constants.start_session_action:
+            self._start_session()
+        elif end_action == Constants.do_nothing_action:
+            pass
+        else:
+            raise ValueError("End action {} not supported.".format(end_action))
+
+        if deletes_session:
+            self._session_started = False
+
+        return res
 
     @staticmethod
     def _get_code_transformer(subcommand):
@@ -175,10 +180,8 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
         try:
             credentials = getattr(conf, 'kernel_' + self.kernel_conf_name + '_credentials')()
             ret = (credentials['username'], credentials['password'], credentials['url'])
-
             # The URL has to be set in the configuration.
             assert(ret[2])
-
             return ret
         except (KeyError, AssertionError):
             message = "Please set configuration for 'kernel_{}_credentials' to initialize Kernel".format(
@@ -194,7 +197,7 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
             error_from_reply = reply_content[u"evalue"]
             if log_if_error is not None:
                 message = "{}\nException details:\n\t\"{}\"".format(log_if_error, error_from_reply)
-                self._abort_with_fatal_error(message)
+                return self._abort_with_fatal_error(message)
 
         return reply_content
 
@@ -204,9 +207,20 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
     def _do_shutdown_ipykernel(self, restart):
         return super(SparkKernelBase, self).do_shutdown(restart)
 
+    def _complete_cell(self, silent=True, store_history=True, user_expressions=None, allow_stdin=False):
+        """A method that runs a cell with no effect. Call this and return the value it
+        returns when there's some sort of error preventing the user's cell from executing; this
+        will register the cell from the Jupyter UI as being completed."""
+        return self._execute_cell("", silent, store_history, user_expressions, allow_stdin)
+
     def _show_user_error(self, message):
         self._logger.error(message)
         self._ipython_display.send_error(message)
+
+    def _throw_internal_error(self, e):
+        self._logger.error("ENCOUNTERED AN INTERNAL ERROR: {}".format(e))
+        self._ipython_display.send_error("An internal error was encountered. "
+                                         "Please file an issue at https://github.com/jupyter-incubator/sparkmagic.")
 
     def _queue_fatal_error(self, message):
         """Queues up a fatal error to be thrown when the next cell is executed; does not
@@ -224,4 +238,4 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
         error = conf.fatal_error_suggestion().format(self._fatal_error)
         self._logger.error(error)
         self._ipython_display.send_error(error)
-        raise ValueError(self._fatal_error)
+        return self._complete_cell()
