@@ -207,11 +207,11 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
     def _do_shutdown_ipykernel(self, restart):
         return super(SparkKernelBase, self).do_shutdown(restart)
 
-    def _complete_cell(self, silent=True, store_history=True, user_expressions=None, allow_stdin=False):
+    def _complete_cell(self):
         """A method that runs a cell with no effect. Call this and return the value it
         returns when there's some sort of error preventing the user's cell from executing; this
         will register the cell from the Jupyter UI as being completed."""
-        return self._execute_cell("", silent, store_history, user_expressions, allow_stdin)
+        return self._execute_cell("None", False, False, None, False)
 
     def _show_user_error(self, message):
         self._logger.error(message)

@@ -149,7 +149,7 @@ def test_parse_user_command_parser_exception():
     # Assert
     assert ret is execute_cell_mock.return_value
     kernel._show_user_error.assert_called_with("None")
-    assert call("", False, True, None, False) in execute_cell_mock.mock_calls
+    assert call("None", False, False, None, False) in execute_cell_mock.mock_calls
 
 
 @with_setup(_setup, _teardown)
@@ -388,7 +388,7 @@ def test_execute_throws_if_fatal_error_happened():
 
     assert ret is execute_cell_mock.return_value
     assert kernel._fatal_error == fatal_error
-    assert execute_cell_mock.called_once_with("", False)
+    assert execute_cell_mock.called_once_with("None", True)
     assert ipython_display.send_error.call_count == 1
 
 
@@ -403,7 +403,7 @@ def test_execute_alerts_user_if_an_unexpected_error_happens():
     ret = kernel.do_execute(code, False)
 
     assert ret is execute_cell_mock.return_value
-    assert execute_cell_mock.called_once_with("", False)
+    assert execute_cell_mock.called_once_with("None", True)
     assert ipython_display.send_error.call_count == 1
 
 
@@ -422,7 +422,7 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
 
     assert ret is execute_cell_mock.return_value
     assert kernel._fatal_error == message
-    assert execute_cell_mock.called_once_with("", False)
+    assert execute_cell_mock.called_once_with("None", True)
     assert ipython_display.send_error.call_count == 1
 
 
