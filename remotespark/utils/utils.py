@@ -117,11 +117,3 @@ def coerce_pandas_df_to_numeric_datetime(df):
                 coerced = True
             except:
                 pass
-
-        # TODO: To be uncommented when https://github.com/pydata/pandas/issues/12108 is fixed
-        # if not coerced and df[column_name].nunique() < SOME_NUMBER:
-        #     try:
-        #         df[column_name] = df[column_name].astype('category')
-        #         coerced = True
-        #     except:
-        #         pass
