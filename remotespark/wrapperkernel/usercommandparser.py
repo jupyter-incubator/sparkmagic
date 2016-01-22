@@ -36,7 +36,7 @@ class UserCommandParser(object):
         """
         parser = argparse.ArgumentParser(prog="SparkCommandParser")
         parser.add_argument("-o", "--output", type=str, default=None)
-        parser.add_argument("-f", "--force", type=bool, default=False)
+        parser.add_argument("-f", "--force", action="store_true")
         parser.add_argument("command", type=str, default=[], nargs="*")
 
         self.parser = parser
@@ -58,7 +58,7 @@ class UserCommandParser(object):
         # Remove percentage sign
         first_line = first_line[1:]
 
-        # Process subcommand as the first word
+        # Process subcommand ourselves first
         first_line_split = first_line.split(" ", 1)
         if len(first_line_split) == 1:
             subcommand = first_line_split[0]
