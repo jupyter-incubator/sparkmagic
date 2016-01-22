@@ -1,5 +1,5 @@
 from mock import MagicMock
-from nose.tools import with_setup, assert_equal
+from nose.tools import with_setup
 from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
@@ -44,9 +44,11 @@ def test_execute_sql_pandas_pyspark_livy():
     execute_m.return_value = result_json
 
     # desired pandas df
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12},
-               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0}]
+    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': u'12'},
+               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': u'0'}]
     desired_df = pd.DataFrame(records)
+    desired_df["date"] = pd.to_datetime(desired_df["date"])
+    desired_df["temp_diff"] = pd.to_numeric(desired_df["temp_diff"])
 
     command = "command"
     df = client.execute_sql(command)
