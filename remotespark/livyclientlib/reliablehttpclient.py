@@ -27,6 +27,7 @@ class ReliableHttpClient(object):
         self.verify_ssl = not conf.ignore_ssl_errors()
         if not self.verify_ssl:
             self.logger.debug("ATTENTION: Will ignore SSL errors. This might render you vulnerable to attacks.")
+            requests.packages.urllib3.disable_warnings()
 
     @property
     def connection_string(self):
