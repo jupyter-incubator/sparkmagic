@@ -34,6 +34,39 @@ def test_magics_parser_capital_letter():
 
 
 @with_setup(_setup, _teardown)
+def test_magics_parser_force():
+    subcommand, force, output_var, command = parser.parse_user_command('%delete -f True 9')
+    assert_equals("delete", subcommand)
+    assert_equals(True, force)
+    assert output_var is None
+    assert_equals("9", command)
+
+    subcommand, force, output_var, command = parser.parse_user_command('%delete 9 -f True')
+    assert_equals("delete", subcommand)
+    assert_equals(True, force)
+    assert output_var is None
+    assert_equals("9", command)
+
+    subcommand, force, output_var, command = parser.parse_user_command('%delete 9')
+    assert_equals("delete", subcommand)
+    assert_equals(False, force)
+    assert output_var is None
+    assert_equals("9", command)
+
+    subcommand, force, output_var, command = parser.parse_user_command('%cleanup -f True')
+    assert_equals("cleanup", subcommand)
+    assert_equals(True, force)
+    assert output_var is None
+    assert_equals("", command)
+
+    subcommand, force, output_var, command = parser.parse_user_command('%cleanup')
+    assert_equals("cleanup", subcommand)
+    assert_equals(False, force)
+    assert output_var is None
+    assert_equals("", command)
+
+
+@with_setup(_setup, _teardown)
 def test_magics_parser_multiple_lines_command():
     user_command = """hvacText = sc.textFile("path")
 hvacSchema = StructType([StructField("date", StringType(), False),StructField("time", StringType(), False),StructField("targettemp", IntegerType(), False),StructField("actualtemp", IntegerType(), False),StructField("buildingID", StringType(), False)])
@@ -64,7 +97,7 @@ def test_magics_parser_single_percentage():
     assert output_var is None
     assert_equals("hi", command)
 
-    subcommand, force, output_var, command = parser.parse_user_command('%config -f')
+    subcommand, force, output_var, command = parser.parse_user_command('%config -f True')
     assert_equals("config", subcommand)
     assert_equals(True, force)
     assert output_var is None
@@ -82,7 +115,7 @@ def test_magics_parser_single_percentage():
     assert_equals("my_var", output_var)
     assert_equals("of course", command)
 
-    subcommand, force, output_var, command = parser.parse_user_command('%config hi hello my name -f')
+    subcommand, force, output_var, command = parser.parse_user_command('%config hi hello my name -f True')
     assert_equals("config", subcommand)
     assert_equals(True, force)
     assert output_var is None
@@ -109,7 +142,7 @@ def test_magics_parser_double_percentage():
     assert output_var is None
     assert_equals("hi", command)
 
-    subcommand, force, output_var, command = parser.parse_user_command('%%config -f')
+    subcommand, force, output_var, command = parser.parse_user_command('%%config -f True')
     assert_equals("config", subcommand)
     assert_equals(True, force)
     assert output_var is None
@@ -127,7 +160,7 @@ def test_magics_parser_double_percentage():
     assert_equals("my_var", output_var)
     assert_equals("of course", command)
 
-    subcommand, force, output_var, command = parser.parse_user_command('%%config hi hello my name -f')
+    subcommand, force, output_var, command = parser.parse_user_command('%%config hi hello my name -f True')
     assert_equals("config", subcommand)
     assert_equals(True, force)
     assert output_var is None
@@ -154,7 +187,7 @@ def test_magics_parser_multiple_lines():
     assert output_var is None
     assert_equals("hi\nmy code", command)
 
-    subcommand, force, output_var, command = parser.parse_user_command('%%config -f\nmy code')
+    subcommand, force, output_var, command = parser.parse_user_command('%%config -f True\nmy code')
     assert_equals("config", subcommand)
     assert_equals(True, force)
     assert output_var is None
@@ -172,7 +205,7 @@ def test_magics_parser_multiple_lines():
     assert_equals("my_var", output_var)
     assert_equals("of course\nmy code", command)
 
-    subcommand, force, output_var, command = parser.parse_user_command('%%config hi hello my name -f\nmy code')
+    subcommand, force, output_var, command = parser.parse_user_command('%%config hi hello my name -f True\nmy code')
     assert_equals("config", subcommand)
     assert_equals(True, force)
     assert output_var is None
