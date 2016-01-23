@@ -15,9 +15,15 @@ class PieGraph(object):
                 print("\n\n\nPlease select an X axis.")
                 return
 
-        values, labels = PieGraph._get_x_values_labels(df, encoding)
-        max_slices_pie_graph = conf.max_slices_pie_graph()
+        try:
+            values, labels = PieGraph._get_x_values_labels(df, encoding)
+        except TypeError:
+            with output:
+                print("\n\n\nCannot group by X selection because of its type: '{}'. Please select another column."
+                      .format(df[encoding.x].dtype))
+                return
 
+        max_slices_pie_graph = conf.max_slices_pie_graph()
         with output:
             # There's performance issues with a large amount of slices.
             # 1500 rows crash the browser.

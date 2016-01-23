@@ -30,8 +30,12 @@ class GraphBase(object):
                         yaxis=dict(type=type_y_axis, rangemode="tozero", title=encoding.y))
 
         with output:
-            fig = Figure(data=Data(data), layout=layout)
-            iplot(fig, show_link=False)
+            try:
+                fig = Figure(data=Data(data), layout=layout)
+                iplot(fig, show_link=False)
+            except TypeError:
+                print("\n\n\nPlease select another set of X and Y axis, because the type of the current axis do\n"
+                      "not support aggregation over it.")
 
     @staticmethod
     def display_x():
@@ -84,32 +88,40 @@ class GraphBase(object):
         if y_aggregation == Encoding.y_agg_none:
             raise ValueError("No Y aggregation function specified.")
 
-        df_grouped = df.groupby(x_column)
-
         try:
-            if y_aggregation == Encoding.y_agg_avg:
-                df_transformed = df_grouped.mean()
-            elif y_aggregation == Encoding.y_agg_min:
-                df_transformed = df_grouped.min()
-            elif y_aggregation == Encoding.y_agg_max:
-                df_transformed = df_grouped.max()
-            elif y_aggregation == Encoding.y_agg_sum:
-                df_transformed = df_grouped.sum()
-            elif y_aggregation == Encoding.y_agg_count:
-                df_transformed = df_grouped.count()
-            else:
-                raise ValueError("Y aggregation '{}' not supported.".format(y_aggregation))
-        except DataError as d_err:
-            raise InvalidEncodingError("Cannot aggregate column '{}' with aggregation function '{}' because:\n\t'{}'."
-                                       .format(y_column, y_aggregation, d_err))
+            df_grouped = df.groupby(x_column)
+        except TypeError:
+            raise InvalidEncodingError("Cannot group by X column '{}' because of its type: '{}'."
+                                       .format(df[x_column].dtype))
         else:
-            df_transformed = df_transformed.reset_index()
+            try:
+                if y_aggregation == Encoding.y_agg_avg:
+                    df_transformed = df_grouped.mean()
+                elif y_aggregation == Encoding.y_agg_min:
+                    df_transformed = df_grouped.min()
+                elif y_aggregation == Encoding.y_agg_max:
+                    df_transformed = df_grouped.max()
+                elif y_aggregation == Encoding.y_agg_sum:
+                    df_transformed = df_grouped.sum()
+                elif y_aggregation == Encoding.y_agg_count:
+                    df_transformed = df_grouped.count()
+                else:
+                    raise ValueError("Y aggregation '{}' not supported.".format(y_aggregation))
+            except DataError as d_err:
+                raise InvalidEncodingError("Cannot aggregate column '{}' with aggregation function '{}' because:\n\t'{}'."
+                                           .format(y_column, y_aggregation, d_err))
+            except TypeError:
+                raise InvalidEncodingError("Cannot aggregate column '{}' with aggregation function '{}' because the type\n"
+                                           "cannot be aggregated over."
+                                           .format(y_column, y_aggregation))
+            else:
+                df_transformed = df_transformed.reset_index()
 
-            if y_column not in df_transformed.columns:
-                raise InvalidEncodingError("Y column '{}' is not valid with aggregation function '{}'. Please select "
-                                           "a different\naggregation function.".format(y_column, y_aggregation))
+                if y_column not in df_transformed.columns:
+                    raise InvalidEncodingError("Y column '{}' is not valid with aggregation function '{}'. Please select "
+                                               "a different\naggregation function.".format(y_column, y_aggregation))
 
-            x_values = df_transformed[x_column].tolist()
-            y_values = df_transformed[y_column].tolist()
+                x_values = df_transformed[x_column].tolist()
+                y_values = df_transformed[y_column].tolist()
 
-            return x_values, y_values
+                return x_values, y_values
