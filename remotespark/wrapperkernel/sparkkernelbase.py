@@ -165,7 +165,7 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
             return "%spark add {} {} {}".format(
                 self.client_name, self.session_language, self.connection_string)
         else:
-            return "%spark delete {}\n%spark add {} {} {}".format(
+            return "%spark delete {} -q True\n%spark add {} {} {}".format(
                 self.client_name, self.client_name, self.session_language, self.connection_string)
 
     def _delete_session(self):

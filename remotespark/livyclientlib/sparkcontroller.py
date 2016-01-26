@@ -41,7 +41,8 @@ class SparkController(object):
         http_client = self.client_factory.create_http_client(connection_string)
         r = http_client.get("/sessions", [200])
         sessions = r.json()["sessions"]
-        session_list = [self.client_factory.create_session(self.ipython_display, connection_string, {"kind": s["kind"]}, s["id"])
+        session_list = [self.client_factory.create_session(self.ipython_display, connection_string,
+                                                           {"kind": s["kind"]}, s["id"])
                         for s in sessions]
         for s in session_list:
             s._refresh_status()
@@ -58,14 +59,15 @@ class SparkController(object):
         for session in self.get_all_sessions_endpoint(connection_string):
             session.delete()
 
-    def delete_session_by_name(self, name):
-        self.client_manager.delete_client(name)
+    def delete_session_by_name(self, name, quiet):
+        self.client_manager.delete_client(name, quiet)
 
     def delete_session_by_id(self, connection_string, session_id):
         http_client = self.client_factory.create_http_client(connection_string)
         r = http_client.get("/sessions/{}".format(session_id), [200, 404])
         if r.status_code != 404:
-            session = self.client_factory.create_session(self.ipython_display, connection_string, {"kind": r.json()["kind"]}, session_id, False)
+            session = self.client_factory.create_session(self.ipython_display, connection_string,
+                                                         {"kind": r.json()["kind"]}, session_id, False)
             session.delete()
 
     def add_session(self, name, connection_string, skip_if_exists, properties):
