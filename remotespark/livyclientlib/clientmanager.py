@@ -70,21 +70,20 @@ class ClientManager(object):
         raise ValueError("Could not find '{}' session in list of saved sessions. Possible sessions are {}".format(
             name, self.get_sessions_list()))
 
-    def delete_client(self, name, quiet):
-        self._remove_session(name, quiet)
+    def delete_client(self, name):
+        self._remove_session(name)
     
-    def clean_up_all(self, quiet=False):
+    def clean_up_all(self):
         for name in self.get_sessions_list():
-            self._remove_session(name, quiet)
+            self._remove_session(name)
 
         if self._serializer is not None:
             self._serialize_state()
 
-    def _remove_session(self, name, quiet):
+    def _remove_session(self, name):
         if name in self.get_sessions_list():
             self._livy_clients[name].close_session()
             del self._livy_clients[name]
         else:
-            if not quiet:
-                raise ValueError("Could not find '{}' session in list of saved sessions. Possible sessions are {}"
-                                 .format(name, self.get_sessions_list()))
+            raise ValueError("Could not find '{}' session in list of saved sessions. Possible sessions are {}"
+                             .format(name, self.get_sessions_list()))

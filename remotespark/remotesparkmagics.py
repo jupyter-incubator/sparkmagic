@@ -58,8 +58,6 @@ class RemoteSparkMagics(Magics):
                                       "If only one session has been created, there's no need to specify one.")
     @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL or Hive "
                                                              "query will be stored in variable of this name.")
-    @argument("-q", "--quiet", type=bool, default=False, help="Whether to raise errors when deleting sessions"
-                                                              "that don't exist or not.")
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @needs_local_scope
     @line_cell_magic
@@ -152,7 +150,7 @@ class RemoteSparkMagics(Magics):
             elif subcommand == "delete":
                 if len(args.command) == 2:
                     name = args.command[1].lower()
-                    self.spark_controller.delete_session_by_name(name, args.quiet)
+                    self.spark_controller.delete_session_by_name(name)
                 elif len(args.command) == 3:
                     connection_string = args.command[1]
                     session_id = args.command[2]
