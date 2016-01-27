@@ -15,8 +15,8 @@ from remotespark.utils.constants import Constants
 from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.utils.log import Log
 from remotespark.utils.utils import get_magics_home_path, join_paths
-from .livyclientlib.dataframeparseexception import DataFrameParseException
-from .livyclientlib.sparkcontroller import SparkController
+from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
+from remotespark.livyclientlib.sparkcontroller import SparkController
 
 
 @magics_class

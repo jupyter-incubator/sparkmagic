@@ -1,11 +1,11 @@
 from mock import MagicMock, call
-from nose.tools import with_setup, assert_equals
+from nose.tools import with_setup
+from remotespark.kernels.wrapperkernel.codetransformers import *
+from remotespark.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 
 import remotespark.utils.configuration as conf
+from remotespark.kernels.wrapperkernel.usercommandparser import UserCommandParser
 from remotespark.utils.utils import get_connection_string
-from remotespark.wrapperkernel.sparkkernelbase import SparkKernelBase
-from remotespark.wrapperkernel.usercommandparser import UserCommandParser
-from remotespark.wrapperkernel.codetransformers import *
 
 kernel = None
 user_ev = "username"
