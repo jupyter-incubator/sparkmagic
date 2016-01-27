@@ -29,13 +29,7 @@ class KernelMagics(SparkMagicBase):
         self.session_name = "session_name"
         self.session_started = False
 
-        configuration = self._get_configuration()
-        if not configuration:
-            # _get_configuration() sets the error for us so we can just return now.
-            # The kernel is not in a good state and all do_execute calls will
-            # fail with the fatal error.
-            return
-        (username, password, url) = configuration
+        (username, password, url) = self._get_configuration()
         self.connection_string = get_connection_string(url, username, password)
 
     @line_cell_magic
