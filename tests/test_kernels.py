@@ -17,9 +17,7 @@ class TestSparkKernel(SparkKernel):
 
 def test_pyspark_kernel_configs():
     kernel = TestPyparkKernel()
-    assert kernel.kernel_conf_name == Constants.lang_python
     assert kernel.session_language == Constants.lang_python
-    assert kernel.client_name == "python_jupyter_kernel"
 
     assert kernel.implementation == 'PySpark'
     assert kernel.language == 'no-op'
@@ -35,9 +33,7 @@ def test_pyspark_kernel_configs():
 def test_spark_kernel_configs():
     kernel = TestSparkKernel()
 
-    assert kernel.kernel_conf_name == Constants.lang_scala
     assert kernel.session_language == Constants.lang_scala
-    assert kernel.client_name == "scala_jupyter_kernel"
 
     assert kernel.implementation == 'Spark'
     assert kernel.language == 'no-op'

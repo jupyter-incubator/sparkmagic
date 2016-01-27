@@ -1,6 +1,6 @@
 from mock import MagicMock, call
 from nose.tools import with_setup
-from remotespark.kernels.wrapperkernel.sparkkernelbase2 import SparkKernelBase
+from remotespark.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.utils import get_connection_string
