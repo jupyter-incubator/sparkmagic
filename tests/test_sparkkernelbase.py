@@ -1,11 +1,10 @@
 from mock import MagicMock, call
 from nose.tools import with_setup
-from remotespark.kernels.wrapperkernel.codetransformers import *
-from remotespark.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
+from remotespark.kernels.wrapperkernel.sparkkernelbase2 import SparkKernelBase
 
 import remotespark.utils.configuration as conf
-from remotespark.kernels.wrapperkernel.usercommandparser import UserCommandParser
 from remotespark.utils.utils import get_connection_string
+from remotespark.utils.constants import Constants
 
 kernel = None
 user_ev = "username"
@@ -21,7 +20,7 @@ parser = None
 class TestSparkKernel(SparkKernelBase):
     def __init__(self):
         kwargs = {"testing": True}
-        super(TestSparkKernel, self).__init__(None, None, None, None, None, None, None, "TestKernel", **kwargs)
+        super(TestSparkKernel, self).__init__(None, None, None, None, None, Constants.lang_python, **kwargs)
 
 
 def _setup():
@@ -44,10 +43,6 @@ def _setup():
     kernel._execute_cell_for_user = execute_cell_mock = MagicMock(return_value={'test':'ing', 'a':'b', 'status':'ok'})
     kernel._do_shutdown_ipykernel = do_shutdown_mock = MagicMock()
     kernel._ipython_display = ipython_display = MagicMock()
-
-    parser = MagicMock()
-    parser.parse_user_command.return_value = (UserCommandParser.run_command, False, None, "my code")
-    kernel.user_command_parser = parser
 
 
 def _teardown():
@@ -117,20 +112,6 @@ def test_delete_session():
 
     assert not kernel._session_started
     assert call("%spark cleanup", True, False) in execute_cell_mock.mock_calls
-
-
-@with_setup(_setup, _teardown)
-def test_returns_right_transformer():
-    assert type(kernel._get_code_transformer(UserCommandParser.run_command)) is SparkTransformer
-    assert type(kernel._get_code_transformer(UserCommandParser.sql_command)) is SqlTransformer
-    assert type(kernel._get_code_transformer(UserCommandParser.hive_command)) is HiveTransformer
-    assert type(kernel._get_code_transformer(UserCommandParser.config_command)) is ConfigTransformer
-    assert type(kernel._get_code_transformer(UserCommandParser.info_command)) is InfoTransformer
-    assert type(kernel._get_code_transformer(UserCommandParser.delete_command)) is DeleteSessionTransformer
-    assert type(kernel._get_code_transformer(UserCommandParser.clean_up_command)) is CleanUpTransformer
-    assert type(kernel._get_code_transformer(UserCommandParser.logs_command)) is LogsTransformer
-    assert type(kernel._get_code_transformer("whatever")) is NotSupportedTransformer
-    assert type(kernel._get_code_transformer(UserCommandParser.local_command)) is PythonTransformer
 
 
 @with_setup(_setup, _teardown)

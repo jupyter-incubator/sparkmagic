@@ -39,11 +39,14 @@ class KernelMagics(SparkMagicBase):
 
     @line_cell_magic
     def logs(self, line, cell="", local_ns=None):
-        (success, out) = self.spark_controller.get_logs()
-        if success:
-            self.ipython_display.write(out)
+        if self.session_started:
+            (success, out) = self.spark_controller.get_logs()
+            if success:
+                self.ipython_display.write(out)
+            else:
+                self.ipython_display.send_error(out)
         else:
-            self.ipython_display.send_error(out)
+            self.ipython_display.write("No logs yet.")
 
     @magic_arguments()
     @line_cell_magic
@@ -102,20 +105,26 @@ class KernelMagics(SparkMagicBase):
             self._delete_session("")
 
             self.spark_controller.cleanup_endpoint(self.connection_string)
+        else:
+            raise ValueError("When you clean up the endpoint, all sessions will be lost, including the one used for "
+                             "this notebook. Please include the -f parameter if that's your intention.")
 
     @magic_arguments()
     @line_cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
-    @argument("-s", "--session", type=str, help="Session id number to delete.")
+    @argument("-s", "--session", type=str, nargs=1, help="Session id number to delete.")
     def delete(self, line, cell="", local_ns=None):
         args = parse_argstring(self.delete, line)
-        if args.force:
-            if args.session == self.spark_controller.get_session_id_for_client(self.session_name):
-                raise ValueError("Cannot delete this kernel's session. Specify a different session, shutdown the "
-                                 "kernel to delete this session, or run %cleanup to delete all sessions for this "
-                                 "endpoint.")
+        session = args.session[0]
 
-            self.spark_controller.delete_session_by_id(self.connection_string, args.session)
+        if args.force:
+            id = self.spark_controller.get_session_id_for_client(self.session_name)
+            if session == id:
+                raise ValueError("Cannot delete this kernel's session ({}). Specify a different session, shutdown the "
+                                 "kernel to delete this session, or run %cleanup to delete all sessions for this "
+                                 "endpoint.".format(id))
+
+            self.spark_controller.delete_session_by_id(self.connection_string, session)
 
     @line_cell_magic
     def _start_session(self, line, cell="", local_ns=None):
@@ -133,6 +142,18 @@ class KernelMagics(SparkMagicBase):
         if self.session_started:
             self.spark_controller.delete_session_by_name(self.session_name)
             self.session_started = False
+
+    @magic_arguments()
+    @line_cell_magic
+    @argument("-l", "--language", type=str, help="Language to use.")
+    def _change_language(self, line, cell="", local_ns=None):
+        args = parse_argstring(self._change_language, line)
+        language = args.language.lower()
+
+        if language not in Constants.lang_supported:
+            raise ValueError("'{}' language not supported in kernel magics.".format(language))
+
+        self.language = language
 
     def _get_configuration(self):
         """Returns (username, password, url). If there is an error (missing configuration),

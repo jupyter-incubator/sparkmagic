@@ -16,12 +16,10 @@ class SparkKernel(SparkKernelBase):
             'pygments_lexer': 'scala'
         }
 
-        kernel_conf_name = Constants.lang_scala
         session_language = Constants.lang_scala
-        client_name = "scala_jupyter_kernel"
 
         super(SparkKernel, self).__init__(implementation, implementation_version, language, language_version,
-                                          language_info, kernel_conf_name, session_language, client_name, **kwargs)
+                                          language_info, session_language, **kwargs)
 
 
 if __name__ == '__main__':

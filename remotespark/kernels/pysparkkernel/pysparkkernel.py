@@ -17,12 +17,10 @@ class PySparkKernel(SparkKernelBase):
             'pygments_lexer': 'python2'
         }
 
-        kernel_conf_name = Constants.lang_python
         session_language = Constants.lang_python
-        client_name = "python_jupyter_kernel"
 
         super(PySparkKernel, self).__init__(implementation, implementation_version, language, language_version,
-                                            language_info, kernel_conf_name, session_language, client_name, **kwargs)
+                                            language_info, session_language, **kwargs)
 
 
 if __name__ == '__main__':
