@@ -70,6 +70,11 @@ class ClientManager(object):
         raise ValueError("Could not find '{}' session in list of saved sessions. Possible sessions are {}".format(
             name, self.get_sessions_list()))
 
+    def get_session_id_for_client(self, name):
+        if name in self.get_sessions_list():
+            return self._livy_clients[name].session_id
+        return None
+
     def delete_client(self, name):
         self._remove_session(name)
     

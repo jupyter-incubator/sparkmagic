@@ -116,7 +116,11 @@ class KernelMagics(SparkMagicBase):
     def delete(self, line, cell="", local_ns=None):
         args = parse_argstring(self.delete, line)
         if args.force:
-            # TODO: check that it's not our session!!!
+            if args.session == self.spark_controller.get_session_id_for_client(self.session_name):
+                raise ValueError("Cannot delete this kernel's session. Specify a different session, shutdown the "
+                                 "kernel to delete this session, or run %cleanup to delete all sessions for this "
+                                 "endpoint.")
+
             self.spark_controller.delete_session_by_id(self.connection_string, args.session)
 
     @line_cell_magic
