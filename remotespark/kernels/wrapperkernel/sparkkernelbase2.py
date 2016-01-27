@@ -58,8 +58,6 @@ class SparkKernelBase2(IPythonKernel):
         if not code.strip().startswith("%"):
             code_to_run = "%%spark\n{}".format(code)
 
-        # print("code to run:\n{}".format(code_to_run))
-
         res = self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
 
         return res

@@ -137,7 +137,7 @@ class SparkKernelBase(IPythonKernel):
             return NotSupportedTransformer(subcommand)
 
     def _load_magics_extension(self):
-        register_magics_code = "%load_ext remotespark"
+        register_magics_code = "%load_ext remotespark.magics"
         self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to load the Spark magics library.")
         self._logger.debug("Loaded magics.")

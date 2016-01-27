@@ -106,7 +106,7 @@ class KernelMagics(SparkMagicBase):
     @magic_arguments()
     @line_cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
-    @argument("-s", "--session", type=int, help="Session id number to delete.")
+    @argument("-s", "--session", type=str, help="Session id number to delete.")
     def delete(self, line, cell="", local_ns=None):
         args = parse_argstring(self.delete, line)
         if args.force:
