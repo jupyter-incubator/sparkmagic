@@ -6,11 +6,12 @@ from remotespark.utils.ipythondisplay import IpythonDisplay
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.log import Log
+from remotespark.kernels.wrapperkernel.usercodeparser import UserCodeParser
 
 
 class SparkKernelBase(IPythonKernel):
     def __init__(self, implementation, implementation_version, language, language_version, language_info,
-                 session_language, **kwargs):
+                 session_language, user_code_parser=None, **kwargs):
         # Required by Jupyter - Override
         self.implementation = implementation
         self.implementation_version = implementation_version
@@ -24,9 +25,13 @@ class SparkKernelBase(IPythonKernel):
         super(SparkKernelBase, self).__init__(**kwargs)
 
         self._logger = Log("_jupyter_kernel".format(self.session_language))
-        self._never_started = True
         self._fatal_error = None
         self._ipython_display = IpythonDisplay()
+
+        if user_code_parser is None:
+            self.user_code_parser = UserCodeParser()
+        else:
+            self.user_code_parser = user_code_parser
 
         # Disable warnings for test env in HDI
         requests.packages.urllib3.disable_warnings()
@@ -38,9 +43,10 @@ class SparkKernelBase(IPythonKernel):
                 self._register_auto_viz()
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
-        if self._fatal_error is not None:
-            return self._repeat_fatal_error()
         try:
+            if self._fatal_error is not None:
+                return self._repeat_fatal_error()
+
             return self._do_execute(code, silent, store_history, user_expressions, allow_stdin)
         except Exception as e:
             self._show_internal_error(e)
@@ -53,13 +59,7 @@ class SparkKernelBase(IPythonKernel):
         return self._do_shutdown_ipykernel(restart)
 
     def _do_execute(self, code, silent, store_history, user_expressions, allow_stdin):
-        code_to_run = code
-        if not code.strip().startswith("%"):
-            code_to_run = "%%spark\n{}".format(code)
-        elif code.strip().startswith("%local ") or code.strip().startswith("%local\n"):
-            code_to_run = code[6:]
-        elif code.strip().startswith("%%local ") or code.strip().startswith("%%local\n"):
-            code_to_run = code[7:]
+        code_to_run = self.user_code_parser.get_code_to_run(code)
 
         res = self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
 

@@ -23,19 +23,19 @@ class KernelMagics(SparkMagicBase):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
 
-        # Overwrite
+        # Overwrite if needed
         self.language = Constants.lang_python
 
         self.session_name = "session_name"
         self.session_started = False
 
-        (username, password, url) = self._get_configuration()
+        (username, password, url) = self.get_configuration(self.language)
         self.connection_string = get_connection_string(url, username, password)
 
     @line_cell_magic
     def info(self, line, cell="", local_ns=None):
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.connection_string)
-        self._print_endpoint_info(info_sessions)
+        self.print_endpoint_info(info_sessions)
 
     @line_cell_magic
     def logs(self, line, cell="", local_ns=None):
@@ -83,8 +83,8 @@ class KernelMagics(SparkMagicBase):
                                                              "name.")
     def sql(self, line, cell="", local_ns=None):
         args = parse_argstring(self.sql, line)
-        return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                             None, args.output)
+        return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
+                                                            None, args.output)
 
     @magic_arguments()
     @line_cell_magic
@@ -93,8 +93,8 @@ class KernelMagics(SparkMagicBase):
                                                              "name.")
     def hive(self, line, cell="", local_ns=None):
         args = parse_argstring(self.hive, line)
-        return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
-                                                             None, args.output)
+        return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
+                                                            None, args.output)
 
     @magic_arguments()
     @line_cell_magic
@@ -133,7 +133,7 @@ class KernelMagics(SparkMagicBase):
 
             skip = False
             properties = copy.deepcopy(conf.session_configs())
-            properties["kind"] = self._get_livy_kind(self.language)
+            properties["kind"] = self.get_livy_kind(self.language)
 
             self.spark_controller.add_session(self.session_name, self.connection_string, skip, properties)
 
@@ -155,10 +155,10 @@ class KernelMagics(SparkMagicBase):
 
         self.language = language
 
-    def _get_configuration(self):
-        """Returns (username, password, url). If there is an error (missing configuration),
-           returns False."""
-        credentials = getattr(conf, 'kernel_' + self.language + '_credentials')()
+    @staticmethod
+    def get_configuration(language):
+        """Returns (username, password, url)."""
+        credentials = getattr(conf, 'kernel_' + language + '_credentials')()
         ret = (credentials['username'], credentials['password'], credentials['url'])
         # The URL has to be set in the configuration.
         assert(ret[2])

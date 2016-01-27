@@ -44,7 +44,7 @@ class SparkMagicBase(Magics):
 
         self.logger.debug("Initialized spark magics.")
 
-    def _execute_against_context_that_returns_df(self, method, cell, session, output_var):
+    def execute_against_context_that_returns_df(self, method, cell, session, output_var):
         try:
             df = method(cell, session)
             if output_var is not None:
@@ -55,7 +55,7 @@ class SparkMagicBase(Magics):
             return None
 
     @staticmethod
-    def _get_livy_kind(language):
+    def get_livy_kind(language):
         if language == Constants.lang_scala:
             return Constants.session_kind_spark
         elif language == Constants.lang_python:
@@ -66,7 +66,7 @@ class SparkMagicBase(Magics):
             raise ValueError("Cannot get session kind for {}.".format(language))
 
     @staticmethod
-    def _print_endpoint_info(info_sessions):
+    def print_endpoint_info(info_sessions):
         sessions_info = ["        {}".format(i) for i in info_sessions]
         print("""Info for endpoint:
     Sessions:

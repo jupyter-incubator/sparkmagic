@@ -92,7 +92,7 @@ class RemoteSparkMagics(SparkMagicBase):
                 if len(args.command) == 2:
                     connection_string = args.command[1]
                     info_sessions = self.spark_controller.get_all_sessions_endpoint_info(connection_string)
-                    self._print_endpoint_info(info_sessions)
+                    self.print_endpoint_info(info_sessions)
                 elif len(args.command) == 1:
                     self._print_local_info()
                 else:
@@ -118,7 +118,7 @@ class RemoteSparkMagics(SparkMagicBase):
                     skip = False
 
                 properties = copy.deepcopy(conf.session_configs())
-                properties["kind"] = self._get_livy_kind(language)
+                properties["kind"] = self.get_livy_kind(language)
 
                 self.spark_controller.add_session(name, connection_string, skip, properties)
             # delete
@@ -162,11 +162,11 @@ class RemoteSparkMagics(SparkMagicBase):
                     else:
                         self.ipython_display.send_error(out)
                 elif args.context == Constants.context_name_sql:
-                    return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                                         args.session, args.output)
+                    return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
+                                                                        args.session, args.output)
                 elif args.context == Constants.context_name_hive:
-                    return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
-                                                                         args.session, args.output)
+                    return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
+                                                                        args.session, args.output)
                 else:
                     raise ValueError("Context '{}' not found".format(args.context))
             # error
