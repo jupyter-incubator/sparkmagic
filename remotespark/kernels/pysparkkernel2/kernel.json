@@ -1,0 +1,3 @@
+{"argv":["python","-m","remotespark.kernels.pysparkkernel2.pysparkkernel2", "-f", "{connection_file}"],
+ "display_name":"PySpark Test"
+}
