@@ -73,7 +73,7 @@ class SparkKernelBase(IPythonKernel):
             subcommand, force, output_var, command = self.user_command_parser.parse_user_command(code)
         except SyntaxError as se:
             self._show_user_error("{}".format(se))
-            return self._complete_cell(silent, store_history, user_expressions, allow_stdin)
+            return self._complete_cell()
 
         # Get transformer
         transformer = self._get_code_transformer(subcommand)

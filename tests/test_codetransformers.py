@@ -1,7 +1,7 @@
 from nose.tools import with_setup, assert_equals
 
-from remotespark.wrapperkernel.codetransformers import *
 from remotespark.utils.constants import Constants
+from remotespark.kernels.wrapperkernel.codetransformers import *
 
 
 code = None

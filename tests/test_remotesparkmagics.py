@@ -1,11 +1,10 @@
 from mock import MagicMock
-from nose.tools import raises, with_setup
+from nose.tools import with_setup
 
-from remotespark.remotesparkmagics import RemoteSparkMagics
-from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 import remotespark.utils.configuration as conf
+from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
+from remotespark.magics.remotesparkmagics import RemoteSparkMagics
 from remotespark.utils.constants import Constants
-
 
 magic = None
 spark_controller = None
