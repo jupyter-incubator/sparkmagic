@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
+from remotespark.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 from remotespark.utils.constants import Constants
-from remotespark.wrapperkernel.sparkkernelbase import SparkKernelBase
 
 
 class PySparkKernel(SparkKernelBase):
@@ -13,7 +13,7 @@ class PySparkKernel(SparkKernelBase):
         language_info = {
             'name': 'pyspark',
             'mimetype': 'text/x-python',
-            'codemirror_mode' : { 'name' : 'python' },
+            'codemirror_mode': {'name': 'python'},
             'pygments_lexer': 'python2'
         }
 
@@ -23,7 +23,6 @@ class PySparkKernel(SparkKernelBase):
 
         super(PySparkKernel, self).__init__(implementation, implementation_version, language, language_version,
                                             language_info, kernel_conf_name, session_language, client_name, **kwargs)
-
 
 
 if __name__ == '__main__':

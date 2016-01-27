@@ -1,6 +1,6 @@
 from nose.tools import with_setup, assert_equals
 
-from remotespark.wrapperkernel.usercommandparser import UserCommandParser
+from remotespark.kernels.wrapperkernel.usercommandparser import UserCommandParser
 
 parser = None
 

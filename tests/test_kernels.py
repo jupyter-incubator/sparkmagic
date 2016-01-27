@@ -1,5 +1,5 @@
-from remotespark.pysparkkernel.pysparkkernel import PySparkKernel
-from remotespark.sparkkernel.sparkkernel import SparkKernel
+from remotespark.kernels.sparkkernel.sparkkernel import SparkKernel
+from remotespark.kernels.pysparkkernel.pysparkkernel import PySparkKernel
 from remotespark.utils.constants import Constants
 
 
