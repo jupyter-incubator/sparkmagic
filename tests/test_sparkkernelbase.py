@@ -10,11 +10,11 @@ execute_cell_mock = None
 do_shutdown_mock = None
 ipython_display = None
 code = "some spark code"
+user_code_parser = MagicMock(return_value=code)
 
 
 class TestSparkKernel(SparkKernelBase):
     def __init__(self):
-        user_code_parser = MagicMock(return_value=code)
         kwargs = {"testing": True}
         super(TestSparkKernel, self).__init__(None, None, None, None, None, Constants.lang_python, user_code_parser,
                                               **kwargs)
@@ -40,6 +40,7 @@ def test_execute_valid_code():
     # Verify that the execution flows through.
     ret = kernel.do_execute(code, False)
 
+    user_code_parser.get_code_to_run.assert_Called_once_with(code, Constants.lang_python)
     assert ret is execute_cell_mock.return_value
     assert kernel._fatal_error is None
     assert execute_cell_mock.called_once_with(code, True)

@@ -59,7 +59,7 @@ class SparkKernelBase(IPythonKernel):
         return self._do_shutdown_ipykernel(restart)
 
     def _do_execute(self, code, silent, store_history, user_expressions, allow_stdin):
-        code_to_run = self.user_code_parser.get_code_to_run(code)
+        code_to_run = self.user_code_parser.get_code_to_run(code, self.session_language)
 
         res = self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
 
@@ -119,8 +119,9 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
 
     def _show_internal_error(self, e):
         self._logger.error("ENCOUNTERED AN INTERNAL ERROR: {}".format(e))
-        self._ipython_display.send_error("An internal error was encountered. "
-                                         "Please file an issue at https://github.com/jupyter-incubator/sparkmagic")
+        self._ipython_display.send_error("An internal error was encountered.\n"
+                                         "Please file an issue at https://github.com/jupyter-incubator/sparkmagic\n"
+                                         "Error:\n{}".format(e))
 
     def _queue_fatal_error(self, message):
         """Queues up a fatal error to be thrown when the next cell is executed; does not
