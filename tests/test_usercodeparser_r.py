@@ -4,7 +4,7 @@ from remotespark.kernels.wrapperkernel.usercodeparser import UserCodeParser
 from remotespark.utils.constants import Constants
 
 
-language = Constants.lang_python
+language = Constants.lang_r
 
 
 def test_without_percentage():
@@ -83,8 +83,8 @@ def test_single_comment():
 
 def test_multi_comment_single_quotes():
     parser = UserCodeParser()
-    cell = """'''hi
-hi'''
+    cell = """'hi
+hi'
 %hi"""
 
     assert_equals("%hi", parser.get_code_to_run(cell, language))
@@ -92,9 +92,9 @@ hi'''
 
 def test_multi_comment_double_quotes():
     parser = UserCodeParser()
-    cell = '''"""hi
+    cell = '''"hi
 hi
-hi"""
+hi"
 %hi'''
 
     assert_equals("%hi", parser.get_code_to_run(cell, language))
@@ -102,7 +102,7 @@ hi"""
 
 def test_multi_comment_single_quotes_same_line():
     parser = UserCodeParser()
-    cell = """'''hi hi'''
+    cell = """'hi hi'
 %hi"""
 
     assert_equals("%hi", parser.get_code_to_run(cell, language))
@@ -110,7 +110,7 @@ def test_multi_comment_single_quotes_same_line():
 
 def test_multi_comment_double_quotes_same_line():
     parser = UserCodeParser()
-    cell = '''"""hi hi"""
+    cell = '''"hi hi"
 %hi'''
 
     assert_equals("%hi", parser.get_code_to_run(cell, language))

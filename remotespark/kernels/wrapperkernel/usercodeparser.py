@@ -81,10 +81,6 @@ class UserCodeParser(object):
                         return True, False, None
                     return True, True, beginning
 
-            # Check if single line comment
-            if language == Constants.lang_r:
-                return False, False, None
-
             if line.startswith(UserCodeParser._single_line_beginning(language)):
                 return True, False, None
 
@@ -96,6 +92,8 @@ class UserCodeParser(object):
             return "#"
         elif language == Constants.lang_scala:
             return "//"
+        elif language == Constants.lang_r:
+            return "#"
         else:
             raise ValueError("Language '{}' does not support single-line comments.".format(language))
 

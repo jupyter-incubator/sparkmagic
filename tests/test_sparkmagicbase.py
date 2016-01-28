@@ -31,7 +31,7 @@ def test_df_execution_without_output_var():
 
     method.assert_called_once_with(cell, session)
     assert res == df
-    assert_equals(shell.user_ns.keys(), [])
+    assert_equals(list(shell.user_ns.keys()), [])
 
 
 def test_df_execution_with_output_var():
@@ -69,4 +69,4 @@ def test_df_execution_throws():
 
     method.assert_called_once_with(cell, session)
     assert res == None
-    assert_equals(shell.user_ns.keys(), [])
+    assert_equals(list(shell.user_ns.keys()), [])

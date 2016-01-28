@@ -84,6 +84,7 @@ def test_single_comment():
 def test_multi_comment():
     parser = UserCodeParser()
     cell = """/*hi
+hi
 hi*/
 %hi"""
 
