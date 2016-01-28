@@ -2,7 +2,6 @@ from mock import MagicMock
 from nose.tools import with_setup
 
 import remotespark.utils.configuration as conf
-from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 from remotespark.magics.remotesparkmagics import RemoteSparkMagics
 
 magic = None
@@ -228,71 +227,6 @@ def test_run_hive_command_parses():
 
     run_cell_method.assert_called_once_with(cell, name)
     assert result is not None
-
-
-@with_setup(_setup, _teardown)
-def test_run_sql_command_returns_none_when_exception():
-    error_message = "error"
-    run_cell_method = MagicMock(side_effect=DataFrameParseException(error_message))
-    run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_sql = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "sql"
-    line = " ".join([command, name, context, context_name])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_called_once_with(cell, name)
-    assert result is None
-    ipython_display.send_error.assert_called_once_with(error_message)
-
-
-@with_setup(_setup, _teardown)
-def test_run_hive_command_returns_none_when_exception():
-    error_message = "error"
-    run_cell_method = MagicMock(side_effect=DataFrameParseException(error_message))
-    run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_hive = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "hive"
-    line = " ".join([command, name, context, context_name])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_called_once_with(cell, name)
-    assert result is None
-    ipython_display.send_error.assert_called_once_with(error_message)
-
-
-@with_setup(_setup, _teardown)
-def test_run_sql_command_stores_variable_in_user_ns():
-    shell.user_ns = user_ns = dict()
-    run_cell_method = MagicMock()
-    run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_sql = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "sql"
-    output = "-o"
-    output_name = "my_var"
-    line = " ".join([command, name, context, context_name, output, output_name])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_called_once_with(cell, name)
-    assert result is not None
-    assert result is user_ns[output_name]
 
 
 @with_setup(_setup, _teardown)

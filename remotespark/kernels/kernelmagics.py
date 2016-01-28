@@ -52,19 +52,22 @@ class KernelMagics(SparkMagicBase):
     @line_cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
     @argument("settings", type=str, default=[""], nargs="*", help="Settings to configure session with.")
-    def config(self, line, cell="", local_ns=None):
-        args = parse_argstring(self.config, line)
+    def configure(self, line, cell="", local_ns=None):
+        args = parse_argstring(self.configure, line)
+
+        # We ignore args.settings because argparse removes quotes. Instead, we get them ourselves.
+        settings = self.get_session_settings(line, args.force)
 
         if self.session_started:
             if not args.force:
                 raise ValueError("A session has already been started. If you intend to recreate the session with "
                                  "new configurations, please include the -f argument.")
             else:
-                self._delete_session()
-                self._override_session_settings(args.settings)
-                self._start_session()
-
-        self._override_session_settings(args.settings)
+                self._delete_session("")
+                self._override_session_settings(settings)
+                self._start_session("")
+        else:
+            self._override_session_settings(settings)
 
     @line_cell_magic
     def spark(self, line, cell="", local_ns=None):
@@ -107,7 +110,7 @@ class KernelMagics(SparkMagicBase):
             self.spark_controller.cleanup_endpoint(self.connection_string)
         else:
             raise ValueError("When you clean up the endpoint, all sessions will be lost, including the one used for "
-                             "this notebook. Please include the -f parameter if that's your intention.")
+                             "this notebook. Include the -f parameter if that's your intention.")
 
     @magic_arguments()
     @line_cell_magic
@@ -125,6 +128,9 @@ class KernelMagics(SparkMagicBase):
                                  "endpoint.".format(id))
 
             self.spark_controller.delete_session_by_id(self.connection_string, session)
+        else:
+            raise ValueError("Include the -f parameter if you understand that all statements executed in this session "
+                             "will be lost.")
 
     @line_cell_magic
     def _start_session(self, line, cell="", local_ns=None):
@@ -153,6 +159,8 @@ class KernelMagics(SparkMagicBase):
         if language not in Constants.lang_supported:
             raise ValueError("'{}' language not supported in kernel magics.".format(language))
 
+        assert not self.session_started
+
         self.language = language
 
     @staticmethod
@@ -165,8 +173,21 @@ class KernelMagics(SparkMagicBase):
         return ret
 
     @staticmethod
+    def get_session_settings(line, force):
+        line = line.strip()
+        if not force:
+            return line
+        else:
+            if line.startswith("-f "):
+                return line[3:]
+            elif line.endswith(" -f"):
+                return line[:-3]
+            else:
+                raise ValueError("Force flag must be at the beginning or end of the line as '-f'.")
+
+    @staticmethod
     def _override_session_settings(settings):
-        conf.override(conf.session_configs.__name__, json.loads(" ".join(settings)))
+        conf.override(conf.session_configs.__name__, json.loads(settings))
 
 
 def load_ipython_extension(ip):
