@@ -182,10 +182,10 @@ def test_serialize_not_empty():
 
 
 def compare_dicts(d1, d2):
-    if d1.keys() != d2.keys():
+    if list(d1.keys()) != list(d2.keys()):
         return False
 
-    for key in d1.keys():
+    for key in list(d1.keys()):
         v1 = d1[key]
         v2 = d2[key]
 

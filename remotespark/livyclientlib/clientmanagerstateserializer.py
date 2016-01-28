@@ -66,7 +66,7 @@ class ClientManagerStateSerializer(object):
         self.logger.debug("Serializing state.")
 
         serialized_clients = []
-        for name in name_client_dictionary.keys():
+        for name in list(name_client_dictionary.keys()):
             client = name_client_dictionary[name]
             serialized_client = client.serialize()
             serialized_client["name"] = name

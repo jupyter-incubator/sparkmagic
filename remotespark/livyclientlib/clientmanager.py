@@ -44,7 +44,7 @@ class ClientManager(object):
         return list(self._livy_clients.keys())
 
     def get_sessions_info(self):
-        return ["Name: {}\t{}".format(k, str(self._livy_clients[k])) for k in self._livy_clients.keys()]
+        return ["Name: {}\t{}".format(k, str(self._livy_clients[k])) for k in list(self._livy_clients.keys())]
 
     def add_client(self, name, livy_client):
         if name in self.get_sessions_list():
