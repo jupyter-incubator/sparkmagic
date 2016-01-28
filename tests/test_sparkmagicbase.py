@@ -1,4 +1,5 @@
 from mock import MagicMock
+from nose.tools import assert_equals
 
 from remotespark.utils.constants import Constants
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
@@ -16,7 +17,7 @@ def test_print_endpoint_info_doesnt_throw():
 
 def test_df_execution_without_output_var():
     shell = MagicMock()
-    shell.user_ns = dict()
+    shell.user_ns = {}
     magic = SparkMagicBase(None)
     magic.shell = shell
 
@@ -30,12 +31,12 @@ def test_df_execution_without_output_var():
 
     method.assert_called_once_with(cell, session)
     assert res == df
-    assert shell.user_ns.keys() == []
+    assert_equals(shell.user_ns.keys(), [])
 
 
 def test_df_execution_with_output_var():
     shell = MagicMock()
-    shell.user_ns = dict()
+    shell.user_ns = {}
     magic = SparkMagicBase(None)
     magic.shell = shell
 
@@ -54,7 +55,7 @@ def test_df_execution_with_output_var():
 
 def test_df_execution_throws():
     shell = MagicMock()
-    shell.user_ns = dict()
+    shell.user_ns = {}
     magic = SparkMagicBase(None)
     magic.shell = shell
     error = "error"
@@ -68,4 +69,4 @@ def test_df_execution_throws():
 
     method.assert_called_once_with(cell, session)
     assert res == None
-    assert shell.user_ns.keys() == []
+    assert_equals(shell.user_ns.keys(), [])
