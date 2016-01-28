@@ -6,14 +6,12 @@ from remotespark.utils.ipythondisplay import IpythonDisplay
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.log import Log
-from remotespark.utils.utils import get_connection_string
-from .usercommandparser import UserCommandParser
-from .codetransformers import *
+from remotespark.kernels.wrapperkernel.usercodeparser import UserCodeParser
 
 
 class SparkKernelBase(IPythonKernel):
     def __init__(self, implementation, implementation_version, language, language_version, language_info,
-                 kernel_conf_name, session_language, client_name, **kwargs):
+                 session_language, user_code_parser=None, **kwargs):
         # Required by Jupyter - Override
         self.implementation = implementation
         self.implementation_version = implementation_version
@@ -22,40 +20,33 @@ class SparkKernelBase(IPythonKernel):
         self.language_info = language_info
 
         # Override
-        self.kernel_conf_name = kernel_conf_name
         self.session_language = session_language
-        self.client_name = client_name
 
         super(SparkKernelBase, self).__init__(**kwargs)
 
-        self._logger = Log(self.client_name)
-        self._never_started = True
-        self._session_started = False
+        self._logger = Log("_jupyter_kernel".format(self.session_language))
         self._fatal_error = None
         self._ipython_display = IpythonDisplay()
 
-        self.user_command_parser = UserCommandParser()
+        if user_code_parser is None:
+            self.user_code_parser = UserCodeParser()
+        else:
+            self.user_code_parser = user_code_parser
 
         # Disable warnings for test env in HDI
         requests.packages.urllib3.disable_warnings()
 
         if not kwargs.get("testing", False):
-            configuration = self._get_configuration()
-            if not configuration:
-                # _get_configuration() sets the error for us so we can just return now.
-                # The kernel is not in a good state and all do_execute calls will
-                # fail with the fatal error.
-                return
-            (username, password, url) = configuration
-            self.connection_string = get_connection_string(url, username, password)
             self._load_magics_extension()
+            self._change_language()
             if conf.use_auto_viz():
                 self._register_auto_viz()
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
-        if self._fatal_error is not None:
-            return self._repeat_fatal_error()
         try:
+            if self._fatal_error is not None:
+                return self._repeat_fatal_error()
+
             return self._do_execute(code, silent, store_history, user_expressions, allow_stdin)
         except Exception as e:
             self._show_internal_error(e)
@@ -68,79 +59,23 @@ class SparkKernelBase(IPythonKernel):
         return self._do_shutdown_ipykernel(restart)
 
     def _do_execute(self, code, silent, store_history, user_expressions, allow_stdin):
-        # Parse command
-        try:
-            subcommand, force, output_var, command = self.user_command_parser.parse_user_command(code)
-        except SyntaxError as se:
-            self._show_user_error("{}".format(se))
-            return self._complete_cell()
-
-        # Get transformer
-        transformer = self._get_code_transformer(subcommand)
-
-        # Get instructions
-        code_to_run, error_to_show, begin_action, end_action, deletes_session = \
-            transformer.get_code_to_execute(self._session_started, self.connection_string,
-                                            force, output_var, command)
-
-        # Execute instructions
-        if error_to_show is not None:
-            self._show_user_error(error_to_show)
-            return self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
-
-        if begin_action == Constants.delete_session_action:
-            self._delete_session()
-        elif begin_action == Constants.start_session_action:
-            self._start_session()
-        elif begin_action == Constants.do_nothing_action:
-            pass
-        else:
-            raise ValueError("Begin action {} not supported.".format(begin_action))
+        code_to_run = self.user_code_parser.get_code_to_run(code, self.session_language)
 
         res = self._execute_cell(code_to_run, silent, store_history, user_expressions, allow_stdin)
 
-        if end_action == Constants.delete_session_action:
-            self._delete_session()
-        elif end_action == Constants.start_session_action:
-            self._start_session()
-        elif end_action == Constants.do_nothing_action:
-            pass
-        else:
-            raise ValueError("End action {} not supported.".format(end_action))
-
-        if deletes_session:
-            self._session_started = False
-
         return res
 
-    @staticmethod
-    def _get_code_transformer(subcommand):
-        if subcommand == UserCommandParser.run_command:
-            return SparkTransformer(subcommand)
-        elif subcommand == UserCommandParser.sql_command:
-            return SqlTransformer(subcommand)
-        elif subcommand == UserCommandParser.hive_command:
-            return HiveTransformer(subcommand)
-        elif subcommand == UserCommandParser.config_command:
-            return ConfigTransformer(subcommand)
-        elif subcommand == UserCommandParser.info_command:
-            return InfoTransformer(subcommand)
-        elif subcommand == UserCommandParser.delete_command:
-            return DeleteSessionTransformer(subcommand)
-        elif subcommand == UserCommandParser.clean_up_command:
-            return CleanUpTransformer(subcommand)
-        elif subcommand == UserCommandParser.logs_command:
-            return LogsTransformer(subcommand)
-        elif subcommand == UserCommandParser.local_command:
-            return PythonTransformer(subcommand)
-        else:
-            return NotSupportedTransformer(subcommand)
-
     def _load_magics_extension(self):
-        register_magics_code = "%load_ext remotespark"
+        register_magics_code = "%load_ext remotespark.kernels"
         self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
-                           log_if_error="Failed to load the Spark magics library.")
+                           log_if_error="Failed to load the Spark kernels magics library.")
         self._logger.debug("Loaded magics.")
+
+    def _change_language(self):
+        register_magics_code = "%_change_language -l {}".format(self.session_language)
+        self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
+                           log_if_error="Failed to change language to {}.".format(self.session_language))
+        self._logger.debug("Changed language.")
 
     def _register_auto_viz(self):
         register_auto_viz_code = """from remotespark.datawidgets.utils import display_dataframe
@@ -150,44 +85,9 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
                            log_if_error="Failed to register auto viz for notebook.")
         self._logger.debug("Registered auto viz.")
 
-    def _start_session(self):
-        if not self._session_started:
-            self._session_started = True
-
-            add_session_code = self._get_start_session_code()
-            self._execute_cell(add_session_code, True, False, shutdown_if_error=True,
-                               log_if_error="Failed to create a Livy session.")
-            self._logger.debug("Added session.")
-
-    def _get_start_session_code(self):
-        if self._never_started:
-            self._never_started = False
-            return "%spark add {} {} {}".format(
-                self.client_name, self.session_language, self.connection_string)
-        else:
-            return "%spark delete {}\n%spark add {} {} {}".format(
-                self.client_name, self.client_name, self.session_language, self.connection_string)
-
     def _delete_session(self):
-        if self._session_started:
-            code = "%spark cleanup"
-            self._execute_cell_for_user(code, True, False)
-            self._session_started = False
-
-    def _get_configuration(self):
-        """Returns (username, password, url). If there is an error (missing configuration),
-           returns False."""
-        try:
-            credentials = getattr(conf, 'kernel_' + self.kernel_conf_name + '_credentials')()
-            ret = (credentials['username'], credentials['password'], credentials['url'])
-            # The URL has to be set in the configuration.
-            assert(ret[2])
-            return ret
-        except (KeyError, AssertionError):
-            message = "Please set configuration for 'kernel_{}_credentials' to initialize Kernel".format(
-                self.kernel_conf_name)
-            self._queue_fatal_error(message)
-            return False
+        code = "%_delete_session"
+        self._execute_cell_for_user(code, True, False)
 
     def _execute_cell(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False,
                       shutdown_if_error=False, log_if_error=None):
@@ -219,8 +119,9 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
 
     def _show_internal_error(self, e):
         self._logger.error("ENCOUNTERED AN INTERNAL ERROR: {}".format(e))
-        self._ipython_display.send_error("An internal error was encountered. "
-                                         "Please file an issue at https://github.com/jupyter-incubator/sparkmagic")
+        self._ipython_display.send_error("An internal error was encountered.\n"
+                                         "Please file an issue at https://github.com/jupyter-incubator/sparkmagic\n"
+                                         "Error:\n{}".format(e))
 
     def _queue_fatal_error(self, message):
         """Queues up a fatal error to be thrown when the next cell is executed; does not
