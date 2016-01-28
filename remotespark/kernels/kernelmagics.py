@@ -6,7 +6,7 @@ Provides the %spark magic."""
 
 from __future__ import print_function
 from IPython.core.magic import magics_class
-from IPython.core.magic import line_cell_magic, needs_local_scope
+from IPython.core.magic import needs_local_scope, cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 import json
 import copy
@@ -32,12 +32,12 @@ class KernelMagics(SparkMagicBase):
         (username, password, url) = self.get_configuration(self.language)
         self.connection_string = get_connection_string(url, username, password)
 
-    @line_cell_magic
+    @cell_magic
     def info(self, line, cell="", local_ns=None):
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.connection_string)
         self.print_endpoint_info(info_sessions)
 
-    @line_cell_magic
+    @cell_magic
     def logs(self, line, cell="", local_ns=None):
         if self.session_started:
             (success, out) = self.spark_controller.get_logs()
@@ -49,7 +49,7 @@ class KernelMagics(SparkMagicBase):
             self.ipython_display.write("No logs yet.")
 
     @magic_arguments()
-    @line_cell_magic
+    @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
     @argument("settings", type=str, default=[""], nargs="*", help="Settings to configure session with.")
     def configure(self, line, cell="", local_ns=None):
@@ -63,15 +63,15 @@ class KernelMagics(SparkMagicBase):
                 raise ValueError("A session has already been started. If you intend to recreate the session with "
                                  "new configurations, please include the -f argument.")
             else:
-                self._delete_session("")
+                self._do_not_call_delete_session("")
                 self._override_session_settings(settings)
-                self._start_session("")
+                self._do_not_call_start_session("")
         else:
             self._override_session_settings(settings)
 
-    @line_cell_magic
+    @cell_magic
     def spark(self, line, cell="", local_ns=None):
-        self._start_session("")
+        self._do_not_call_start_session("")
 
         (success, out) = self.spark_controller.run_cell(cell)
         if success:
@@ -80,7 +80,7 @@ class KernelMagics(SparkMagicBase):
             self.ipython_display.send_error(out)
 
     @magic_arguments()
-    @line_cell_magic
+    @cell_magic
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
@@ -90,7 +90,7 @@ class KernelMagics(SparkMagicBase):
                                                             None, args.output)
 
     @magic_arguments()
-    @line_cell_magic
+    @cell_magic
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
@@ -100,12 +100,14 @@ class KernelMagics(SparkMagicBase):
                                                             None, args.output)
 
     @magic_arguments()
-    @line_cell_magic
+    @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
     def cleanup(self, line, cell="", local_ns=None):
+        print("line: {}".format(line))
+        print("cell: {}".format(cell))
         args = parse_argstring(self.cleanup, line)
         if args.force:
-            self._delete_session("")
+            self._do_not_call_delete_session("")
 
             self.spark_controller.cleanup_endpoint(self.connection_string)
         else:
@@ -113,7 +115,7 @@ class KernelMagics(SparkMagicBase):
                              "this notebook. Include the -f parameter if that's your intention.")
 
     @magic_arguments()
-    @line_cell_magic
+    @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
     @argument("-s", "--session", type=str, nargs=1, help="Session id number to delete.")
     def delete(self, line, cell="", local_ns=None):
@@ -132,8 +134,8 @@ class KernelMagics(SparkMagicBase):
             raise ValueError("Include the -f parameter if you understand that all statements executed in this session "
                              "will be lost.")
 
-    @line_cell_magic
-    def _start_session(self, line, cell="", local_ns=None):
+    @cell_magic
+    def _do_not_call_start_session(self, line, cell="", local_ns=None):
         if not self.session_started:
             self.session_started = True
 
@@ -143,17 +145,17 @@ class KernelMagics(SparkMagicBase):
 
             self.spark_controller.add_session(self.session_name, self.connection_string, skip, properties)
 
-    @line_cell_magic
-    def _delete_session(self, line, cell="", local_ns=None):
+    @cell_magic
+    def _do_not_call_delete_session(self, line, cell="", local_ns=None):
         if self.session_started:
             self.spark_controller.delete_session_by_name(self.session_name)
             self.session_started = False
 
     @magic_arguments()
-    @line_cell_magic
+    @cell_magic
     @argument("-l", "--language", type=str, help="Language to use.")
-    def _change_language(self, line, cell="", local_ns=None):
-        args = parse_argstring(self._change_language, line)
+    def _do_not_call_change_language(self, line, cell="", local_ns=None):
+        args = parse_argstring(self._do_not_call_change_language, line)
         language = args.language.lower()
 
         if language not in Constants.lang_supported:

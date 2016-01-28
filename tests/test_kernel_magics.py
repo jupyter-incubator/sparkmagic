@@ -42,14 +42,14 @@ def test_start_session():
     line = ""
     assert not magic.session_started
 
-    magic._start_session(line)
+    magic._do_not_call_start_session(line)
 
     assert magic.session_started
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": Constants.session_kind_pyspark})
 
     # Call a second time
-    magic._start_session(line)
+    magic._do_not_call_start_session(line)
     assert magic.session_started
     assert spark_controller.add_session.call_count == 1
 
@@ -59,13 +59,13 @@ def test_delete_session():
     line = ""
     magic.session_started = True
 
-    magic._delete_session(line)
+    magic._do_not_call_delete_session(line)
 
     assert not magic.session_started
     spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
 
     # Call a second time
-    magic._delete_session(line)
+    magic._do_not_call_delete_session(line)
     assert not magic.session_started
     assert spark_controller.delete_session_by_name.call_count == 1
 
@@ -75,7 +75,7 @@ def test_change_language():
     language = Constants.lang_python.upper()
     line = "-l {}".format(language)
 
-    magic._change_language(line)
+    magic._do_not_call_change_language(line)
 
     assert_equals(Constants.lang_python, magic.language)
 
@@ -87,7 +87,7 @@ def test_change_language_session_started():
     line = "-l {}".format(language)
     magic.session_started = True
 
-    magic._change_language(line)
+    magic._do_not_call_change_language(line)
 
 
 @with_setup(_setup, _teardown)
@@ -96,7 +96,7 @@ def test_change_language_not_valid():
     language = "not_valid"
     line = "-l {}".format(language)
 
-    magic._change_language(line)
+    magic._do_not_call_change_language(line)
 
 
 @with_setup(_setup, _teardown)
