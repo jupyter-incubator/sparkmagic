@@ -182,7 +182,7 @@ def test_serialize_not_empty():
 
 
 def compare_dicts(d1, d2):
-    if list(d1.keys()) != list(d2.keys()):
+    if sorted(d1.keys()) != sorted(d2.keys()):
         return False
 
     for key in list(d1.keys()):

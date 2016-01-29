@@ -9,7 +9,7 @@ from remotespark.utils.constants import Constants
 magic = None
 spark_controller = None
 shell = None
-ipython_display = None
+ipython_display = MagicMock()
 
 
 @magics_class
@@ -17,9 +17,12 @@ class TestKernelMagics(KernelMagics):
     def __init__(self, shell, data=None):
         super(TestKernelMagics, self).__init__(shell)
 
-    @staticmethod
-    def get_configuration(language):
-        return "user", "pass", "url"
+        self.language = Constants.lang_python
+        self.url = "url"
+        self.connection_string = "conn_str"
+
+    def refresh_configuration(self):
+        self.url = "new_url"
 
 
 def _setup():
@@ -38,18 +41,26 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
+@raises(NotImplementedError)
+def test_local():
+    line = ""
+
+    magic.local(line)
+
+
+@with_setup(_setup, _teardown)
 def test_start_session():
     line = ""
     assert not magic.session_started
 
-    magic._start_session(line)
+    magic._do_not_call_start_session(line)
 
     assert magic.session_started
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": Constants.session_kind_pyspark})
 
     # Call a second time
-    magic._start_session(line)
+    magic._do_not_call_start_session(line)
     assert magic.session_started
     assert spark_controller.add_session.call_count == 1
 
@@ -59,44 +70,51 @@ def test_delete_session():
     line = ""
     magic.session_started = True
 
-    magic._delete_session(line)
+    magic._do_not_call_delete_session(line)
 
     assert not magic.session_started
     spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
 
     # Call a second time
-    magic._delete_session(line)
+    magic._do_not_call_delete_session(line)
     assert not magic.session_started
     assert spark_controller.delete_session_by_name.call_count == 1
 
 
 @with_setup(_setup, _teardown)
 def test_change_language():
-    language = Constants.lang_python.upper()
+    language = Constants.lang_scala.upper()
     line = "-l {}".format(language)
 
-    magic._change_language(line)
+    magic._do_not_call_change_language(line)
 
-    assert_equals(Constants.lang_python, magic.language)
+    assert_equals(Constants.lang_scala, magic.language)
+    assert_equals("new_url", magic.url)
 
 
 @with_setup(_setup, _teardown)
-@raises(AssertionError)
 def test_change_language_session_started():
     language = Constants.lang_python
     line = "-l {}".format(language)
     magic.session_started = True
 
-    magic._change_language(line)
+    magic._do_not_call_change_language(line)
+
+    assert_equals(ipython_display.send_error.call_count, 1)
+    assert_equals(Constants.lang_python, magic.language)
+    assert_equals("url", magic.url)
 
 
 @with_setup(_setup, _teardown)
-@raises(ValueError)
 def test_change_language_not_valid():
     language = "not_valid"
     line = "-l {}".format(language)
 
-    magic._change_language(line)
+    magic._do_not_call_change_language(line)
+
+    assert_equals(ipython_display.send_error.call_count, 1)
+    assert_equals(Constants.lang_python, magic.language)
+    assert_equals("url", magic.url)
 
 
 @with_setup(_setup, _teardown)
@@ -109,6 +127,14 @@ def test_info():
     magic.info(line)
 
     print_info_mock.assert_called_once_with(session_info)
+    spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
+
+
+@with_setup(_setup, _teardown)
+def test_help():
+    magic.help("")
+
+    assert_equals(ipython_display.html.call_count, 1)
 
 
 @with_setup(_setup, _teardown)
@@ -142,11 +168,10 @@ def test_configure():
     # Session started - no -f
     magic.session_started = True
     conf.override_all({})
-    try:
-        magic.configure("{\"extra\": \"yes\"}")
-        assert False
-    except ValueError:
-        assert conf.session_configs() == {}
+    magic.configure("{\"extra\": \"yes\"}")
+
+    assert conf.session_configs() == {}
+    assert_equals(ipython_display.send_error.call_count, 1)
 
     # Session started - with -f
     conf.override_all({})
@@ -164,11 +189,7 @@ def test_get_session_settings():
     assert magic.get_session_settings("    something", False) == "something"
     assert magic.get_session_settings("-f something", True) == "something"
     assert magic.get_session_settings("something -f", True) == "something"
-    try:
-        magic.get_session_settings("something", True)
-        assert False
-    except ValueError:
-        pass
+    assert magic.get_session_settings("something", True) == None
 
 
 @with_setup(_setup, _teardown)
@@ -245,7 +266,6 @@ def test_hive_with_output():
 
 
 @with_setup(_setup, _teardown)
-@raises(ValueError)
 def test_cleanup_without_force():
     line = ""
     cell = ""
@@ -254,6 +274,9 @@ def test_cleanup_without_force():
     spark_controller.delete_session_by_name = MagicMock()
 
     magic.cleanup(line, cell)
+
+    assert_equals(ipython_display.send_error.call_count, 1)
+    assert_equals(spark_controller.cleanup_endpoint.call_count, 0)
 
 
 @with_setup(_setup, _teardown)
@@ -271,7 +294,6 @@ def test_cleanup_with_force():
 
 
 @with_setup(_setup, _teardown)
-@raises(ValueError)
 def test_delete_without_force():
     session_id = "0"
     line = "-s {}".format(session_id)
@@ -281,9 +303,11 @@ def test_delete_without_force():
 
     magic.delete(line, cell)
 
+    assert_equals(ipython_display.send_error.call_count, 1)
+    assert_equals(spark_controller.delete_session_by_id.call_count, 0)
+
 
 @with_setup(_setup, _teardown)
-@raises(ValueError)
 def test_delete_with_force_same_session():
     session_id = "0"
     line = "-f -s {}".format(session_id)
@@ -292,6 +316,9 @@ def test_delete_with_force_same_session():
     spark_controller.get_session_id_for_client = MagicMock(return_value=session_id)
 
     magic.delete(line, cell)
+
+    assert_equals(ipython_display.send_error.call_count, 1)
+    assert_equals(spark_controller.delete_session_by_id.call_count, 0)
 
 
 @with_setup(_setup, _teardown)

@@ -40,7 +40,7 @@ def test_execute_valid_code():
     # Verify that the execution flows through.
     ret = kernel.do_execute(code, False)
 
-    user_code_parser.get_code_to_run.assert_Called_once_with(code, Constants.lang_python)
+    user_code_parser.get_code_to_run.assert_called_once_with(code)
     assert ret is execute_cell_mock.return_value
     assert kernel._fatal_error is None
     assert execute_cell_mock.called_once_with(code, True)
@@ -101,7 +101,7 @@ def test_shutdown_cleans_up():
 
     kernel.do_shutdown(False)
 
-    ecfu_m.assert_called_once_with("%_delete_session", True, False)
+    ecfu_m.assert_called_once_with("%%_do_not_call_delete_session\n ", True, False)
     dsi_m.assert_called_once_with(False)
 
     # On restart
@@ -110,7 +110,7 @@ def test_shutdown_cleans_up():
 
     kernel.do_shutdown(True)
 
-    ecfu_m.assert_called_once_with("%_delete_session", True, False)
+    ecfu_m.assert_called_once_with("%%_do_not_call_delete_session\n ", True, False)
     dsi_m.assert_called_once_with(True)
 
 
@@ -127,7 +127,7 @@ def test_register_auto_viz():
 def test_change_language():
     kernel._change_language()
 
-    assert call("%_change_language -l {}".format(Constants.lang_python),
+    assert call("%%_do_not_call_change_language -l {}\n ".format(Constants.lang_python),
                 True, False, None, False) in execute_cell_mock.mock_calls
 
 
@@ -142,4 +142,4 @@ def test_load_magics():
 def test_delete_session():
     kernel._delete_session()
 
-    assert call("%_delete_session", True, False) in execute_cell_mock.mock_calls
+    assert call("%%_do_not_call_delete_session\n ", True, False) in execute_cell_mock.mock_calls
