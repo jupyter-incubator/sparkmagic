@@ -80,6 +80,9 @@ class SparkController(object):
         self.client_manager.add_client(name, livy_client)
         livy_client.start()
 
+    def get_session_id_for_client(self, name):
+        return self.client_manager.get_session_id_for_client(name)
+
     def get_client_keys(self):
         return self.client_manager.get_sessions_list()
 

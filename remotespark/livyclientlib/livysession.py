@@ -15,7 +15,7 @@ class LivySession(object):
     """Session that is livy specific."""
 
     def __init__(self, ipython_display, http_client, session_id, sql_created, properties):
-        assert "kind" in properties.keys()
+        assert "kind" in list(properties.keys())
         kind = properties["kind"]
         self.properties = properties
         self.ipython_display = ipython_display
