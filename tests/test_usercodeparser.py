@@ -74,3 +74,13 @@ hi
 hi"""
 
     assert_equals(cell, parser.get_code_to_run(cell))
+
+
+def test_scala_code():
+    parser = UserCodeParser()
+    cell = """/* Place the cursor in the cell and press SHIFT + ENTER to run */
+
+val fruits = sc.textFile("wasb:///example/data/fruits.txt")
+val yellowThings = sc.textFile("wasb:///example/data/yellowthings.txt")"""
+
+    assert_equals("%%spark\n{}\n ".format(cell), parser.get_code_to_run(cell))

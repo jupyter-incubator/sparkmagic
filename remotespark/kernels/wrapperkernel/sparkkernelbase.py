@@ -72,7 +72,7 @@ class SparkKernelBase(IPythonKernel):
         self._logger.debug("Loaded magics.")
 
     def _change_language(self):
-        register_magics_code = "%_do_not_call_change_language -l {}".format(self.session_language)
+        register_magics_code = "%%_do_not_call_change_language -l {}\n ".format(self.session_language)
         self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to change language to {}.".format(self.session_language))
         self._logger.debug("Changed language.")
@@ -86,7 +86,7 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
         self._logger.debug("Registered auto viz.")
 
     def _delete_session(self):
-        code = "%_do_not_call_delete_session"
+        code = "%%_do_not_call_delete_session\n "
         self._execute_cell_for_user(code, True, False)
 
     def _execute_cell(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False,
