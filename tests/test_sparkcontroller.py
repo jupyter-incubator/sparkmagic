@@ -189,3 +189,9 @@ def test_get_logs():
     controller.get_logs()
 
     chosen_client.get_logs.assert_called_with()
+
+
+@with_setup(_setup, _teardown)
+def test_get_session_id_for_client():
+    assert controller.get_session_id_for_client("name") is not None
+    client_manager.get_session_id_for_client.assert_called_once_with("name")

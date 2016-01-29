@@ -5,47 +5,22 @@ Provides the %spark magic."""
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
-from IPython.core.magic import Magics, magics_class, line_cell_magic, needs_local_scope
+from IPython.core.magic import magics_class
+from IPython.core.magic import line_cell_magic, needs_local_scope
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 import json
 import copy
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
-from remotespark.utils.ipythondisplay import IpythonDisplay
-from remotespark.utils.log import Log
-from remotespark.utils.utils import get_magics_home_path, join_paths
-from .livyclientlib.dataframeparseexception import DataFrameParseException
-from .livyclientlib.sparkcontroller import SparkController
+from remotespark.magics.sparkmagicsbase import SparkMagicBase
 
 
 @magics_class
-class RemoteSparkMagics(Magics):
+class RemoteSparkMagics(SparkMagicBase):
     def __init__(self, shell, data=None):
         # You must call the parent constructor
-        super(RemoteSparkMagics, self).__init__(shell)
-
-        self.logger = Log("RemoteSparkMagics")
-        self.ipython_display = IpythonDisplay()
-        self.spark_controller = SparkController(self.ipython_display)
-
-        try:
-            should_serialize = conf.serialize()
-            if should_serialize:
-                self.logger.debug("Serialization enabled.")
-
-                self.magics_home_path = get_magics_home_path()
-                path_to_serialize = join_paths(self.magics_home_path, "state.json")
-
-                self.logger.debug("Will serialize to {}.".format(path_to_serialize))
-
-                self.spark_controller = SparkController(self.ipython_display, serialize_path=path_to_serialize)
-            else:
-                self.logger.debug("Serialization NOT enabled.")
-        except KeyError:
-            self.logger.error("Could not read env vars for serialization.")
-
-        self.logger.debug("Initialized spark magics.")
+        super(RemoteSparkMagics, self).__init__(shell, data)
 
     @magic_arguments()
     @argument("-c", "--context", type=str, default=Constants.context_name_spark,
@@ -117,7 +92,7 @@ class RemoteSparkMagics(Magics):
                 if len(args.command) == 2:
                     connection_string = args.command[1]
                     info_sessions = self.spark_controller.get_all_sessions_endpoint_info(connection_string)
-                    self._print_endpoint_info(info_sessions)
+                    self.print_endpoint_info(info_sessions)
                 elif len(args.command) == 1:
                     self._print_local_info()
                 else:
@@ -143,7 +118,7 @@ class RemoteSparkMagics(Magics):
                     skip = False
 
                 properties = copy.deepcopy(conf.session_configs())
-                properties["kind"] = self._get_livy_kind(language)
+                properties["kind"] = self.get_livy_kind(language)
 
                 self.spark_controller.add_session(name, connection_string, skip, properties)
             # delete
@@ -187,11 +162,11 @@ class RemoteSparkMagics(Magics):
                     else:
                         self.ipython_display.send_error(out)
                 elif args.context == Constants.context_name_sql:
-                    return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                                         args.session, args.output)
+                    return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
+                                                                        args.session, args.output)
                 elif args.context == Constants.context_name_hive:
-                    return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
-                                                                         args.session, args.output)
+                    return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
+                                                                        args.session, args.output)
                 else:
                     raise ValueError("Context '{}' not found".format(args.context))
             # error
@@ -199,16 +174,6 @@ class RemoteSparkMagics(Magics):
                 raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
         except ValueError as err:
             self.ipython_display.send_error("{}".format(err))
-
-    def _execute_against_context_that_returns_df(self, method, cell, session, output_var):
-        try:
-            df = method(cell, session)
-            if output_var is not None:
-                self.shell.user_ns[output_var] = df
-            return df
-        except DataFrameParseException as e:
-            self.ipython_display.send_error(e.out)
-            return None
 
     def _print_local_info(self):
         sessions_info = ["        {}".format(i) for i in self.spark_controller.get_manager_sessions_str()]
@@ -218,25 +183,6 @@ class RemoteSparkMagics(Magics):
     Session configs:
         {}
 """.format("\n".join(sessions_info), conf.session_configs()))
-
-
-    def _print_endpoint_info(self, info_sessions):
-        sessions_info = ["        {}".format(i) for i in info_sessions]
-        print("""Info for endpoint:
-    Sessions:
-{}
-""".format("\n".join(sessions_info)))
-
-    @staticmethod
-    def _get_livy_kind(language):
-        if language == Constants.lang_scala:
-            return Constants.session_kind_spark
-        elif language == Constants.lang_python:
-            return Constants.session_kind_pyspark
-        elif language == Constants.lang_r:
-            return Constants.session_kind_sparkr
-        else:
-            raise ValueError("Cannot get session kind for {}.".format(language))
 
         
 def load_ipython_extension(ip):
