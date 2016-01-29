@@ -38,6 +38,14 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
+@raises(NotImplementedError)
+def test_local():
+    line = ""
+
+    magic.local(line)
+
+
+@with_setup(_setup, _teardown)
 def test_start_session():
     line = ""
     assert not magic.session_started
