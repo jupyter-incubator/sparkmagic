@@ -33,6 +33,11 @@ class KernelMagics(SparkMagicBase):
         self.connection_string = get_connection_string(url, username, password)
 
     @cell_magic
+    def local(self, line, cell="", local_ns=None):
+        # This should not be reachable thanks to UserCodeParser. Registering it here so that it auto-completes with tab.
+        raise NotImplementedError("UserCodeParser should have prevented code execution from reaching here.")
+
+    @cell_magic
     def info(self, line, cell="", local_ns=None):
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.connection_string)
         self.print_endpoint_info(info_sessions)
@@ -103,8 +108,6 @@ class KernelMagics(SparkMagicBase):
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
     def cleanup(self, line, cell="", local_ns=None):
-        print("line: {}".format(line))
-        print("cell: {}".format(cell))
         args = parse_argstring(self.cleanup, line)
         if args.force:
             self._do_not_call_delete_session("")

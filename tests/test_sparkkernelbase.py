@@ -40,7 +40,7 @@ def test_execute_valid_code():
     # Verify that the execution flows through.
     ret = kernel.do_execute(code, False)
 
-    user_code_parser.get_code_to_run.assert_Called_once_with(code, Constants.lang_python)
+    user_code_parser.get_code_to_run.assert_called_once_with(code)
     assert ret is execute_cell_mock.return_value
     assert kernel._fatal_error is None
     assert execute_cell_mock.called_once_with(code, True)
