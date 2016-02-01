@@ -9,7 +9,6 @@ from IPython.core.magic import magics_class
 from IPython.core.magic import line_cell_magic, needs_local_scope
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 import json
-import copy
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
@@ -117,8 +116,7 @@ class RemoteSparkMagics(SparkMagicBase):
                 else:
                     skip = False
 
-                properties = copy.deepcopy(conf.session_configs())
-                properties["kind"] = self.get_livy_kind(language)
+                properties = conf.get_session_properties(language)
 
                 self.spark_controller.add_session(name, connection_string, skip, properties)
             # delete

@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 
 from .filesystemreaderwriter import FileSystemReaderWriter
+from .constants import Constants
 
 
 first_run = True
@@ -117,3 +118,14 @@ def coerce_pandas_df_to_numeric_datetime(df):
                 coerced = True
             except (ValueError, TypeError):
                 pass
+
+
+def get_livy_kind(language):
+    if language == Constants.lang_scala:
+        return Constants.session_kind_spark
+    elif language == Constants.lang_python:
+        return Constants.session_kind_pyspark
+    elif language == Constants.lang_r:
+        return Constants.session_kind_sparkr
+    else:
+        raise ValueError("Cannot get session kind for {}.".format(language))

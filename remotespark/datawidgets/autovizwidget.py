@@ -5,9 +5,9 @@ import pandas as pd
 from ipywidgets import FlexBox
 
 from remotespark.utils.ipythondisplay import IpythonDisplay
+from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
 from .encoding import Encoding
 from .encodingwidget import EncodingWidget
-from .ipywidgetfactory import IpyWidgetFactory
 from .plotlygraphs.graphrenderer import GraphRenderer
 
 

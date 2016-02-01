@@ -4,9 +4,10 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
+import copy
 
 from remotespark.utils.constants import Constants
-from remotespark.utils.utils import join_paths, get_magics_home_path
+from remotespark.utils.utils import join_paths, get_magics_home_path, get_livy_kind
 from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 
 _overrides = None
@@ -187,3 +188,9 @@ def max_results_sql():
 @_override
 def max_slices_pie_graph():
     return 100
+
+
+def get_session_properties(language):
+    properties = copy.deepcopy(session_configs())
+    properties["kind"] = get_livy_kind(language)
+    return properties
