@@ -95,3 +95,6 @@ class SparkController(object):
         else:
             client_name = client_name.lower()
             return self.client_manager.get_client(client_name)
+
+    def get_managed_clients(self):
+        return self.client_manager.livy_clients

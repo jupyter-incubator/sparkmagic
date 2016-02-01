@@ -38,10 +38,10 @@ class LivySession(object):
                              .format(kind, ", ".join(Constants.session_kinds_supported)))
 
         if session_id == "-1":
-            self._status = Constants.not_started_session_status
+            self.status = Constants.not_started_session_status
             sql_created = False
         else:
-            self._status = Constants.busy_session_status
+            self.status = Constants.busy_session_status
 
         self._logs = ""
         self._http_client = http_client
@@ -53,7 +53,7 @@ class LivySession(object):
                                        kind, sql_created)
 
     def __str__(self):
-        return "Session id: {}\tKind: {}\tState: {}".format(self.id, self.kind, self._status)
+        return "Session id: {}\tKind: {}\tState: {}".format(self.id, self.kind, self.status)
 
     def get_state(self):
         return self._state
@@ -64,7 +64,7 @@ class LivySession(object):
 
         r = self._http_client.post("/sessions", [201], self.properties)
         self._state.session_id = str(r.json()["id"])
-        self._status = str(r.json()["state"])
+        self.status = str(r.json()["state"])
 
         self.ipython_display.writeln("Creating SparkContext as 'sc'")
         self.logger.debug("Session '{}' started.".format(self.kind))
@@ -137,13 +137,13 @@ class LivySession(object):
     def delete(self):
         self.logger.debug("Deleting session '{}'".format(self.id))
 
-        if self._status != Constants.not_started_session_status and self._status != Constants.dead_session_status:
+        if self.status != Constants.not_started_session_status and self.status != Constants.dead_session_status:
             self._http_client.delete("/sessions/{}".format(self.id), [200, 404])
-            self._status = Constants.dead_session_status
+            self.status = Constants.dead_session_status
             self._state.session_id = "-1"
         else:
             raise ValueError("Cannot delete session {} that is in state '{}'."
-                             .format(self.id, self._status))
+                             .format(self.id, self.status))
 
     def wait_for_idle(self, seconds_to_wait):
         """Wait for session to go to idle status. Sleep meanwhile. Calls done every status_sleep_seconds as
@@ -153,7 +153,7 @@ class LivySession(object):
             seconds_to_wait : number of seconds to wait before giving up.
         """
         self._refresh_status()
-        current_status = self._status
+        current_status = self.status
         if current_status == Constants.idle_session_status:
             return
 
@@ -183,11 +183,11 @@ class LivySession(object):
         status = self._get_latest_status()
 
         if status in Constants.possible_session_status:
-            self._status = status
+            self.status = status
         else:
             raise ValueError("Status '{}' not supported by session.".format(status))
 
-        return self._status
+        return self.status
 
     def _refresh_logs(self):
         self._logs = self._get_latest_logs()

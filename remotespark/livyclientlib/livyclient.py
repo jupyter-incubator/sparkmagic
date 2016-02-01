@@ -48,3 +48,7 @@ class LivyClient(object):
     @property
     def session_id(self):
         return self._session.id
+
+    @property
+    def status(self):
+        return self._session.status

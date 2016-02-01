@@ -37,3 +37,6 @@ class Constants(object):
     delete_session_action = "delete"
     start_session_action = "start"
     do_nothing_action = "nothing"
+
+    default_endpoint = " Add and select an endpoint "
+    default_endpoint_conn_str = ""
