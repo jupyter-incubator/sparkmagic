@@ -1,16 +1,20 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 from remotespark.controllerwidget.abstractmenuwidget import AbstractMenuWidget
-from remotespark.controllerwidget.endpointwidget import EndpointWidget
-from remotespark.controllerwidget.sessionwidget import SessionWidget
+from remotespark.controllerwidget.addendpointwidget import AddEndpointWidget
+from remotespark.controllerwidget.manageendpointwidget import ManageEndpointWidget
+from remotespark.controllerwidget.managesessionwidget import ManageSessionWidget
+from remotespark.controllerwidget.createsessionwidget import CreateSessionWidget
 from remotespark.utils.constants import Constants
 
 
 class MagicsControllerWidget(AbstractMenuWidget):
-    def __init__(self, spark_controller, ipywidget_factory, ipython_display):
+    def __init__(self, spark_controller, ipywidget_factory, ipython_display, endpoints=None):
         super(MagicsControllerWidget, self).__init__(spark_controller, ipywidget_factory, ipython_display)
 
-        self.endpoints = {Constants.default_endpoint: Constants.default_endpoint_conn_str}
+        if endpoints is None:
+            endpoints = {}
+        self.endpoints = endpoints
 
         self._refresh()
 
@@ -20,18 +24,24 @@ class MagicsControllerWidget(AbstractMenuWidget):
     def _refresh(self):
         self.endpoints_dropdown_widget = self.ipywidget_factory.get_dropdown(
                 description="Endpoint:",
-                options=self.endpoints,
-                value=Constants.default_endpoint_conn_str
+                options=self.endpoints
         )
 
-        self.endpoint = EndpointWidget(self.spark_controller, self.ipywidget_factory, self.ipython_display,
-                                       self.endpoints, self.endpoints_dropdown_widget, self._refresh)
-        self.add_session = SessionWidget(self.spark_controller, self.ipywidget_factory, self.ipython_display,
-                                         self.endpoints_dropdown_widget, self._refresh)
+        self.manage_session = ManageSessionWidget(self.spark_controller, self.ipywidget_factory, self.ipython_display,
+                                                  self._refresh)
+        self.create_session = CreateSessionWidget(self.spark_controller, self.ipywidget_factory, self.ipython_display,
+                                                  self.endpoints_dropdown_widget, self._refresh)
+        self.add_endpoint = AddEndpointWidget(self.spark_controller, self.ipywidget_factory, self.ipython_display,
+                                              self.endpoints, self.endpoints_dropdown_widget, self._refresh)
+        self.manage_endpoint = ManageEndpointWidget(self.spark_controller, self.ipywidget_factory, self.ipython_display,
+                                                    self.endpoints, self._refresh)
 
-        self.tabs = self.ipywidget_factory.get_tab(children=[self.add_session, self.endpoint])
+        self.tabs = self.ipywidget_factory.get_tab(children=[self.manage_session, self.create_session,
+                                                             self.add_endpoint, self.manage_endpoint])
         self.tabs.set_title(0, "Manage Sessions")
-        self.tabs.set_title(1, "Manage Endpoints")
+        self.tabs.set_title(1, "Create Session")
+        self.tabs.set_title(2, "Add Endpoint")
+        self.tabs.set_title(3, "Manage Endpoints")
 
         self.children = [self.tabs]
 

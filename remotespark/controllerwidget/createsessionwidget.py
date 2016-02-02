@@ -7,14 +7,12 @@ from remotespark.utils import configuration as conf
 from remotespark.utils.constants import Constants
 
 
-class SessionWidget(AbstractMenuWidget):
+class CreateSessionWidget(AbstractMenuWidget):
     def __init__(self, spark_controller, ipywidget_factory, ipython_display, endpoints_dropdown_widget, refresh_method):
         # This is nested
-        super(SessionWidget, self).__init__(spark_controller, ipywidget_factory, ipython_display, True)
+        super(CreateSessionWidget, self).__init__(spark_controller, ipywidget_factory, ipython_display, True)
 
         self.refresh_method = refresh_method
-
-        children = self.get_existing_session_widgets()
 
         self.endpoints_dropdown_widget = endpoints_dropdown_widget
 
@@ -34,9 +32,9 @@ class SessionWidget(AbstractMenuWidget):
             description='Create Session'
         )
 
-        children = children + [self.endpoints_dropdown_widget, self.session_widget, self.lang_widget, self.properties,
-                               self.submit_widget]
-        self.children = children
+        self.children = [self.ipywidget_factory.get_html(value="<br/>", width="600px"), self.endpoints_dropdown_widget,
+                         self.session_widget, self.lang_widget, self.properties,
+                         self.ipywidget_factory.get_html(value="<br/>", width="600px"), self.submit_widget]
 
         for child in self.children:
             child.parent_widget = self
@@ -56,10 +54,6 @@ class SessionWidget(AbstractMenuWidget):
         skip = False
         properties = conf.get_session_properties(language)
 
-        if connection_string == Constants.default_endpoint_conn_str:
-            self.ipython_display.send_error("Please select a valid endpoint first.")
-            return
-
         try:
             self.spark_controller.add_session(alias, connection_string, skip, properties)
         except ValueError as e:
@@ -73,40 +67,3 @@ due to error: '{}'""".format(alias, properties, e))
             return
 
         self.refresh_method()
-
-    def get_existing_session_widgets(self):
-        session_widgets = []
-
-        client_dict = self.spark_controller.get_managed_clients()
-        if len(client_dict) > 0:
-
-            header = self.get_session_widget("Name", "Id", "Kind", "State", False)
-            session_widgets.append(header)
-            session_widgets.append(self.ipywidget_factory.get_html(value="<hr/>", width="600px"))
-
-            for name, client in client_dict.items():
-                session_widgets.append(self.get_session_widget(name, client.session_id, client.kind, client.status))
-
-        return session_widgets
-
-    def get_session_widget(self, name, id, kind, state, button=True):
-        hbox = self.ipywidget_factory.get_hbox()
-
-        name_w = self.ipywidget_factory.get_html(value=name, width="200px")
-        id_w = self.ipywidget_factory.get_html(value=id, width="100px")
-        kind_w = self.ipywidget_factory.get_html(value=kind, width="100px")
-        state_w = self.ipywidget_factory.get_html(value=state, width="100px")
-
-        if button:
-            def delete_on_click(button):
-                self.spark_controller.delete_session_by_name(name)
-                self.refresh_method()
-
-            delete_w = self.ipywidget_factory.get_button(description="Delete")
-            delete_w.on_click(delete_on_click)
-        else:
-            delete_w = self.ipywidget_factory.get_html(value="", width="100px")
-
-        hbox.children = [name_w, id_w, kind_w, state_w, delete_w]
-
-        return hbox
