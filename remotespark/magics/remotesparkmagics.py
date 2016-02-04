@@ -13,6 +13,8 @@ import json
 import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
+from remotespark.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
+from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
 
 
 @magics_class
@@ -20,6 +22,13 @@ class RemoteSparkMagics(SparkMagicBase):
     def __init__(self, shell, data=None):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell, data)
+
+        self.endpoints = {}
+        self.manage_widget = MagicsControllerWidget(self.spark_controller, IpyWidgetFactory(), self.ipython_display)
+
+    @line_cell_magic
+    def manage_spark(self, line, cell="", local_ns=None):
+        return self.manage_widget
 
     @magic_arguments()
     @argument("-c", "--context", type=str, default=Constants.context_name_spark,

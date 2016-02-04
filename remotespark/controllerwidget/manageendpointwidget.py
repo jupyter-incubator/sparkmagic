@@ -117,7 +117,7 @@ class ManageEndpointWidget(AbstractMenuWidget):
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(conn_str)
 
         if len(info_sessions) > 0:
-            text = "{}:<br/>{}".format(url, "<br/>* ".join(info_sessions))
+            text = "{}:<br/>{}".format(url, "* {}".format("<br/>* ".join(info_sessions)))
         else:
             text = "No sessions on this endpoint."
 
