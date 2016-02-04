@@ -48,11 +48,14 @@ class AddEndpointWidget(AbstractMenuWidget):
             self.conn_string_widget.value = conn_str
 
         def conn_to_parts(name, old_value, new_value):
-            conn_str = self.conn_string_widget.value
-            cso = get_connection_string_elements(conn_str)
-            self.address_widget.value = cso.url
-            self.user_widget.value = cso.username
-            self.password_widget.value = cso.password
+            try:
+                conn_str = self.conn_string_widget.value
+                cso = get_connection_string_elements(conn_str)
+                self.address_widget.value = cso.url
+                self.user_widget.value = cso.username
+                self.password_widget.value = cso.password
+            except ValueError:
+                pass
 
         self.address_widget.on_trait_change(parts_to_conn, "value")
         self.user_widget.on_trait_change(parts_to_conn, "value")
