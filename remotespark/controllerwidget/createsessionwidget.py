@@ -26,7 +26,7 @@ class CreateSessionWidget(AbstractMenuWidget):
         )
         self.properties = self.ipywidget_factory.get_text(
             description='Properties:',
-            value="{}"
+            value="{}".format(conf.session_configs())
         )
         self.submit_widget = self.ipywidget_factory.get_submit_button(
             description='Create Session'

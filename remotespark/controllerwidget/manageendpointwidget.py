@@ -25,7 +25,7 @@ class ManageEndpointWidget(AbstractMenuWidget):
 
         if len(self.endpoints) > 0:
             # Header
-            header = self.get_endpoint_widget("Endpoint", None, False)
+            header = self.ipywidget_factory.get_html(value="Endpoint")
             endpoint_widgets.append(header)
 
             # Endpoints
@@ -38,61 +38,63 @@ class ManageEndpointWidget(AbstractMenuWidget):
 
         return endpoint_widgets
 
-    def get_endpoint_widget(self, url, conn_str, button=True):
+    def get_endpoint_widget(self, url, conn_str):
         # 600 px
+        width = "600px"
         vbox_outter = self.ipywidget_factory.get_vbox()
+        separator = self.ipywidget_factory.get_html(value="<hr/>", width=width)
+
         hbox_outter = self.ipywidget_factory.get_hbox()
+        hbox_outter_children = []
+        try:
+            vbox_left = self.get_endpoint_left(conn_str, url)
+            cleanup_w = self.get_cleanup_button_endpoint(url, conn_str)
 
-        separator = self.ipywidget_factory.get_html(value="<hr/>", width="600px")
+            hbox_outter_children.append(vbox_left)
+            hbox_outter_children.append(cleanup_w)
+        except ValueError as e:
+            hbox_outter_children.append(self.ipywidget_factory.get_html(value=str(e), width=width))
 
-        vbox_left = self.get_endpoint_left(conn_str, url)
+        hbox_outter_children.append(self.get_delete_button_endpoint(url, conn_str))
+        hbox_outter.children = hbox_outter_children
 
-        cleanup_w, delete_w = self.get_buttons_endpoint(url, conn_str, button)
-
-        hbox_outter.children = [vbox_left, cleanup_w, delete_w]
         vbox_outter.children = [separator, hbox_outter]
 
         return vbox_outter
 
     def get_endpoint_left(self, conn_str, url):
         # 400 px
-        if conn_str is None:
-            return self.ipywidget_factory.get_text(value=url, width="200px")
-
         info = self.get_info_endpoint_widget(conn_str, url)
         delete_session_number = self.get_delete_session_endpoint_widget(url, conn_str)
-        vbox_left = self.ipywidget_factory.get_vbox(children=[info, delete_session_number])
+        vbox_left = self.ipywidget_factory.get_vbox(children=[info, delete_session_number], width="400px")
         return vbox_left
 
-    def get_buttons_endpoint(self, url, conn_str, button):
-        # 100 px x 2
-        if button:
-            def cleanup_on_click(button):
-                try:
-                    self.spark_controller.cleanup_endpoint(conn_str)
-                except ValueError as e:
-                    self.ipython_display.send_error("Could not clean up endpoint due to error: {}".format(e))
-                    return
-                self.ipython_display.writeln("Cleaned up endpoint {}".format(url))
+    def get_cleanup_button_endpoint(self, url, conn_str):
+        def cleanup_on_click(button):
+            try:
+                self.spark_controller.cleanup_endpoint(conn_str)
+            except ValueError as e:
+                self.ipython_display.send_error("Could not clean up endpoint due to error: {}".format(e))
+                return
+            self.ipython_display.writeln("Cleaned up endpoint {}".format(url))
 
-            cleanup_w = self.ipywidget_factory.get_button(description="Clean Up")
-            cleanup_w.on_click(cleanup_on_click)
+        cleanup_w = self.ipywidget_factory.get_button(description="Clean Up")
+        cleanup_w.on_click(cleanup_on_click)
 
-            def delete_on_click(button):
-                self.endpoints.pop(url, None)
-                self.refresh_method()
+        return cleanup_w
 
-            delete_w = self.ipywidget_factory.get_button(description="Remove")
-            delete_w.on_click(delete_on_click)
-        else:
-            cleanup_w = self.ipywidget_factory.get_html(value="", width="100px", padding="4px")
-            delete_w = self.ipywidget_factory.get_html(value="", width="100px", padding="4px")
+    def get_delete_button_endpoint(self, url, conn_str):
+        def delete_on_click(button):
+            self.endpoints.pop(url, None)
+            self.refresh_method()
 
-        return cleanup_w, delete_w
+        delete_w = self.ipywidget_factory.get_button(description="Remove")
+        delete_w.on_click(delete_on_click)
+
+        return delete_w
 
     def get_delete_session_endpoint_widget(self, url, conn_str):
-        # 400 px
-        session_text = self.ipywidget_factory.get_text(description="Session:", value="0")
+        session_text = self.ipywidget_factory.get_text(description="Session to delete:", value="0", width="50px")
 
         def delete_endpoint(button):
             try:
@@ -106,21 +108,17 @@ class ManageEndpointWidget(AbstractMenuWidget):
         button = self.ipywidget_factory.get_button(description="Delete")
         button.on_click(delete_endpoint)
 
-        return self.ipywidget_factory.get_vbox(children=[session_text])
+        return self.ipywidget_factory.get_hbox(children=[session_text, button], width="152px")
 
     def get_info_endpoint_widget(self, conn_str, url):
         # 400 px
         width = "400px"
 
-        if conn_str is None:
-            w = self.ipywidget_factory.get_text(value="", width=width)
-        else:
-            try:
-                info = self.spark_controller.get_all_sessions_endpoint_info(conn_str)
-                w = self.ipywidget_factory.get_html(value="{}: {}"
-                                                    .format(url, info),
-                                                    width=width)
-            except ValueError as e:
-                w = self.ipywidget_factory.get_text(value=str(e), width=width)
+        info_sessions = self.spark_controller.get_all_sessions_endpoint_info(conn_str)
 
-        return w
+        if len(info_sessions) > 0:
+            text = "{}:<br/>{}".format(url, "<br/>* ".join(info_sessions))
+        else:
+            text = "No sessions on this endpoint."
+
+        return self.ipywidget_factory.get_html(text, width=width)
