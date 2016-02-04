@@ -15,7 +15,7 @@ def _setup():
 
     conf.override_all({})
 
-    magic = RemoteSparkMagics(shell=None)
+    magic = RemoteSparkMagics(shell=None, widget=MagicMock())
     magic.shell = shell = MagicMock()
     magic.ipython_display = ipython_display = MagicMock()
     magic.spark_controller = spark_controller = MagicMock()

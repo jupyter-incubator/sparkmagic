@@ -19,12 +19,14 @@ from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
 
 @magics_class
 class RemoteSparkMagics(SparkMagicBase):
-    def __init__(self, shell, data=None):
+    def __init__(self, shell, data=None, widget=None):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell, data)
 
         self.endpoints = {}
-        self.manage_widget = MagicsControllerWidget(self.spark_controller, IpyWidgetFactory(), self.ipython_display)
+        if widget is None:
+            widget = MagicsControllerWidget(self.spark_controller, IpyWidgetFactory(), self.ipython_display)
+        self.manage_widget = widget
 
     @line_cell_magic
     def manage_spark(self, line, cell="", local_ns=None):
