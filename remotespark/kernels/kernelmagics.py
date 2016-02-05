@@ -94,11 +94,12 @@ class KernelMagics(SparkMagicBase):
 
     @cell_magic
     def info(self, line, cell="", local_ns=None):
-        print("Endpoint:\n\t{}\n".format(self.url))
+        self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.url))
 
-        print("Current session:\n\t{}\n".format(self.spark_controller.get_session_id_for_client(self.session_name)))
+        self.ipython_display.writeln("Current session:\n\t{}\n".format(
+                self.spark_controller.get_session_id_for_client(self.session_name)))
 
-        print("Session configs:\n\t{}\n".format(conf.get_session_properties(self.language)))
+        self.ipython_display.writeln("Session configs:\n\t{}\n".format(conf.get_session_properties(self.language)))
 
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.connection_string)
         self.print_endpoint_info(info_sessions)
@@ -139,6 +140,8 @@ class KernelMagics(SparkMagicBase):
                 self._do_not_call_start_session("")
         else:
             self._override_session_settings(settings)
+
+        self.info("")
 
     @cell_magic
     def spark(self, line, cell="", local_ns=None):
