@@ -40,6 +40,10 @@ class ClientManager(object):
     def _serialize_state(self):
         self._serializer.serialize_state(self._livy_clients)
 
+    @property
+    def livy_clients(self):
+        return self._livy_clients
+
     def get_sessions_list(self):
         return list(self._livy_clients.keys())
 

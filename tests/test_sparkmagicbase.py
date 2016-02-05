@@ -2,13 +2,14 @@ from mock import MagicMock
 from nose.tools import assert_equals
 
 from remotespark.utils.constants import Constants
+from remotespark.utils.utils import get_livy_kind
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 
 
 def test_get_livy_kind_covers_all_langs():
     for lang in Constants.lang_supported:
-        SparkMagicBase.get_livy_kind(lang)
+        get_livy_kind(lang)
 
 
 def test_print_endpoint_info_doesnt_throw():

@@ -9,7 +9,6 @@ from IPython.core.magic import magics_class
 from IPython.core.magic import needs_local_scope, cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 import json
-import copy
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
@@ -99,7 +98,7 @@ class KernelMagics(SparkMagicBase):
 
         print("Current session:\n\t{}\n".format(self.spark_controller.get_session_id_for_client(self.session_name)))
 
-        print("Session configs:\n\t{}\n".format(self._get_session_properties()))
+        print("Session configs:\n\t{}\n".format(conf.get_session_properties(self.language)))
 
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.connection_string)
         self.print_endpoint_info(info_sessions)
@@ -218,7 +217,7 @@ class KernelMagics(SparkMagicBase):
             self.session_started = True
 
             skip = False
-            properties = self._get_session_properties()
+            properties = conf.get_session_properties(self.language)
 
             self.spark_controller.add_session(self.session_name, self.connection_string, skip, properties)
 
@@ -245,11 +244,6 @@ class KernelMagics(SparkMagicBase):
 
         self.language = language
         self.refresh_configuration()
-
-    def _get_session_properties(self):
-        properties = copy.deepcopy(conf.session_configs())
-        properties["kind"] = KernelMagics.get_livy_kind(self.language)
-        return properties
 
     def refresh_configuration(self):
         credentials = getattr(conf, 'kernel_' + self.language + '_credentials')()

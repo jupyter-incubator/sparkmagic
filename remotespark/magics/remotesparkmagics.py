@@ -9,18 +9,28 @@ from IPython.core.magic import magics_class
 from IPython.core.magic import line_cell_magic, needs_local_scope
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 import json
-import copy
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
+from remotespark.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
+from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
 
 
 @magics_class
 class RemoteSparkMagics(SparkMagicBase):
-    def __init__(self, shell, data=None):
+    def __init__(self, shell, data=None, widget=None):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell, data)
+
+        self.endpoints = {}
+        if widget is None:
+            widget = MagicsControllerWidget(self.spark_controller, IpyWidgetFactory(), self.ipython_display)
+        self.manage_widget = widget
+
+    @line_cell_magic
+    def manage_spark(self, line, cell="", local_ns=None):
+        return self.manage_widget
 
     @magic_arguments()
     @argument("-c", "--context", type=str, default=Constants.context_name_spark,
@@ -117,8 +127,7 @@ class RemoteSparkMagics(SparkMagicBase):
                 else:
                     skip = False
 
-                properties = copy.deepcopy(conf.session_configs())
-                properties["kind"] = self.get_livy_kind(language)
+                properties = conf.get_session_properties(language)
 
                 self.spark_controller.add_session(name, connection_string, skip, properties)
             # delete

@@ -155,7 +155,7 @@ class TestLivySession:
         conf.load()
 
         assert_equals(kind, session.kind)
-        assert_equals("starting", session._status)
+        assert_equals("starting", session.status)
         assert_equals("0", session.id)
         http_client.post.assert_called_with(
             "/sessions", [201], {"kind": "spark"})
@@ -174,7 +174,7 @@ class TestLivySession:
         conf.load()
 
         assert_equals(kind, session.kind)
-        assert_equals("starting", session._status)
+        assert_equals("starting", session.status)
         assert_equals("0", session.id)
         http_client.post.assert_called_with(
             "/sessions", [201], {"kind": "sparkr"})
@@ -193,7 +193,7 @@ class TestLivySession:
         conf.load()
 
         assert_equals(kind, session.kind)
-        assert_equals("starting", session._status)
+        assert_equals("starting", session.status)
         assert_equals("0", session.id)
         http_client.post.assert_called_with(
             "/sessions", [201], {"kind": "pyspark"})
@@ -230,7 +230,7 @@ class TestLivySession:
         session.start()
 
         session._refresh_status()
-        state = session._status
+        state = session.status
 
         assert_equals("idle", state)
         http_client.get.assert_called_with("/sessions/0", [200])
@@ -327,7 +327,7 @@ class TestLivySession:
 
         session.delete()
 
-        assert_equals("dead", session._status)
+        assert_equals("dead", session.status)
 
     @raises(ValueError)
     def test_delete_session_when_not_started(self):
@@ -342,7 +342,7 @@ class TestLivySession:
 
         session.delete()
     
-        assert_equals("dead", session._status)
+        assert_equals("dead", session.status)
         assert_equals("-1", session.id)
 
     @raises(ValueError)
@@ -355,7 +355,7 @@ class TestLivySession:
         })
         session = self._create_session(http_client=http_client)
         conf.load()
-        session._status = "dead"
+        session.status = "dead"
 
         session.delete()
 

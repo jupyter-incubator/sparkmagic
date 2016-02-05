@@ -8,7 +8,6 @@ from __future__ import print_function
 from IPython.core.magic import Magics, magics_class
 
 import remotespark.utils.configuration as conf
-from remotespark.utils.constants import Constants
 from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.utils.log import Log
 from remotespark.utils.utils import get_magics_home_path, join_paths
@@ -53,17 +52,6 @@ class SparkMagicBase(Magics):
         except DataFrameParseException as e:
             self.ipython_display.send_error(e.out)
             return None
-
-    @staticmethod
-    def get_livy_kind(language):
-        if language == Constants.lang_scala:
-            return Constants.session_kind_spark
-        elif language == Constants.lang_python:
-            return Constants.session_kind_pyspark
-        elif language == Constants.lang_r:
-            return Constants.session_kind_sparkr
-        else:
-            raise ValueError("Cannot get session kind for {}.".format(language))
 
     @staticmethod
     def print_endpoint_info(info_sessions):
