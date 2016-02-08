@@ -14,6 +14,7 @@ import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.utils import get_connection_string
+from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
 
 
 @magics_class
@@ -29,6 +30,8 @@ class KernelMagics(SparkMagicBase):
         self.language = ""
         self.url = None
         self.connection_string = None
+
+        self.fatal_error = False
 
     @cell_magic
     def help(self, line, cell="", local_ns=None):
@@ -145,13 +148,14 @@ class KernelMagics(SparkMagicBase):
 
     @cell_magic
     def spark(self, line, cell="", local_ns=None):
-        self._do_not_call_start_session("")
-
-        (success, out) = self.spark_controller.run_cell(cell)
-        if success:
-            self.ipython_display.write(out)
+        if self._do_not_call_start_session(""):
+            (success, out) = self.spark_controller.run_cell(cell)
+            if success:
+                self.ipython_display.write(out)
+            else:
+                self.ipython_display.send_error(out)
         else:
-            self.ipython_display.send_error(out)
+            return ""
 
     @magic_arguments()
     @cell_magic
@@ -159,11 +163,12 @@ class KernelMagics(SparkMagicBase):
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
     def sql(self, line, cell="", local_ns=None):
-        self._do_not_call_start_session("")
-
-        args = parse_argstring(self.sql, line)
-        return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
+        if self._do_not_call_start_session(""):
+            args = parse_argstring(self.sql, line)
+            return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
                                                             None, args.output)
+        else:
+            return ""
 
     @magic_arguments()
     @cell_magic
@@ -171,11 +176,12 @@ class KernelMagics(SparkMagicBase):
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
     def hive(self, line, cell="", local_ns=None):
-        self._do_not_call_start_session("")
-
-        args = parse_argstring(self.hive, line)
-        return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
-                                                            None, args.output)
+        if self._do_not_call_start_session(""):
+            args = parse_argstring(self.hive, line)
+            return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
+                                                                None, args.output)
+        else:
+            return ""
 
     @magic_arguments()
     @cell_magic
@@ -216,13 +222,27 @@ class KernelMagics(SparkMagicBase):
 
     @cell_magic
     def _do_not_call_start_session(self, line, cell="", local_ns=None):
-        if not self.session_started:
-            self.session_started = True
+        # Starts a session unless session is already created or a fatal error occurred. Returns True when session is
+        # created successfully.
 
+        if self.fatal_error:
+            self.ipython_display.send_error(conf.fatal_error_suggestion())
+            return False
+
+        if not self.session_started:
             skip = False
             properties = conf.get_session_properties(self.language)
 
-            self.spark_controller.add_session(self.session_name, self.connection_string, skip, properties)
+            try:
+                self.spark_controller.add_session(self.session_name, self.connection_string, skip, properties)
+                self.session_started = True
+            except LivyClientTimeoutError as e:
+                self.fatal_error = True
+                self.logger.error("Timeout creating session: {}".format(e))
+                self.ipython_display.send_error(conf.fatal_error_suggestion())
+                return False
+
+        return self.session_started
 
     @cell_magic
     def _do_not_call_delete_session(self, line, cell="", local_ns=None):
