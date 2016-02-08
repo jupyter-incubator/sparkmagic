@@ -233,6 +233,8 @@ def test_sql_without_output():
 
     magic.sql(line, cell)
 
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+                                                         {"kind": Constants.session_kind_pyspark})
     magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_sql, cell, None,
                                                                           None)
 
@@ -244,6 +246,8 @@ def test_sql_with_output():
 
     magic.sql(line, cell)
 
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+                                                         {"kind": Constants.session_kind_pyspark})
     magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_sql, cell, None,
                                                                           "my_var")
 
@@ -256,6 +260,8 @@ def test_hive_without_output():
 
     magic.hive(line, cell)
 
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+                                                         {"kind": Constants.session_kind_pyspark})
     magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_hive, cell, None,
                                                                           None)
 
@@ -267,6 +273,8 @@ def test_hive_with_output():
 
     magic.hive(line, cell)
 
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+                                                         {"kind": Constants.session_kind_pyspark})
     magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_hive, cell, None,
                                                                           "my_var")
 
