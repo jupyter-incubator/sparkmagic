@@ -99,7 +99,7 @@ class KernelMagics(SparkMagicBase):
     def info(self, line, cell="", local_ns=None):
         self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.url))
 
-        self.ipython_display.writeln("Current session:\n\t{}\n".format(
+        self.ipython_display.writeln("Current session ID number:\n\t{}\n".format(
                 self.spark_controller.get_session_id_for_client(self.session_name)))
 
         self.ipython_display.writeln("Session configs:\n\t{}\n".format(conf.get_session_properties(self.language)))
