@@ -2,9 +2,10 @@ from mock import MagicMock
 from nose.tools import with_setup, raises, assert_equals
 from IPython.core.magic import magics_class
 
-import remotespark.utils.configuration as conf
 from remotespark.kernels.kernelmagics import KernelMagics
+from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
 from remotespark.utils.constants import Constants
+import remotespark.utils.configuration as conf
 
 magic = None
 spark_controller = None
@@ -53,16 +54,39 @@ def test_start_session():
     line = ""
     assert not magic.session_started
 
-    magic._do_not_call_start_session(line)
+    ret = magic._do_not_call_start_session(line)
 
+    assert ret
     assert magic.session_started
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": Constants.session_kind_pyspark})
 
     # Call a second time
-    magic._do_not_call_start_session(line)
+    ret = magic._do_not_call_start_session(line)
+    assert ret
     assert magic.session_started
     assert spark_controller.add_session.call_count == 1
+
+
+@with_setup(_setup, _teardown)
+def test_start_session_times_out():
+    line = ""
+    spark_controller.add_session = MagicMock(side_effect=LivyClientTimeoutError)
+    assert not magic.session_started
+
+    ret = magic._do_not_call_start_session(line)
+
+    assert not ret
+    assert magic.session_started
+    assert magic.fatal_error
+    assert_equals(ipython_display.send_error.call_count, 1)
+
+    # Call after fatal error
+    ipython_display.send_error.reset_mock()
+    ret = magic._do_not_call_start_session(line)
+    assert not ret
+    assert magic.session_started
+    assert_equals(ipython_display.send_error.call_count, 1)
 
 
 @with_setup(_setup, _teardown)
@@ -195,7 +219,7 @@ def test_get_session_settings():
     assert magic.get_session_settings("    something", False) == "something"
     assert magic.get_session_settings("-f something", True) == "something"
     assert magic.get_session_settings("something -f", True) == "something"
-    assert magic.get_session_settings("something", True) == None
+    assert magic.get_session_settings("something", True) is None
 
 
 @with_setup(_setup, _teardown)
@@ -225,6 +249,21 @@ def test_spark_error():
                                                          {"kind": Constants.session_kind_pyspark})
     spark_controller.run_cell.assert_called_once_with(cell)
 
+
+@with_setup(_setup, _teardown)
+def test_spark_failed_session_start():
+    line = ""
+    cell = "some spark code"
+    magic._do_not_call_start_session = MagicMock(return_value=False)
+
+    ret = magic.spark(line, cell)
+
+    assert_equals(ret, None)
+    assert_equals(ipython_display.write.call_count, 0)
+    assert_equals(spark_controller.add_session.call_count, 0)
+    assert_equals(spark_controller.run_cell.call_count, 0)
+
+
 @with_setup(_setup, _teardown)
 def test_sql_without_output():
     line = ""
@@ -237,6 +276,7 @@ def test_sql_without_output():
                                                          {"kind": Constants.session_kind_pyspark})
     magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_sql, cell, None,
                                                                           None)
+
 
 @with_setup(_setup, _teardown)
 def test_sql_with_output():
@@ -253,6 +293,19 @@ def test_sql_with_output():
 
 
 @with_setup(_setup, _teardown)
+def test_sql_failed_session_start():
+    line = ""
+    cell = "some spark code"
+    magic._do_not_call_start_session = MagicMock(return_value=False)
+
+    ret = magic.sql(line, cell)
+
+    assert_equals(ret, None)
+    assert_equals(spark_controller.add_session.call_count, 0)
+    assert_equals(spark_controller.execute_against_context_that_returns_df.call_count, 0)
+
+
+@with_setup(_setup, _teardown)
 def test_hive_without_output():
     line = ""
     cell = "some spark code"
@@ -264,6 +317,7 @@ def test_hive_without_output():
                                                          {"kind": Constants.session_kind_pyspark})
     magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_hive, cell, None,
                                                                           None)
+
 
 @with_setup(_setup, _teardown)
 def test_hive_with_output():
@@ -277,6 +331,19 @@ def test_hive_with_output():
                                                          {"kind": Constants.session_kind_pyspark})
     magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_hive, cell, None,
                                                                           "my_var")
+
+
+@with_setup(_setup, _teardown)
+def test_hive_failed_session_start():
+    line = ""
+    cell = "some spark code"
+    magic._do_not_call_start_session = MagicMock(return_value=False)
+
+    ret = magic.hive(line, cell)
+
+    assert_equals(ret, None)
+    assert_equals(spark_controller.add_session.call_count, 0)
+    assert_equals(spark_controller.execute_against_context_that_returns_df.call_count, 0)
 
 
 @with_setup(_setup, _teardown)

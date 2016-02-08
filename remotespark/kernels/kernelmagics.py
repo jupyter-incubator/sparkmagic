@@ -29,6 +29,8 @@ class KernelMagics(SparkMagicBase):
         self.language = ""
         self.url = None
         self.connection_string = None
+        self.fatal_error = False
+        self.fatal_error_message = ""
 
     @cell_magic
     def help(self, line, cell="", local_ns=None):
@@ -96,7 +98,7 @@ class KernelMagics(SparkMagicBase):
     def info(self, line, cell="", local_ns=None):
         self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.url))
 
-        self.ipython_display.writeln("Current session:\n\t{}\n".format(
+        self.ipython_display.writeln("Current session ID number:\n\t{}\n".format(
                 self.spark_controller.get_session_id_for_client(self.session_name)))
 
         self.ipython_display.writeln("Session configs:\n\t{}\n".format(conf.get_session_properties(self.language)))
@@ -145,13 +147,14 @@ class KernelMagics(SparkMagicBase):
 
     @cell_magic
     def spark(self, line, cell="", local_ns=None):
-        self._do_not_call_start_session("")
-
-        (success, out) = self.spark_controller.run_cell(cell)
-        if success:
-            self.ipython_display.write(out)
+        if self._do_not_call_start_session(""):
+            (success, out) = self.spark_controller.run_cell(cell)
+            if success:
+                self.ipython_display.write(out)
+            else:
+                self.ipython_display.send_error(out)
         else:
-            self.ipython_display.send_error(out)
+            return None
 
     @magic_arguments()
     @cell_magic
@@ -159,11 +162,12 @@ class KernelMagics(SparkMagicBase):
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
     def sql(self, line, cell="", local_ns=None):
-        self._do_not_call_start_session("")
-
-        args = parse_argstring(self.sql, line)
-        return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
+        if self._do_not_call_start_session(""):
+            args = parse_argstring(self.sql, line)
+            return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
                                                             None, args.output)
+        else:
+            return None
 
     @magic_arguments()
     @cell_magic
@@ -171,11 +175,12 @@ class KernelMagics(SparkMagicBase):
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
     def hive(self, line, cell="", local_ns=None):
-        self._do_not_call_start_session("")
-
-        args = parse_argstring(self.hive, line)
-        return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
-                                                            None, args.output)
+        if self._do_not_call_start_session(""):
+            args = parse_argstring(self.hive, line)
+            return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
+                                                                None, args.output)
+        else:
+            return None
 
     @magic_arguments()
     @cell_magic
@@ -190,7 +195,7 @@ class KernelMagics(SparkMagicBase):
             self.ipython_display.send_error("When you clean up the endpoint, all sessions will be lost, including the "
                                             "one used for this notebook. Include the -f parameter if that's your "
                                             "intention.")
-            return
+            return None
 
     @magic_arguments()
     @cell_magic
@@ -206,23 +211,38 @@ class KernelMagics(SparkMagicBase):
                 self.ipython_display.send_error("Cannot delete this kernel's session ({}). Specify a different session,"
                                                 " shutdown the kernel to delete this session, or run %cleanup to "
                                                 "delete all sessions for this endpoint.".format(id))
-                return
+                return None
 
             self.spark_controller.delete_session_by_id(self.connection_string, session)
         else:
             self.ipython_display.send_error("Include the -f parameter if you understand that all statements executed"
                                             "in this session will be lost.")
-            return
+            return None
 
     @cell_magic
     def _do_not_call_start_session(self, line, cell="", local_ns=None):
-        if not self.session_started:
-            self.session_started = True
+        # Starts a session unless session is already created or a fatal error occurred. Returns True when session is
+        # created successfully.
 
+        if self.fatal_error:
+            self.ipython_display.send_error(self.fatal_error_message)
+            return False
+
+        if not self.session_started:
             skip = False
             properties = conf.get_session_properties(self.language)
 
-            self.spark_controller.add_session(self.session_name, self.connection_string, skip, properties)
+            try:
+                self.session_started = True
+                self.spark_controller.add_session(self.session_name, self.connection_string, skip, properties)
+            except Exception as e:
+                self.fatal_error = True
+                self.fatal_error_message = conf.fatal_error_suggestion().format(e)
+                self.logger.error("Error creating session: {}".format(e))
+                self.ipython_display.send_error(self.fatal_error_message)
+                return False
+
+        return self.session_started
 
     @cell_magic
     def _do_not_call_delete_session(self, line, cell="", local_ns=None):
@@ -239,11 +259,11 @@ class KernelMagics(SparkMagicBase):
 
         if language not in Constants.lang_supported:
             self.ipython_display.send_error("'{}' language not supported in kernel magics.".format(language))
-            return
+            return None
 
         if self.session_started:
             self.ipython_display.send_error("Cannot change the language if a session has been started.")
-            return
+            return None
 
         self.language = language
         self.refresh_configuration()
