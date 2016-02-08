@@ -77,7 +77,7 @@ def test_start_session_times_out():
     ret = magic._do_not_call_start_session(line)
 
     assert not ret
-    assert not magic.session_started
+    assert magic.session_started
     assert magic.fatal_error
     assert_equals(ipython_display.send_error.call_count, 1)
 
@@ -85,7 +85,7 @@ def test_start_session_times_out():
     ipython_display.send_error.reset_mock()
     ret = magic._do_not_call_start_session(line)
     assert not ret
-    assert not magic.session_started
+    assert magic.session_started
     assert_equals(ipython_display.send_error.call_count, 1)
 
 
