@@ -2,10 +2,10 @@ from mock import MagicMock
 from nose.tools import with_setup, raises, assert_equals
 from IPython.core.magic import magics_class
 
-import remotespark.utils.configuration as conf
 from remotespark.kernels.kernelmagics import KernelMagics
-from remotespark.utils.constants import Constants
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
+from remotespark.utils.constants import Constants
+import remotespark.utils.configuration as conf
 
 magic = None
 spark_controller = None

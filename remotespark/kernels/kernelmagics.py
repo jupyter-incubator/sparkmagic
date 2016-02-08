@@ -29,8 +29,8 @@ class KernelMagics(SparkMagicBase):
         self.language = ""
         self.url = None
         self.connection_string = None
-
         self.fatal_error = False
+        self.fatal_error_message = ""
 
     @cell_magic
     def help(self, line, cell="", local_ns=None):
