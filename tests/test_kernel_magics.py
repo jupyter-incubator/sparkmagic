@@ -258,7 +258,7 @@ def test_spark_failed_session_start():
 
     ret = magic.spark(line, cell)
 
-    assert_equals(ret, "")
+    assert_equals(ret, None)
     assert_equals(ipython_display.write.call_count, 0)
     assert_equals(spark_controller.add_session.call_count, 0)
     assert_equals(spark_controller.run_cell.call_count, 0)
@@ -300,7 +300,7 @@ def test_sql_failed_session_start():
 
     ret = magic.sql(line, cell)
 
-    assert_equals(ret, "")
+    assert_equals(ret, None)
     assert_equals(spark_controller.add_session.call_count, 0)
     assert_equals(spark_controller.execute_against_context_that_returns_df.call_count, 0)
 
@@ -341,7 +341,7 @@ def test_hive_failed_session_start():
 
     ret = magic.hive(line, cell)
 
-    assert_equals(ret, "")
+    assert_equals(ret, None)
     assert_equals(spark_controller.add_session.call_count, 0)
     assert_equals(spark_controller.execute_against_context_that_returns_df.call_count, 0)
 
