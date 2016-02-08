@@ -14,7 +14,6 @@ import remotespark.utils.configuration as conf
 from remotespark.utils.constants import Constants
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.utils import get_connection_string
-from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
 
 
 @magics_class
@@ -196,7 +195,7 @@ class KernelMagics(SparkMagicBase):
             self.ipython_display.send_error("When you clean up the endpoint, all sessions will be lost, including the "
                                             "one used for this notebook. Include the -f parameter if that's your "
                                             "intention.")
-            return
+            return ""
 
     @magic_arguments()
     @cell_magic
@@ -212,13 +211,13 @@ class KernelMagics(SparkMagicBase):
                 self.ipython_display.send_error("Cannot delete this kernel's session ({}). Specify a different session,"
                                                 " shutdown the kernel to delete this session, or run %cleanup to "
                                                 "delete all sessions for this endpoint.".format(id))
-                return
+                return ""
 
             self.spark_controller.delete_session_by_id(self.connection_string, session)
         else:
             self.ipython_display.send_error("Include the -f parameter if you understand that all statements executed"
                                             "in this session will be lost.")
-            return
+            return ""
 
     @cell_magic
     def _do_not_call_start_session(self, line, cell="", local_ns=None):
@@ -226,7 +225,7 @@ class KernelMagics(SparkMagicBase):
         # created successfully.
 
         if self.fatal_error:
-            self.ipython_display.send_error(conf.fatal_error_suggestion())
+            self.ipython_display.send_error(self.fatal_error_message)
             return False
 
         if not self.session_started:
@@ -234,12 +233,13 @@ class KernelMagics(SparkMagicBase):
             properties = conf.get_session_properties(self.language)
 
             try:
-                self.spark_controller.add_session(self.session_name, self.connection_string, skip, properties)
                 self.session_started = True
-            except LivyClientTimeoutError as e:
+                self.spark_controller.add_session(self.session_name, self.connection_string, skip, properties)
+            except Exception as e:
                 self.fatal_error = True
-                self.logger.error("Timeout creating session: {}".format(e))
-                self.ipython_display.send_error(conf.fatal_error_suggestion())
+                self.fatal_error_message = conf.fatal_error_suggestion().format(e)
+                self.logger.error("Error creating session: {}".format(e))
+                self.ipython_display.send_error(self.fatal_error_message)
                 return False
 
         return self.session_started
@@ -259,11 +259,11 @@ class KernelMagics(SparkMagicBase):
 
         if language not in Constants.lang_supported:
             self.ipython_display.send_error("'{}' language not supported in kernel magics.".format(language))
-            return
+            return ""
 
         if self.session_started:
             self.ipython_display.send_error("Cannot change the language if a session has been started.")
-            return
+            return ""
 
         self.language = language
         self.refresh_configuration()
