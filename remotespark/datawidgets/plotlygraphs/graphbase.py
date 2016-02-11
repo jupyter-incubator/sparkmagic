@@ -107,9 +107,9 @@ class GraphBase(object):
                     df_transformed = df_grouped.count()
                 else:
                     raise ValueError("Y aggregation '{}' not supported.".format(y_aggregation))
-            except DataError as d_err:
+            except (DataError, ValueError) as err:
                 raise InvalidEncodingError("Cannot aggregate column '{}' with aggregation function '{}' because:\n\t'{}'."
-                                           .format(y_column, y_aggregation, d_err))
+                                           .format(y_column, y_aggregation, err))
             except TypeError:
                 raise InvalidEncodingError("Cannot aggregate column '{}' with aggregation function '{}' because the type\n"
                                            "cannot be aggregated over."
