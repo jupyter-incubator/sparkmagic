@@ -88,6 +88,11 @@ class GraphBase(object):
         if y_aggregation == Encoding.y_agg_none:
             raise ValueError("No Y aggregation function specified.")
 
+        # Pandas has some confusing behavior when it comes to aggregating
+        # over empty dataframes. We're just going to explicitly block against that here.
+        if len(df) == 0:
+            raise InvalidEncodingError("Cannot display graph for an empty data set.")
+
         try:
             df_grouped = df.groupby(x_column)
         except TypeError:
