@@ -33,15 +33,12 @@ class SparkController(object):
         client_to_use = self.get_client_by_name_or_default(client_name)
         return client_to_use.execute_sql(cell)
 
-    def run_cell_hive(self, cell, client_name=None):
-        client_to_use = self.get_client_by_name_or_default(client_name)
-        return client_to_use.execute_hive(cell)
-
     def get_all_sessions_endpoint(self, connection_string):
         http_client = self.client_factory.create_http_client(connection_string)
         r = http_client.get("/sessions", [200])
         sessions = r.json()["sessions"]
-        session_list = [self.client_factory.create_session(self.ipython_display, connection_string, {"kind": s["kind"]}, s["id"])
+        session_list = [self.client_factory.create_session(self.ipython_display, connection_string,
+                                                           {"kind": s["kind"]}, s["id"])
                         for s in sessions]
         for s in session_list:
             s._refresh_status()

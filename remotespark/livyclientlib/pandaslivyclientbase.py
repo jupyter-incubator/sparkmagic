@@ -9,16 +9,13 @@ from .dataframeparseexception import DataFrameParseException
 from remotespark.utils.utils import coerce_pandas_df_to_numeric_datetime
 
 class PandasLivyClientBase(LivyClient):
-    """Spark client for Livy session that produces pandas df for sql and hive commands."""
+    """Spark client for Livy session that produces pandas df for sql commands."""
     def __init__(self, session, max_take_rows):
         super(PandasLivyClientBase, self).__init__(session)
         self.max_take_rows = max_take_rows
 
     def execute_sql(self, command):
         return self._execute_dataframe_helper("sqlContext", command)
-
-    def execute_hive(self, command):
-        return self._execute_dataframe_helper("hiveContext", command)
 
     def _execute_dataframe_helper(self, context_name, command):
         (success, records_text) = self.get_records(context_name, command,

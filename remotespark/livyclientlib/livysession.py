@@ -73,22 +73,14 @@ class LivySession(object):
         """Create a sqlContext object on the session. Object will be accessible via variable 'sqlContext'."""
         if self.started_sql_context:
             return
-
-        self.logger.debug("Starting '{}' sql and hive session.".format(self.kind))
-
-        self.ipython_display.writeln("Creating SqlContext as 'sqlContext'")
+        self.logger.debug("Starting '{}' hive session.".format(self.kind))
+        self.ipython_display.writeln("Creating HiveContext as 'sqlContext'")
         self._create_context(Constants.context_name_sql)
-
-        self.ipython_display.writeln("Creating HiveContext as 'hiveContext'")
-        self._create_context(Constants.context_name_hive)
-
         self._state.sql_context_created = True
 
     def _create_context(self, context_type):
         if context_type == Constants.context_name_sql:
             command = self._get_sql_context_creation_command()
-        elif context_type == Constants.context_name_hive:
-            command = self._get_hive_context_creation_command()
         else:
             raise ValueError("Cannot create context of type {}.".format(context_type))
 
@@ -233,26 +225,12 @@ class LivySession(object):
 
     def _get_sql_context_creation_command(self):
         if self.kind == Constants.session_kind_spark:
-            sql_context_command = "val sqlContext = new org.apache.spark.sql.SQLContext(sc)\n" \
-                                  "import sqlContext.implicits._"
+            sql_context_command = "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"
         elif self.kind == Constants.session_kind_pyspark:
-            sql_context_command = "from pyspark.sql import SQLContext\nfrom pyspark.sql.types import *\n" \
-                                  "sqlContext = SQLContext(sc)"
+            sql_context_command = "from pyspark.sql import HiveContext\nsqlContext = HiveContext(sc)"
         elif self.kind == Constants.session_kind_sparkr:
-            sql_context_command = "sqlContext <- sparkRSQL.init(sc)"
+            sql_context_command = "sqlContext <- sparkRHive.init(sc)"
         else:
-            raise ValueError("Do not know how to create sqlContext in session of kind {}.".format(self.kind))
+            raise ValueError("Do not know how to create HiveContext in session of kind {}.".format(self.kind))
 
         return sql_context_command
-
-    def _get_hive_context_creation_command(self):
-        if self.kind == Constants.session_kind_spark:
-            hive_context_command = "val hiveContext = new org.apache.spark.sql.hive.HiveContext(sc)"
-        elif self.kind == Constants.session_kind_pyspark:
-            hive_context_command = "from pyspark.sql import HiveContext\nhiveContext = HiveContext(sc)"
-        elif self.kind == Constants.session_kind_sparkr:
-            hive_context_command = "hiveContext <- sparkRHive.init(sc)"
-        else:
-            raise ValueError("Do not know how to create hiveContext in session of kind {}.".format(self.kind))
-
-        return hive_context_command

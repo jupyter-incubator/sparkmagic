@@ -306,47 +306,6 @@ def test_sql_failed_session_start():
 
 
 @with_setup(_setup, _teardown)
-def test_hive_without_output():
-    line = ""
-    cell = "some spark code"
-    magic.execute_against_context_that_returns_df = MagicMock()
-
-    magic.hive(line, cell)
-
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
-                                                         {"kind": Constants.session_kind_pyspark})
-    magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_hive, cell, None,
-                                                                          None)
-
-
-@with_setup(_setup, _teardown)
-def test_hive_with_output():
-    line = "-o my_var"
-    cell = "some spark code"
-    magic.execute_against_context_that_returns_df = MagicMock()
-
-    magic.hive(line, cell)
-
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
-                                                         {"kind": Constants.session_kind_pyspark})
-    magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_hive, cell, None,
-                                                                          "my_var")
-
-
-@with_setup(_setup, _teardown)
-def test_hive_failed_session_start():
-    line = ""
-    cell = "some spark code"
-    magic._do_not_call_start_session = MagicMock(return_value=False)
-
-    ret = magic.hive(line, cell)
-
-    assert_equals(ret, None)
-    assert_equals(spark_controller.add_session.call_count, 0)
-    assert_equals(spark_controller.execute_against_context_that_returns_df.call_count, 0)
-
-
-@with_setup(_setup, _teardown)
 def test_cleanup_without_force():
     line = ""
     cell = ""

@@ -34,15 +34,14 @@ class RemoteSparkMagics(SparkMagicBase):
 
     @magic_arguments()
     @argument("-c", "--context", type=str, default=Constants.context_name_spark,
-              help="Context to use: '{}' for spark, '{}' for sql queries, and '{}' for hive queries. "
+              help="Context to use: '{}' for spark and '{}' for sql queries"
                    "Default is '{}'.".format(Constants.context_name_spark,
                                              Constants.context_name_sql,
-                                             Constants.context_name_hive,
                                              Constants.context_name_spark))
     @argument("-s", "--session", help="The name of the Livy session to use. "
                                       "If only one session has been created, there's no need to specify one.")
-    @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL or Hive "
-                                                             "query will be stored in variable of this name.")
+    @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL "
+                                                             "queries will be stored in this variable.")
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @needs_local_scope
     @line_cell_magic
@@ -172,9 +171,6 @@ class RemoteSparkMagics(SparkMagicBase):
                         self.ipython_display.send_error(out)
                 elif args.context == Constants.context_name_sql:
                     return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                                        args.session, args.output)
-                elif args.context == Constants.context_name_hive:
-                    return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
                                                                         args.session, args.output)
                 else:
                     raise ValueError("Context '{}' not found".format(args.context))

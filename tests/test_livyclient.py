@@ -45,19 +45,6 @@ def test_execute_sql():
     mock_spark_session.execute.assert_called_with("sqlContext.sql(\"{}\").collect()".format(command))
 
 
-def test_execute_hive():
-    mock_spark_session = MagicMock()
-    client = LivyClient(mock_spark_session)
-    client.start()
-    command = "command"
-
-    client.execute_hive(command)
-
-    mock_spark_session.create_sql_context.assert_called_with()
-    mock_spark_session.wait_for_idle.assert_called_with(3600)
-    mock_spark_session.execute.assert_called_with("hiveContext.sql(\"{}\").collect()".format(command))
-
-
 def test_serialize():
     url = "url"
     username = "username"

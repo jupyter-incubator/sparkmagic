@@ -75,12 +75,6 @@ class KernelMagics(SparkMagicBase):
     available in the %%local Python context as a <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</td>
   </tr>
   <tr>
-    <td>hive</td>
-    <td>%%hive -o tables<br/>SHOW TABLES</td>
-    <td>Executes a Hive query against the hivelContext. If the -o parameter is passed, the result of the query will be
-    available in the %%local Python context as a <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</td>
-  </tr>
-  <tr>
     <td>local</td>
     <td>%%local<br/>a = 1</td>
     <td>All the code in subsequent lines will be executed locally. Code must be valid Python code.</td>
@@ -165,19 +159,6 @@ class KernelMagics(SparkMagicBase):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)
             return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                            None, args.output)
-        else:
-            return None
-
-    @magic_arguments()
-    @cell_magic
-    @needs_local_scope
-    @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
-                                                             "name.")
-    def hive(self, line, cell="", local_ns=None):
-        if self._do_not_call_start_session(""):
-            args = parse_argstring(self.hive, line)
-            return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
                                                                 None, args.output)
         else:
             return None

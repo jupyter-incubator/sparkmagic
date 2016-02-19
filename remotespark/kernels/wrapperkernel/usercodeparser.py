@@ -36,5 +36,5 @@ class UserCodeParser(object):
     def get_kernel_magic_names_as_line_magics():
         # Do not include the _do_not_call magics and the spark magic, as they should only be called explicitly by us.
         return tuple("%{}".format(i.__name__) for i in [KernelMagics.info, KernelMagics.logs, KernelMagics.configure,
-                                                        KernelMagics.sql, KernelMagics.hive, KernelMagics.cleanup,
+                                                        KernelMagics.sql, KernelMagics.cleanup,
                                                         KernelMagics.delete, KernelMagics.help])

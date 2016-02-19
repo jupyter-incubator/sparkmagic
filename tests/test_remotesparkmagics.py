@@ -211,25 +211,6 @@ def test_run_sql_command_parses():
 
 
 @with_setup(_setup, _teardown)
-def test_run_hive_command_parses():
-    run_cell_method = MagicMock()
-    run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_hive = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "hive"
-    line = " ".join([command, name, context, context_name])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_called_once_with(cell, name)
-    assert result is not None
-
-
-@with_setup(_setup, _teardown)
 def test_logs_subcommand():
     get_logs_method = MagicMock()
     result_value = ""
