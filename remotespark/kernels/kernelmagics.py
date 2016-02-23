@@ -161,7 +161,7 @@ class KernelMagics(SparkMagicBase):
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
-    @argument("-q", "--quiet", type=bool, default=False, const=True, nargs="?", help="Do not display visualization")
+    @argument("-q", "--quiet", type=bool, default=False, const=True, nargs="?", help="Return None instead of the dataframe.")
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)
@@ -175,7 +175,7 @@ class KernelMagics(SparkMagicBase):
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
-    @argument("-q", "--quiet", type=bool, default=False, const=True, nargs="?", help="Do not display visualization")
+    @argument("-q", "--quiet", type=bool, default=False, const=True, nargs="?", help="Return None instead of the dataframe.")
     def hive(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.hive, line)
