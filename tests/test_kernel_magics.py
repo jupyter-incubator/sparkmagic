@@ -275,7 +275,7 @@ def test_sql_without_output():
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": Constants.session_kind_pyspark})
     magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_sql, cell, None,
-                                                                          None)
+                                                                          None, False)
 
 
 @with_setup(_setup, _teardown)
@@ -289,7 +289,7 @@ def test_sql_with_output():
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": Constants.session_kind_pyspark})
     magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_sql, cell, None,
-                                                                          "my_var")
+                                                                          "my_var", False)
 
 
 @with_setup(_setup, _teardown)
@@ -303,6 +303,7 @@ def test_sql_failed_session_start():
     assert_equals(ret, None)
     assert_equals(spark_controller.add_session.call_count, 0)
     assert_equals(spark_controller.execute_against_context_that_returns_df.call_count, 0)
+
 
 
 @with_setup(_setup, _teardown)
