@@ -43,12 +43,15 @@ class SparkMagicBase(Magics):
 
         self.logger.debug("Initialized spark magics.")
 
-    def execute_against_context_that_returns_df(self, method, cell, session, output_var):
+    def execute_against_context_that_returns_df(self, method, cell, session, output_var, quiet):
         try:
             df = method(cell, session)
             if output_var is not None:
                 self.shell.user_ns[output_var] = df
-            return df
+            if quiet:
+                return None
+            else:
+                return df
         except DataFrameParseException as e:
             self.ipython_display.send_error(e.out)
             return None

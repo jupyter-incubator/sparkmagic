@@ -43,6 +43,7 @@ class RemoteSparkMagics(SparkMagicBase):
                                       "If only one session has been created, there's no need to specify one.")
     @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL or Hive "
                                                              "query will be stored in variable of this name.")
+    @argument("-q", "--quiet", type=bool, default=False, nargs="?", const=True, help="Do not display visualizations")
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @needs_local_scope
     @line_cell_magic
@@ -172,10 +173,10 @@ class RemoteSparkMagics(SparkMagicBase):
                         self.ipython_display.send_error(out)
                 elif args.context == Constants.context_name_sql:
                     return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                                        args.session, args.output)
+                                                                        args.session, args.output, args.quiet)
                 elif args.context == Constants.context_name_hive:
                     return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
-                                                                        args.session, args.output)
+                                                                        args.session, args.output, args.quiet)
                 else:
                     raise ValueError("Context '{}' not found".format(args.context))
             # error

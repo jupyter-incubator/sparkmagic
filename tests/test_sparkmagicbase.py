@@ -28,7 +28,7 @@ def test_df_execution_without_output_var():
     session = MagicMock()
     output_var = None
 
-    res = magic.execute_against_context_that_returns_df(method, cell, session, output_var)
+    res = magic.execute_against_context_that_returns_df(method, cell, session, output_var, False)
 
     method.assert_called_once_with(cell, session)
     assert res == df
@@ -47,10 +47,48 @@ def test_df_execution_with_output_var():
     session = MagicMock()
     output_var = "var_name"
 
-    res = magic.execute_against_context_that_returns_df(method, cell, session, output_var)
+    res = magic.execute_against_context_that_returns_df(method, cell, session, output_var, False)
 
     method.assert_called_once_with(cell, session)
     assert res == df
+    assert shell.user_ns[output_var] == df
+
+
+def test_df_execution_quiet_without_output_var():
+    shell = MagicMock()
+    shell.user_ns = {}
+    magic = SparkMagicBase(None)
+    magic.shell = shell
+
+    df = 0
+    method = MagicMock(return_value=df)
+    cell = ""
+    session = MagicMock()
+    output_var = None
+
+    res = magic.execute_against_context_that_returns_df(method, cell, session, output_var, True)
+
+    method.assert_called_once_with(cell, session)
+    assert res is None
+    assert_equals(list(shell.user_ns.keys()), [])
+
+
+def test_df_execution_quiet_with_output_var():
+    shell = MagicMock()
+    shell.user_ns = {}
+    magic = SparkMagicBase(None)
+    magic.shell = shell
+
+    df = 0
+    method = MagicMock(return_value=df)
+    cell = ""
+    session = MagicMock()
+    output_var = "var_name"
+
+    res = magic.execute_against_context_that_returns_df(method, cell, session, output_var, True)
+
+    method.assert_called_once_with(cell, session)
+    assert res is None
     assert shell.user_ns[output_var] == df
 
 
@@ -66,8 +104,8 @@ def test_df_execution_throws():
     session = MagicMock()
     output_var = "var_name"
 
-    res = magic.execute_against_context_that_returns_df(method, cell, session, output_var)
+    res = magic.execute_against_context_that_returns_df(method, cell, session, output_var, False)
 
     method.assert_called_once_with(cell, session)
-    assert res == None
+    assert res is None
     assert_equals(list(shell.user_ns.keys()), [])

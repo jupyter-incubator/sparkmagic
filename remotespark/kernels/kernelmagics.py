@@ -161,11 +161,12 @@ class KernelMagics(SparkMagicBase):
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
+    @argument("-q", "--quiet", type=bool, default=False, const=True, nargs="?", help="Do not display visualization")
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)
             return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                            None, args.output)
+                                                                None, args.output, args.quiet)
         else:
             return None
 
@@ -174,11 +175,12 @@ class KernelMagics(SparkMagicBase):
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
+    @argument("-q", "--quiet", type=bool, default=False, const=True, nargs="?", help="Do not display visualization")
     def hive(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.hive, line)
             return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
-                                                                None, args.output)
+                                                                None, args.output, args.quiet)
         else:
             return None
 
