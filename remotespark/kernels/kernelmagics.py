@@ -70,9 +70,10 @@ class KernelMagics(SparkMagicBase):
   </tr>
   <tr>
     <td>sql</td>
-    <td>%%sql -o tables<br/>SHOW TABLES</td>
+    <td>%%sql -o tables<br/>SHOW TABLES</td> -q
     <td>Executes a SQL query against the sqlContext. If the -o parameter is passed, the result of the query will be
-    available in the %%local Python context as a <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</td>
+    available in the %%local Python context as a <a href="http://pandas.pydata.org/">Pandas</a> dataframe. If
+    the -q parameter is passed, the magic will return None instead of the dataframe.</td>
   </tr>
   <tr>
     <td>local</td>
