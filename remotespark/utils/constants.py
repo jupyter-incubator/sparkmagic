@@ -12,7 +12,6 @@ class Constants(object):
 
     context_name_spark = "spark"
     context_name_sql = "sql"
-    context_name_hive = "hive"
 
     lang_scala = "scala"
     lang_python = "python"

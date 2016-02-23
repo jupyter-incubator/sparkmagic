@@ -413,17 +413,14 @@ class TestLivySession:
         http_client.reset_mock()
 
         session.create_sql_context()
-        assert ipython_display.writeln.call_count == 3
+        assert ipython_display.writeln.call_count == 2
 
         # Second call should not issue a post request
         session.create_sql_context()
 
-        assert call("/sessions/0/statements", [201], {"code": "val sqlContext = new org.apache.spark.sql.SQLContext"
-                                                              "(sc)\nimport sqlContext.implicits._"}) \
-               in http_client.post.call_args_list
-        assert call("/sessions/0/statements", [201], {"code": "val hiveContext = new org.apache.spark.sql.hive.Hive"
+        assert call("/sessions/0/statements", [201], {"code": "val sqlContext = new org.apache.spark.sql.hive.Hive"
                                                               "Context(sc)"}) in http_client.post.call_args_list
-        assert len(http_client.post.call_args_list) == 2
+        assert len(http_client.post.call_args_list) == 1
 
     def test_create_sql_context_spark(self):
         kind = Constants.session_kind_spark
@@ -448,10 +445,7 @@ class TestLivySession:
 
         session.create_sql_context()
 
-        assert call("/sessions/0/statements", [201], {"code": "val sqlContext = new org.apache.spark.sql.SQLContext"
-                                                              "(sc)\nimport sqlContext.implicits._"}) \
-               in http_client.post.call_args_list
-        assert call("/sessions/0/statements", [201], {"code": "val hiveContext = new org.apache.spark.sql.hive.Hive"
+        assert call("/sessions/0/statements", [201], {"code": "val sqlContext = new org.apache.spark.sql.hive.Hive"
                                                               "Context(sc)"}) in http_client.post.call_args_list
 
     def test_create_sql_hive_context_pyspark(self):
@@ -477,11 +471,8 @@ class TestLivySession:
 
         session.create_sql_context()
 
-        assert call("/sessions/0/statements", [201], {"code": "from pyspark.sql import SQLContext\nfrom pyspark."
-                                                              "sql.types import *\nsqlContext = SQLContext("
-                                                              "sc)"}) in http_client.post.call_args_list
         assert call("/sessions/0/statements", [201], {"code": "from pyspark.sql import HiveContext\n"
-                                                              "hiveContext = HiveContext(sc)"}) \
+                                                              "sqlContext = HiveContext(sc)"}) \
                in http_client.post.call_args_list
 
     @raises(ValueError)
@@ -533,8 +524,3 @@ class TestLivySession:
         for kind in Constants.session_kinds_supported:
             session = self._create_session(kind=kind)
             session._get_sql_context_creation_command()
-
-    def test_get_hive_context_creation_command_all_langs(self):
-        for kind in Constants.session_kinds_supported:
-            session = self._create_session(kind=kind)
-            session._get_hive_context_creation_command()

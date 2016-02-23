@@ -113,12 +113,6 @@ def test_run_cell():
     controller.run_cell_sql(cell, None)
     default_client.execute_sql.assert_called_with(cell)
 
-    controller.run_cell_hive(cell, name)
-    chosen_client.execute_hive.assert_called_with(cell)
-
-    controller.run_cell_hive(cell, None)
-    default_client.execute_hive.assert_called_with(cell)
-
 
 @with_setup(_setup, _teardown)
 def test_get_client_keys():

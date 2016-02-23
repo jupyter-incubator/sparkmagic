@@ -70,15 +70,10 @@ class KernelMagics(SparkMagicBase):
   </tr>
   <tr>
     <td>sql</td>
-    <td>%%sql -o tables<br/>SHOW TABLES</td>
+    <td>%%sql -o tables<br/>SHOW TABLES</td> -q
     <td>Executes a SQL query against the sqlContext. If the -o parameter is passed, the result of the query will be
-    available in the %%local Python context as a <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</td>
-  </tr>
-  <tr>
-    <td>hive</td>
-    <td>%%hive -o tables<br/>SHOW TABLES</td>
-    <td>Executes a Hive query against the hivelContext. If the -o parameter is passed, the result of the query will be
-    available in the %%local Python context as a <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</td>
+    available in the %%local Python context as a <a href="http://pandas.pydata.org/">Pandas</a> dataframe. If
+    the -q parameter is passed, the magic will return None instead of the dataframe.</td>
   </tr>
   <tr>
     <td>local</td>
@@ -166,20 +161,6 @@ class KernelMagics(SparkMagicBase):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)
             return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                                None, args.output, args.quiet)
-        else:
-            return None
-
-    @magic_arguments()
-    @cell_magic
-    @needs_local_scope
-    @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
-                                                             "name.")
-    @argument("-q", "--quiet", type=bool, default=False, const=True, nargs="?", help="Return None instead of the dataframe.")
-    def hive(self, line, cell="", local_ns=None):
-        if self._do_not_call_start_session(""):
-            args = parse_argstring(self.hive, line)
-            return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
                                                                 None, args.output, args.quiet)
         else:
             return None
