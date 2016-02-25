@@ -29,9 +29,9 @@ class SparkController(object):
         client_to_use = self.get_client_by_name_or_default(client_name)
         return client_to_use.execute(cell)
 
-    def run_cell_sql(self, cell, client_name=None):
+    def run_cell_sql(self, sqlquery, client_name=None):
         client_to_use = self.get_client_by_name_or_default(client_name)
-        return client_to_use.execute_sql(cell)
+        return client_to_use.execute_sql(sqlquery)
 
     def get_all_sessions_endpoint(self, connection_string):
         http_client = self.client_factory.create_http_client(connection_string)

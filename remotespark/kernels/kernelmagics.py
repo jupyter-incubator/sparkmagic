@@ -5,14 +5,17 @@ Provides the %spark magic."""
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
+
+import json
+
 from IPython.core.magic import magics_class
 from IPython.core.magic import needs_local_scope, cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
-import json
 
 import remotespark.utils.configuration as conf
-from remotespark.utils.constants import Constants
+from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
+from remotespark.utils.constants import Constants
 from remotespark.utils.utils import get_connection_string
 
 
@@ -157,11 +160,15 @@ class KernelMagics(SparkMagicBase):
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
     @argument("-q", "--quiet", type=bool, default=False, const=True, nargs="?", help="Return None instead of the dataframe.")
+    @argument("-m", "--samplemethod", type=str, default=None, help="Sample method for SQL queries: either take or sample")
+    @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
+                                                                        "from the server for SQL queries")
+    @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)
-            return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                                None, args.output, args.quiet)
+            sql_query = SQLQuery(cell, args.samplemethod, args.maxrows, args.samplefraction)
+            return self.execute_against_context_that_returns_df(sql_query, None, args.output, args.quiet)
         else:
             return None
 

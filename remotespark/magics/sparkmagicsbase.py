@@ -43,9 +43,9 @@ class SparkMagicBase(Magics):
 
         self.logger.debug("Initialized spark magics.")
 
-    def execute_against_context_that_returns_df(self, method, cell, session, output_var, quiet):
+    def execute_against_context_that_returns_df(self, sqlquery, session, output_var, quiet):
         try:
-            df = method(cell, session)
+            df = self.spark_controller.run_cell_sql(sqlquery, session)
             if output_var is not None:
                 self.shell.user_ns[output_var] = df
             if quiet:

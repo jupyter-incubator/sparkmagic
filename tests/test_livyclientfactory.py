@@ -2,8 +2,8 @@ from mock import MagicMock
 from nose.tools import raises
 
 from remotespark.livyclientlib.livyclientfactory import LivyClientFactory
-from remotespark.livyclientlib.pandaspysparklivyclient import PandasPysparkLivyClient
-from remotespark.livyclientlib.pandasscalalivyclient import PandasScalaLivyClient
+from remotespark.livyclientlib.pysparklivyclient import PysparkLivyClient
+from remotespark.livyclientlib.scalalivyclient import ScalaLivyClient
 from remotespark.utils.constants import Constants
 from remotespark.utils.utils import get_connection_string
 
@@ -59,7 +59,7 @@ def test_build_pyspark():
     session.kind = Constants.session_kind_pyspark
     factory = LivyClientFactory()
     client = factory.build_client(session)
-    assert isinstance(client, PandasPysparkLivyClient)
+    assert isinstance(client, PysparkLivyClient)
 
 
 def test_build_spark():
@@ -67,4 +67,4 @@ def test_build_spark():
     session.kind = Constants.session_kind_spark
     factory = LivyClientFactory()
     client = factory.build_client(session)
-    assert isinstance(client, PandasScalaLivyClient)
+    assert isinstance(client, ScalaLivyClient)

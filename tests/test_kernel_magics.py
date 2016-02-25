@@ -4,6 +4,7 @@ from IPython.core.magic import magics_class
 
 from remotespark.kernels.kernelmagics import KernelMagics
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
+from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.utils.constants import Constants
 import remotespark.utils.configuration as conf
 
@@ -274,8 +275,7 @@ def test_sql_without_output():
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": Constants.session_kind_pyspark})
-    magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_sql, cell, None,
-                                                                          None, False)
+    magic.execute_against_context_that_returns_df.assert_called_once_with(SQLQuery(cell), None, None, False)
 
 
 @with_setup(_setup, _teardown)
@@ -288,8 +288,7 @@ def test_sql_with_output():
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": Constants.session_kind_pyspark})
-    magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_sql, cell, None,
-                                                                          "my_var", False)
+    magic.execute_against_context_that_returns_df.assert_called_once_with(SQLQuery(cell), None, "my_var", False)
 
 
 @with_setup(_setup, _teardown)

@@ -7,9 +7,9 @@ from remotespark.utils.utils import get_connection_string_elements
 from .linearretrypolicy import LinearRetryPolicy
 from .livyreliablehttpclient import LivyReliableHttpClient
 from .livysession import LivySession
-from .pandaspysparklivyclient import PandasPysparkLivyClient
-from .pandasscalalivyclient import PandasScalaLivyClient
-from .pandasrlivyclient import PandasRLivyClient
+from .pysparklivyclient import PysparkLivyClient
+from .scalalivyclient import ScalaLivyClient
+from .rlivyclient import RLivyClient
 
 
 class LivyClientFactory(object):
@@ -17,18 +17,18 @@ class LivyClientFactory(object):
 
     def __init__(self):
         self.logger = Log("LivyClientFactory")
-        self.max_results = conf.max_results_sql()
+        self.max_results = conf.default_maxrows()
 
     def build_client(self, session):
         assert session is not None
         kind = session.kind
 
         if kind == Constants.session_kind_pyspark:
-            return PandasPysparkLivyClient(session, self.max_results)
+            return PysparkLivyClient(session)
         elif kind == Constants.session_kind_spark:
-            return PandasScalaLivyClient(session, self.max_results)
+            return ScalaLivyClient(session)
         elif kind == Constants.session_kind_sparkr:
-            return PandasRLivyClient(session, self.max_results)
+            return RLivyClient(session)
         else:
             raise ValueError("Kind '{}' is not supported.".format(kind))
 

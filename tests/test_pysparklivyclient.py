@@ -4,8 +4,9 @@ from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
 from remotespark.utils.constants import Constants
-from remotespark.livyclientlib.pandaspysparklivyclient import PandasPysparkLivyClient
 from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
+from remotespark.livyclientlib.pysparklivyclient import PysparkLivyClient
+from remotespark.livyclientlib.sqlquery import SQLQuery
 
 mock_spark_session = None
 client = None
@@ -25,7 +26,7 @@ def _setup():
     global mock_spark_session, client, execute_m, execute_responses
 
     mock_spark_session = MagicMock()
-    client = PandasPysparkLivyClient(mock_spark_session, 10)
+    client = PysparkLivyClient(mock_spark_session)
     client.execute = execute_m = MagicMock()
     execute_responses = []
 
@@ -50,11 +51,11 @@ def test_execute_sql_pandas_pyspark_livy():
     desired_df["date"] = pd.to_datetime(desired_df["date"])
     desired_df["temp_diff"] = pd.to_numeric(desired_df["temp_diff"])
 
-    command = "command"
+    command = SQLQuery("command", maxrows=50)
     df = client.execute_sql(command)
 
     execute_m.assert_called_with('for {} in sqlContext.sql("""{}""").toJSON().take({}): print({})'\
-                                 .format(Constants.long_random_variable_name, command, 10,
+                                 .format(Constants.long_random_variable_name, command.query, 50,
                                          Constants.long_random_variable_name))
     assert_frame_equal(desired_df, df)
 
@@ -64,7 +65,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
     global execute_responses
 
     # Set up spark session to return empty JSON and then columns
-    command = "command"
+    command = SQLQuery("command")
     result_json = ""
     result_columns = "buildingID\ndate\ntemp_diff"
     execute_responses = [(True, result_json), (True, result_columns)]
@@ -78,7 +79,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
 
     # Verify basic calls were done
     execute_m.assert_called_with('for {} in sqlContext.sql("""{}""").columns: print({})'\
-                                 .format(Constants.long_random_variable_name, command,
+                                 .format(Constants.long_random_variable_name, command.query,
                                          Constants.long_random_variable_name))
     assert_frame_equal(desired_df, df)
 
@@ -87,7 +88,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
 def test_execute_sql_pandas_pyspark_livy_bad_return():
     global execute_responses
 
-    command = "command"
+    command = SQLQuery("command")
     result_json = (True, "something bad happened")
     execute_m.return_value = result_json
 
@@ -103,7 +104,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
     global execute_responses
 
     # Set up spark session to return empty JSON and then columns
-    command = "command"
+    command = SQLQuery("command")
     result_json = ""
     some_exception = "some exception"
     execute_responses = [(True, result_json), (False, some_exception)]
@@ -114,7 +115,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
         assert False
     except DataFrameParseException as e:
         execute_m.assert_called_with('for {} in sqlContext.sql("""{}""").columns: print({})'\
-                                     .format(Constants.long_random_variable_name, command,
+                                     .format(Constants.long_random_variable_name, command.query,
                                              Constants.long_random_variable_name))
         assert e.out == some_exception
 
@@ -122,7 +123,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
 @with_setup(_setup, _teardown)
 def test_execute_sql_pandas_pyspark_livy_some_exception():
     # Set up spark session to return empty JSON and then columns
-    command = "command"
+    command = SQLQuery("command", maxrows=10)
     some_exception = "some awful exception"
     execute_m.return_value = (False, some_exception)
 
@@ -131,7 +132,7 @@ def test_execute_sql_pandas_pyspark_livy_some_exception():
         assert False
     except DataFrameParseException as e:
         execute_m.assert_called_with('for {} in sqlContext.sql("""{}""").toJSON().take({}): print({})'\
-                                     .format(Constants.long_random_variable_name, command, 10,
+                                     .format(Constants.long_random_variable_name, command.query, 10,
                                              Constants.long_random_variable_name))
         assert e.out == some_exception
 

@@ -3,6 +3,7 @@ from nose.tools import with_setup
 
 import remotespark.utils.configuration as conf
 from remotespark.magics.remotesparkmagics import RemoteSparkMagics
+from remotespark.livyclientlib.sqlquery import SQLQuery
 
 magic = None
 spark_controller = None
@@ -201,12 +202,15 @@ def test_run_sql_command_parses():
     name = "sessions_name"
     context = "-c"
     context_name = "sql"
-    line = " ".join([command, name, context, context_name])
+    quiet = "-q"
+    meth = "-m"
+    method_name = "sample"
+    line = " ".join([command, name, context, context_name, quiet, meth, method_name])
     cell = "cell code"
 
     result = magic.spark(line, cell)
 
-    run_cell_method.assert_called_once_with(cell, name)
+    run_cell_method.assert_called_once_with(SQLQuery(cell, samplemethod=method_name), name)
     assert result is not None
 
 

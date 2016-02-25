@@ -1,9 +1,31 @@
-﻿from mock import MagicMock, PropertyMock
+﻿from mock import MagicMock, PropertyMock, call
+from nose.tools import with_setup, assert_equals
+import pandas as pd
+from pandas.util.testing import assert_frame_equal
+
+from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 
 from remotespark.livyclientlib.livyclient import LivyClient
 from remotespark.livyclientlib.livysessionstate import LivySessionState
+from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.utils.utils import get_connection_string
 from remotespark.utils.constants import Constants
+
+
+mock_spark_session = None
+client = None
+
+
+def _setup():
+    global mock_spark_session, client
+
+    mock_spark_session = MagicMock()
+    mock_spark_session.execute = MagicMock(return_value=(True, ""))
+    client = LivyClient(mock_spark_session)
+
+
+def _teardown():
+    pass
 
 
 def test_doesnt_create_sql_context_automatically():
@@ -30,19 +52,6 @@ def test_execute_code():
     mock_spark_session.create_sql_context.assert_called_with()
     mock_spark_session.wait_for_idle.assert_called_with(3600)
     mock_spark_session.execute.assert_called_with(command)
-
-
-def test_execute_sql():
-    mock_spark_session = MagicMock()
-    client = LivyClient(mock_spark_session)
-    client.start()
-    command = "command"
-
-    client.execute_sql(command)
-
-    mock_spark_session.create_sql_context.assert_called_with()
-    mock_spark_session.wait_for_idle.assert_called_with(3600)
-    mock_spark_session.execute.assert_called_with("sqlContext.sql(\"{}\").collect()".format(command))
 
 
 def test_serialize():
@@ -129,3 +138,58 @@ def test_get_logs_returns_false_with_value_error():
 
     assert not res
     assert logs_r == err
+
+
+@with_setup(_setup, _teardown)
+def test_execute_sql():
+    sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2)
+    command = "SOME_COMMAND"
+    result = """{"z":100,"y":50}
+{"z":25,"y":10}"""
+    result_data = pd.DataFrame([{'z': 100, 'y': 50}, {'z':25, 'y':10}])
+    client._get_command_for_query = MagicMock(return_value=command)
+    mock_spark_session.execute.return_value = (True, result)
+    result = client.execute_sql(sqlquery)
+    assert_frame_equal(result, result_data)
+    mock_spark_session.execute.assert_called_once_with(command)
+
+
+@with_setup(_setup, _teardown)
+def test_execute_sql_no_results():
+    sqlquery = SQLQuery("SHOW TABLES", "sample", 3, 0.75)
+    command1 = "SOME_COMMAND"
+    command2 = "SOME OTHER COMMAND HERE"
+    result1 = ""
+    result2 = """column_a
+THE_SECOND_COLUMN"""
+    result_data = pd.DataFrame.from_records([], columns=['column_a', 'THE_SECOND_COLUMN'])
+    def cmds(q):
+        if not q.only_columns:
+            return command1
+        else:
+            return command2
+    def calls(c):
+        if c == command1:
+            return True, result1
+        else:
+            return True, result2
+    client._get_command_for_query = MagicMock(wraps=cmds)
+    mock_spark_session.execute = MagicMock(wraps=calls)
+    result = client.execute_sql(sqlquery)
+    assert_frame_equal(result, result_data)
+    assert_equals(mock_spark_session.execute.mock_calls, [call(command1), call(command2)])
+
+
+@with_setup(_setup, _teardown)
+def test_execute_sql_some_exception():
+    sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2)
+    command = "SOME_COMMAND"
+    result = """NYARGLEBARGLE"""
+    client._get_command_for_query = MagicMock(side_effect=DataFrameParseException("yo"))
+
+    try:
+        result = client.execute_sql(sqlquery)
+        assert False
+    except DataFrameParseException as e:
+        pass
+
