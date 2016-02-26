@@ -138,6 +138,13 @@ def logging_config():
         }
     }
 
+@_override
+def events_config():
+    return {
+        "local": 1,
+        "handler": "remotespark.utils.jupytereventfilehandler"
+    }
+
 
 @_override
 def execute_timeout_seconds():
