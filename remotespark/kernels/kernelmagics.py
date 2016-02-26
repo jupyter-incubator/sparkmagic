@@ -73,16 +73,16 @@ class KernelMagics(SparkMagicBase):
   </tr>
   <tr>
     <td>sql</td>
-    <td>%%sql -o tables<br/>SHOW TABLES</td> -q
+    <td>%%sql -o tables -q<br/>SHOW TABLES</td>
     <td>Executes a SQL query against the sqlContext.
     Parameters:
       <ul>
-        <li>-o [VAR_NAME]: The result of the query will be available in the %%local Python context as a
+        <li>-o VAR_NAME: The result of the query will be available in the %%local Python context as a
           <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</li>
         <li>-q: The magic will return None instead of the dataframe (no visualization).</li>
-        <li>-m: Sample method, either <tt>take</tt> or <tt>sample</tt>.</li>
-        <li>-n: The maximum number of rows of a SQL query that will be pulled from Livy to Jupyter.</li>
-        <li>-r: Fraction used for sampling.</li>
+        <li>-m METHOD: Sample method, either <tt>take</tt> or <tt>sample</tt>.</li>
+        <li>-n MAXROWS: The maximum number of rows of a SQL query that will be pulled from Livy to Jupyter.</li>
+        <li>-r FRACTION: Fraction used for sampling.</li>
       </ul>
     </td>
   </tr>
