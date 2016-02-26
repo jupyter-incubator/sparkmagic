@@ -74,9 +74,17 @@ class KernelMagics(SparkMagicBase):
   <tr>
     <td>sql</td>
     <td>%%sql -o tables<br/>SHOW TABLES</td> -q
-    <td>Executes a SQL query against the sqlContext. If the -o parameter is passed, the result of the query will be
-    available in the %%local Python context as a <a href="http://pandas.pydata.org/">Pandas</a> dataframe. If
-    the -q parameter is passed, the magic will return None instead of the dataframe.</td>
+    <td>Executes a SQL query against the sqlContext.
+    Parameters:
+      <ul>
+        <li>-o [VAR_NAME]: The result of the query will be available in the %%local Python context as a
+          <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</li>
+        <li>-q: The magic will return None instead of the dataframe (no visualization).</li>
+        <li>-m: Sample method, either <tt>take</tt> or <tt>sample</tt>.</li>
+        <li>-n: The maximum number of rows of a SQL query that will be pulled from Livy to Jupyter.</li>
+        <li>-r: Fraction used for sampling.</li>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>local</td>
@@ -168,7 +176,7 @@ class KernelMagics(SparkMagicBase):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)
             sql_query = SQLQuery(cell, args.samplemethod, args.maxrows, args.samplefraction)
-            return self.execute_against_context_that_returns_df(sql_query, None, args.output, args.quiet)
+            return self.execute_sqlquery(sql_query, None, args.output, args.quiet)
         else:
             return None
 

@@ -38,6 +38,19 @@ def test_sqlquery_loads_defaults():
     assert_false(sqlquery.only_columns)
 
 
+def test_sqlquery_only_columns():
+    query = "HERE IS MY SQL QUERY SELECT * FROM CREATE DROP TABLE"
+    samplemethod = "take"
+    maxrows = 120
+    samplefraction = 0.6
+    sqlquery = SQLQuery(query, samplemethod, maxrows, samplefraction)
+    assert_false(sqlquery.only_columns)
+    sqlquery2 = SQLQuery.as_only_columns_query(sqlquery)
+
+    sqlquery.only_columns = True
+    assert_equals(sqlquery, sqlquery2)
+
+
 @raises(AssertionError)
 def test_sqlquery_rejects_bad_data():
     query = "HERE IS MY SQL QUERY SELECT * FROM CREATE DROP TABLE"

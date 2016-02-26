@@ -1,5 +1,5 @@
 from mock import MagicMock
-from nose.tools import with_setup
+from nose.tools import with_setup, assert_equals
 from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
@@ -37,7 +37,7 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
-def test_execute_sql_pandas_pyspark_livy():
+def test_execute_sql_pyspark_livy():
     # result from livy
     result_json = (True,
                    """{"buildingID":0,"date":"6/1/13","temp_diff":12}
@@ -61,7 +61,7 @@ def test_execute_sql_pandas_pyspark_livy():
 
 
 @with_setup(_setup, _teardown)
-def test_execute_sql_pandas_pyspark_livy_no_results():
+def test_execute_sql_pyspark_livy_no_results():
     global execute_responses
 
     # Set up spark session to return empty JSON and then columns
@@ -85,7 +85,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results():
 
 
 @with_setup(_setup, _teardown)
-def test_execute_sql_pandas_pyspark_livy_bad_return():
+def test_execute_sql_pyspark_livy_bad_return():
     global execute_responses
 
     command = SQLQuery("command")
@@ -100,7 +100,7 @@ def test_execute_sql_pandas_pyspark_livy_bad_return():
 
 
 @with_setup(_setup, _teardown)
-def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
+def test_execute_sql_pyspark_livy_no_results_exception_in_columns():
     global execute_responses
 
     # Set up spark session to return empty JSON and then columns
@@ -121,7 +121,7 @@ def test_execute_sql_pandas_pyspark_livy_no_results_exception_in_columns():
 
 
 @with_setup(_setup, _teardown)
-def test_execute_sql_pandas_pyspark_livy_some_exception():
+def test_execute_sql_pyspark_livy_some_exception():
     # Set up spark session to return empty JSON and then columns
     command = SQLQuery("command", maxrows=10)
     some_exception = "some awful exception"
@@ -137,5 +137,44 @@ def test_execute_sql_pandas_pyspark_livy_some_exception():
         assert e.out == some_exception
 
 
+@with_setup(_setup, _teardown)
+def test_pyspark_livy_sql_options():
+    query = "abc"
+
+    sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'for {} in sqlContext.sql("""{}""").toJSON().collect(): print({})'\
+                  .format(Constants.long_random_variable_name, query,
+                          Constants.long_random_variable_name))
+
+    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'for {} in sqlContext.sql("""{}""").toJSON().sample(False, 0.25).collect(): print({})'\
+                  .format(Constants.long_random_variable_name, query,
+                          Constants.long_random_variable_name))
+
+    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'for {} in sqlContext.sql("""{}""").toJSON().sample(False, 0.33).take(3234): print({})'\
+                  .format(Constants.long_random_variable_name, query,
+                          Constants.long_random_variable_name))
+
+    sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1, only_columns=True)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'for {} in sqlContext.sql("""{}""").columns: print({})'\
+                  .format(Constants.long_random_variable_name, query,
+                          Constants.long_random_variable_name))
+
+    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.999, maxrows=-1, only_columns=True)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'for {} in sqlContext.sql("""{}""").columns: print({})'\
+                  .format(Constants.long_random_variable_name, query,
+                          Constants.long_random_variable_name))
+
+    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.01, maxrows=3, only_columns=True)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'for {} in sqlContext.sql("""{}""").columns: print({})'\
+                  .format(Constants.long_random_variable_name, query,
+                          Constants.long_random_variable_name))
 
 

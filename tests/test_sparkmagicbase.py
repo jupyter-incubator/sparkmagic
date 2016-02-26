@@ -31,7 +31,7 @@ def test_df_execution_without_output_var():
     magic.spark_controller = MagicMock()
     magic.spark_controller.run_cell_sql = MagicMock(return_value=df)
 
-    res = magic.execute_against_context_that_returns_df(query, session, output_var, False)
+    res = magic.execute_sqlquery(query, session, output_var, False)
 
     magic.spark_controller.run_cell_sql.assert_called_once_with(query, session)
     assert res == df
@@ -52,7 +52,7 @@ def test_df_execution_with_output_var():
     magic.spark_controller = MagicMock()
     magic.spark_controller.run_cell_sql = MagicMock(return_value=df)
 
-    res = magic.execute_against_context_that_returns_df(query, session, output_var, False)
+    res = magic.execute_sqlquery(query, session, output_var, False)
 
     magic.spark_controller.run_cell_sql.assert_called_once_with(query, session)
     assert res == df
@@ -73,7 +73,7 @@ def test_df_execution_quiet_without_output_var():
     magic.spark_controller = MagicMock()
     magic.spark_controller.run_cell_sql = MagicMock(return_value=df)
 
-    res = magic.execute_against_context_that_returns_df(cell, session, output_var, True)
+    res = magic.execute_sqlquery(cell, session, output_var, True)
 
     magic.spark_controller.run_cell_sql.assert_called_once_with(cell, session)
     assert res is None
@@ -94,7 +94,7 @@ def test_df_execution_quiet_with_output_var():
     magic.spark_controller = MagicMock()
     magic.spark_controller.run_cell_sql = MagicMock(return_value=df)
 
-    res = magic.execute_against_context_that_returns_df(cell, session, output_var, True)
+    res = magic.execute_sqlquery(cell, session, output_var, True)
 
     magic.spark_controller.run_cell_sql.assert_called_once_with(cell, session)
     assert res is None
@@ -115,7 +115,7 @@ def test_df_execution_throws():
     magic.spark_controller = MagicMock()
     magic.spark_controller.run_cell_sql = MagicMock(side_effect=DataFrameParseException(error))
 
-    res = magic.execute_against_context_that_returns_df(query, session, output_var, False)
+    res = magic.execute_sqlquery(query, session, output_var, False)
 
     magic.spark_controller.run_cell_sql.assert_called_once_with(query, session)
     assert res is None

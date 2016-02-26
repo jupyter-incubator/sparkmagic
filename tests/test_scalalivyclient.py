@@ -1,5 +1,5 @@
 from mock import MagicMock
-from nose.tools import with_setup
+from nose.tools import with_setup, assert_equals
 from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
@@ -124,3 +124,33 @@ def test_execute_sql_pandas_scala_livy_some_exception():
     except DataFrameParseException as e:
         execute_m.assert_called_with('sqlContext.sql("""{}""").toJSON.take({}).foreach(println)'.format(command.query, 1000))
         assert e.out == some_exception
+
+
+@with_setup(_setup, _teardown)
+def test_pyspark_livy_sql_options():
+    query = "abc"
+
+    sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'sqlContext.sql("""{}""").toJSON.collect.foreach(println)'.format(query))
+
+    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'sqlContext.sql("""{}""").toJSON.sample(false, 0.25).collect.foreach(println)'.format(query))
+
+    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'sqlContext.sql("""{}""").toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(query))
+
+    sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1, only_columns=True)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'sqlContext.sql("""{}""").columns.foreach(println)'.format(query))
+
+    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.999, maxrows=-1, only_columns=True)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'sqlContext.sql("""{}""").columns.foreach(println)'.format(query))
+
+    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.01, maxrows=3, only_columns=True)
+    assert_equals(client._get_command_for_query(sqlquery),
+                  'sqlContext.sql("""{}""").columns.foreach(println)'.format(query))
+

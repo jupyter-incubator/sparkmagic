@@ -180,8 +180,8 @@ class RemoteSparkMagics(SparkMagicBase):
                         self.ipython_display.send_error(out)
                 elif args.context == Constants.context_name_sql:
                     sqlquery = SQLQuery(cell, args.samplemethod, args.maxrows, args.samplefraction)
-                    return self.execute_against_context_that_returns_df(sqlquery, args.session, args.output,
-                                                                        args.quiet)
+                    return self.execute_sqlquery(sqlquery, args.session, args.output,
+                                                 args.quiet)
                 else:
                     raise ValueError("Context '{}' not found".format(args.context))
             # error

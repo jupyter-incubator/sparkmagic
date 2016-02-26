@@ -1,5 +1,5 @@
 from mock import MagicMock
-from nose.tools import with_setup, raises, assert_equals
+from nose.tools import with_setup, raises, assert_equals, assert_is
 from IPython.core.magic import magics_class
 
 from remotespark.kernels.kernelmagics import KernelMagics
@@ -259,7 +259,7 @@ def test_spark_failed_session_start():
 
     ret = magic.spark(line, cell)
 
-    assert_equals(ret, None)
+    assert_is(ret, None)
     assert_equals(ipython_display.write.call_count, 0)
     assert_equals(spark_controller.add_session.call_count, 0)
     assert_equals(spark_controller.run_cell.call_count, 0)
@@ -269,26 +269,26 @@ def test_spark_failed_session_start():
 def test_sql_without_output():
     line = ""
     cell = "some spark code"
-    magic.execute_against_context_that_returns_df = MagicMock()
+    magic.execute_sqlquery = MagicMock()
 
     magic.sql(line, cell)
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": Constants.session_kind_pyspark})
-    magic.execute_against_context_that_returns_df.assert_called_once_with(SQLQuery(cell), None, None, False)
+    magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, None, False)
 
 
 @with_setup(_setup, _teardown)
 def test_sql_with_output():
     line = "-o my_var"
     cell = "some spark code"
-    magic.execute_against_context_that_returns_df = MagicMock()
+    magic.execute_sqlquery = MagicMock()
 
     magic.sql(line, cell)
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": Constants.session_kind_pyspark})
-    magic.execute_against_context_that_returns_df.assert_called_once_with(SQLQuery(cell), None, "my_var", False)
+    magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, "my_var", False)
 
 
 @with_setup(_setup, _teardown)
@@ -299,10 +299,37 @@ def test_sql_failed_session_start():
 
     ret = magic.sql(line, cell)
 
-    assert_equals(ret, None)
+    assert_is(ret, None)
     assert_equals(spark_controller.add_session.call_count, 0)
-    assert_equals(spark_controller.execute_against_context_that_returns_df.call_count, 0)
+    assert_equals(spark_controller.execute_sqlquery.call_count, 0)
 
+
+@with_setup(_setup, _teardown)
+def test_sql_quiet():
+    line = "-q -o Output"
+    cell = ""
+    magic.execute_sqlquery = MagicMock()
+
+    ret = magic.sql(line, cell)
+
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+                                                         {"kind": Constants.session_kind_pyspark})
+    magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, "Output", True)
+
+
+@with_setup(_setup, _teardown)
+def test_sql_sample_options():
+    line = "-q -m sample -n 142 -r 0.3"
+    cell = ""
+    magic.execute_sqlquery = MagicMock()
+
+    ret = magic.sql(line, cell)
+
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+                                                         {"kind": Constants.session_kind_pyspark})
+    magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell, samplemethod="sample",
+                                                            maxrows=142, samplefraction=0.3),
+                                                   None, None, True)
 
 
 @with_setup(_setup, _teardown)
