@@ -22,7 +22,7 @@ class SQLQuery(object):
         self.only_columns = only_columns
 
     @staticmethod
-    def get_only_columns_query(query):
+    def as_only_columns_query(query):
         """Given a SQL query, return a new version of that SQL query which only gets
         the columns for that query."""
         return SQLQuery(query.query, query.samplemethod, query.maxrows,

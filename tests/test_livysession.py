@@ -247,7 +247,7 @@ class TestLivySession:
         conf.load()
         session.start()
 
-        logs = session.logs
+        logs = session.get_logs()
 
         assert_equals("hi\nhi", logs)
         http_client.get.assert_called_with("/sessions/0/log?from=0", [200])

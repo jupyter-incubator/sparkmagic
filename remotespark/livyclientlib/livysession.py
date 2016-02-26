@@ -92,6 +92,12 @@ class LivySession(object):
             raise LivyClientTimeoutError("Failed to create the {} context in time. Timed out after {} seconds."
                                          .format(context_type, self._create_sql_context_timeout_seconds))
 
+    def get_logs(self):
+        r = self._http_client.get("/sessions/{}/log?from=0".format(self.id), [200])
+        log_array = r.json()['log']
+        self._logs = "\n".join(log_array)
+        return self._logs
+
     @property
     def id(self):
         return self._state.session_id
@@ -103,11 +109,6 @@ class LivySession(object):
     @property
     def kind(self):
         return self._state.kind
-
-    @property
-    def logs(self):
-        self._refresh_logs()
-        return self._logs
 
     @property
     def http_client(self):
@@ -151,7 +152,7 @@ class LivySession(object):
 
         if current_status in Constants.final_status:
             error = "Session {} unexpectedly reached final status '{}'. See logs:\n{}"\
-                .format(self.id, current_status, self.logs)
+                .format(self.id, current_status, self.get_logs())
             self.logger.error(error)
             raise LivyUnexpectedStatusError(error)
 
@@ -172,7 +173,7 @@ class LivySession(object):
         return "/sessions/{}/statements".format(self.id)
 
     def _refresh_status(self):
-        status = self._get_latest_status()
+        status = self._http_client.get("/sessions/{}".format(self.id), [200]).json()['state']
 
         if status in Constants.possible_session_status:
             self.status = status
@@ -180,22 +181,6 @@ class LivySession(object):
             raise ValueError("Status '{}' not supported by session.".format(status))
 
         return self.status
-
-    def _refresh_logs(self):
-        self._logs = self._get_latest_logs()
-
-    def _get_latest_status(self):
-        r = self._http_client.get("/sessions/{}".format(self.id), [200])
-        session = r.json()
-                    
-        return session['state']
-
-    def _get_latest_logs(self):
-        r = self._http_client.get("/sessions/{}/log?from=0".format(self.id), [200])
-        log_array = r.json()['log']
-        logs = "\n".join(log_array)
-
-        return logs
     
     def _get_statement_output(self, statement_id):
         statement_running = True

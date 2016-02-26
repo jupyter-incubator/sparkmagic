@@ -31,7 +31,7 @@ class LivyClient(object):
 
     def get_logs(self):
         try:
-            return True, self._session.logs
+            return True, self._session.get_logs()
         except ValueError as err:
             return False, "{}".format(err)
 
@@ -40,7 +40,15 @@ class LivyClient(object):
         return self._session.execute(commands)
 
     def execute_sql(self, sqlquery):
-        return self._execute_sql_helper(sqlquery)
+        (success, records_text) = self._get_records(sqlquery)
+        if not success:
+            raise DataFrameParseException(records_text)
+        if records_text == "":
+            # If there are no records, show some columns at least.
+            records_text = self._get_columns(sqlquery)
+            return self._columns_to_dataframe(records_text)
+        else:
+            return self._records_to_dataframe(records_text)
 
     def close_session(self):
         self._session.delete()
@@ -57,23 +65,12 @@ class LivyClient(object):
     def status(self):
         return self._session.status
 
-    def _execute_sql_helper(self, sqlquery):
-        (success, records_text) = self._get_records(sqlquery)
-        if not success:
-            raise DataFrameParseException(records_text)
-        if records_text == "":
-            # If there are no records, show some columns at least.
-            records_text = self._get_columns(sqlquery)
-            return self._columns_to_dataframe(records_text)
-        else:
-            return self._records_to_dataframe(records_text)
-
     def _get_records(self, sqlquery):
         command = self._get_command_for_query(sqlquery)
         return self.execute(command)
 
     def _get_columns(self, sqlquery):
-        sqlquery2 = SQLQuery.get_only_columns_query(sqlquery)
+        sqlquery2 = SQLQuery.as_only_columns_query(sqlquery)
         command = self._get_command_for_query(sqlquery2)
         (success, out) = self.execute(command)
         if success:

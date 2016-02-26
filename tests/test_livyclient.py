@@ -119,7 +119,7 @@ def test_session_id():
 def test_get_logs_returns_session_logs():
     logs = "hi"
     mock_spark_session = MagicMock()
-    mock_spark_session.logs = logs
+    mock_spark_session.get_logs = MagicMock(return_value=logs)
     client = LivyClient(mock_spark_session)
 
     res, logs_r = client.get_logs()
@@ -131,7 +131,7 @@ def test_get_logs_returns_session_logs():
 def test_get_logs_returns_false_with_value_error():
     err = "err"
     mock_spark_session = MagicMock()
-    type(mock_spark_session).logs = PropertyMock(side_effect=ValueError(err))
+    mock_spark_session.get_logs = MagicMock(side_effect=ValueError(err))
     client = LivyClient(mock_spark_session)
 
     res, logs_r = client.get_logs()
