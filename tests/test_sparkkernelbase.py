@@ -3,7 +3,7 @@ from nose.tools import with_setup
 from remotespark.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 
 import remotespark.utils.configuration as conf
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import LANG_PYTHON
 
 kernel = None
 execute_cell_mock = None
@@ -16,7 +16,7 @@ user_code_parser = MagicMock(return_value=code)
 class TestSparkKernel(SparkKernelBase):
     def __init__(self):
         kwargs = {"testing": True}
-        super(TestSparkKernel, self).__init__(None, None, None, None, None, Constants.lang_python, user_code_parser,
+        super(TestSparkKernel, self).__init__(None, None, None, None, None, LANG_PYTHON, user_code_parser,
                                               **kwargs)
 
 
@@ -127,7 +127,7 @@ def test_register_auto_viz():
 def test_change_language():
     kernel._change_language()
 
-    assert call("%%_do_not_call_change_language -l {}\n ".format(Constants.lang_python),
+    assert call("%%_do_not_call_change_language -l {}\n ".format(LANG_PYTHON),
                 True, False, None, False) in execute_cell_mock.mock_calls
 
 

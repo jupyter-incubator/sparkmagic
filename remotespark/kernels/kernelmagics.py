@@ -15,7 +15,7 @@ from IPython.core.magic_arguments import argument, magic_arguments, parse_argstr
 import remotespark.utils.configuration as conf
 from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import LANGS_SUPPORTED
 from remotespark.utils.utils import get_connection_string
 
 
@@ -256,7 +256,7 @@ class KernelMagics(SparkMagicBase):
         args = parse_argstring(self._do_not_call_change_language, line)
         language = args.language.lower()
 
-        if language not in Constants.lang_supported:
+        if language not in LANGS_SUPPORTED:
             self.ipython_display.send_error("'{}' language not supported in kernel magics.".format(language))
             return None
 
