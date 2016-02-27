@@ -66,12 +66,11 @@ class LivyClient(object):
         return self._session.status
 
     def _get_records(self, sqlquery):
-        command = self._get_command_for_query(sqlquery)
+        command = sqlquery.to_command(self.kind)
         return self.execute(command)
 
     def _get_columns(self, sqlquery):
-        sqlquery2 = SQLQuery.as_only_columns_query(sqlquery)
-        command = self._get_command_for_query(sqlquery2)
+        command = SQLQuery.as_only_columns_query(sqlquery).to_command(self.kind)
         (success, out) = self.execute(command)
         if success:
             return out
@@ -92,6 +91,4 @@ class LivyClient(object):
         except ValueError:
             raise DataFrameParseException("Cannot parse object as JSON: '{}'".format(strings))
 
-    # Override this!
-    def _get_command_for_query(self, sqlquery):
-        raise NotImplementedError()
+

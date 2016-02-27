@@ -143,49 +143,42 @@ def test_get_logs_returns_false_with_value_error():
 @with_setup(_setup, _teardown)
 def test_execute_sql():
     sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2)
-    command = "SOME_COMMAND"
     result = """{"z":100,"y":50}
 {"z":25,"y":10}"""
     result_data = pd.DataFrame([{'z': 100, 'y': 50}, {'z':25, 'y':10}])
-    client._get_command_for_query = MagicMock(return_value=command)
+    mock_spark_session.kind = "pyspark"
     mock_spark_session.execute.return_value = (True, result)
     result = client.execute_sql(sqlquery)
     assert_frame_equal(result, result_data)
-    mock_spark_session.execute.assert_called_once_with(command)
+    mock_spark_session.execute.assert_called_once_with(sqlquery.to_command("pyspark"))
 
 
 @with_setup(_setup, _teardown)
 def test_execute_sql_no_results():
-    sqlquery = SQLQuery("SHOW TABLES", "sample", 3, 0.75)
-    command1 = "SOME_COMMAND"
-    command2 = "SOME OTHER COMMAND HERE"
+    sqlquery = SQLQuery("SHOW TABLES", "take", maxrows=-1)
     result1 = ""
     result2 = """column_a
 THE_SECOND_COLUMN"""
     result_data = pd.DataFrame.from_records([], columns=['column_a', 'THE_SECOND_COLUMN'])
-    def cmds(q):
-        if not q.only_columns:
-            return command1
-        else:
-            return command2
     def calls(c):
-        if c == command1:
+        if c == sqlquery.to_command("spark"):
             return True, result1
         else:
             return True, result2
-    client._get_command_for_query = MagicMock(wraps=cmds)
     mock_spark_session.execute = MagicMock(wraps=calls)
+    mock_spark_session.kind = "spark"
     result = client.execute_sql(sqlquery)
     assert_frame_equal(result, result_data)
-    assert_equals(mock_spark_session.execute.mock_calls, [call(command1), call(command2)])
+    assert_equals(mock_spark_session.execute.mock_calls,
+                  [call(sqlquery.to_command("spark")),
+                   call(SQLQuery.as_only_columns_query(sqlquery).to_command("spark"))])
 
 
 @with_setup(_setup, _teardown)
 def test_execute_sql_some_exception():
     sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2)
-    command = "SOME_COMMAND"
-    result = """NYARGLEBARGLE"""
-    client._get_command_for_query = MagicMock(side_effect=DataFrameParseException("yo"))
+    client.execute = MagicMock(return_value=(False, ''))
+    mock_spark_session.kind = "pyspark"
 
     try:
         result = client.execute_sql(sqlquery)

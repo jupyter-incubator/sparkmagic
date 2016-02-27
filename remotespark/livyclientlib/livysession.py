@@ -9,12 +9,14 @@ from remotespark.utils.log import Log
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livyunexpectedstatuserror import LivyUnexpectedStatusError
 from .livysessionstate import LivySessionState
+from .livyreliablehttpclient import LivyReliableHttpClient
 
 
 class LivySession(object):
     """Session that is livy specific."""
 
-    def __init__(self, ipython_display, http_client, session_id, sql_created, properties):
+    def __init__(self, http_client, properties, ipython_display,
+                 session_id="-1", sql_created=None):
         assert "kind" in list(properties.keys())
         kind = properties["kind"]
         self.properties = properties
@@ -49,8 +51,14 @@ class LivySession(object):
         self._statement_sleep_seconds = statement_sleep_seconds
         self._create_sql_context_timeout_seconds = create_sql_context_timeout_seconds
 
-        self._state = LivySessionState(session_id, http_client.connection_string,
+        self._state = LivySessionState(session_id, self._http_client.connection_string,
                                        kind, sql_created)
+
+    @staticmethod
+    def from_connection_string(connection_string, properties, ipython_display,
+                               session_id="-1", sql_created=None):
+        http_client = LivyReliableHttpClient.from_connection_string(connection_string)
+        return LivySession(http_client, properties, ipython_display, session_id, sql_created)
 
     def __str__(self):
         return "Session id: {}\tKind: {}\tState: {}".format(self.id, self.kind, self.status)

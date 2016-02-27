@@ -25,6 +25,9 @@ class DummyResponse:
         return self._status_code
 
 
+CONN_STR = 'url=https://www.DFAS90D82309F0W9ASD0F9ZX.com;username=abcd;password=1234'
+
+
 class TestLivySession:
 
     def __init__(self):
@@ -56,10 +59,9 @@ class TestLivySession:
     def _create_session(self, kind=Constants.session_kind_spark, session_id="-1", sql_created=False, http_client=None):
         if http_client is None:
             http_client = MagicMock()
-
         ipython_display = MagicMock()
-
-        return LivySession(ipython_display, http_client, session_id, sql_created, {"kind": kind})
+        session = LivySession(http_client, {"kind": kind}, ipython_display, session_id, sql_created)
+        return session
 
     @raises(AssertionError)
     def test_constructor_throws_status_sleep_seconds(self):
@@ -210,7 +212,7 @@ class TestLivySession:
         properties = {"kind": kind, "extra": 1}
 
         ipython_display = MagicMock()
-        session = LivySession(ipython_display, http_client, "-1", False, properties)
+        session = LivySession(http_client, properties, ipython_display)
         session.start()
         conf.load()
 

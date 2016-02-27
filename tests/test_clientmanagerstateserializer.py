@@ -7,12 +7,12 @@ from remotespark.livyclientlib.clientmanagerstateserializer import ClientManager
 
 @raises(AssertionError)
 def test_serializer_throws_none_path():
-    ClientManagerStateSerializer(None, MagicMock())
+    ClientManagerStateSerializer(MagicMock())
 
 
 @raises(AssertionError)
 def test_serializer_throws_none_factory():
-    ClientManagerStateSerializer(MagicMock(), None)
+    ClientManagerStateSerializer(None)
 
 
 def test_deserialize_not_emtpy():
@@ -42,7 +42,7 @@ def test_deserialize_not_emtpy():
   ]
 }
 """
-    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+    serializer = ClientManagerStateSerializer(reader_writer)
 
     deserialized = serializer.deserialize_state()
 
@@ -88,7 +88,7 @@ def test_deserialize_not_emtpy_but_dead():
   ]
 }
 """
-    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+    serializer = ClientManagerStateSerializer(reader_writer)
 
     deserialized = serializer.deserialize_state()
 
@@ -126,7 +126,7 @@ def test_deserialize_not_emtpy_but_error():
   ]
 }
 """
-    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+    serializer = ClientManagerStateSerializer(reader_writer)
 
     deserialized = serializer.deserialize_state()
 
@@ -139,7 +139,7 @@ def test_deserialize_empty():
     client_factory = MagicMock()
     reader_writer = MagicMock()
     reader_writer.read_lines.return_value = ""
-    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+    serializer = ClientManagerStateSerializer(reader_writer)
 
     deserialized = serializer.deserialize_state()
 
@@ -160,7 +160,7 @@ def test_serialize_not_empty():
     client2.serialize.return_value = {"id": "2", "sqlcontext": False, "kind": "spark",
                                       "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
                                       "version": "0.0.0"}
-    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+    serializer = ClientManagerStateSerializer(reader_writer)
 
     # Call serialization
     serializer.serialize_state({"py": client1, "sc": client2})

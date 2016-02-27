@@ -1,4 +1,5 @@
 import remotespark.utils.configuration as conf
+from remotespark.utils.constants import Constants
 
 
 class SQLQuery(object):
@@ -20,6 +21,50 @@ class SQLQuery(object):
         self.maxrows = maxrows
         self.samplefraction = samplefraction
         self.only_columns = only_columns
+
+    def to_command(self, kind):
+        if kind == Constants.session_kind_pyspark:
+            return self._pyspark_command()
+        elif kind == Constants.session_kind_spark:
+            return self._scala_command()
+        elif kind == Constants.session_kind_sparkr:
+            return self._r_command()
+        else:
+            raise ValueError("Kind '{}' is not supported.".format(kind))
+
+    def _pyspark_command(self):
+        command = 'sqlContext.sql("""{}""")'.format(self.query)
+        if self.only_columns:
+            command = '{}.columns'.format(command)
+        else:
+            command = '{}.toJSON()'.format(command)
+            if self.samplemethod == 'sample':
+                command = '{}.sample(False, {})'.format(command, self.samplefraction)
+            if self.maxrows >= 0:
+                command = '{}.take({})'.format(command, self.maxrows)
+            else:
+                command = '{}.collect()'.format(command)
+        command = 'for {} in {}: print({})'.format(Constants.long_random_variable_name,
+                                                   command,
+                                                   Constants.long_random_variable_name)
+        return command
+
+    def _scala_command(self):
+        command = 'sqlContext.sql("""{}""")'.format(self.query)
+        if self.only_columns:
+            command = '{}.columns'.format(command)
+        else:
+            command = '{}.toJSON'.format(command)
+            if self.samplemethod == 'sample':
+                command = '{}.sample(false, {})'.format(command, self.samplefraction)
+            if self.maxrows >= 0:
+                command = '{}.take({})'.format(command, self.maxrows)
+            else:
+                command = '{}.collect'.format(command)
+        return '{}.foreach(println)'.format(command)
+
+    def _r_command(self):
+        raise NotImplementedError()
 
     @staticmethod
     def as_only_columns_query(query):
