@@ -81,7 +81,8 @@ class KernelMagics(SparkMagicBase):
           <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</li>
         <li>-q: The magic will return None instead of the dataframe (no visualization).</li>
         <li>-m METHOD: Sample method, either <tt>take</tt> or <tt>sample</tt>.</li>
-        <li>-n MAXROWS: The maximum number of rows of a SQL query that will be pulled from Livy to Jupyter.</li>
+        <li>-n MAXROWS: The maximum number of rows of a SQL query that will be pulled from Livy to Jupyter.
+            If this number is negative, then the number of rows will be unlimited.</li>
         <li>-r FRACTION: Fraction used for sampling.</li>
       </ul>
     </td>
