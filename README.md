@@ -1,5 +1,5 @@
 # sparkmagic
-IPython magics for working with remote Spark clusters
+IPython magics and wrapper kernels for working with remote Spark clusters
 
 ## Development team and Advocate
 
@@ -8,10 +8,27 @@ Subproject development team:
 * Alejandro Guerrero Gonzalez, Microsoft (`@aggFTW`)
 * Auberon Lopez, Cal Poly (`@alope107`)
 * Sangeetha Shekar, Microsoft (`@sangeethashekar`)
+* Ricky Stewart, Microsoft (`@msftristew`)
+* Mohamed Elkamhawy (`@MohamedElKamhawy`)
 
 Steering Council Advocate
 
 * Brian Granger (`@ellisonbg`)
+
+## Installation
+
+Installaton happens in two steps: 
+
+1. Install the library:
+
+    git clone https://github.com/jupyter-incubator/sparkmagic
+    cd sparkmagic
+    pip install -e .
+
+2. Install the wrapper kernels (install either, both, or none of the wrapper kernels)
+
+    jupyter-kernelspec install remotespark/kernels/sparkkernel
+    jupyter-kernelspec install remotespark/kernels/pysparkkernel
 
 ## Subproject goals, scope and functionality
 
