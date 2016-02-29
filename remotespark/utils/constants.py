@@ -2,37 +2,36 @@
 # Distributed under the terms of the Modified BSD License.
 
 
-class Constants(object):
-    config_json = "config.json"
+CONFIG_JSON = "config.json"
 
-    session_kind_spark = "spark"
-    session_kind_pyspark = "pyspark"
-    session_kind_sparkr = "sparkr"
-    session_kinds_supported = [session_kind_spark, session_kind_pyspark, session_kind_sparkr]
+SESSION_KIND_SPARK = "spark"
+SESSION_KIND_PYSPARK = "pyspark"
+SESSION_KIND_SPARKR = "sparkr"
+SESSION_KINDS_SUPPORTED = [SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_SPARKR]
 
-    context_name_spark = "spark"
-    context_name_sql = "sql"
+CONTEXT_NAME_SPARK = "spark"
+CONTEXT_NAME_SQL = "sql"
 
-    lang_scala = "scala"
-    lang_python = "python"
-    lang_r = "r"
-    lang_supported = [lang_scala, lang_python, lang_r]
+LANG_SCALA = "scala"
+LANG_PYTHON = "python"
+LANG_R = "r"
+LANGS_SUPPORTED = [LANG_SCALA, LANG_PYTHON, LANG_R]
 
-    long_random_variable_name = "_yQeKOYBsFgLWWGWZJu3y"
+LONG_RANDOM_VARIABLE_NAME = "_yQeKOYBsFgLWWGWZJu3y"
 
-    magics_logger_name = "magicsLogger"
+MAGICS_LOGGER_NAME = "magicsLogger"
 
-    idle_session_status = "idle"
-    error_session_status = "error"
-    dead_session_status = "dead"
-    not_started_session_status = "not_started"
-    starting_session_status = "starting"
-    busy_session_status = "busy"
+IDLE_SESSION_STATUS = "idle"
+ERROR_SESSION_STATUS = "error"
+DEAD_SESSION_STATUS = "dead"
+NOT_STARTED_SESSION_STATUS = "not_started"
+STARTING_SESSION_STATUS = "starting"
+BUSY_SESSION_STATUS = "busy"
 
-    possible_session_status = [not_started_session_status, idle_session_status, starting_session_status,
-                               busy_session_status, error_session_status, dead_session_status]
-    final_status = [dead_session_status, error_session_status]
+POSSIBLE_SESSION_STATUS = [NOT_STARTED_SESSION_STATUS, IDLE_SESSION_STATUS, STARTING_SESSION_STATUS,
+                           BUSY_SESSION_STATUS, ERROR_SESSION_STATUS, DEAD_SESSION_STATUS]
+FINAL_STATUS = [DEAD_SESSION_STATUS, ERROR_SESSION_STATUS]
 
-    delete_session_action = "delete"
-    start_session_action = "start"
-    do_nothing_action = "nothing"
+DELETE_SESSION_ACTION = "delete"
+START_SESSION_ACTION = "start"
+DO_NOTHING_ACTION = "nothing"

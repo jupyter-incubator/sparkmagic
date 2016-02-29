@@ -1,10 +1,11 @@
 from mock import MagicMock
-from nose.tools import with_setup, raises, assert_equals
+from nose.tools import with_setup, raises, assert_equals, assert_is
 from IPython.core.magic import magics_class
 
 from remotespark.kernels.kernelmagics import KernelMagics
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
-from remotespark.utils.constants import Constants
+from remotespark.livyclientlib.sqlquery import SQLQuery
+import remotespark.utils.constants as constants
 import remotespark.utils.configuration as conf
 
 magic = None
@@ -18,7 +19,7 @@ class TestKernelMagics(KernelMagics):
     def __init__(self, shell, data=None):
         super(TestKernelMagics, self).__init__(shell)
 
-        self.language = Constants.lang_python
+        self.language = constants.LANG_PYTHON
         self.url = "url"
         self.connection_string = "conn_str"
 
@@ -59,7 +60,7 @@ def test_start_session():
     assert ret
     assert magic.session_started
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
-                                                         {"kind": Constants.session_kind_pyspark})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK})
 
     # Call a second time
     ret = magic._do_not_call_start_session(line)
@@ -107,25 +108,25 @@ def test_delete_session():
 
 @with_setup(_setup, _teardown)
 def test_change_language():
-    language = Constants.lang_scala.upper()
+    language = constants.LANG_SCALA.upper()
     line = "-l {}".format(language)
 
     magic._do_not_call_change_language(line)
 
-    assert_equals(Constants.lang_scala, magic.language)
+    assert_equals(constants.LANG_SCALA, magic.language)
     assert_equals("new_url", magic.url)
 
 
 @with_setup(_setup, _teardown)
 def test_change_language_session_started():
-    language = Constants.lang_python
+    language = constants.LANG_PYTHON
     line = "-l {}".format(language)
     magic.session_started = True
 
     magic._do_not_call_change_language(line)
 
     assert_equals(ipython_display.send_error.call_count, 1)
-    assert_equals(Constants.lang_python, magic.language)
+    assert_equals(constants.LANG_PYTHON, magic.language)
     assert_equals("url", magic.url)
 
 
@@ -137,7 +138,7 @@ def test_change_language_not_valid():
     magic._do_not_call_change_language(line)
 
     assert_equals(ipython_display.send_error.call_count, 1)
-    assert_equals(Constants.lang_python, magic.language)
+    assert_equals(constants.LANG_PYTHON, magic.language)
     assert_equals("url", magic.url)
 
 
@@ -208,7 +209,7 @@ def test_configure():
     assert conf.session_configs() == {"extra": "yes"}
     spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
-                                                         {"kind": Constants.session_kind_pyspark, "extra": "yes"})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK, "extra": "yes"})
     magic.info.assert_called_once_with("")
 
 
@@ -232,7 +233,7 @@ def test_spark():
 
     ipython_display.write.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
-                                                         {"kind": Constants.session_kind_pyspark})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK})
     spark_controller.run_cell.assert_called_once_with(cell)
 
 
@@ -246,7 +247,7 @@ def test_spark_error():
 
     ipython_display.send_error.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
-                                                         {"kind": Constants.session_kind_pyspark})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK})
     spark_controller.run_cell.assert_called_once_with(cell)
 
 
@@ -258,7 +259,7 @@ def test_spark_failed_session_start():
 
     ret = magic.spark(line, cell)
 
-    assert_equals(ret, None)
+    assert_is(ret, None)
     assert_equals(ipython_display.write.call_count, 0)
     assert_equals(spark_controller.add_session.call_count, 0)
     assert_equals(spark_controller.run_cell.call_count, 0)
@@ -268,28 +269,26 @@ def test_spark_failed_session_start():
 def test_sql_without_output():
     line = ""
     cell = "some spark code"
-    magic.execute_against_context_that_returns_df = MagicMock()
+    magic.execute_sqlquery = MagicMock()
 
     magic.sql(line, cell)
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
-                                                         {"kind": Constants.session_kind_pyspark})
-    magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_sql, cell, None,
-                                                                          None, False)
+                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+    magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, None, False)
 
 
 @with_setup(_setup, _teardown)
 def test_sql_with_output():
     line = "-o my_var"
     cell = "some spark code"
-    magic.execute_against_context_that_returns_df = MagicMock()
+    magic.execute_sqlquery = MagicMock()
 
     magic.sql(line, cell)
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
-                                                         {"kind": Constants.session_kind_pyspark})
-    magic.execute_against_context_that_returns_df.assert_called_once_with(spark_controller.run_cell_sql, cell, None,
-                                                                          "my_var", False)
+                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+    magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, "my_var", False)
 
 
 @with_setup(_setup, _teardown)
@@ -300,10 +299,37 @@ def test_sql_failed_session_start():
 
     ret = magic.sql(line, cell)
 
-    assert_equals(ret, None)
+    assert_is(ret, None)
     assert_equals(spark_controller.add_session.call_count, 0)
-    assert_equals(spark_controller.execute_against_context_that_returns_df.call_count, 0)
+    assert_equals(spark_controller.execute_sqlquery.call_count, 0)
 
+
+@with_setup(_setup, _teardown)
+def test_sql_quiet():
+    line = "-q -o Output"
+    cell = ""
+    magic.execute_sqlquery = MagicMock()
+
+    ret = magic.sql(line, cell)
+
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+    magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, "Output", True)
+
+
+@with_setup(_setup, _teardown)
+def test_sql_sample_options():
+    line = "-q -m sample -n 142 -r 0.3"
+    cell = ""
+    magic.execute_sqlquery = MagicMock()
+
+    ret = magic.sql(line, cell)
+
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+    magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell, samplemethod="sample",
+                                                            maxrows=142, samplefraction=0.3),
+                                                   None, None, True)
 
 
 @with_setup(_setup, _teardown)

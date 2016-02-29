@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 from remotespark.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import LANG_PYTHON
 
 
 class PySparkKernel(SparkKernelBase):
@@ -17,7 +17,7 @@ class PySparkKernel(SparkKernelBase):
             'pygments_lexer': 'python2'
         }
 
-        session_language = Constants.lang_python
+        session_language = LANG_PYTHON
 
         super(PySparkKernel, self).__init__(implementation, implementation_version, language, language_version,
                                             language_info, session_language, **kwargs)

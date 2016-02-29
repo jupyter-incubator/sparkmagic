@@ -3,6 +3,7 @@ from nose.tools import with_setup
 
 import remotespark.utils.configuration as conf
 from remotespark.magics.remotesparkmagics import RemoteSparkMagics
+from remotespark.livyclientlib.sqlquery import SQLQuery
 
 magic = None
 spark_controller = None
@@ -201,13 +202,37 @@ def test_run_sql_command_parses():
     name = "sessions_name"
     context = "-c"
     context_name = "sql"
-    line = " ".join([command, name, context, context_name])
+    meth = "-m"
+    method_name = "sample"
+    line = " ".join([command, name, context, context_name, meth, method_name])
     cell = "cell code"
 
     result = magic.spark(line, cell)
 
-    run_cell_method.assert_called_once_with(cell, name)
+    run_cell_method.assert_called_once_with(SQLQuery(cell, samplemethod=method_name), name)
     assert result is not None
+
+
+@with_setup(_setup, _teardown)
+def test_run_sql_command_knows_how_to_be_quiet():
+    run_cell_method = MagicMock()
+    run_cell_method.return_value = (True, "")
+    spark_controller.run_cell_sql = run_cell_method
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "sql"
+    quiet = "-q"
+    meth = "-m"
+    method_name = "sample"
+    line = " ".join([command, name, context, context_name, quiet, meth, method_name])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    run_cell_method.assert_called_once_with(SQLQuery(cell, samplemethod=method_name), name)
+    assert result is None
 
 
 @with_setup(_setup, _teardown)
