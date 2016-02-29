@@ -1,6 +1,6 @@
 from nose.tools import with_setup, assert_equals, assert_false, raises
 
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import LONG_RANDOM_VARIABLE_NAME
 from remotespark.livyclientlib.sqlquery import SQLQuery
 import remotespark.utils.configuration as conf
 
@@ -65,44 +65,44 @@ def test_pyspark_livy_sql_options():
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
     assert_equals(sqlquery._pyspark_command(),
                   'for {} in sqlContext.sql("""{}""").toJSON().take(120): print({})'\
-                  .format(Constants.long_random_variable_name, query,
-                          Constants.long_random_variable_name))
+                  .format(LONG_RANDOM_VARIABLE_NAME, query,
+                          LONG_RANDOM_VARIABLE_NAME))
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
     assert_equals(sqlquery._pyspark_command(),
                   'for {} in sqlContext.sql("""{}""").toJSON().collect(): print({})'\
-                  .format(Constants.long_random_variable_name, query,
-                          Constants.long_random_variable_name))
+                  .format(LONG_RANDOM_VARIABLE_NAME, query,
+                          LONG_RANDOM_VARIABLE_NAME))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
     assert_equals(sqlquery._pyspark_command(),
                   'for {} in sqlContext.sql("""{}""").toJSON().sample(False, 0.25).collect(): print({})'\
-                  .format(Constants.long_random_variable_name, query,
-                          Constants.long_random_variable_name))
+                  .format(LONG_RANDOM_VARIABLE_NAME, query,
+                          LONG_RANDOM_VARIABLE_NAME))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
     assert_equals(sqlquery._pyspark_command(),
                   'for {} in sqlContext.sql("""{}""").toJSON().sample(False, 0.33).take(3234): print({})'\
-                  .format(Constants.long_random_variable_name, query,
-                          Constants.long_random_variable_name))
+                  .format(LONG_RANDOM_VARIABLE_NAME, query,
+                          LONG_RANDOM_VARIABLE_NAME))
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1, only_columns=True)
     assert_equals(sqlquery._pyspark_command(),
                   'for {} in sqlContext.sql("""{}""").columns: print({})'\
-                  .format(Constants.long_random_variable_name, query,
-                          Constants.long_random_variable_name))
+                  .format(LONG_RANDOM_VARIABLE_NAME, query,
+                          LONG_RANDOM_VARIABLE_NAME))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.999, maxrows=-1, only_columns=True)
     assert_equals(sqlquery._pyspark_command(),
                   'for {} in sqlContext.sql("""{}""").columns: print({})'\
-                  .format(Constants.long_random_variable_name, query,
-                          Constants.long_random_variable_name))
+                  .format(LONG_RANDOM_VARIABLE_NAME, query,
+                          LONG_RANDOM_VARIABLE_NAME))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.01, maxrows=3, only_columns=True)
     assert_equals(sqlquery._pyspark_command(),
                   'for {} in sqlContext.sql("""{}""").columns: print({})'\
-                  .format(Constants.long_random_variable_name, query,
-                          Constants.long_random_variable_name))
+                  .format(LONG_RANDOM_VARIABLE_NAME, query,
+                          LONG_RANDOM_VARIABLE_NAME))
 
 
 def test_scala_livy_sql_options():
