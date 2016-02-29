@@ -21,14 +21,14 @@ Installaton happens in two steps:
 
 1. Install the library:
 
-    git clone https://github.com/jupyter-incubator/sparkmagic
-    cd sparkmagic
-    pip install -e .
+        git clone https://github.com/jupyter-incubator/sparkmagic
+        cd sparkmagic
+        pip install -e .
 
 2. Install the wrapper kernels (install either, both, or none of the wrapper kernels)
 
-    jupyter-kernelspec install remotespark/kernels/sparkkernel
-    jupyter-kernelspec install remotespark/kernels/pysparkkernel
+        jupyter-kernelspec install remotespark/kernels/sparkkernel
+        jupyter-kernelspec install remotespark/kernels/pysparkkernel
 
 ## Subproject goals, scope and functionality
 
