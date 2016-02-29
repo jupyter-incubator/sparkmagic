@@ -72,6 +72,12 @@ def _override(f):
     return ret
 
 
+def get_session_properties(language):
+    properties = copy.deepcopy(session_configs())
+    properties["kind"] = get_livy_kind(language)
+    return properties
+
+
 # All of the functions below return the values of configurations. They are
 # all marked with the _override decorator, which returns the overridden
 # value of that configuration if there is any such configuration. Otherwise,
@@ -181,16 +187,20 @@ def use_auto_viz():
 
 
 @_override
-def max_results_sql():
+def default_maxrows():
     return 2500
+
+
+@_override
+def default_samplemethod():
+    return "take"
+
+
+@_override
+def default_samplefraction():
+    return 0.1
 
 
 @_override
 def max_slices_pie_graph():
     return 100
-
-
-def get_session_properties(language):
-    properties = copy.deepcopy(session_configs())
-    properties["kind"] = get_livy_kind(language)
-    return properties
