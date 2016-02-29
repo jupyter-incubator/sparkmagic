@@ -46,13 +46,13 @@ def test_deserialize_not_empty():
     (name, client) = deserialized[0]
     assert name == "py"
     serializer._create_livy_session.assert_any_call("url=https://mysite.com/livy;username=user;password=pass",
-                                                    "1", True, {"kind":"pyspark"})
+                                                    {"kind":"pyspark"}, serializer._ipython_display, "1", True)
     serializer._create_livy_client.assert_any_call(session)
 
     (name, client) = deserialized[1]
     assert name == "sc"
     serializer._create_livy_session.assert_any_call("url=https://mysite.com/livy;username=user;password=pass",
-                                                  "2", False, {"kind":"spark"})
+                                                     {"kind":"spark"}, serializer._ipython_display, "2", False)
     serializer._create_livy_client.assert_any_call(session)
 
 
