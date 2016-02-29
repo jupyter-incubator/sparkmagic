@@ -5,5 +5,5 @@ python:
 install:
     - pip install -r requirements.txt -e .
     - mkdir ~/.sparkmagic
-    - cp remotespark/default_config.json ~/.sparkmagic/config.json
+    - cp remotespark/example_config.json ~/.sparkmagic/config.json
 script: nosetests
