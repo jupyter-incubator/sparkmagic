@@ -4,12 +4,7 @@
 import textwrap
 from time import sleep, time
 import remotespark.utils.configuration as conf
-<<<<<<< HEAD
 import remotespark.utils.constants as constants
-=======
-import uuid
-from remotespark.utils.constants import Constants
->>>>>>> b4a8466c2bf084fa55013fd8dba0878baa1d2a91
 from remotespark.utils.log import Log
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livyunexpectedstatuserror import LivyUnexpectedStatusError
