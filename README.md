@@ -1,23 +1,15 @@
 # sparkmagic
-IPython magics and wrapper kernels for working with remote Spark clusters
 
-## Development team and Advocate
+Sparkmagic is a set of tools for interactively working with remote Spark clusters through [Livy](https://github.com/cloudera/hue/tree/master/apps/spark/java) in [Jupyter](http://jupyter.org) notebooks.
+The Sparkmagic project includes a set of IPython magics for interactively running Spark code in multiple languages, as well as some kernels that you can use to turn Jupyter into an integrated Spark environment.
 
-Subproject development team:
+## Features
 
-* Alejandro Guerrero Gonzalez, Microsoft (`@aggFTW`)
-* Auberon Lopez, Cal Poly (`@alope107`)
-* Sangeetha Shekar, Microsoft (`@sangeethashekar`)
-* Ricky Stewart, Microsoft (`@msftristew`)
-* Mohamed Elkamhawy (`@MohamedElKamhawy`)
+* Run Spark code in multiple languages against any remote Spark cluster through Livy
 
-Steering Council Advocate
-
-* Brian Granger (`@ellisonbg`)
+* 
 
 ## Installation
-
-Installaton happens in two steps: 
 
 1. Install the library:
 
@@ -25,10 +17,14 @@ Installaton happens in two steps:
         cd sparkmagic
         pip install -e .
 
-2. Install the wrapper kernels (install either, both, or none of the wrapper kernels)
+2. (Optional) Install the wrapper kernels
 
         jupyter-kernelspec install remotespark/kernels/sparkkernel
         jupyter-kernelspec install remotespark/kernels/pysparkkernel
+        
+3. (Optional) Copy the config file to your home directory 
+
+        cp remotespark/example_config.json ~/.sparkmagic/config.json
 
 ## Subproject goals, scope and functionality
 
