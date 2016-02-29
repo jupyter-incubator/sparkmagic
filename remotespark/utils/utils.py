@@ -129,3 +129,4 @@ def get_livy_kind(language):
         return Constants.session_kind_sparkr
     else:
         raise ValueError("Cannot get session kind for {}.".format(language))
+

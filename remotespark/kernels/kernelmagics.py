@@ -5,14 +5,17 @@ Provides the %spark magic."""
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
+
+import json
+
 from IPython.core.magic import magics_class
 from IPython.core.magic import needs_local_scope, cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
-import json
 
 import remotespark.utils.configuration as conf
-from remotespark.utils.constants import Constants
+from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
+from remotespark.utils.constants import Constants
 from remotespark.utils.utils import get_connection_string
 
 
@@ -70,10 +73,19 @@ class KernelMagics(SparkMagicBase):
   </tr>
   <tr>
     <td>sql</td>
-    <td>%%sql -o tables<br/>SHOW TABLES</td> -q
-    <td>Executes a SQL query against the sqlContext. If the -o parameter is passed, the result of the query will be
-    available in the %%local Python context as a <a href="http://pandas.pydata.org/">Pandas</a> dataframe. If
-    the -q parameter is passed, the magic will return None instead of the dataframe.</td>
+    <td>%%sql -o tables -q<br/>SHOW TABLES</td>
+    <td>Executes a SQL query against the sqlContext.
+    Parameters:
+      <ul>
+        <li>-o VAR_NAME: The result of the query will be available in the %%local Python context as a
+          <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</li>
+        <li>-q: The magic will return None instead of the dataframe (no visualization).</li>
+        <li>-m METHOD: Sample method, either <tt>take</tt> or <tt>sample</tt>.</li>
+        <li>-n MAXROWS: The maximum number of rows of a SQL query that will be pulled from Livy to Jupyter.
+            If this number is negative, then the number of rows will be unlimited.</li>
+        <li>-r FRACTION: Fraction used for sampling.</li>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>local</td>
@@ -157,11 +169,15 @@ class KernelMagics(SparkMagicBase):
     @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
                                                              "name.")
     @argument("-q", "--quiet", type=bool, default=False, const=True, nargs="?", help="Return None instead of the dataframe.")
+    @argument("-m", "--samplemethod", type=str, default=None, help="Sample method for SQL queries: either take or sample")
+    @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
+                                                                        "from the server for SQL queries")
+    @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)
-            return self.execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                                None, args.output, args.quiet)
+            sql_query = SQLQuery(cell, args.samplemethod, args.maxrows, args.samplefraction)
+            return self.execute_sqlquery(sql_query, None, args.output, args.quiet)
         else:
             return None
 

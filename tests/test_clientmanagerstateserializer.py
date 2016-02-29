@@ -6,20 +6,13 @@ from remotespark.livyclientlib.clientmanagerstateserializer import ClientManager
 
 
 @raises(AssertionError)
-def test_serializer_throws_none_path():
-    ClientManagerStateSerializer(None, MagicMock())
-
-
-@raises(AssertionError)
 def test_serializer_throws_none_factory():
-    ClientManagerStateSerializer(MagicMock(), None)
+    ClientManagerStateSerializer(None)
 
 
-def test_deserialize_not_emtpy():
-    client_factory = MagicMock()
+def test_deserialize_not_empty():
     session = MagicMock()
     session.is_final_status.return_value = False
-    client_factory.create_session.return_value = session
     reader_writer = MagicMock()
     reader_writer.read_lines.return_value = """{
   "clients": [
@@ -42,7 +35,9 @@ def test_deserialize_not_emtpy():
   ]
 }
 """
-    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+    serializer = ClientManagerStateSerializer(reader_writer)
+    serializer._create_livy_session = MagicMock(return_value=session)
+    serializer._create_livy_client = MagicMock()
 
     deserialized = serializer.deserialize_state()
 
@@ -50,22 +45,20 @@ def test_deserialize_not_emtpy():
 
     (name, client) = deserialized[0]
     assert name == "py"
-    client_factory.create_session.assert_any_call("url=https://mysite.com/livy;username=user;password=pass",
-                                                  "1", True, {"kind":"pyspark"})
-    client_factory.build_client.assert_any_call(session)
+    serializer._create_livy_session.assert_any_call("url=https://mysite.com/livy;username=user;password=pass",
+                                                    {"kind":"pyspark"}, serializer._ipython_display, "1", True)
+    serializer._create_livy_client.assert_any_call(session)
 
     (name, client) = deserialized[1]
     assert name == "sc"
-    client_factory.create_session.assert_any_call("url=https://mysite.com/livy;username=user;password=pass",
-                                                  "2", False, {"kind":"spark"})
-    client_factory.build_client.assert_any_call(session)
+    serializer._create_livy_session.assert_any_call("url=https://mysite.com/livy;username=user;password=pass",
+                                                     {"kind":"spark"}, serializer._ipython_display, "2", False)
+    serializer._create_livy_client.assert_any_call(session)
 
 
-def test_deserialize_not_emtpy_but_dead():
-    client_factory = MagicMock()
+def test_deserialize_not_empty_but_dead():
     session = MagicMock()
     session.is_final_status.return_value = True
-    client_factory.create_session.return_value = session
     reader_writer = MagicMock()
     reader_writer.read_lines.return_value = """{
   "clients": [
@@ -88,22 +81,22 @@ def test_deserialize_not_emtpy_but_dead():
   ]
 }
 """
-    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+    serializer = ClientManagerStateSerializer(reader_writer)
+    serializer._create_livy_session = MagicMock(return_value=session)
+    serializer._create_livy_client = MagicMock()
 
     deserialized = serializer.deserialize_state()
 
     assert len(deserialized) == 0
-    client_factory.create_session.assert_no_called()
-    client_factory.build_client.assert_no_called()
+    serializer._create_livy_session.assert_no_called()
+    serializer._create_livy_client.assert_no_called()
 
 
-def test_deserialize_not_emtpy_but_error():
-    client_factory = MagicMock()
+def test_deserialize_not_empty_but_error():
     session = MagicMock()
     status_property = PropertyMock()
     status_property.side_effect = ValueError()
     type(session).status = status_property
-    client_factory.create_session.return_value = session
     reader_writer = MagicMock()
     reader_writer.read_lines.return_value = """{
   "clients": [
@@ -126,31 +119,31 @@ def test_deserialize_not_emtpy_but_error():
   ]
 }
 """
-    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+    serializer = ClientManagerStateSerializer(reader_writer)
+    serializer._create_livy_session = MagicMock(return_value=session)
+    serializer._create_livy_client = MagicMock()
 
     deserialized = serializer.deserialize_state()
 
     assert len(deserialized) == 0
-    client_factory.create_session.assert_no_called()
-    client_factory.build_client.assert_no_called()
+    serializer._create_livy_session.assert_no_called()
+    serializer._create_livy_session.assert_no_called()
 
 
 def test_deserialize_empty():
-    client_factory = MagicMock()
     reader_writer = MagicMock()
     reader_writer.read_lines.return_value = ""
-    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+    serializer = ClientManagerStateSerializer(reader_writer)
+    serializer._create_livy_session = MagicMock(side_effect=ValueError)
+    serializer._create_livy_client = MagicMock(side_effect=ValueError)
 
     deserialized = serializer.deserialize_state()
 
     assert len(deserialized) == 0
-    client_factory.create_session.assert_no_called()
-    client_factory.build_client.assert_no_called()
 
 
 def test_serialize_not_empty():
     # Prepare data to serialize
-    client_factory = MagicMock()
     reader_writer = MagicMock()
     client1 = MagicMock()
     client1.serialize.return_value = {"id": "1", "sqlcontext": True, "kind": "pyspark",
@@ -160,7 +153,7 @@ def test_serialize_not_empty():
     client2.serialize.return_value = {"id": "2", "sqlcontext": False, "kind": "spark",
                                       "connectionstring": "url=https://mysite.com/livy;username=user;password=pass",
                                       "version": "0.0.0"}
-    serializer = ClientManagerStateSerializer(client_factory, reader_writer)
+    serializer = ClientManagerStateSerializer(reader_writer)
 
     # Call serialization
     serializer.serialize_state({"py": client1, "sc": client2})
@@ -178,10 +171,10 @@ def test_serialize_not_empty():
 
     # == comparison doesn't work on test even though it works on cmd
     # created helper methods below meanwhile
-    assert compare_dicts(expected_dict, called_with)
+    assert _compare_dicts(expected_dict, called_with)
 
 
-def compare_dicts(d1, d2):
+def _compare_dicts(d1, d2):
     if sorted(d1.keys()) != sorted(d2.keys()):
         return False
 
@@ -192,7 +185,7 @@ def compare_dicts(d1, d2):
         if type(v1) is list:
             if type(v2) is not list:
                 return False
-            compare_list_dicts(v1, v2)
+            _compare_list_dicts(v1, v2)
         else:
             if v1 != v2:
                 return False
@@ -200,7 +193,7 @@ def compare_dicts(d1, d2):
     return True
 
 
-def compare_list_dicts(l1, l2):
+def _compare_list_dicts(l1, l2):
     assert len(l1) == len(l2)
     for i in range(len(l1)):
         found = False
@@ -208,7 +201,7 @@ def compare_list_dicts(l1, l2):
 
         for j in range(len(l2)):
             e2 = l2[j]
-            if compare_dicts(e1, e2):
+            if _compare_dicts(e1, e2):
                 found = True
                 break
 
