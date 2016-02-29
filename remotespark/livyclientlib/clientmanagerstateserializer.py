@@ -42,9 +42,8 @@ class ClientManagerStateSerializer(object):
                 kind = client["kind"].lower()
                 connection_string = client["connectionstring"]
 
-                session = LivySession.from_connection_string(connection_string, {"kind": kind},
-                                                             IpythonDisplay,
-                                                             session_id, sql_context_created)
+                session = self._create_livy_session(connection_string, {"kind": kind}, IpythonDisplay,
+                                                    session_id, sql_context_created)
 
                 # Do not start session automatically. Just create it but skip is not existent.
                 try:
@@ -52,7 +51,7 @@ class ClientManagerStateSerializer(object):
                     status = session.status
                     if not session.is_final_status(status):
                         self.logger.debug("Adding session {}".format(session_id))
-                        client_obj = LivyClient(session)
+                        client_obj = self._create_livy_client(session)
                         clients_to_return.append((name, client_obj))
                     else:
                         self.logger.error("Skipping serialized session '{}' because session was in status {}."
@@ -76,3 +75,12 @@ class ClientManagerStateSerializer(object):
 
         serialized_str = json.dumps({"clients": serialized_clients})
         self._reader_writer.overwrite_with_line(serialized_str)
+
+    def _create_livy_session(self, connection_string, properties, ipython_display,
+                             session_id, sql_context_created):
+        return LivySession.from_connection_string(connection_string, properties, ipython_display,
+                                                  session_id, sql_context_created)
+
+    def _create_livy_client(self, session):
+        return LivyClient(session)
+
