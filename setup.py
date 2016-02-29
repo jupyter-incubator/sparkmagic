@@ -61,10 +61,10 @@ setup(name=NAME,
           'nose',
           'mock',
           'requests',
-          'jupyter>=1,<2'
+          'jupyter>=1,<2',
           'pandas>=0.17.1',
           'numpy',
-          'ipykernel>=4.2.2,<5'
+          'ipykernel>=4.2.2,<5',
           'ipywidgets',
           'plotly>=1.9.4,<2'
       ])
