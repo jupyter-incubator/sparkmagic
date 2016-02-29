@@ -18,6 +18,7 @@ class ClientManagerStateSerializer(object):
         assert reader_writer is not None
 
         self.logger = Log("ClientManagerStateSerializer")
+        self._ipython_display = IpythonDisplay()
 
         self._reader_writer = reader_writer
 
@@ -42,7 +43,7 @@ class ClientManagerStateSerializer(object):
                 kind = client["kind"].lower()
                 connection_string = client["connectionstring"]
 
-                session = self._create_livy_session(connection_string, {"kind": kind}, IpythonDisplay,
+                session = self._create_livy_session(connection_string, {"kind": kind}, self._ipython_display,
                                                     session_id, sql_context_created)
 
                 # Do not start session automatically. Just create it but skip is not existent.
