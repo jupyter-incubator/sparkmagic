@@ -1,7 +1,7 @@
 from mock import MagicMock
 from nose.tools import assert_equals
 
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import LANGS_SUPPORTED
 from remotespark.utils.utils import get_livy_kind
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
@@ -9,7 +9,7 @@ from remotespark.livyclientlib.sqlquery import SQLQuery
 
 
 def test_get_livy_kind_covers_all_langs():
-    for lang in Constants.lang_supported:
+    for lang in LANGS_SUPPORTED:
         get_livy_kind(lang)
 
 

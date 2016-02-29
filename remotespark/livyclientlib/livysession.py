@@ -4,7 +4,7 @@
 import textwrap
 from time import sleep, time
 import remotespark.utils.configuration as conf
-from remotespark.utils.constants import Constants
+import remotespark.utils.constants as constants
 from remotespark.utils.log import Log
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livyunexpectedstatuserror import LivyUnexpectedStatusError
@@ -35,15 +35,15 @@ class LivySession(object):
         self.logger = Log("LivySession")
 
         kind = kind.lower()
-        if kind not in Constants.session_kinds_supported:
+        if kind not in constants.SESSION_KINDS_SUPPORTED:
             raise ValueError("Session of kind '{}' not supported. Session must be of kinds {}."
-                             .format(kind, ", ".join(Constants.session_kinds_supported)))
+                             .format(kind, ", ".join(constants.SESSION_KINDS_SUPPORTED)))
 
         if session_id == "-1":
-            self.status = Constants.not_started_session_status
+            self.status = constants.NOT_STARTED_SESSION_STATUS
             sql_created = False
         else:
-            self.status = Constants.busy_session_status
+            self.status = constants.BUSY_SESSION_STATUS
 
         self._logs = ""
         self._http_client = http_client
@@ -83,11 +83,11 @@ class LivySession(object):
             return
         self.logger.debug("Starting '{}' hive session.".format(self.kind))
         self.ipython_display.writeln("Creating HiveContext as 'sqlContext'")
-        self._create_context(Constants.context_name_sql)
+        self._create_context(constants.CONTEXT_NAME_SQL)
         self._state.sql_context_created = True
 
     def _create_context(self, context_type):
-        if context_type == Constants.context_name_sql:
+        if context_type == constants.CONTEXT_NAME_SQL:
             command = self._get_sql_context_creation_command()
         else:
             raise ValueError("Cannot create context of type {}.".format(context_type))
@@ -124,7 +124,7 @@ class LivySession(object):
 
     @staticmethod
     def is_final_status(status):
-        return status in Constants.final_status
+        return status in constants.FINAL_STATUS
     
     def execute(self, commands):
         code = textwrap.dedent(commands)
@@ -138,9 +138,9 @@ class LivySession(object):
     def delete(self):
         self.logger.debug("Deleting session '{}'".format(self.id))
 
-        if self.status != Constants.not_started_session_status and self.status != Constants.dead_session_status:
+        if self.status != constants.NOT_STARTED_SESSION_STATUS and self.status != constants.DEAD_SESSION_STATUS:
             self._http_client.delete("/sessions/{}".format(self.id), [200, 404])
-            self.status = Constants.dead_session_status
+            self.status = constants.DEAD_SESSION_STATUS
             self._state.session_id = "-1"
         else:
             raise ValueError("Cannot delete session {} that is in state '{}'."
@@ -155,10 +155,10 @@ class LivySession(object):
         """
         self._refresh_status()
         current_status = self.status
-        if current_status == Constants.idle_session_status:
+        if current_status == constants.IDLE_SESSION_STATUS:
             return
 
-        if current_status in Constants.final_status:
+        if current_status in constants.FINAL_STATUS:
             error = "Session {} unexpectedly reached final status '{}'. See logs:\n{}"\
                 .format(self.id, current_status, self.get_logs())
             self.logger.error(error)
@@ -183,7 +183,7 @@ class LivySession(object):
     def _refresh_status(self):
         status = self._http_client.get("/sessions/{}".format(self.id), [200]).json()['state']
 
-        if status in Constants.possible_session_status:
+        if status in constants.POSSIBLE_SESSION_STATUS:
             self.status = status
         else:
             raise ValueError("Status '{}' not supported by session.".format(status))
@@ -217,11 +217,11 @@ class LivySession(object):
         return out
 
     def _get_sql_context_creation_command(self):
-        if self.kind == Constants.session_kind_spark:
+        if self.kind == constants.SESSION_KIND_SPARK:
             sql_context_command = "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"
-        elif self.kind == Constants.session_kind_pyspark:
+        elif self.kind == constants.SESSION_KIND_PYSPARK:
             sql_context_command = "from pyspark.sql import HiveContext\nsqlContext = HiveContext(sc)"
-        elif self.kind == Constants.session_kind_sparkr:
+        elif self.kind == constants.SESSION_KIND_SPARKR:
             sql_context_command = "sqlContext <- sparkRHive.init(sc)"
         else:
             raise ValueError("Do not know how to create HiveContext in session of kind {}.".format(self.kind))

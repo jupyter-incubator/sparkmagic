@@ -3,13 +3,12 @@
 from mock import MagicMock, call
 from nose.tools import raises, assert_equals
 
-from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
 from remotespark.livyclientlib.livyunexpectedstatuserror import LivyUnexpectedStatusError
 from remotespark.livyclientlib.livysession import LivySession
 import remotespark.utils.configuration as conf
 from remotespark.utils.utils import get_connection_string
-from remotespark.utils.constants import Constants
+import remotespark.utils.constants as constants
 
 
 class DummyResponse:
@@ -56,7 +55,7 @@ class TestLivySession:
         self.post_responses = self.post_responses[1:]    
         return val
 
-    def _create_session(self, kind=Constants.session_kind_spark, session_id="-1", sql_created=False, http_client=None):
+    def _create_session(self, kind=constants.SESSION_KIND_SPARK, session_id="-1", sql_created=False, http_client=None):
         if http_client is None:
             http_client = MagicMock()
         ipython_display = MagicMock()
@@ -151,7 +150,7 @@ class TestLivySession:
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
-        kind = Constants.session_kind_spark
+        kind = constants.SESSION_KIND_SPARK
         session = self._create_session(kind=kind, http_client=http_client)
         session.start()
         conf.load()
@@ -170,7 +169,7 @@ class TestLivySession:
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
-        kind = Constants.session_kind_sparkr
+        kind = constants.SESSION_KIND_SPARKR
         session = self._create_session(kind=kind, http_client=http_client)
         session.start()
         conf.load()
@@ -189,7 +188,7 @@ class TestLivySession:
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
-        kind = Constants.session_kind_pyspark
+        kind = constants.SESSION_KIND_PYSPARK
         session = self._create_session(kind=kind, http_client=http_client)
         session.start()
         conf.load()
@@ -208,7 +207,7 @@ class TestLivySession:
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
-        kind = Constants.session_kind_spark
+        kind = constants.SESSION_KIND_SPARK
         properties = {"kind": kind, "extra": 1}
 
         ipython_display = MagicMock()
@@ -362,7 +361,7 @@ class TestLivySession:
         session.delete()
 
     def test_execute(self):
-        kind = Constants.session_kind_spark
+        kind = constants.SESSION_KIND_SPARK
         http_client = MagicMock()
         self.post_responses = [DummyResponse(201, self.session_create_json),
                                DummyResponse(201, self.post_statement_json)]
@@ -388,7 +387,7 @@ class TestLivySession:
         assert_equals(self.pi_result, result[1])
 
     def test_create_sql_hive_context_happens_once(self):
-        kind = Constants.session_kind_spark
+        kind = constants.SESSION_KIND_SPARK
         http_client = MagicMock()
         ipython_display = MagicMock()
 
@@ -425,7 +424,7 @@ class TestLivySession:
         assert len(http_client.post.call_args_list) == 1
 
     def test_create_sql_context_spark(self):
-        kind = Constants.session_kind_spark
+        kind = constants.SESSION_KIND_SPARK
         http_client = MagicMock()
         self.post_responses = [DummyResponse(201, self.session_create_json),
                                DummyResponse(201, self.post_statement_json),
@@ -451,7 +450,7 @@ class TestLivySession:
                                                               "Context(sc)"}) in http_client.post.call_args_list
 
     def test_create_sql_hive_context_pyspark(self):
-        kind = Constants.session_kind_pyspark
+        kind = constants.SESSION_KIND_PYSPARK
         http_client = MagicMock()
         self.post_responses = [DummyResponse(201, self.session_create_json),
                                DummyResponse(201, self.post_statement_json),
@@ -505,7 +504,7 @@ class TestLivySession:
         connection_string = get_connection_string(url, username, password)
         http_client = MagicMock()
         http_client.connection_string = connection_string
-        kind = Constants.session_kind_spark
+        kind = constants.SESSION_KIND_SPARK
         conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
@@ -523,6 +522,6 @@ class TestLivySession:
         assert len(serialized.keys()) == 5
 
     def test_get_sql_context_creation_command_all_langs(self):
-        for kind in Constants.session_kinds_supported:
+        for kind in constants.SESSION_KINDS_SUPPORTED:
             session = self._create_session(kind=kind)
             session._get_sql_context_creation_command()

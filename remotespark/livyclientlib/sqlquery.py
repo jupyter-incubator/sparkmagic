@@ -1,5 +1,5 @@
 import remotespark.utils.configuration as conf
-from remotespark.utils.constants import Constants
+import remotespark.utils.constants as constants
 
 
 class SQLQuery(object):
@@ -23,11 +23,11 @@ class SQLQuery(object):
         self.only_columns = only_columns
 
     def to_command(self, kind):
-        if kind == Constants.session_kind_pyspark:
+        if kind == constants.SESSION_KIND_PYSPARK:
             return self._pyspark_command()
-        elif kind == Constants.session_kind_spark:
+        elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command()
-        elif kind == Constants.session_kind_sparkr:
+        elif kind == constants.SESSION_KIND_SPARKR:
             return self._r_command()
         else:
             raise ValueError("Kind '{}' is not supported.".format(kind))
@@ -44,9 +44,9 @@ class SQLQuery(object):
                 command = '{}.take({})'.format(command, self.maxrows)
             else:
                 command = '{}.collect()'.format(command)
-        command = 'for {} in {}: print({})'.format(Constants.long_random_variable_name,
+        command = 'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
                                                    command,
-                                                   Constants.long_random_variable_name)
+                                                   constants.LONG_RANDOM_VARIABLE_NAME)
         return command
 
     def _scala_command(self):

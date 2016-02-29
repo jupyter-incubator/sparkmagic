@@ -5,7 +5,6 @@ from remotespark.controllerwidget.addendpointwidget import AddEndpointWidget
 from remotespark.controllerwidget.manageendpointwidget import ManageEndpointWidget
 from remotespark.controllerwidget.managesessionwidget import ManageSessionWidget
 from remotespark.controllerwidget.createsessionwidget import CreateSessionWidget
-from remotespark.utils.constants import Constants
 
 
 class MagicsControllerWidget(AbstractMenuWidget):
