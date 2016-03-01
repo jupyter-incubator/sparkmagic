@@ -7,6 +7,8 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 
 ![Automatic visualization](screenshots/autoviz.png)
 
+![Help](screenshots/help.png)
+
 ## Features
 
 * Run Spark code in multiple languages against any remote Spark cluster through Livy
