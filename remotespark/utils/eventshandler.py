@@ -5,11 +5,9 @@ class EventsHandler:
     def __init__(self):
         self.logger = Log("EventsHandler")
 
-    def store_event(self, **kwargs):
+    def store_event(self, *args):
         """
         Storing the Event details using the logger.
         """
-        event_line = ""
-        for key, value in kwargs.iteritems():
-            event_line += "{}: {} ".format(key, value)
+        event_line = ",".join("{}".format(arg) for arg in args)
         self.logger.debug(event_line)

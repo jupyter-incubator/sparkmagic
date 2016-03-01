@@ -145,10 +145,8 @@ def logging_config():
     }
 
 @_override
-def events_config():
-    return {
-        "handler": "remotespark.utils.EventsHandler"
-    }
+def events_handler_class():
+    return "remotespark.utils.eventshandler.EventsHandler"
 
 
 @_override
