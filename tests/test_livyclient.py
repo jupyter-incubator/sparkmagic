@@ -9,7 +9,7 @@ from remotespark.livyclientlib.livyclient import LivyClient
 from remotespark.livyclientlib.livysessionstate import LivySessionState
 from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.utils.utils import get_connection_string
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import SESSION_KIND_SPARK
 
 
 mock_spark_session = None
@@ -61,7 +61,7 @@ def test_serialize():
     connection_string = get_connection_string(url, username, password)
     http_client = MagicMock()
     http_client.connection_string = connection_string
-    kind = Constants.session_kind_spark
+    kind = SESSION_KIND_SPARK
     session_id = "-1"
     sql_created = False
     session = MagicMock()

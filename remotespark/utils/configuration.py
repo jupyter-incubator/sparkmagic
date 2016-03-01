@@ -6,7 +6,7 @@
 import json
 import copy
 
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import CONFIG_JSON
 from remotespark.utils.utils import join_paths, get_magics_home_path, get_livy_kind
 from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 
@@ -29,7 +29,7 @@ def load(fsrw_class=None):
         fsrw_class = FileSystemReaderWriter
     home_path = fsrw_class(get_magics_home_path())
     home_path.ensure_path_exists()
-    config_file = fsrw_class(join_paths(home_path.path, Constants.config_json))
+    config_file = fsrw_class(join_paths(home_path.path, CONFIG_JSON))
     config_file.ensure_file_exists()
     config_text = config_file.read_lines()
     line = "".join(config_text).strip()

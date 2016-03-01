@@ -12,7 +12,8 @@ import pandas as pd
 import numpy as np
 
 from .filesystemreaderwriter import FileSystemReaderWriter
-from .constants import Constants
+from .constants import LANG_SCALA, LANG_PYTHON, LANG_R, \
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK
 
 
 first_run = True
@@ -121,12 +122,12 @@ def coerce_pandas_df_to_numeric_datetime(df):
 
 
 def get_livy_kind(language):
-    if language == Constants.lang_scala:
-        return Constants.session_kind_spark
-    elif language == Constants.lang_python:
-        return Constants.session_kind_pyspark
-    elif language == Constants.lang_r:
-        return Constants.session_kind_sparkr
+    if language == LANG_SCALA:
+        return SESSION_KIND_SPARK
+    elif language == LANG_PYTHON:
+        return SESSION_KIND_PYSPARK
+    elif language == LANG_R:
+        return SESSION_KIND_SPARKR
     else:
         raise ValueError("Cannot get session kind for {}.".format(language))
 

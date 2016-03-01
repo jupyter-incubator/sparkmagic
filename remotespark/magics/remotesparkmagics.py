@@ -16,7 +16,7 @@ import remotespark.utils.configuration as conf
 from remotespark.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
 from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL
 from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
 
 
@@ -36,11 +36,9 @@ class RemoteSparkMagics(SparkMagicBase):
         return self.manage_widget
 
     @magic_arguments()
-    @argument("-c", "--context", type=str, default=Constants.context_name_spark,
+    @argument("-c", "--context", type=str, default=CONTEXT_NAME_SPARK,
               help="Context to use: '{}' for spark and '{}' for sql queries"
-                   "Default is '{}'.".format(Constants.context_name_spark,
-                                             Constants.context_name_sql,
-                                             Constants.context_name_spark))
+                   "Default is '{}'.".format(CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, CONTEXT_NAME_SPARK))
     @argument("-s", "--session", help="The name of the Livy session to use. "
                                       "If only one session has been created, there's no need to specify one.")
     @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL "
@@ -172,13 +170,13 @@ class RemoteSparkMagics(SparkMagicBase):
                     raise ValueError("Subcommand 'logs' requires no further values.\n{}".format(usage))
             # run
             elif len(subcommand) == 0:
-                if args.context == Constants.context_name_spark:
+                if args.context == CONTEXT_NAME_SPARK:
                     (success, out) = self.spark_controller.run_cell(cell, args.session)
                     if success:
                         self.ipython_display.write(out)
                     else:
                         self.ipython_display.send_error(out)
-                elif args.context == Constants.context_name_sql:
+                elif args.context == CONTEXT_NAME_SQL:
                     sqlquery = SQLQuery(cell, args.samplemethod, args.maxrows, args.samplefraction)
                     return self.execute_sqlquery(sqlquery, args.session, args.output,
                                                  args.quiet)
