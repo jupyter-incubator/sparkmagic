@@ -36,3 +36,33 @@ Check out the [examples](examples) directory.
 
         cp remotespark/example_config.json ~/.sparkmagic/config.json
         
+## Architecture
+
+Sparkmagic uses Livy, a REST server for Spark, to remotely execute all user code. 
+The library then automatically collects the output of your code as plain text or a JSON document, displaying the results to you as formatted text or as a Pandas dataframe as appropriate.
+
+![Architecture](screenshots/diagram.png)
+
+This architecture offers us some important advantages:
+
+1. Run Spark code completely remotely; no Spark components need to be installed on the Jupyter server
+
+2. Multi-language support; the Python and Scala kernels are equally feature-rich, and adding support for more languages will be easy
+
+3. Support for multiple endpoints; you can use a single notebook to start multiple Spark jobs in different languages and against different remote clusters
+
+4. Easy integration with any Python library for data science or visualization, like Pandas or [Plotly](https://plot.ly/python/offline)
+
+However, there are some important limitations to note:
+
+1. Some overhead added by sending all code and output through Livy
+
+2. Since all code is run on a remote driver through Livy, all structured data must be serialized to JSON and parsed by the Sparkmagic library so that it can be manipulated and visualized on the client side.
+In practice this means that you must use Python for client-side data manipulation in `%%local` mode.
+
+## Contributing
+
+We welcome contributions from everyone. 
+If you've made an improvement to our code, please send us a [pull request](https://github.com/jupyter-incubator/sparkmagic/pulls).
+
+If you don't have the time to work on the issue yourself, feel free to submit an [issue](https://github.com/jupyter-incubator/sparkmagic/issues) for us to deal with.
