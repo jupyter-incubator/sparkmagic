@@ -44,5 +44,5 @@ class LivySessionState(object):
         return self._connection_string
 
     def to_dict(self):
-        return {"GUID": self.session_guid, "id": self.session_id, "kind": self.kind, "sqlcontext": self.sql_context_created,
+        return {"guid": self.session_guid, "id": self.session_id, "kind": self.kind, "sqlcontext": self.sql_context_created,
                 "version": self.version, "connectionstring": self.connection_string}

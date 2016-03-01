@@ -147,7 +147,7 @@ def logging_config():
 @_override
 def events_config():
     return {
-        "handler": "remotespark.utils.jupytereventfilehandler"
+        "handler": "remotespark.utils.EventsHandler"
     }
 
 

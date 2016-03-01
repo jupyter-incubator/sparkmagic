@@ -11,5 +11,5 @@ class EventsHandler:
         """
         event_line = ""
         for key, value in kwargs.iteritems():
-            event_line += "{} = {}\n".format(key, value)
+            event_line += "{}: {} ".format(key, value)
         self.logger.debug(event_line)

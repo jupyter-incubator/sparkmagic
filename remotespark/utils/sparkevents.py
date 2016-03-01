@@ -1,7 +1,7 @@
 import remotespark.utils.configuration as conf
 
 
-class JupyterEvents:
+class SparkEvents:
     def __init__(self):
         """
         Create an instance from the handler mentioned in the config file.
