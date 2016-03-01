@@ -65,4 +65,4 @@ In practice this means that you must use Python for client-side data manipulatio
 We welcome contributions from everyone. 
 If you've made an improvement to our code, please send us a [pull request](https://github.com/jupyter-incubator/sparkmagic/pulls).
 
-If you don't have the time to work on the issue yourself, feel free to submit an [issue](https://github.com/jupyter-incubator/sparkmagic/issues) for us to deal with.
+If you want to see an enhancement made but don't have time to work on it yourself, feel free to submit an [issue](https://github.com/jupyter-incubator/sparkmagic/issues) for us to deal with.
