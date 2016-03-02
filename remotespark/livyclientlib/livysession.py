@@ -5,7 +5,7 @@ import textwrap
 from time import sleep, time
 import remotespark.utils.configuration as conf
 import remotespark.utils.constants as constants
-import uuid
+import remotespark.utils.decorators as decorators
 from remotespark.utils.log import Log
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livyunexpectedstatuserror import LivyUnexpectedStatusError
@@ -13,6 +13,7 @@ from .livysessionstate import LivySessionState
 from .livyreliablehttpclient import LivyReliableHttpClient
 
 
+@decorators.add_guid('session_guid')
 class LivySession(object):
     """Session that is livy specific."""
 
@@ -51,7 +52,6 @@ class LivySession(object):
         self._status_sleep_seconds = status_sleep_seconds
         self._statement_sleep_seconds = statement_sleep_seconds
         self._create_sql_context_timeout_seconds = create_sql_context_timeout_seconds
-        self.session_guid = uuid.uuid4()
 
         self._state = LivySessionState(session_id, self._http_client.connection_string, kind, sql_created)
 

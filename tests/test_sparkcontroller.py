@@ -1,4 +1,5 @@
 from mock import MagicMock, patch
+import remotespark.utils.constants as constants
 from nose.tools import with_setup
 import json
 
@@ -41,6 +42,8 @@ def test_add_session():
     connection_string = "url=http://location:port;username=name;password=word"
     client = MagicMock()
     session = MagicMock()
+    session.kind = constants.SESSION_KIND_SPARK
+    session.id = 0
     controller._create_livy_session = MagicMock(return_value=session)
     controller._create_livy_client = MagicMock(return_value=client)
 
