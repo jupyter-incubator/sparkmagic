@@ -13,8 +13,7 @@ from .livysessionstate import LivySessionState
 from .livyreliablehttpclient import LivyReliableHttpClient
 
 
-
-class LivySession(GuidMixin, object):
+class LivySession(GuidMixin):
     """Session that is livy specific."""
 
     def __init__(self, http_client, properties, ipython_display,

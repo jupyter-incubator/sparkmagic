@@ -16,6 +16,7 @@ class SparkController(object):
     def __init__(self, ipython_display, serialize_path=None):
         self.logger = Log("SparkController")
         self.ipython_display = ipython_display
+        self.spark_events = SparkEvents()
 
         if serialize_path is not None:
             serializer = ClientManagerStateSerializer(FileSystemReaderWriter(serialize_path))
@@ -74,16 +75,14 @@ class SparkController(object):
             return
 
         session = self._create_livy_session(connection_string, properties, self.ipython_display)
-
-        spark_events = SparkEvents()
-        spark_events.emit_session_creation_start_event(session.guid, session.kind)
+        self.spark_events.emit_session_creation_start_event(session.guid, session.kind)
         session.start()
 
         livy_client = self._create_livy_client(session)
         self.client_manager.add_client(name, livy_client)
         livy_client.start()
 
-        spark_events.emit_session_creation_end_event(session.guid, session.kind, session.id)
+        self.spark_events.emit_session_creation_end_event(session.guid, session.kind, session.id)
 
     def get_session_id_for_client(self, name):
         return self.client_manager.get_session_id_for_client(name)

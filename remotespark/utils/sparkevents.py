@@ -15,7 +15,6 @@ class SparkEvents:
 
         self.handler = events_handler()
 
-
     def emit_session_creation_start_event(self, session_guid, language):
         """
         Emitting Start Session Event
@@ -23,7 +22,7 @@ class SparkEvents:
         assert language in constants.SESSION_KINDS_SUPPORTED
 
         event_name = constants.SESSION_CREATION_START_EVENT
-        time_stamp = datetime.now()
+        time_stamp = SparkEvents.get_utc_date_time()
 
         args = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", session_guid),
                 ("SparkLanguage", language)]
@@ -37,12 +36,14 @@ class SparkEvents:
         assert language in constants.SESSION_KINDS_SUPPORTED
         assert session_id >= 0
 
-        args = []
-
         event_name = constants.SESSION_CREATION_END_EVENT
-        time_stamp = datetime.now()
+        time_stamp = SparkEvents.get_utc_date_time()
 
         args = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", session_guid),
                 ("SparkLanguage", language), ("SessionId", session_id)]
 
         self.handler.handle_event(args)
+
+    @staticmethod
+    def get_utc_date_time():
+        return datetime.utcnow()

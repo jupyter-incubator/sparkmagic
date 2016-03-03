@@ -1,5 +1,4 @@
 from mock import MagicMock, patch
-from remotespark.utils.constants import SESSION_KIND_SPARK
 from nose.tools import with_setup
 import json
 
@@ -28,12 +27,13 @@ def _setup():
 
     client_manager = MagicMock()
     ipython_display = MagicMock()
+    spark_events = MagicMock()
     controller = SparkController(ipython_display)
     controller.client_manager = client_manager
+    controller.spark_events = spark_events
 
 def _teardown():
     pass
-
 
 @with_setup(_setup, _teardown)
 def test_add_session():
@@ -42,8 +42,7 @@ def test_add_session():
     connection_string = "url=http://location:port;username=name;password=word"
     client = MagicMock()
     session = MagicMock()
-    session.kind = SESSION_KIND_SPARK
-    session.id = 0
+
     controller._create_livy_session = MagicMock(return_value=session)
     controller._create_livy_client = MagicMock(return_value=client)
 
