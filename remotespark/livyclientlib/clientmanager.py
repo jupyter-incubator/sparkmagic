@@ -40,11 +40,15 @@ class ClientManager(object):
     def _serialize_state(self):
         self._serializer.serialize_state(self._livy_clients)
 
+    @property
+    def livy_clients(self):
+        return self._livy_clients
+
     def get_sessions_list(self):
         return list(self._livy_clients.keys())
 
     def get_sessions_info(self):
-        return ["Name: {}\t{}".format(k, str(self._livy_clients[k])) for k in self._livy_clients.keys()]
+        return ["Name: {}\t{}".format(k, str(self._livy_clients[k])) for k in list(self._livy_clients.keys())]
 
     def add_client(self, name, livy_client):
         if name in self.get_sessions_list():
@@ -69,6 +73,11 @@ class ClientManager(object):
             return self._livy_clients[name]
         raise ValueError("Could not find '{}' session in list of saved sessions. Possible sessions are {}".format(
             name, self.get_sessions_list()))
+
+    def get_session_id_for_client(self, name):
+        if name in self.get_sessions_list():
+            return self._livy_clients[name].session_id
+        return None
 
     def delete_client(self, name):
         self._remove_session(name)

@@ -1,9 +1,7 @@
 ﻿import time
-
 from mock import MagicMock
 from nose.tools import raises, assert_equals
 
-import remotespark.utils.configuration as conf
 from remotespark.livyclientlib.clientmanager import ClientManager
 import remotespark.utils.configuration as conf
 
@@ -140,3 +138,22 @@ def test_clean_up_serializer():
     client0.close_session.assert_called_once_with()
     client1.close_session.assert_called_once_with()
     serializer.serialize_state.assert_called_once_with({})
+
+
+def test_get_session_id_for_client():
+    manager = ClientManager()
+    manager.get_sessions_list = MagicMock(return_value=["name"])
+    manager._livy_clients["name"] = MagicMock()
+
+    id = manager.get_session_id_for_client("name")
+
+    assert id is not None
+
+
+def test_get_session_id_for_client_not_there():
+    manager = ClientManager()
+    manager.get_sessions_list = MagicMock(return_value=[])
+
+    id = manager.get_session_id_for_client("name")
+
+    assert id is None

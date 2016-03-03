@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
-from remotespark.utils.constants import Constants
-from remotespark.wrapperkernel.sparkkernelbase import SparkKernelBase
+from remotespark.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
+from remotespark.utils.constants import LANG_SCALA
 
 
 class SparkKernel(SparkKernelBase):
@@ -16,12 +16,10 @@ class SparkKernel(SparkKernelBase):
             'pygments_lexer': 'scala'
         }
 
-        kernel_conf_name = Constants.lang_scala
-        session_language = Constants.lang_scala
-        client_name = "scala_jupyter_kernel"
+        session_language = LANG_SCALA
 
         super(SparkKernel, self).__init__(implementation, implementation_version, language, language_version,
-                                          language_info, kernel_conf_name, session_language, client_name, **kwargs)
+                                          language_info, session_language, **kwargs)
 
 
 if __name__ == '__main__':

@@ -5,59 +5,50 @@ Provides the %spark magic."""
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
-from IPython.core.magic import Magics, magics_class, line_cell_magic, needs_local_scope
-from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
+
 import json
-import copy
+
+from IPython.core.magic import line_cell_magic, needs_local_scope
+from IPython.core.magic import magics_class
+from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 import remotespark.utils.configuration as conf
-from remotespark.utils.constants import Constants
-from remotespark.utils.ipythondisplay import IpythonDisplay
-from remotespark.utils.log import Log
-from remotespark.utils.utils import get_magics_home_path, join_paths
-from .livyclientlib.dataframeparseexception import DataFrameParseException
-from .livyclientlib.sparkcontroller import SparkController
+from remotespark.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
+from remotespark.livyclientlib.sqlquery import SQLQuery
+from remotespark.magics.sparkmagicsbase import SparkMagicBase
+from remotespark.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL
+from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
 
 
 @magics_class
-class RemoteSparkMagics(Magics):
-    def __init__(self, shell, data=None):
+class RemoteSparkMagics(SparkMagicBase):
+    def __init__(self, shell, data=None, widget=None):
         # You must call the parent constructor
-        super(RemoteSparkMagics, self).__init__(shell)
+        super(RemoteSparkMagics, self).__init__(shell, data)
 
-        self.logger = Log("RemoteSparkMagics")
-        self.ipython_display = IpythonDisplay()
-        self.spark_controller = SparkController(self.ipython_display)
+        self.endpoints = {}
+        if widget is None:
+            widget = MagicsControllerWidget(self.spark_controller, IpyWidgetFactory(), self.ipython_display)
+        self.manage_widget = widget
 
-        try:
-            should_serialize = conf.serialize()
-            if should_serialize:
-                self.logger.debug("Serialization enabled.")
-
-                self.magics_home_path = get_magics_home_path()
-                path_to_serialize = join_paths(self.magics_home_path, "state.json")
-
-                self.logger.debug("Will serialize to {}.".format(path_to_serialize))
-
-                self.spark_controller = SparkController(self.ipython_display, serialize_path=path_to_serialize)
-            else:
-                self.logger.debug("Serialization NOT enabled.")
-        except KeyError:
-            self.logger.error("Could not read env vars for serialization.")
-
-        self.logger.debug("Initialized spark magics.")
+    @line_cell_magic
+    def manage_spark(self, line, cell="", local_ns=None):
+        return self.manage_widget
 
     @magic_arguments()
-    @argument("-c", "--context", type=str, default=Constants.context_name_spark,
-              help="Context to use: '{}' for spark, '{}' for sql queries, and '{}' for hive queries. "
-                   "Default is '{}'.".format(Constants.context_name_spark,
-                                             Constants.context_name_sql,
-                                             Constants.context_name_hive,
-                                             Constants.context_name_spark))
+    @argument("-c", "--context", type=str, default=CONTEXT_NAME_SPARK,
+              help="Context to use: '{}' for spark and '{}' for sql queries"
+                   "Default is '{}'.".format(CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, CONTEXT_NAME_SPARK))
     @argument("-s", "--session", help="The name of the Livy session to use. "
                                       "If only one session has been created, there's no need to specify one.")
-    @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL or Hive "
-                                                             "query will be stored in variable of this name.")
+    @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL "
+                                                             "queries will be stored in this variable.")
+    @argument("-q", "--quiet", type=bool, default=False, nargs="?", const=True, help="Do not display visualizations"
+                                                                                     " on SQL queries")
+    @argument("-m", "--samplemethod", type=str, default=None, help="Sample method for SQL queries: either take or sample")
+    @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
+                                                                        "from the server for SQL queries")
+    @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @needs_local_scope
     @line_cell_magic
@@ -117,7 +108,7 @@ class RemoteSparkMagics(Magics):
                 if len(args.command) == 2:
                     connection_string = args.command[1]
                     info_sessions = self.spark_controller.get_all_sessions_endpoint_info(connection_string)
-                    self._print_endpoint_info(info_sessions)
+                    self.print_endpoint_info(info_sessions)
                 elif len(args.command) == 1:
                     self._print_local_info()
                 else:
@@ -142,8 +133,7 @@ class RemoteSparkMagics(Magics):
                 else:
                     skip = False
 
-                properties = copy.deepcopy(conf.session_configs())
-                properties["kind"] = self._get_livy_kind(language)
+                properties = conf.get_session_properties(language)
 
                 self.spark_controller.add_session(name, connection_string, skip, properties)
             # delete
@@ -180,18 +170,16 @@ class RemoteSparkMagics(Magics):
                     raise ValueError("Subcommand 'logs' requires no further values.\n{}".format(usage))
             # run
             elif len(subcommand) == 0:
-                if args.context == Constants.context_name_spark:
+                if args.context == CONTEXT_NAME_SPARK:
                     (success, out) = self.spark_controller.run_cell(cell, args.session)
                     if success:
                         self.ipython_display.write(out)
                     else:
                         self.ipython_display.send_error(out)
-                elif args.context == Constants.context_name_sql:
-                    return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_sql, cell,
-                                                                         args.session, args.output)
-                elif args.context == Constants.context_name_hive:
-                    return self._execute_against_context_that_returns_df(self.spark_controller.run_cell_hive, cell,
-                                                                         args.session, args.output)
+                elif args.context == CONTEXT_NAME_SQL:
+                    sqlquery = SQLQuery(cell, args.samplemethod, args.maxrows, args.samplefraction)
+                    return self.execute_sqlquery(sqlquery, args.session, args.output,
+                                                 args.quiet)
                 else:
                     raise ValueError("Context '{}' not found".format(args.context))
             # error
@@ -199,16 +187,6 @@ class RemoteSparkMagics(Magics):
                 raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
         except ValueError as err:
             self.ipython_display.send_error("{}".format(err))
-
-    def _execute_against_context_that_returns_df(self, method, cell, session, output_var):
-        try:
-            df = method(cell, session)
-            if output_var is not None:
-                self.shell.user_ns[output_var] = df
-            return df
-        except DataFrameParseException as e:
-            self.ipython_display.send_error(e.out)
-            return None
 
     def _print_local_info(self):
         sessions_info = ["        {}".format(i) for i in self.spark_controller.get_manager_sessions_str()]
@@ -218,25 +196,6 @@ class RemoteSparkMagics(Magics):
     Session configs:
         {}
 """.format("\n".join(sessions_info), conf.session_configs()))
-
-
-    def _print_endpoint_info(self, info_sessions):
-        sessions_info = ["        {}".format(i) for i in info_sessions]
-        print("""Info for endpoint:
-    Sessions:
-{}
-""".format("\n".join(sessions_info)))
-
-    @staticmethod
-    def _get_livy_kind(language):
-        if language == Constants.lang_scala:
-            return Constants.session_kind_spark
-        elif language == Constants.lang_python:
-            return Constants.session_kind_pyspark
-        elif language == Constants.lang_r:
-            return Constants.session_kind_sparkr
-        else:
-            raise ValueError("Cannot get session kind for {}.".format(language))
 
         
 def load_ipython_extension(ip):

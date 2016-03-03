@@ -5,19 +5,21 @@ import json
 
 from requests import ConnectionError
 
+from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.utils.log import Log
+from .livysession import LivySession
+from .livyclient import LivyClient
 
 
 class ClientManagerStateSerializer(object):
     """Livy client manager state serializer"""
 
-    def __init__(self, client_factory, reader_writer):
-        assert client_factory is not None
+    def __init__(self, reader_writer):
         assert reader_writer is not None
 
         self.logger = Log("ClientManagerStateSerializer")
+        self._ipython_display = IpythonDisplay()
 
-        self._client_factory = client_factory
         self._reader_writer = reader_writer
 
     def deserialize_state(self):
@@ -41,8 +43,8 @@ class ClientManagerStateSerializer(object):
                 kind = client["kind"].lower()
                 connection_string = client["connectionstring"]
 
-                session = self._client_factory.create_session(
-                    connection_string, session_id, sql_context_created, {"kind": kind})
+                session = self._create_livy_session(connection_string, {"kind": kind}, self._ipython_display,
+                                                    session_id, sql_context_created)
 
                 # Do not start session automatically. Just create it but skip is not existent.
                 try:
@@ -50,7 +52,7 @@ class ClientManagerStateSerializer(object):
                     status = session.status
                     if not session.is_final_status(status):
                         self.logger.debug("Adding session {}".format(session_id))
-                        client_obj = self._client_factory.build_client(session)
+                        client_obj = self._create_livy_client(session)
                         clients_to_return.append((name, client_obj))
                     else:
                         self.logger.error("Skipping serialized session '{}' because session was in status {}."
@@ -66,7 +68,7 @@ class ClientManagerStateSerializer(object):
         self.logger.debug("Serializing state.")
 
         serialized_clients = []
-        for name in name_client_dictionary.keys():
+        for name in list(name_client_dictionary.keys()):
             client = name_client_dictionary[name]
             serialized_client = client.serialize()
             serialized_client["name"] = name
@@ -74,3 +76,12 @@ class ClientManagerStateSerializer(object):
 
         serialized_str = json.dumps({"clients": serialized_clients})
         self._reader_writer.overwrite_with_line(serialized_str)
+
+    def _create_livy_session(self, connection_string, properties, ipython_display,
+                             session_id, sql_context_created):
+        return LivySession.from_connection_string(connection_string, properties, ipython_display,
+                                                  session_id, sql_context_created)
+
+    def _create_livy_client(self, session):
+        return LivyClient(session)
+

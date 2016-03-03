@@ -3,6 +3,7 @@
 
 from plotly.graph_objs import Pie, Figure, Data
 from plotly.offline import iplot
+from pandas.core.groupby import DataError
 
 import remotespark.utils.configuration as conf
 
@@ -21,6 +22,13 @@ class PieGraph(object):
             with output:
                 print("\n\n\nCannot group by X selection because of its type: '{}'. Please select another column."
                       .format(df[encoding.x].dtype))
+                return
+        except (ValueError, DataError):
+            with output:
+                print("\n\n\nCannot group by X selection. Please select another column."
+                      .format(df[encoding.x].dtype))
+                if df.size == 0:
+                    print("\n\n\nCannot display a pie graph for an empty data set.")
                 return
 
         max_slices_pie_graph = conf.max_slices_pie_graph()
