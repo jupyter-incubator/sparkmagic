@@ -9,19 +9,20 @@ class SparkEvents:
         """
         Create an instance from the handler mentioned in the config file.
         """
-        components = conf.events_handler_class().rsplit('.', 1)
-        events_handler = importlib.import_module(components[0])
-        my_e = getattr(events_handler, components[1])
-        self.handler = my_e()
+        module, class_name = conf.events_handler_class().rsplit('.', 1)
+        events_handler_module = importlib.import_module(module)
+        events_handler = getattr(events_handler_module, class_name)
+
+        self.handler = events_handler()
 
 
-    def emit_start_session_event(self, session_guid, language):
+    def emit_session_creation_start_event(self, session_guid, language):
         """
         Emitting Start Session Event
         """
         assert language in constants.SESSION_KINDS_SUPPORTED
 
-        event_name = "notebookSessionStart"
+        event_name = constants.SESSION_CREATION_START_EVENT
         time_stamp = datetime.now()
 
         args = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", session_guid),
@@ -29,7 +30,7 @@ class SparkEvents:
 
         self.handler.handle_event(args)
 
-    def emit_end_session_event(self, session_guid, language, session_id):
+    def emit_session_creation_end_event(self, session_guid, language, session_id):
         """
         Emitting End Session Event
         """
@@ -38,7 +39,7 @@ class SparkEvents:
 
         args = []
 
-        event_name = "notebookSessionStart"
+        event_name = constants.SESSION_CREATION_END_EVENT
         time_stamp = datetime.now()
 
         args = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", session_guid),

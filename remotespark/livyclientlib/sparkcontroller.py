@@ -76,14 +76,14 @@ class SparkController(object):
         session = self._create_livy_session(connection_string, properties, self.ipython_display)
 
         spark_events = SparkEvents()
-        spark_events.emit_start_session_event(session.session_guid, session.kind)
+        spark_events.emit_session_creation_start_event(session.guid, session.kind)
         session.start()
 
         livy_client = self._create_livy_client(session)
         self.client_manager.add_client(name, livy_client)
         livy_client.start()
 
-        spark_events.emit_end_session_event(session.session_guid, session.kind, session.id)
+        spark_events.emit_session_creation_end_event(session.guid, session.kind, session.id)
 
     def get_session_id_for_client(self, name):
         return self.client_manager.get_session_id_for_client(name)
