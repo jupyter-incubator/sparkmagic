@@ -18,12 +18,15 @@ class Log(object):
         assert caller_name is not None
         self._caller_name = caller_name
         self._getLogger()
-    
+
     def debug(self, message):
         self.logger.debug(self._transform_log_message(message))
 
     def error(self, message):
         self.logger.error(self._transform_log_message(message))
+
+    def info(self, message):
+        self.logger.info(self._transform_log_message(message))
 
     def _getLogger(self):
         self.logger = logging.getLogger(MAGICS_LOGGER_NAME)

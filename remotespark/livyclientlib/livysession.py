@@ -5,6 +5,7 @@ import textwrap
 from time import sleep, time
 import remotespark.utils.configuration as conf
 import remotespark.utils.constants as constants
+from remotespark.utils.guid import GuidWithObject
 from remotespark.utils.log import Log
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livyunexpectedstatuserror import LivyUnexpectedStatusError
@@ -12,11 +13,12 @@ from .livysessionstate import LivySessionState
 from .livyreliablehttpclient import LivyReliableHttpClient
 
 
-class LivySession(object):
+class LivySession(GuidWithObject):
     """Session that is livy specific."""
 
     def __init__(self, http_client, properties, ipython_display,
                  session_id="-1", sql_created=None):
+        super(LivySession, self).__init__()
         assert "kind" in list(properties.keys())
         kind = properties["kind"]
         self.properties = properties
@@ -51,8 +53,7 @@ class LivySession(object):
         self._statement_sleep_seconds = statement_sleep_seconds
         self._create_sql_context_timeout_seconds = create_sql_context_timeout_seconds
 
-        self._state = LivySessionState(session_id, self._http_client.connection_string,
-                                       kind, sql_created)
+        self._state = LivySessionState(session_id, self._http_client.connection_string, kind, sql_created)
 
     @staticmethod
     def from_connection_string(connection_string, properties, ipython_display,
@@ -125,14 +126,14 @@ class LivySession(object):
     @staticmethod
     def is_final_status(status):
         return status in constants.FINAL_STATUS
-    
+
     def execute(self, commands):
         code = textwrap.dedent(commands)
 
         data = {"code": code}
         r = self._http_client.post(self._statements_url(), [201], data)
         statement_id = r.json()['id']
-        
+
         return self._get_statement_output(statement_id)
 
     def delete(self):
@@ -159,13 +160,13 @@ class LivySession(object):
             return
 
         if current_status in constants.FINAL_STATUS:
-            error = "Session {} unexpectedly reached final status '{}'. See logs:\n{}"\
+            error = "Session {} unexpectedly reached final status '{}'. See logs:\n{}" \
                 .format(self.id, current_status, self.get_logs())
             self.logger.error(error)
             raise LivyUnexpectedStatusError(error)
 
         if seconds_to_wait <= 0.0:
-            error = "Session {} did not reach idle status in time. Current status is {}."\
+            error = "Session {} did not reach idle status in time. Current status is {}." \
                 .format(self.id, current_status)
             self.logger.error(error)
             raise LivyClientTimeoutError(error)
@@ -189,7 +190,7 @@ class LivySession(object):
             raise ValueError("Status '{}' not supported by session.".format(status))
 
         return self.status
-    
+
     def _get_statement_output(self, statement_id):
         statement_running = True
         out = ""
@@ -204,7 +205,7 @@ class LivySession(object):
                 sleep(self._statement_sleep_seconds)
             else:
                 statement_running = False
-                
+
                 statement_output = statement["output"]
                 if statement_output["status"] == "ok":
                     out = (True, statement_output["data"]["text/plain"])

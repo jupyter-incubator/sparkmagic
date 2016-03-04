@@ -3,6 +3,7 @@
 
 from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 from remotespark.utils.log import Log
+from remotespark.utils.sparkevents import SparkEvents
 from .clientmanager import ClientManager
 from .clientmanagerstateserializer import ClientManagerStateSerializer
 from .livyclient import LivyClient
@@ -15,6 +16,7 @@ class SparkController(object):
     def __init__(self, ipython_display, serialize_path=None):
         self.logger = Log("SparkController")
         self.ipython_display = ipython_display
+        self.spark_events = SparkEvents()
 
         if serialize_path is not None:
             serializer = ClientManagerStateSerializer(FileSystemReaderWriter(serialize_path))
@@ -73,11 +75,14 @@ class SparkController(object):
             return
 
         session = self._create_livy_session(connection_string, properties, self.ipython_display)
+        self.spark_events.emit_session_creation_start_event(session.guid, session.kind)
         session.start()
 
         livy_client = self._create_livy_client(session)
         self.client_manager.add_client(name, livy_client)
         livy_client.start()
+
+        self.spark_events.emit_session_creation_end_event(session.guid, session.kind, session.id, session.status)
 
     def get_session_id_for_client(self, name):
         return self.client_manager.get_session_id_for_client(name)

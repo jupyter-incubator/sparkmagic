@@ -19,6 +19,9 @@ class MockLogger(object):
     def error(self, message):
         self.level, self.message = 'ERROR', message
 
+    def info(self, message):
+        self.level, self.message = 'INFO', message
+
 class MockLog(Log):
     def _getLogger(self):
        self.logger = MockLogger() 
@@ -33,3 +36,6 @@ def test_log_returnvalue():
     logger.error('word2')
     assert mock.level == 'ERROR'
     assert mock.message == 'test2\tword2'
+    logger.info('word3')
+    assert mock.level == 'INFO'
+    assert mock.message == 'test2\tword3'

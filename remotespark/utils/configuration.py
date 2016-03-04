@@ -144,6 +144,10 @@ def logging_config():
         }
     }
 
+@_override
+def events_handler_class():
+    return "remotespark.utils.eventshandler.EventsHandler"
+
 
 @_override
 def execute_timeout_seconds():
