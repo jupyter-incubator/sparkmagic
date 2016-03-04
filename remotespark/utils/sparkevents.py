@@ -24,12 +24,12 @@ class SparkEvents:
         event_name = constants.SESSION_CREATION_START_EVENT
         time_stamp = SparkEvents.get_utc_date_time()
 
-        args = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", session_guid),
+        kwargs_list = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", session_guid),
                 ("SparkLanguage", language)]
 
-        self.handler.handle_event(args)
+        self.handler.handle_event(kwargs_list)
 
-    def emit_session_creation_end_event(self, session_guid, language, session_id):
+    def emit_session_creation_end_event(self, session_guid, language, session_id, status):
         """
         Emitting End Session Event
         """
@@ -39,10 +39,10 @@ class SparkEvents:
         event_name = constants.SESSION_CREATION_END_EVENT
         time_stamp = SparkEvents.get_utc_date_time()
 
-        args = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", session_guid),
-                ("SparkLanguage", language), ("SessionId", session_id)]
+        kwargs_list = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", session_guid),
+                ("SparkLanguage", language), ("SessionId", session_id), ("Status:", status)]
 
-        self.handler.handle_event(args)
+        self.handler.handle_event(kwargs_list)
 
     @staticmethod
     def get_utc_date_time():

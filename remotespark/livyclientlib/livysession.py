@@ -18,6 +18,7 @@ class LivySession(GuidMixin):
 
     def __init__(self, http_client, properties, ipython_display,
                  session_id="-1", sql_created=None):
+        super(LivySession, self).__init__()
         assert "kind" in list(properties.keys())
         kind = properties["kind"]
         self.properties = properties

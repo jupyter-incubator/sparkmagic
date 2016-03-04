@@ -82,7 +82,7 @@ class SparkController(object):
         self.client_manager.add_client(name, livy_client)
         livy_client.start()
 
-        self.spark_events.emit_session_creation_end_event(session.guid, session.kind, session.id)
+        self.spark_events.emit_session_creation_end_event(session.guid, session.kind, session.id, session.status)
 
     def get_session_id_for_client(self, name):
         return self.client_manager.get_session_id_for_client(name)
