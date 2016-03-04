@@ -14,9 +14,9 @@ SESSION_CREATION_END_EVENT = "notebookSessionCreationEnd"
 
 TIMESTAMP = "Timestamp"
 EVENT_NAME = "EventName"
-SESSION_GUID = ""
-LANGUAGE = "Language"
 SESSION_ID = "SessionId"
+SESSION_GUID = "SessionGuid"
+LIVY_KIND = "LivyKind"
 STATUS = "Status"
 
 CONTEXT_NAME_SPARK = "spark"
