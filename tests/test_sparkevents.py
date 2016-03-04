@@ -22,8 +22,8 @@ def test_emit_session_creation_start_event():
     language = constants.SESSION_KIND_SPARK
     event_name = constants.SESSION_CREATION_START_EVENT
 
-    kwargs_list = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", guid),
-                ("SparkLanguage", language)]
+    kwargs_list = [(constants.TIMESTAMP, time_stamp), (constants.EVENT_NAME, event_name), (constants.SESSION_GUID, guid),
+                (constants.LANGUAGE, language)]
 
     spark_events.emit_session_creation_start_event(guid, language)
     spark_events.get_utc_date_time.assert_called_with()
@@ -37,8 +37,8 @@ def test_emit_session_creation_end_event():
     status = constants.BUSY_SESSION_STATUS
     session_id = 0
 
-    kwargs_list = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", guid),
-                ("SparkLanguage", language), ("SessionId", session_id), ("Status:", status)]
+    kwargs_list = [(constants.TIMESTAMP, time_stamp), (constants.EVENT_NAME, event_name), (constants.SESSION_GUID, guid),
+                (constants.LANGUAGE, language), (constants.SESSION_ID, session_id), (constants.STATUS, status)]
 
     spark_events.emit_session_creation_end_event(guid, language, session_id, status)
     spark_events.get_utc_date_time.assert_called_with()

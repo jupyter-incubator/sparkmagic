@@ -24,8 +24,8 @@ class SparkEvents:
         event_name = constants.SESSION_CREATION_START_EVENT
         time_stamp = SparkEvents.get_utc_date_time()
 
-        kwargs_list = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", session_guid),
-                ("SparkLanguage", language)]
+        kwargs_list = [(constants.TIMESTAMP, time_stamp), (constants.EVENT_NAME, event_name), (constants.SESSION_GUID, session_guid),
+                (constants.LANGUAGE, language)]
 
         self.handler.handle_event(kwargs_list)
 
@@ -39,8 +39,8 @@ class SparkEvents:
         event_name = constants.SESSION_CREATION_END_EVENT
         time_stamp = SparkEvents.get_utc_date_time()
 
-        kwargs_list = [("TimeStamp", time_stamp), ("EventName", event_name), ("SessionGuid", session_guid),
-                ("SparkLanguage", language), ("SessionId", session_id), ("Status:", status)]
+        kwargs_list = [(constants.TIMESTAMP, time_stamp), (constants.EVENT_NAME, event_name), (constants.SESSION_GUID, session_guid),
+                (constants.LANGUAGE, language), (constants.SESSION_ID, session_id), (constants.STATUS, status)]
 
         self.handler.handle_event(kwargs_list)
 
