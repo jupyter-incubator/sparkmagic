@@ -90,21 +90,6 @@ def session_configs():
 
 
 @_override
-def serialize():
-    return False
-
-
-@_override
-def serialize_periodically():
-    return False
-
-
-@_override
-def serialize_period_seconds():
-    return 3
-
-
-@_override
 def default_chart_type():
     return 'area'
 
@@ -150,11 +135,6 @@ def events_handler_class():
 
 
 @_override
-def execute_timeout_seconds():
-    return 3600
-
-
-@_override
 def status_sleep_seconds():
     return 2
 
@@ -165,7 +145,7 @@ def statement_sleep_seconds():
 
 
 @_override
-def create_sql_context_timeout_seconds():
+def wait_for_idle_timeout_seconds():
     return 60
 
 

@@ -1,7 +1,6 @@
 import remotespark.utils.configuration as conf
 from mock import MagicMock
 from nose.tools import with_setup, assert_equals, assert_not_equals
-from remotespark.utils.utils import join_paths, get_magics_home_path
 import json
 
 def _setup():
@@ -68,10 +67,10 @@ def test_configuration_override():
     kpc = { 'username': 'U', 'password': 'P', 'url': 'L' }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    conf.override(conf.execute_timeout_seconds.__name__, 1)
+    conf.override(conf.status_sleep_seconds.__name__, 1)
     assert_equals(conf._overrides, { conf.kernel_python_credentials.__name__: kpc,
-                                     conf.execute_timeout_seconds.__name__: 1 })
-    assert_equals(conf.execute_timeout_seconds(), 1)
+                                     conf.status_sleep_seconds.__name__: 1 })
+    assert_equals(conf.status_sleep_seconds(), 1)
     assert_equals(conf.kernel_python_credentials(), kpc)
 
 

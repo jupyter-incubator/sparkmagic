@@ -29,7 +29,7 @@ def _setup():
     ipython_display = MagicMock()
     spark_events = MagicMock()
     controller = SparkController(ipython_display)
-    controller.client_manager = client_manager
+    controller.session_manager = client_manager
     controller.spark_events = spark_events
 
 def _teardown():
@@ -40,17 +40,14 @@ def test_add_session():
     name = "name"
     properties = {"kind": "spark"}
     connection_string = "url=http://location:port;username=name;password=word"
-    client = MagicMock()
     session = MagicMock()
 
     controller._create_livy_session = MagicMock(return_value=session)
-    controller._create_livy_client = MagicMock(return_value=client)
 
     controller.add_session(name, connection_string, False, properties)
 
     controller._create_livy_session.assert_called_once_with(connection_string, properties, ipython_display)
-    controller.client_manager.add_client.assert_called_once_with(name, client)
-    client.start.assert_called_once_with()
+    controller.session_manager.add_session.assert_called_once_with(name, session)
     session.start.assert_called_once_with()
 
 
@@ -69,7 +66,7 @@ def test_add_session_skip():
 
     assert controller._create_livy_session.create_session.call_count == 0
     assert controller._http_client_from_connection_string.build_client.call_count == 0
-    assert client_manager.add_client.call_count == 0
+    assert client_manager.add_session.call_count == 0
     assert session.start.call_count == 0
 
 
@@ -93,8 +90,8 @@ def test_run_cell():
     default_client = MagicMock()
     chosen_client = MagicMock()
     default_client.execute = chosen_client.execute = MagicMock(return_value=(True, ""))
-    client_manager.get_any_client = MagicMock(return_value=default_client)
-    client_manager.get_client = MagicMock(return_value=chosen_client)
+    client_manager.get_any_session = MagicMock(return_value=default_client)
+    client_manager.get_session = MagicMock(return_value=chosen_client)
     name = "session_name"
     cell = "cell code"
 
@@ -174,7 +171,7 @@ def test_delete_session_by_id_non_existent():
 @with_setup(_setup, _teardown)
 def test_get_logs():
     chosen_client = MagicMock()
-    controller.get_client_by_name_or_default = MagicMock(return_value=chosen_client)
+    controller.get_session_by_name_or_default = MagicMock(return_value=chosen_client)
 
     controller.get_logs()
 

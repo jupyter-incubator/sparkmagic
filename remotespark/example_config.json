@@ -1,8 +1,4 @@
 {
-  "serialize": false,
-  "serialize_periodically": false,
-  "serialize_period_seconds": 3,
-
   "default_chart_type": "area",
 
   "kernel_python_credentials" : {
