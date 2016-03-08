@@ -25,7 +25,7 @@ def test_execute():
 
     result = command.execute(session)
 
-    http_client.post_statement.assert_called_with("0", {"code": command.code})
-    http_client.get_statement.assert_called_with("0", 0)
+    http_client.post_statement.assert_called_with(0, {"code": command.code})
+    http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
     assert_equals(tls.TestLivySession.pi_result, result[1])

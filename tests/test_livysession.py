@@ -67,7 +67,7 @@ class TestLivySession:
         return val
 
     @staticmethod
-    def _create_session(kind=constants.SESSION_KIND_SPARK, session_id="-1", sql_created=False, http_client=None):
+    def _create_session(kind=constants.SESSION_KIND_SPARK, session_id=-1, sql_created=False, http_client=None):
         if http_client is None:
             http_client = MagicMock()
         ipython_display = MagicMock()
@@ -132,7 +132,7 @@ class TestLivySession:
         session = self._create_session()
         conf.load()
 
-        assert session.id == "-1"
+        assert session.id == -1
         assert not session.created_sql_context
 
     def test_is_final_status(self):
@@ -166,7 +166,7 @@ class TestLivySession:
 
         assert_equals(kind, session.kind)
         assert_equals("starting", session.status)
-        assert_equals("0", session.id)
+        assert_equals(0, session.id)
         http_client.post_session.assert_called_with({"kind": "spark"})
         session.create_sql_context.assert_called_once_with()
 
@@ -186,7 +186,7 @@ class TestLivySession:
 
         assert_equals(kind, session.kind)
         assert_equals("starting", session.status)
-        assert_equals("0", session.id)
+        assert_equals(0, session.id)
         http_client.post_session.assert_called_with({"kind": "sparkr"})
         session.create_sql_context.assert_called_once_with()
 
@@ -206,7 +206,7 @@ class TestLivySession:
 
         assert_equals(kind, session.kind)
         assert_equals("starting", session.status)
-        assert_equals("0", session.id)
+        assert_equals(0, session.id)
         http_client.post_session.assert_called_with({"kind": "pyspark"})
         session.create_sql_context.assert_called_once_with()
 
@@ -226,7 +226,7 @@ class TestLivySession:
 
         assert_equals(kind, session.kind)
         assert_equals("starting", session.status)
-        assert_equals("0", session.id)
+        assert_equals(0, session.id)
         http_client.post_session.assert_called_with({"kind": "pyspark"})
         session.create_sql_context.assert_not_called()
 
@@ -265,7 +265,7 @@ class TestLivySession:
         state = session.status
 
         assert_equals("idle", state)
-        http_client.get_session.assert_called_with("0")
+        http_client.get_session.assert_called_with(0)
 
     def test_logs_gets_latest_logs(self):
         http_client = MagicMock()
@@ -282,7 +282,7 @@ class TestLivySession:
         logs = session.get_logs()
 
         assert_equals("hi\nhi", logs)
-        http_client.get_all_session_logs.assert_called_with("0")
+        http_client.get_all_session_logs.assert_called_with(0)
 
     def test_wait_for_idle_returns_when_in_state(self):
         http_client = MagicMock()
@@ -302,7 +302,7 @@ class TestLivySession:
 
         session.wait_for_idle(30)
 
-        http_client.get_session.assert_called_with("0")
+        http_client.get_session.assert_called_with(0)
         assert_equals(2, http_client.get_session.call_count)
 
     @raises(LivyUnexpectedStatusError)
@@ -375,7 +375,7 @@ class TestLivySession:
         session.delete()
     
         assert_equals("dead", session.status)
-        assert_equals("-1", session.id)
+        assert_equals(-1, session.id)
 
     @raises(ValueError)
     def test_delete_session_when_dead_throws(self):
@@ -423,7 +423,7 @@ class TestLivySession:
         # Second call should not issue a post request
         session.create_sql_context()
 
-        assert call("0", {"code": "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"}) \
+        assert call(0, {"code": "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"}) \
                in http_client.post_statement.call_args_list
         assert len(http_client.post_statement.call_args_list) == 1
 
@@ -445,7 +445,7 @@ class TestLivySession:
         conf.load()
         session.start()
 
-        assert call("0", {"code": "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"}) \
+        assert call(0, {"code": "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"}) \
                in http_client.post_statement.call_args_list
 
     def test_create_sql_hive_context_pyspark(self):
@@ -464,7 +464,7 @@ class TestLivySession:
         conf.load()
         session.start()
 
-        assert call("0", {"code": "from pyspark.sql import HiveContext\n"
+        assert call(0, {"code": "from pyspark.sql import HiveContext\n"
                                   "sqlContext = HiveContext(sc)"}) \
                in http_client.post_statement.call_args_list
 

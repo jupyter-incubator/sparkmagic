@@ -33,7 +33,7 @@ class LivySession(ObjectWithGuid):
         assert status_sleep_seconds > 0
         assert statement_sleep_seconds > 0
         assert wait_for_idle_timeout_seconds > 0
-        if session_id == "-1" and sql_created is True:
+        if session_id == -1 and sql_created is True:
             raise ValueError("Cannot indicate sql state without session id.")
 
         self.logger = Log("LivySession")
@@ -43,7 +43,7 @@ class LivySession(ObjectWithGuid):
             raise ValueError("Session of kind '{}' not supported. Session must be of kinds {}."
                              .format(kind, ", ".join(constants.SESSION_KINDS_SUPPORTED)))
 
-        if session_id == "-1":
+        if session_id == -1:
             self.status = constants.NOT_STARTED_SESSION_STATUS
             sql_created = False
         else:
@@ -73,7 +73,7 @@ class LivySession(ObjectWithGuid):
         self._spark_events.emit_session_creation_start_event(self.guid, self.kind)
 
         r = self._http_client.post_session(self.properties)
-        self.id = str(r["id"])
+        self.id = r["id"]
         self.status = str(r["state"])
 
         self.ipython_display.writeln("Creating SparkContext as 'sc'")
@@ -114,7 +114,7 @@ class LivySession(ObjectWithGuid):
         if self.status != constants.NOT_STARTED_SESSION_STATUS and self.status != constants.DEAD_SESSION_STATUS:
             self._http_client.delete_session(self.id)
             self.status = constants.DEAD_SESSION_STATUS
-            self.id = "-1"
+            self.id = -1
         else:
             raise ValueError("Cannot delete session {} that is in state '{}'."
                              .format(self.id, self.status))
