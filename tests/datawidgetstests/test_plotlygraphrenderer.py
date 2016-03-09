@@ -5,7 +5,7 @@ from remotespark.datawidgets.encoding import Encoding
 
 
 def test_support_all_graph_types():
-    renderer = GraphRenderer(testing=True)
+    renderer = GraphRenderer()
 
     for chart_type in Encoding.supported_chart_types:
         graph = renderer._get_graph(chart_type)
@@ -18,7 +18,7 @@ def test_support_all_graph_types():
 
 
 def test_display_controls():
-    renderer = GraphRenderer(testing=True)
+    renderer = GraphRenderer()
 
     GraphRenderer.display_x = MagicMock(return_value=True)
     GraphRenderer.display_y = MagicMock(return_value=True)
