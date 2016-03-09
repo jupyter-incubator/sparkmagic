@@ -9,16 +9,20 @@ from .reliablehttpclient import ReliableHttpClient
 class LivyReliableHttpClient(object):
     """Default headers."""
 
-    def __init__(self, url, username, password, retry_policy):
-        self._http_client = ReliableHttpClient(url, {"Content-Type": "application/json"},
-                                               username, password, retry_policy)
+    def __init__(self, http_client):
+        self._http_client = http_client
 
     @staticmethod
     def from_connection_string(connection_string):
         cso = get_connection_string_elements(connection_string)
 
         retry_policy = LinearRetryPolicy(seconds_to_sleep=5, max_retries=5)
-        return LivyReliableHttpClient(cso.url, cso.username, cso.password, retry_policy)
+        return LivyReliableHttpClient.from_credentials(cso.url, cso.username, cso.password, retry_policy)
+
+    @staticmethod
+    def from_credentials(url, username, password, retry_policy):
+        return LivyReliableHttpClient(ReliableHttpClient(url, {"Content-Type": "application/json"},
+                                                         username, password, retry_policy))
 
     def post_statement(self, session_id, data):
         return self._http_client.post(self._statements_url(session_id), [201], data).json()
