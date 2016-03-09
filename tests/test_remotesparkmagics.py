@@ -3,6 +3,7 @@ from nose.tools import with_setup
 
 import remotespark.utils.configuration as conf
 from remotespark.magics.remotesparkmagics import RemoteSparkMagics
+from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.sqlquery import SQLQuery
 
 magic = None
@@ -159,7 +160,7 @@ def test_run_cell_command_parses():
     run_cell_method = MagicMock()
     result_value = ""
     run_cell_method.return_value = (True, result_value)
-    spark_controller.run_cell = run_cell_method
+    spark_controller.run_command = run_cell_method
 
     command = "-s"
     name = "sessions_name"
@@ -168,7 +169,7 @@ def test_run_cell_command_parses():
 
     result = magic.spark(line, cell)
 
-    run_cell_method.assert_called_once_with(cell, name)
+    run_cell_method.assert_called_once_with(Command(cell), name)
     assert result is None
     ipython_display.write.assert_called_once_with(result_value)
 
@@ -178,7 +179,7 @@ def test_run_cell_command_writes_to_err():
     run_cell_method = MagicMock()
     result_value = ""
     run_cell_method.return_value = (False, result_value)
-    spark_controller.run_cell = run_cell_method
+    spark_controller.run_command = run_cell_method
 
     command = "-s"
     name = "sessions_name"
@@ -187,7 +188,7 @@ def test_run_cell_command_writes_to_err():
 
     result = magic.spark(line, cell)
 
-    run_cell_method.assert_called_once_with(cell, name)
+    run_cell_method.assert_called_once_with(Command(cell), name)
     assert result is None
     ipython_display.send_error.assert_called_once_with(result_value)
 
@@ -196,7 +197,7 @@ def test_run_cell_command_writes_to_err():
 def test_run_sql_command_parses():
     run_cell_method = MagicMock()
     run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_sql = run_cell_method
+    spark_controller.run_sqlquery = run_cell_method
 
     command = "-s"
     name = "sessions_name"
@@ -217,7 +218,7 @@ def test_run_sql_command_parses():
 def test_run_sql_command_knows_how_to_be_quiet():
     run_cell_method = MagicMock()
     run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_sql = run_cell_method
+    spark_controller.run_sqlquery = run_cell_method
 
     command = "-s"
     name = "sessions_name"

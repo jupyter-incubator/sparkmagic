@@ -4,6 +4,7 @@ from IPython.core.magic import magics_class
 
 from remotespark.kernels.kernelmagics import KernelMagics
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
+from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.sqlquery import SQLQuery
 import remotespark.utils.constants as constants
 import remotespark.utils.configuration as conf
@@ -227,28 +228,28 @@ def test_get_session_settings():
 def test_spark():
     line = ""
     cell = "some spark code"
-    spark_controller.run_cell = MagicMock(return_value=(True, line))
+    spark_controller.run_command = MagicMock(return_value=(True, line))
 
     magic.spark(line, cell)
 
     ipython_display.write.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
-    spark_controller.run_cell.assert_called_once_with(cell)
+    spark_controller.run_command.assert_called_once_with(Command(cell))
 
 
 @with_setup(_setup, _teardown)
 def test_spark_error():
     line = ""
     cell = "some spark code"
-    spark_controller.run_cell = MagicMock(return_value=(False, line))
+    spark_controller.run_command = MagicMock(return_value=(False, line))
 
     magic.spark(line, cell)
 
     ipython_display.send_error.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
-    spark_controller.run_cell.assert_called_once_with(cell)
+    spark_controller.run_command.assert_called_once_with(Command(cell))
 
 
 @with_setup(_setup, _teardown)
@@ -262,7 +263,7 @@ def test_spark_failed_session_start():
     assert_is(ret, None)
     assert_equals(ipython_display.write.call_count, 0)
     assert_equals(spark_controller.add_session.call_count, 0)
-    assert_equals(spark_controller.run_cell.call_count, 0)
+    assert_equals(spark_controller.run_command.call_count, 0)
 
 
 @with_setup(_setup, _teardown)

@@ -7,7 +7,6 @@ from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutEr
 from remotespark.livyclientlib.livyunexpectedstatuserror import LivyUnexpectedStatusError
 from remotespark.livyclientlib.livysession import LivySession
 import remotespark.utils.configuration as conf
-from remotespark.utils.utils import get_connection_string
 import remotespark.utils.constants as constants
 
 

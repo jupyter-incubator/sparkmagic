@@ -26,6 +26,9 @@ class LivyReliableHttpClient(object):
     def get_statement(self, session_id, statement_id):
         return self._http_client.get(self._statement_url(session_id, statement_id), [200]).json()
 
+    def get_sessions(self):
+        return self._http_client.get("/sessions", [200]).json()
+
     def post_session(self, properties):
         return self._http_client.post("/sessions", [201], properties).json()
 

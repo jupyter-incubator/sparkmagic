@@ -13,6 +13,7 @@ from IPython.core.magic import needs_local_scope, cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 import remotespark.utils.configuration as conf
+from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
@@ -155,7 +156,7 @@ class KernelMagics(SparkMagicBase):
     @cell_magic
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
-            (success, out) = self.spark_controller.run_cell(cell)
+            (success, out) = self.spark_controller.run_command(Command(cell))
             if success:
                 self.ipython_display.write(out)
             else:

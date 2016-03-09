@@ -19,18 +19,17 @@ class SparkController(object):
         session_to_use = self.get_session_by_name_or_default(client_name)
         return session_to_use.get_logs()
 
-    def run_cell(self, cell, client_name=None):
+    def run_command(self, command, client_name=None):
         session_to_use = self.get_session_by_name_or_default(client_name)
-        return session_to_use.execute(cell)
+        return command.execute(session_to_use)
 
-    def run_cell_sql(self, sqlquery, client_name=None):
+    def run_sqlquery(self, sqlquery, client_name=None):
         session_to_use = self.get_session_by_name_or_default(client_name)
-        return session_to_use.execute_sql(sqlquery)
+        return sqlquery.execute(session_to_use)
 
     def get_all_sessions_endpoint(self, connection_string):
         http_client = self._http_client_from_connection_string(connection_string)
-        r = http_client.get("/sessions", [200])
-        sessions = r.json()["sessions"]
+        sessions = http_client.get_sessions()["sessions"]
         session_list = [self._create_livy_session(connection_string, {"kind": s["kind"]},
                                                   self.ipython_display, s["id"])
                         for s in sessions]
@@ -54,11 +53,14 @@ class SparkController(object):
 
     def delete_session_by_id(self, connection_string, session_id):
         http_client = self._http_client_from_connection_string(connection_string)
-        r = http_client.get("/sessions/{}".format(session_id), [200, 404])
-        if r.status_code != 404:
-            session = self._create_livy_session(connection_string, {"kind": r.json()["kind"]},
-                                                self.ipython_display, session_id, False)
+        try:
+            r = http_client.get_session(session_id)
+            session = self._create_livy_session(connection_string, {"kind": r["kind"]},
+                                            self.ipython_display, session_id, False)
             session.delete()
+        except ValueError:
+            # Session does not exist; do nothing
+            pass
 
     def add_session(self, name, connection_string, skip_if_exists, properties):
         if skip_if_exists and (name in self.session_manager.get_sessions_list()):

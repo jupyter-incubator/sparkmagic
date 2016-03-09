@@ -29,7 +29,7 @@ class SparkMagicBase(Magics):
 
     def execute_sqlquery(self, sqlquery, session, output_var, quiet):
         try:
-            df = self.spark_controller.run_cell_sql(sqlquery, session)
+            df = self.spark_controller.run_sqlquery(sqlquery, session)
             if output_var is not None:
                 self.shell.user_ns[output_var] = df
             if quiet:
