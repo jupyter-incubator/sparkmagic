@@ -1,8 +1,15 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
+import json
+import pandas as pd
+
 import remotespark.utils.configuration as conf
 from remotespark.utils.log import Log
+from remotespark.utils.utils import coerce_pandas_df_to_numeric_datetime
+
+from .dataframeparseexception import DataFrameParseException
+from .sqlquery import SQLQuery
 
 
 class LivyClient(object):
@@ -24,7 +31,7 @@ class LivyClient(object):
 
     def get_logs(self):
         try:
-            return True, self._session.logs
+            return True, self._session.get_logs()
         except ValueError as err:
             return False, "{}".format(err)
 
@@ -32,11 +39,16 @@ class LivyClient(object):
         self._session.wait_for_idle(self._execute_timeout_seconds)
         return self._session.execute(commands)
 
-    def execute_sql(self, command):
-        return self.execute('sqlContext.sql("{}").collect()'.format(command))
-
-    def execute_hive(self, command):
-        return self.execute('hiveContext.sql("{}").collect()'.format(command))
+    def execute_sql(self, sqlquery):
+        (success, records_text) = self._get_records(sqlquery)
+        if not success:
+            raise DataFrameParseException(records_text)
+        if records_text == "":
+            # If there are no records, show some columns at least.
+            records_text = self._get_columns(sqlquery)
+            return self._columns_to_dataframe(records_text)
+        else:
+            return self._records_to_dataframe(records_text)
 
     def close_session(self):
         self._session.delete()
@@ -52,3 +64,31 @@ class LivyClient(object):
     @property
     def status(self):
         return self._session.status
+
+    def _get_records(self, sqlquery):
+        command = sqlquery.to_command(self.kind)
+        return self.execute(command)
+
+    def _get_columns(self, sqlquery):
+        command = SQLQuery.as_only_columns_query(sqlquery).to_command(self.kind)
+        (success, out) = self.execute(command)
+        if success:
+            return out
+        else:
+            raise DataFrameParseException(out)
+
+    @staticmethod
+    def _columns_to_dataframe(columns_text):
+        return pd.DataFrame.from_records([], columns=columns_text.split('\n'))
+
+    @staticmethod
+    def _records_to_dataframe(records_text):
+        strings = records_text.split('\n')
+        try:
+            df = pd.DataFrame([json.loads(s) for s in strings])
+            coerce_pandas_df_to_numeric_datetime(df)
+            return df
+        except ValueError:
+            raise DataFrameParseException("Cannot parse object as JSON: '{}'".format(strings))
+
+

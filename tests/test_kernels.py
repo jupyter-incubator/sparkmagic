@@ -1,6 +1,6 @@
 from remotespark.kernels.sparkkernel.sparkkernel import SparkKernel
 from remotespark.kernels.pysparkkernel.pysparkkernel import PySparkKernel
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import LANG_PYTHON, LANG_SCALA
 
 
 class TestPyparkKernel(PySparkKernel):
@@ -17,7 +17,7 @@ class TestSparkKernel(SparkKernel):
 
 def test_pyspark_kernel_configs():
     kernel = TestPyparkKernel()
-    assert kernel.session_language == Constants.lang_python
+    assert kernel.session_language == LANG_PYTHON
 
     assert kernel.implementation == 'PySpark'
     assert kernel.language == 'no-op'
@@ -33,7 +33,7 @@ def test_pyspark_kernel_configs():
 def test_spark_kernel_configs():
     kernel = TestSparkKernel()
 
-    assert kernel.session_language == Constants.lang_scala
+    assert kernel.session_language == LANG_SCALA
 
     assert kernel.implementation == 'Spark'
     assert kernel.language == 'no-op'

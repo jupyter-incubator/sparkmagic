@@ -13,9 +13,12 @@ from remotespark.datawidgets.encoding import Encoding
 
 class GraphRenderer(object):
 
+    already_initialized = False
+
     def __init__(self, testing=False):
-        if not testing:
+        if not testing and not GraphRenderer.already_initialized:
             init_notebook_mode()
+            GraphRenderer.already_initialized = True
 
     @staticmethod
     def render(df, encoding, output):

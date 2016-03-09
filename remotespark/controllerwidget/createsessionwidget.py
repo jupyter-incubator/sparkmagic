@@ -4,7 +4,7 @@ import json
 
 from remotespark.controllerwidget.abstractmenuwidget import AbstractMenuWidget
 from remotespark.utils import configuration as conf
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import LANG_SCALA, LANG_PYTHON
 
 
 class CreateSessionWidget(AbstractMenuWidget):
@@ -22,7 +22,7 @@ class CreateSessionWidget(AbstractMenuWidget):
         )
         self.lang_widget = self.ipywidget_factory.get_toggle_buttons(
             description='Language:',
-            options=[Constants.lang_scala, Constants.lang_python],
+            options=[LANG_SCALA, LANG_PYTHON],
         )
         self.properties = self.ipywidget_factory.get_text(
             description='Properties:',

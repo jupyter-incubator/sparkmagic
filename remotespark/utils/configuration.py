@@ -6,7 +6,7 @@
 import json
 import copy
 
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import CONFIG_JSON
 from remotespark.utils.utils import join_paths, get_magics_home_path, get_livy_kind
 from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 
@@ -29,7 +29,7 @@ def load(fsrw_class=None):
         fsrw_class = FileSystemReaderWriter
     home_path = fsrw_class(get_magics_home_path())
     home_path.ensure_path_exists()
-    config_file = fsrw_class(join_paths(home_path.path, Constants.config_json))
+    config_file = fsrw_class(join_paths(home_path.path, CONFIG_JSON))
     config_file.ensure_file_exists()
     config_text = config_file.read_lines()
     line = "".join(config_text).strip()
@@ -70,6 +70,12 @@ def _override(f):
     # later to get the name of the configuration dynamically, e.g. for unit tests
     ret.__name__ = f.__name__
     return ret
+
+
+def get_session_properties(language):
+    properties = copy.deepcopy(session_configs())
+    properties["kind"] = get_livy_kind(language)
+    return properties
 
 
 # All of the functions below return the values of configurations. They are
@@ -138,6 +144,10 @@ def logging_config():
         }
     }
 
+@_override
+def events_handler_class():
+    return "remotespark.utils.eventshandler.EventsHandler"
+
 
 @_override
 def execute_timeout_seconds():
@@ -181,16 +191,20 @@ def use_auto_viz():
 
 
 @_override
-def max_results_sql():
+def default_maxrows():
     return 2500
+
+
+@_override
+def default_samplemethod():
+    return "take"
+
+
+@_override
+def default_samplefraction():
+    return 0.1
 
 
 @_override
 def max_slices_pie_graph():
     return 100
-
-
-def get_session_properties(language):
-    properties = copy.deepcopy(session_configs())
-    properties["kind"] = get_livy_kind(language)
-    return properties
