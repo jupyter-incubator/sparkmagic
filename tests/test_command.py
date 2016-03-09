@@ -4,7 +4,7 @@ from nose.tools import assert_equals
 from remotespark.livyclientlib.command import Command
 from remotespark.utils.constants import SESSION_KIND_SPARK
 import remotespark.utils.configuration as conf
-import test_livysession as tls
+from . import test_livysession as tls
 
 
 def test_execute():
