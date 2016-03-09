@@ -18,7 +18,7 @@ class LivySession(ObjectWithGuid):
     """Session that is livy specific."""
 
     def __init__(self, http_client, properties, ipython_display,
-                 session_id="-1", sql_created=None):
+                 session_id=-1, sql_created=None):
         super(LivySession, self).__init__()
         assert "kind" in list(properties.keys())
         kind = properties["kind"]
@@ -61,7 +61,7 @@ class LivySession(ObjectWithGuid):
 
     @staticmethod
     def from_connection_string(connection_string, properties, ipython_display,
-                               session_id="-1", sql_created=None):
+                               session_id=-1, sql_created=None):
         http_client = LivyReliableHttpClient.from_connection_string(connection_string)
         return LivySession(http_client, properties, ipython_display, session_id, sql_created)
 
@@ -77,6 +77,13 @@ class LivySession(ObjectWithGuid):
         self.status = str(r["state"])
 
         self.ipython_display.writeln("Creating SparkContext as 'sc'")
+        # We wait for livy_session_startup_timeout_seconds() for the session to start up.
+        try:
+            self.wait_for_idle(conf.livy_session_startup_timeout_seconds())
+        except LivyClientTimeoutError:
+            raise LivyClientTimeoutError("Session {} did not start up in {} seconds."\
+                                         .format(self.id, conf.livy_session_startup_timeout_seconds()))
+
         if create_sql_context:
             self.create_sql_context()
         self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status)
@@ -129,29 +136,28 @@ class LivySession(ObjectWithGuid):
         if seconds_to_wait is None:
             seconds_to_wait = self._wait_for_idle_timeout_seconds
 
-        self._refresh_status()
-        current_status = self.status
-        if current_status == constants.IDLE_SESSION_STATUS:
-            return
+        while True:
+            self._refresh_status()
+            if self.status == constants.IDLE_SESSION_STATUS:
+                return
 
-        if current_status in constants.FINAL_STATUS:
-            error = "Session {} unexpectedly reached final status '{}'. See logs:\n{}" \
-                .format(self.id, current_status, self.get_logs())
-            self.logger.error(error)
-            raise LivyUnexpectedStatusError(error)
+            if self.status in constants.FINAL_STATUS:
+                error = "Session {} unexpectedly reached final status '{}'. See logs:\n{}"\
+                    .format(self.id, self.status, self.get_logs())
+                self.logger.error(error)
+                raise LivyUnexpectedStatusError(error)
 
-        if seconds_to_wait <= 0.0:
-            error = "Session {} did not reach idle status in time. Current status is {}." \
-                .format(self.id, current_status)
-            self.logger.error(error)
-            raise LivyClientTimeoutError(error)
+            if seconds_to_wait <= 0.0:
+                error = "Session {} did not reach idle status in time. Current status is {}."\
+                    .format(self.id, self.status)
+                self.logger.error(error)
+                raise LivyClientTimeoutError(error)
 
-        start_time = time()
-        self.logger.debug("Session {} in state {}. Sleeping {} seconds."
-                          .format(self.id, current_status, seconds_to_wait))
-        sleep(self._status_sleep_seconds)
-        elapsed = (time() - start_time)
-        return self.wait_for_idle(seconds_to_wait - elapsed)
+            start_time = time()
+            self.logger.debug("Session {} in state {}. Sleeping {} seconds."
+                              .format(self.id, self.status, self._status_sleep_seconds))
+            sleep(self._status_sleep_seconds)
+            seconds_to_wait -= time() - start_time
 
     def sleep(self):
         sleep(self._statement_sleep_seconds)

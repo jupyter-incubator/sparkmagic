@@ -152,6 +152,7 @@ class TestLivySession:
     def test_start_scala_starts_session(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
 
         conf.override_all({
             "status_sleep_seconds": 0.01,
@@ -164,7 +165,7 @@ class TestLivySession:
         conf.load()
 
         assert_equals(kind, session.kind)
-        assert_equals("starting", session.status)
+        assert_equals("idle", session.status)
         assert_equals(0, session.id)
         http_client.post_session.assert_called_with({"kind": "spark"})
         session.create_sql_context.assert_called_once_with()
@@ -172,6 +173,7 @@ class TestLivySession:
     def test_start_r_starts_session(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
 
         conf.override_all({
             "status_sleep_seconds": 0.01,
@@ -184,7 +186,7 @@ class TestLivySession:
         conf.load()
 
         assert_equals(kind, session.kind)
-        assert_equals("starting", session.status)
+        assert_equals("idle", session.status)
         assert_equals(0, session.id)
         http_client.post_session.assert_called_with({"kind": "sparkr"})
         session.create_sql_context.assert_called_once_with()
@@ -192,6 +194,7 @@ class TestLivySession:
     def test_start_python_starts_session(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
 
         conf.override_all({
             "status_sleep_seconds": 0.01,
@@ -204,7 +207,7 @@ class TestLivySession:
         conf.load()
 
         assert_equals(kind, session.kind)
-        assert_equals("starting", session.status)
+        assert_equals("idle", session.status)
         assert_equals(0, session.id)
         http_client.post_session.assert_called_with({"kind": "pyspark"})
         session.create_sql_context.assert_called_once_with()
@@ -212,6 +215,7 @@ class TestLivySession:
     def test_start_turn_off_sql_context_creation(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
 
         conf.override_all({
             "status_sleep_seconds": 0.01,
@@ -224,7 +228,7 @@ class TestLivySession:
         conf.load()
 
         assert_equals(kind, session.kind)
-        assert_equals("starting", session.status)
+        assert_equals("idle", session.status)
         assert_equals(0, session.id)
         http_client.post_session.assert_called_with({"kind": "pyspark"})
         session.create_sql_context.assert_not_called()
@@ -233,6 +237,7 @@ class TestLivySession:
     def test_start_passes_in_all_properties(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
 
         conf.override_all({
             "status_sleep_seconds": 0.01,
@@ -269,6 +274,7 @@ class TestLivySession:
     def test_logs_gets_latest_logs(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
         http_client.get_all_session_logs.return_value = self.log_json
         conf.override_all({
             "status_sleep_seconds": 0.01,
@@ -286,7 +292,8 @@ class TestLivySession:
     def test_wait_for_idle_returns_when_in_state(self):
         http_client = MagicMock()
         http_client.post_session.return_value =  self.session_create_json
-        self.get_session_responses = [self.busy_sessions_json,
+        self.get_session_responses = [self.ready_sessions_json,
+                                      self.busy_sessions_json,
                                       self.ready_sessions_json]
         http_client.get_session.side_effect = self._next_session_response_get
 
@@ -302,13 +309,14 @@ class TestLivySession:
         session.wait_for_idle(30)
 
         http_client.get_session.assert_called_with(0)
-        assert_equals(2, http_client.get_session.call_count)
+        assert_equals(3, http_client.get_session.call_count)
 
     @raises(LivyUnexpectedStatusError)
     def test_wait_for_idle_throws_when_in_final_status(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
-        self.get_session_responses = [self.busy_sessions_json,
+        self.get_session_responses = [self.ready_sessions_json,
+                                      self.busy_sessions_json,
                                       self.busy_sessions_json,
                                       self.error_sessions_json]
         http_client.get_session.side_effect = self._next_session_response_get
@@ -329,7 +337,8 @@ class TestLivySession:
     def test_wait_for_idle_times_out(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
-        self.get_session_responses = [self.busy_sessions_json,
+        self.get_session_responses = [self.ready_sessions_json,
+                                      self.busy_sessions_json,
                                       self.busy_sessions_json,
                                       self.ready_sessions_json]
         http_client.get_session.side_effect = self._next_session_response_get
@@ -348,6 +357,7 @@ class TestLivySession:
     def test_delete_session_when_active(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
         conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01

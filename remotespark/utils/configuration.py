@@ -146,6 +146,11 @@ def statement_sleep_seconds():
 
 @_override
 def wait_for_idle_timeout_seconds():
+    return 15
+
+
+@_override
+def livy_session_startup_timeout_seconds():
     return 60
 
 
