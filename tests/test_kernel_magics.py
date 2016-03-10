@@ -22,7 +22,7 @@ class TestKernelMagics(KernelMagics):
 
         self.language = constants.LANG_PYTHON
         self.url = "url"
-        self.connection_string = "conn_str"
+        self.endpoint = "conn_str"
 
     def refresh_configuration(self):
         self.url = "new_url"

@@ -59,12 +59,6 @@ class LivySession(ObjectWithGuid):
         self.id = session_id
         self.created_sql_context = sql_created
 
-    @staticmethod
-    def from_connection_string(connection_string, properties, ipython_display,
-                               session_id=-1, sql_created=None):
-        http_client = LivyReliableHttpClient.from_connection_string(connection_string)
-        return LivySession(http_client, properties, ipython_display, session_id, sql_created)
-
     def __str__(self):
         return "Session id: {}\tKind: {}\tState: {}".format(self.id, self.kind, self.status)
 
