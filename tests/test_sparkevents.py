@@ -10,8 +10,8 @@ def _setup():
     spark_events = SparkEvents()
     spark_events.handler = MagicMock()
     SparkEvents.get_utc_date_time = MagicMock()
-    time_stamp = "{}".format(spark_events.get_utc_date_time())
-    guid = "{}".format(utils.generate_uuid())
+    time_stamp = spark_events.get_utc_date_time()
+    guid = utils.generate_uuid()
 
 def _teardown():
     pass
