@@ -143,7 +143,7 @@ class RemoteSparkMagics(SparkMagicBase):
                     self.spark_controller.delete_session_by_name(args.session)
                 elif args.url is not None:
                     if args.id is None:
-                        raise ValueError("Must provide --id option to delete session at endpoint from URL")
+                        raise ValueError("Must provide --id or -i option to delete session at endpoint from URL")
                     endpoint = Endpoint(args.url, args.user, args.password)
                     session_id = args.id
                     self.spark_controller.delete_session_by_id(endpoint, session_id)

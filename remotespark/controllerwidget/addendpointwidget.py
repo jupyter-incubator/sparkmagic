@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 from remotespark.controllerwidget.abstractmenuwidget import AbstractMenuWidget
-from remotespark.utils.utils import get_connection_string, get_connection_string_elements
+from remotespark.livyclientlib.endpoint import Endpoint
 
 
 class AddEndpointWidget(AbstractMenuWidget):
@@ -33,52 +33,21 @@ class AddEndpointWidget(AbstractMenuWidget):
             width=widget_width
         )
 
-        self.conn_string_widget = self.ipywidget_factory.get_text(
-            description='Connection String:',
-            value=get_connection_string(self.address_widget.value, self.user_widget.value, self.password_widget.value),
-            width=widget_width
-        )
-
-        # Sync values
-        def parts_to_conn(name, old_value, new_value):
-            url = self.address_widget.value
-            user = self.user_widget.value
-            password = self.password_widget.value
-            conn_str = get_connection_string(url, user, password)
-            self.conn_string_widget.value = conn_str
-
-        def conn_to_parts(name, old_value, new_value):
-            try:
-                conn_str = self.conn_string_widget.value
-                cso = get_connection_string_elements(conn_str)
-                self.address_widget.value = cso.url
-                self.user_widget.value = cso.username
-                self.password_widget.value = cso.password
-            except ValueError:
-                pass
-
-        self.address_widget.on_trait_change(parts_to_conn, "value")
-        self.user_widget.on_trait_change(parts_to_conn, "value")
-        self.password_widget.on_trait_change(parts_to_conn, "value")
-        self.conn_string_widget.on_trait_change(conn_to_parts, "value")
-
         # Submit widget
         self.submit_widget = self.ipywidget_factory.get_submit_button(
             description='Add endpoint'
         )
 
-        self.children = [self.ipywidget_factory.get_html(value="<br/>", width=widget_width), self.address_widget,
-                         self.user_widget, self.password_widget, self.conn_string_widget,
+        self.children = [self.ipywidget_factory.get_html(value="<br/>", width=widget_width),
+                         self.address_widget, self.user_widget, self.password_widget,
                          self.ipywidget_factory.get_html(value="<br/>", width=widget_width), self.submit_widget]
 
         for child in self.children:
             child.parent_widget = self
 
     def run(self):
-        connection_string = get_connection_string(self.address_widget.value, self.user_widget.value,
-                                                  self.password_widget.value)
-        self.endpoints[self.address_widget.value] = connection_string
-
+        endpoint = Endpoint(self.address_widget.value, self.user_widget.value, self.password_widget.value)
+        self.endpoints[self.address_widget.value] = endpoint
         self.ipython_display.writeln("Added endpoint {}".format(self.address_widget.value))
 
         # We need to call the refresh method because drop down in Tab 2 for endpoints wouldn't refresh with the new

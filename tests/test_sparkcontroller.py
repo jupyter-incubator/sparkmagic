@@ -3,6 +3,7 @@ from nose.tools import with_setup
 import json
 
 from remotespark.livyclientlib.sparkcontroller import SparkController
+from remotespark.livyclientlib.endpoint import Endpoint
 
 client_manager = None
 controller = None
@@ -39,14 +40,15 @@ def _teardown():
 def test_add_session():
     name = "name"
     properties = {"kind": "spark"}
-    connection_string = "url=http://location:port;username=name;password=word"
+    endpoint = Endpoint("http://location:port", "name", "word")
     session = MagicMock()
 
     controller._livy_session = MagicMock(return_value=session)
+    controller._http_client = MagicMock(return_value=MagicMock())
 
-    controller.add_session(name, connection_string, False, properties)
+    controller.add_session(name, endpoint, False, properties)
 
-    controller._livy_session.assert_called_once_with(connection_string, properties, ipython_display)
+    controller._livy_session.assert_called_once_with(controller._http_client.return_value, properties, ipython_display)
     controller.session_manager.add_session.assert_called_once_with(name, session)
     session.start.assert_called_once_with()
 
@@ -159,7 +161,7 @@ def test_delete_session_by_id_existent():
 
     controller.delete_session_by_id("conn_str", 0)
 
-    controller._livy_session.assert_called_once_with("conn_str", {"kind": "spark"}, ipython_display, 0, False)
+    controller._livy_session.assert_called_once_with(http_client, {"kind": "spark"}, ipython_display, 0, False)
     session.delete.assert_called_once_with()
 
 

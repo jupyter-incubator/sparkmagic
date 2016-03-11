@@ -4,6 +4,7 @@ from nose.tools import with_setup
 import remotespark.utils.configuration as conf
 from remotespark.magics.remotesparkmagics import RemoteSparkMagics
 from remotespark.livyclientlib.command import Command
+from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.livyclientlib.sqlquery import SQLQuery
 
 magic = None
@@ -42,7 +43,7 @@ def test_info_command_parses():
 def test_info_endpoint_command_parses():
     print_info_mock = MagicMock()
     magic.print_endpoint_info = print_info_mock
-    command = "info conn_str"
+    command = "info -u http://microsoft.com"
     spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=None)
 
     magic.spark(command)
@@ -56,27 +57,29 @@ def test_add_sessions_command_parses():
     add_sessions_mock = MagicMock()
     spark_controller.add_session = add_sessions_mock
     command = "add"
-    name = "name"
-    language = "python"
-    connection_string = "url=http://location:port;username=name;password=word"
+    name = "-s name"
+    language = "-l python"
+    connection_string = "-u http://url.com -a sdf -p w"
     line = " ".join([command, name, language, connection_string])
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with(name, connection_string, False, {"kind": "pyspark"})
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", "sdf", "w"),
+                                              False, {"kind": "pyspark"})
 
     # Skip and scala - upper case
     add_sessions_mock = MagicMock()
     spark_controller.add_session = add_sessions_mock
     command = "add"
-    name = "name"
-    language = "Scala"
-    connection_string = "url=http://location:port;username=name;password=word"
-    line = " ".join([command, name, language, connection_string, "skip"])
+    name = "-s name"
+    language = "-l scala"
+    connection_string = "--url http://location:port"
+    line = " ".join([command, name, language, connection_string, "-k"])
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with(name, connection_string, True, {"kind": "spark"})
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://location:port"),
+                                              True, {"kind": "spark"})
 
 
 @with_setup(_setup, _teardown)
@@ -88,14 +91,15 @@ def test_add_sessions_command_extra_properties():
     add_sessions_mock = MagicMock()
     spark_controller.add_session = add_sessions_mock
     command = "add"
-    name = "name"
-    language = "scala"
-    connection_string = "url=http://location:port;username=name;password=word"
+    name = "-s name"
+    language = "-l scala"
+    connection_string = "-u http://livyendpoint.com"
     line = " ".join([command, name, language, connection_string])
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with(name, connection_string, False, {"kind": "spark", "extra": "yes"})
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com"),
+                                              False, {"kind": "spark", "extra": "yes"})
     conf.load()
 
 
@@ -103,24 +107,15 @@ def test_add_sessions_command_extra_properties():
 def test_delete_sessions_command_parses():
     mock_method = MagicMock()
     spark_controller.delete_session_by_name = mock_method
-    command = "delete"
-    name = "name"
-    line = " ".join([command, name])
+    command = "delete -s name"
+    magic.spark(command)
+    mock_method.assert_called_once_with("name")
 
-    magic.spark(line)
-
-    mock_method.assert_called_once_with(name)
-
-
-@with_setup(_setup, _teardown)
-def test_delete_sessions_command_parses():
+    command = "delete -u URL -a username -p password -i 4"
     mock_method = MagicMock()
     spark_controller.delete_session_by_id = mock_method
-    line = "delete conn_str 7"
-
-    magic.spark(line)
-
-    mock_method.assert_called_once_with("conn_str", "7")
+    magic.spark(command)
+    mock_method.assert_called_once_with(Endpoint("URL", "username", "password"), 4)
 
 
 @with_setup(_setup, _teardown)
@@ -138,11 +133,15 @@ def test_cleanup_command_parses():
 def test_cleanup_endpoint_command_parses():
     mock_method = MagicMock()
     spark_controller.cleanup_endpoint = mock_method
-    line = "cleanup conn_str"
+    line = "cleanup -u endp"
 
     magic.spark(line)
 
-    mock_method.assert_called_once_with("conn_str")
+    mock_method.assert_called_once_with(Endpoint("endp"))
+
+    line = "cleanup -u endp -a user -p passw"
+    magic.spark(line)
+    mock_method.assert_called_with(Endpoint("endp", "user", "passw"))
 
 
 @with_setup(_setup, _teardown)
