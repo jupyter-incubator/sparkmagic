@@ -59,7 +59,7 @@ def test_configuration_load_not_lazy():
     conf.load(fsrw_class)
     assert conf._overrides is not None
     assert_equals(conf._overrides, config)
-    assert_equals(conf.events_handler_class(), "whoops")
+    assert_equals(conf.events_handler_class(), a)
 
 
 @with_setup(_setup)
