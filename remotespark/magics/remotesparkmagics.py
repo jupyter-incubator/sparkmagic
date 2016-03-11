@@ -14,6 +14,7 @@ from IPython.core.magic_arguments import argument, magic_arguments, parse_argstr
 
 import remotespark.utils.configuration as conf
 from remotespark.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
+from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL
@@ -171,7 +172,7 @@ class RemoteSparkMagics(SparkMagicBase):
             # run
             elif len(subcommand) == 0:
                 if args.context == CONTEXT_NAME_SPARK:
-                    (success, out) = self.spark_controller.run_cell(cell, args.session)
+                    (success, out) = self.spark_controller.run_command(Command(cell), args.session)
                     if success:
                         self.ipython_display.write(out)
                     else:

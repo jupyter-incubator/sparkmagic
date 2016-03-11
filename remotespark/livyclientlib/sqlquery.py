@@ -1,5 +1,12 @@
+import json
+import pandas as pd
+
 import remotespark.utils.configuration as conf
 import remotespark.utils.constants as constants
+from remotespark.utils.utils import coerce_pandas_df_to_numeric_datetime
+
+from .command import Command
+from .dataframeparseexception import DataFrameParseException
 
 
 class SQLQuery(object):
@@ -32,6 +39,47 @@ class SQLQuery(object):
         else:
             raise ValueError("Kind '{}' is not supported.".format(kind))
 
+    def execute(self, session):
+        (success, records_text) = self._get_records(session)
+        if not success:
+            raise DataFrameParseException(records_text)
+        if records_text == "":
+            # If there are no records, show some columns at least.
+            records_text = self._get_columns(session)
+            return self._columns_to_dataframe(records_text)
+        else:
+            return self._records_to_dataframe(records_text)
+
+    def to_only_columns_query(self):
+        """Given a SQL query, return a new version of that SQL query which only gets
+        the columns for that query."""
+        return SQLQuery(self.query, self.samplemethod, self.maxrows,
+                        self.samplefraction, True)
+
+    def _get_records(self, session):
+        return self.to_command(session.kind).execute(session)
+
+    def _get_columns(self, session):
+        (success, out) = self.to_only_columns_query().to_command(session.kind).execute(session)
+        if success:
+            return out
+        else:
+            raise DataFrameParseException(out)
+
+    @staticmethod
+    def _columns_to_dataframe(columns_text):
+        return pd.DataFrame.from_records([], columns=columns_text.split('\n'))
+
+    @staticmethod
+    def _records_to_dataframe(records_text):
+        strings = records_text.split('\n')
+        try:
+            df = pd.DataFrame([json.loads(s) for s in strings])
+            coerce_pandas_df_to_numeric_datetime(df)
+            return df
+        except ValueError:
+            raise DataFrameParseException("Cannot parse object as JSON: '{}'".format(strings))
+
     def _pyspark_command(self):
         command = 'sqlContext.sql("""{}""")'.format(self.query)
         if self.only_columns:
@@ -47,7 +95,7 @@ class SQLQuery(object):
         command = 'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
                                                    command,
                                                    constants.LONG_RANDOM_VARIABLE_NAME)
-        return command
+        return Command(command)
 
     def _scala_command(self):
         command = 'sqlContext.sql("""{}""")'.format(self.query)
@@ -61,17 +109,10 @@ class SQLQuery(object):
                 command = '{}.take({})'.format(command, self.maxrows)
             else:
                 command = '{}.collect'.format(command)
-        return '{}.foreach(println)'.format(command)
+        return Command('{}.foreach(println)'.format(command))
 
     def _r_command(self):
         raise NotImplementedError()
-
-    @staticmethod
-    def as_only_columns_query(query):
-        """Given a SQL query, return a new version of that SQL query which only gets
-        the columns for that query."""
-        return SQLQuery(query.query, query.samplemethod, query.maxrows,
-                        query.samplefraction, True)
 
     # Used only for unit testing
     def __eq__(self, other):
