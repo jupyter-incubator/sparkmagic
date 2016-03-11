@@ -8,6 +8,8 @@ class Endpoint(object):
         self.authenticate = False if username == '' and password == '' else True
 
     def __eq__(self, other):
+        if type(other) is not Endpoint:
+            return False
         return self.url == other.url and self.username == other.username and self.password == other.password
 
     def __ne__(self, other):
