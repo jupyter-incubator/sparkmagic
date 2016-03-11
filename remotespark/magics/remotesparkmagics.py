@@ -74,13 +74,9 @@ class RemoteSparkMagics(SparkMagicBase):
            info
                Display the available Livy sessions and other configurations for sessions.
            add
-               Add a Livy session. First argument is the name of the session, second argument
-               is the language, and third argument is the connection string of the Livy endpoint.
-               A fourth argument specifying if session creation can be skipped if it already exists is optional:
-               "skip" or empty.
-               e.g. `%%spark add test python url=https://sparkcluster.net/livy;username=u;password=p skip`
-               or
-               e.g. `%%spark add test python url=https://sparkcluster.net/livy;username=u;password=p`
+               Add a Livy session given a session name (-s), language (-l), and endpoint credentials.
+               The -k argument, if present, will skip adding this session if it already exists.
+               e.g. `%%spark add -s test -l python -u https://sparkcluster.net/livy -a u -p -k`
            config
                Override the livy session properties sent to Livy on session creation. All session creations will
                contain these config settings from then on.
@@ -98,8 +94,8 @@ class RemoteSparkMagics(SparkMagicBase):
                Returns the logs for a given session.
                e.g. `%%spark logs -s testsession` will return the logs for the testsession previously created
            delete
-               Delete a Livy session. Argument is the name of the session to be deleted.
-               e.g. `%%spark delete defaultlivy`
+               Delete a Livy session.
+               e.g. `%%spark delete -s defaultlivy`
            cleanup
                Delete all Livy sessions created by the notebook. No arguments required.
                e.g. `%%spark cleanup`
