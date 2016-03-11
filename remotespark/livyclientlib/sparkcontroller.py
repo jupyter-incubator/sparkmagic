@@ -54,9 +54,9 @@ class SparkController(object):
     def delete_session_by_id(self, endpoint, session_id):
         http_client = self._http_client(endpoint)
         try:
-            r = http_client.get_session(session_id)
+            response = http_client.get_session(session_id)
             http_client = self._http_client(endpoint)
-            session = self._livy_session(http_client, {"kind": r["kind"]},
+            session = self._livy_session(http_client, {"kind": response["kind"]},
                                          self.ipython_display, session_id, False)
             session.delete()
         except ValueError:
