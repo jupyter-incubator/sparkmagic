@@ -48,14 +48,14 @@ class CreateSessionWidget(AbstractMenuWidget):
             self.ipython_display.send_error("Session properties must be a valid JSON string. Error:\n{}".format(e))
             return
 
-        connection_string = self.endpoints_dropdown_widget.value
+        endpoint = self.endpoints_dropdown_widget.value
         language = self.lang_widget.value
         alias = self.session_widget.value
         skip = False
         properties = conf.get_session_properties(language)
 
         try:
-            self.spark_controller.add_session(alias, connection_string, skip, properties)
+            self.spark_controller.add_session(alias, endpoint, skip, properties)
         except ValueError as e:
             self.ipython_display.send_error("""Could not add session with
 name:

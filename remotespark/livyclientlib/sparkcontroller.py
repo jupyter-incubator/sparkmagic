@@ -27,47 +27,48 @@ class SparkController(object):
         session_to_use = self.get_session_by_name_or_default(client_name)
         return sqlquery.execute(session_to_use)
 
-    def get_all_sessions_endpoint(self, connection_string):
-        http_client = self._http_client_from_connection_string(connection_string)
+    def get_all_sessions_endpoint(self, endpoint):
+        http_client = self._http_client(endpoint)
         sessions = http_client.get_sessions()["sessions"]
-        session_list = [self._create_livy_session(connection_string, {"kind": s["kind"]},
-                                                  self.ipython_display, s["id"])
+        session_list = [self._livy_session(http_client, {"kind": s["kind"]},
+                                           self.ipython_display, s["id"])
                         for s in sessions]
         for s in session_list:
             s._refresh_status()
         return session_list
 
-    def get_all_sessions_endpoint_info(self, connection_string):
-        sessions = self.get_all_sessions_endpoint(connection_string)
+    def get_all_sessions_endpoint_info(self, endpoint):
+        sessions = self.get_all_sessions_endpoint(endpoint)
         return [str(s) for s in sessions]
 
     def cleanup(self):
         self.session_manager.clean_up_all()
 
-    def cleanup_endpoint(self, connection_string):
-        for session in self.get_all_sessions_endpoint(connection_string):
+    def cleanup_endpoint(self, endpoint):
+        for session in self.get_all_sessions_endpoint(endpoint):
             session.delete()
 
     def delete_session_by_name(self, name):
         self.session_manager.delete_client(name)
 
-    def delete_session_by_id(self, connection_string, session_id):
-        http_client = self._http_client_from_connection_string(connection_string)
+    def delete_session_by_id(self, endpoint, session_id):
+        http_client = self._http_client(endpoint)
         try:
             response = http_client.get_session(session_id)
-            session = self._create_livy_session(connection_string, {"kind": response["kind"]},
-                                                self.ipython_display, session_id, False)
+            http_client = self._http_client(endpoint)
+            session = self._livy_session(http_client, {"kind": response["kind"]},
+                                         self.ipython_display, session_id, False)
             session.delete()
         except ValueError:
             # Session does not exist; do nothing
             pass
 
-    def add_session(self, name, connection_string, skip_if_exists, properties):
+    def add_session(self, name, endpoint, skip_if_exists, properties):
         if skip_if_exists and (name in self.session_manager.get_sessions_list()):
             self.logger.debug("Skipping {} because it already exists in list of sessions.".format(name))
             return
-
-        session = self._create_livy_session(connection_string, properties, self.ipython_display)
+        http_client = self._http_client(endpoint)
+        session = self._livy_session(http_client, properties, self.ipython_display)
         self.session_manager.add_session(name, session)
         session.start()
 
@@ -91,9 +92,11 @@ class SparkController(object):
         return self.session_manager.sessions
 
     @staticmethod
-    def _create_livy_session(*args, **kwargs):
-        return LivySession.from_connection_string(*args, **kwargs)
+    def _livy_session(http_client, properties, ipython_display,
+                      session_id=-1, sql_created=None):
+        return LivySession(http_client, properties, ipython_display,
+                           session_id, sql_created)
 
     @staticmethod
-    def _http_client_from_connection_string(connection_string):
-        return LivyReliableHttpClient.from_connection_string(connection_string)
+    def _http_client(endpoint):
+        return LivyReliableHttpClient.from_endpoint(endpoint)
