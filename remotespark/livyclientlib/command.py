@@ -19,16 +19,15 @@ class Command(ObjectWithGuid):
     def execute(self, session):
         session.wait_for_idle()
         data = {"code": self.code}
-        r = session.http_client.post_statement(session.id, data)
-        statement_id = r['id']
+        response = session.http_client.post_statement(session.id, data)
+        statement_id = response['id']
         return self._get_statement_output(session, statement_id)
 
     def _get_statement_output(self, session, statement_id):
         statement_running = True
         out = ""
         while statement_running:
-            r = session.http_client.get_statement(session.id, statement_id)
-            statement = r
+            statement = session.http_client.get_statement(session.id, statement_id)
             status = statement["state"]
 
             self.logger.debug("Status of statement {} is {}.".format(statement_id, status))

@@ -49,17 +49,17 @@ def test_configuration_load():
 @with_setup(_setup)
 def test_configuration_load_not_lazy():
     a = "whoops"
-    config = { conf.default_chart_type.__name__: a }
+    config = { conf.events_handler_class.__name__: a }
     fsrw = MagicMock()
     fsrw.path = ""
     read_lines = MagicMock(return_value=[json.dumps(config)])
     fsrw.read_lines = read_lines
     fsrw_class = MagicMock(return_value=fsrw)
-    conf.override_all({conf.default_chart_type.__name__: "bar"})
+    conf.override_all({conf.events_handler_class.__name__: "bar"})
     conf.load(fsrw_class)
     assert conf._overrides is not None
     assert_equals(conf._overrides, config)
-    assert_equals(conf.default_chart_type(), "whoops")
+    assert_equals(conf.events_handler_class(), "whoops")
 
 
 @with_setup(_setup)

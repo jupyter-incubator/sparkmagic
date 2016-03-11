@@ -54,9 +54,9 @@ class SparkController(object):
     def delete_session_by_id(self, connection_string, session_id):
         http_client = self._http_client_from_connection_string(connection_string)
         try:
-            r = http_client.get_session(session_id)
-            session = self._create_livy_session(connection_string, {"kind": r["kind"]},
-                                            self.ipython_display, session_id, False)
+            response = http_client.get_session(session_id)
+            session = self._create_livy_session(connection_string, {"kind": response["kind"]},
+                                                self.ipython_display, session_id, False)
             session.delete()
         except ValueError:
             # Session does not exist; do nothing

@@ -1,6 +1,4 @@
 {
-  "default_chart_type": "area",
-
   "kernel_python_credentials" : {
     "username": "",
     "password": "",
