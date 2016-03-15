@@ -1,9 +1,10 @@
 from mock import MagicMock, call
-from nose.tools import with_setup
+from nose.tools import with_setup, assert_equals
 
 from remotespark.datawidgets.autovizwidget import AutoVizWidget
 from remotespark.datawidgets.encoding import Encoding
 import pandas as pd
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 
 
 renderer = None
@@ -86,3 +87,21 @@ def test_create_viz_types_buttons():
     assert call(description=Encoding.chart_type_line) in ipywidget_factory.get_button.mock_calls
     assert call(description=Encoding.chart_type_area) in ipywidget_factory.get_button.mock_calls
     assert call(description=Encoding.chart_type_bar) in ipywidget_factory.get_button.mock_calls
+
+
+@with_setup(_setup, _teardown)
+def test_convert_to_displayable_dataframe():
+    bool_df = pd.DataFrame([{u'bool_col': True, u'int_col': 0, u'float_col': 3.0},
+                            {u'bool_col': False, u'int_col': 100, u'float_col': 0.7}])
+    copy_of_df = bool_df.copy()
+    widget = AutoVizWidget(df, encoding, renderer, ipywidget_factory,
+                           encoding_widget, ipython_display, testing=True)
+    result = AutoVizWidget._convert_to_displayable_dataframe(bool_df)
+    # Ensure original DF not changed
+    assert_frame_equal(bool_df, copy_of_df)
+    assert_series_equal(bool_df[u'int_col'], result[u'int_col'])
+    assert_series_equal(bool_df[u'float_col'], result[u'float_col'])
+    assert_equals(result.dtypes[u'bool_col'], object)
+    assert_equals(len(result[u'bool_col']), 2)
+    assert_equals(result[u'bool_col'][0], 'True')
+    assert_equals(result[u'bool_col'][1], 'False')
