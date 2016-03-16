@@ -4,9 +4,10 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
+import copy
 
-from remotespark.utils.constants import Constants
-from remotespark.utils.utils import join_paths, get_magics_home_path
+from remotespark.utils.constants import CONFIG_JSON
+from remotespark.utils.utils import join_paths, get_magics_home_path, get_livy_kind
 from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
 
 _overrides = None
@@ -28,7 +29,7 @@ def load(fsrw_class=None):
         fsrw_class = FileSystemReaderWriter
     home_path = fsrw_class(get_magics_home_path())
     home_path.ensure_path_exists()
-    config_file = fsrw_class(join_paths(home_path.path, Constants.config_json))
+    config_file = fsrw_class(join_paths(home_path.path, CONFIG_JSON))
     config_file.ensure_file_exists()
     config_text = config_file.read_lines()
     line = "".join(config_text).strip()
@@ -71,6 +72,12 @@ def _override(f):
     return ret
 
 
+def get_session_properties(language):
+    properties = copy.deepcopy(session_configs())
+    properties["kind"] = get_livy_kind(language)
+    return properties
+
+
 # All of the functions below return the values of configurations. They are
 # all marked with the _override decorator, which returns the overridden
 # value of that configuration if there is any such configuration. Otherwise,
@@ -80,26 +87,6 @@ def _override(f):
 @_override
 def session_configs():
     return {}
-
-
-@_override
-def serialize():
-    return False
-
-
-@_override
-def serialize_periodically():
-    return False
-
-
-@_override
-def serialize_period_seconds():
-    return 3
-
-
-@_override
-def default_chart_type():
-    return 'area'
 
 
 @_override
@@ -137,10 +124,9 @@ def logging_config():
         }
     }
 
-
 @_override
-def execute_timeout_seconds():
-    return 3600
+def events_handler_class():
+    return "remotespark.utils.eventshandler.EventsHandler"
 
 
 @_override
@@ -154,7 +140,12 @@ def statement_sleep_seconds():
 
 
 @_override
-def create_sql_context_timeout_seconds():
+def wait_for_idle_timeout_seconds():
+    return 15
+
+
+@_override
+def livy_session_startup_timeout_seconds():
     return 60
 
 
@@ -180,8 +171,18 @@ def use_auto_viz():
 
 
 @_override
-def max_results_sql():
+def default_maxrows():
     return 2500
+
+
+@_override
+def default_samplemethod():
+    return "take"
+
+
+@_override
+def default_samplefraction():
+    return 0.1
 
 
 @_override

@@ -27,5 +27,5 @@ class IpythonDisplay(object):
         self.write("{}\n".format(msg))
 
     def send_error(self, error):
-        self._ipython_shell.write_err(error)
+        self._ipython_shell.write_err("{}\n".format(error))
         self.stderr_flush()

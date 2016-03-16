@@ -4,7 +4,7 @@
 import pandas as pd
 from ipywidgets import FlexBox
 
-from .ipywidgetfactory import IpyWidgetFactory
+from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
 from .encoding import Encoding
 
 

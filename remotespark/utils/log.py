@@ -7,7 +7,7 @@ import logging
 import logging.config
 
 import remotespark.utils.configuration as conf
-from remotespark.utils.constants import Constants
+from remotespark.utils.constants import MAGICS_LOGGER_NAME
 
 
 class Log(object):
@@ -18,15 +18,18 @@ class Log(object):
         assert caller_name is not None
         self._caller_name = caller_name
         self._getLogger()
-    
+
     def debug(self, message):
         self.logger.debug(self._transform_log_message(message))
 
     def error(self, message):
         self.logger.error(self._transform_log_message(message))
 
+    def info(self, message):
+        self.logger.info(self._transform_log_message(message))
+
     def _getLogger(self):
-        self.logger = logging.getLogger(Constants.magics_logger_name)
+        self.logger = logging.getLogger(MAGICS_LOGGER_NAME)
 
     def _transform_log_message(self, message):
         return '{}\t{}'.format(self._caller_name, message)

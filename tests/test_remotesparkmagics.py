@@ -1,11 +1,11 @@
 from mock import MagicMock
-from nose.tools import raises, with_setup
+from nose.tools import with_setup
 
-from remotespark.remotesparkmagics import RemoteSparkMagics
-from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 import remotespark.utils.configuration as conf
-from remotespark.utils.constants import Constants
-
+from remotespark.magics.remotesparkmagics import RemoteSparkMagics
+from remotespark.livyclientlib.command import Command
+from remotespark.livyclientlib.endpoint import Endpoint
+from remotespark.livyclientlib.sqlquery import SQLQuery
 
 magic = None
 spark_controller = None
@@ -18,14 +18,10 @@ def _setup():
 
     conf.override_all({})
 
-    shell = MagicMock()
-    ipython_display = MagicMock()
-    magic = RemoteSparkMagics(shell=None)
-    magic.shell = shell
-    magic.ipython_display = ipython_display
-
-    spark_controller = MagicMock()
-    magic.spark_controller = spark_controller
+    magic = RemoteSparkMagics(shell=None, widget=MagicMock())
+    magic.shell = shell = MagicMock()
+    magic.ipython_display = ipython_display = MagicMock()
+    magic.spark_controller = spark_controller = MagicMock()
 
 
 def _teardown():
@@ -46,8 +42,8 @@ def test_info_command_parses():
 @with_setup(_setup, _teardown)
 def test_info_endpoint_command_parses():
     print_info_mock = MagicMock()
-    magic._print_endpoint_info = print_info_mock
-    command = "info conn_str"
+    magic.print_endpoint_info = print_info_mock
+    command = "info -u http://microsoft.com"
     spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=None)
 
     magic.spark(command)
@@ -61,27 +57,29 @@ def test_add_sessions_command_parses():
     add_sessions_mock = MagicMock()
     spark_controller.add_session = add_sessions_mock
     command = "add"
-    name = "name"
-    language = "python"
-    connection_string = "url=http://location:port;username=name;password=word"
+    name = "-s name"
+    language = "-l python"
+    connection_string = "-u http://url.com -a sdf -p w"
     line = " ".join([command, name, language, connection_string])
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with(name, connection_string, False, {"kind": "pyspark"})
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", "sdf", "w"),
+                                              False, {"kind": "pyspark"})
 
     # Skip and scala - upper case
     add_sessions_mock = MagicMock()
     spark_controller.add_session = add_sessions_mock
     command = "add"
-    name = "name"
-    language = "Scala"
-    connection_string = "url=http://location:port;username=name;password=word"
-    line = " ".join([command, name, language, connection_string, "skip"])
+    name = "-s name"
+    language = "-l scala"
+    connection_string = "--url http://location:port"
+    line = " ".join([command, name, language, connection_string, "-k"])
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with(name, connection_string, True, {"kind": "spark"})
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://location:port"),
+                                              True, {"kind": "spark"})
 
 
 @with_setup(_setup, _teardown)
@@ -93,14 +91,15 @@ def test_add_sessions_command_extra_properties():
     add_sessions_mock = MagicMock()
     spark_controller.add_session = add_sessions_mock
     command = "add"
-    name = "name"
-    language = "scala"
-    connection_string = "url=http://location:port;username=name;password=word"
+    name = "-s name"
+    language = "-l scala"
+    connection_string = "-u http://livyendpoint.com"
     line = " ".join([command, name, language, connection_string])
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with(name, connection_string, False, {"kind": "spark", "extra": "yes"})
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com"),
+                                              False, {"kind": "spark", "extra": "yes"})
     conf.load()
 
 
@@ -108,24 +107,15 @@ def test_add_sessions_command_extra_properties():
 def test_delete_sessions_command_parses():
     mock_method = MagicMock()
     spark_controller.delete_session_by_name = mock_method
-    command = "delete"
-    name = "name"
-    line = " ".join([command, name])
+    command = "delete -s name"
+    magic.spark(command)
+    mock_method.assert_called_once_with("name")
 
-    magic.spark(line)
-
-    mock_method.assert_called_once_with(name)
-
-
-@with_setup(_setup, _teardown)
-def test_delete_sessions_command_parses():
+    command = "delete -u URL -a username -p password -i 4"
     mock_method = MagicMock()
     spark_controller.delete_session_by_id = mock_method
-    line = "delete conn_str 7"
-
-    magic.spark(line)
-
-    mock_method.assert_called_once_with("conn_str", "7")
+    magic.spark(command)
+    mock_method.assert_called_once_with(Endpoint("URL", "username", "password"), 4)
 
 
 @with_setup(_setup, _teardown)
@@ -143,11 +133,15 @@ def test_cleanup_command_parses():
 def test_cleanup_endpoint_command_parses():
     mock_method = MagicMock()
     spark_controller.cleanup_endpoint = mock_method
-    line = "cleanup conn_str"
+    line = "cleanup -u endp"
 
     magic.spark(line)
 
-    mock_method.assert_called_once_with("conn_str")
+    mock_method.assert_called_once_with(Endpoint("endp"))
+
+    line = "cleanup -u endp -a user -p passw"
+    magic.spark(line)
+    mock_method.assert_called_with(Endpoint("endp", "user", "passw"))
 
 
 @with_setup(_setup, _teardown)
@@ -165,7 +159,7 @@ def test_run_cell_command_parses():
     run_cell_method = MagicMock()
     result_value = ""
     run_cell_method.return_value = (True, result_value)
-    spark_controller.run_cell = run_cell_method
+    spark_controller.run_command = run_cell_method
 
     command = "-s"
     name = "sessions_name"
@@ -174,7 +168,7 @@ def test_run_cell_command_parses():
 
     result = magic.spark(line, cell)
 
-    run_cell_method.assert_called_once_with(cell, name)
+    run_cell_method.assert_called_once_with(Command(cell), name)
     assert result is None
     ipython_display.write.assert_called_once_with(result_value)
 
@@ -184,7 +178,7 @@ def test_run_cell_command_writes_to_err():
     run_cell_method = MagicMock()
     result_value = ""
     run_cell_method.return_value = (False, result_value)
-    spark_controller.run_cell = run_cell_method
+    spark_controller.run_command = run_cell_method
 
     command = "-s"
     name = "sessions_name"
@@ -193,7 +187,7 @@ def test_run_cell_command_writes_to_err():
 
     result = magic.spark(line, cell)
 
-    run_cell_method.assert_called_once_with(cell, name)
+    run_cell_method.assert_called_once_with(Command(cell), name)
     assert result is None
     ipython_display.send_error.assert_called_once_with(result_value)
 
@@ -202,108 +196,43 @@ def test_run_cell_command_writes_to_err():
 def test_run_sql_command_parses():
     run_cell_method = MagicMock()
     run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_sql = run_cell_method
+    spark_controller.run_sqlquery = run_cell_method
 
     command = "-s"
     name = "sessions_name"
     context = "-c"
     context_name = "sql"
-    line = " ".join([command, name, context, context_name])
+    meth = "-m"
+    method_name = "sample"
+    line = " ".join([command, name, context, context_name, meth, method_name])
     cell = "cell code"
 
     result = magic.spark(line, cell)
 
-    run_cell_method.assert_called_once_with(cell, name)
+    run_cell_method.assert_called_once_with(SQLQuery(cell, samplemethod=method_name), name)
     assert result is not None
 
 
 @with_setup(_setup, _teardown)
-def test_run_hive_command_parses():
+def test_run_sql_command_knows_how_to_be_quiet():
     run_cell_method = MagicMock()
     run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_hive = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "hive"
-    line = " ".join([command, name, context, context_name])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_called_once_with(cell, name)
-    assert result is not None
-
-
-@with_setup(_setup, _teardown)
-def test_run_sql_command_returns_none_when_exception():
-    error_message = "error"
-    run_cell_method = MagicMock(side_effect=DataFrameParseException(error_message))
-    run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_sql = run_cell_method
+    spark_controller.run_sqlquery = run_cell_method
 
     command = "-s"
     name = "sessions_name"
     context = "-c"
     context_name = "sql"
-    line = " ".join([command, name, context, context_name])
+    quiet = "-q"
+    meth = "-m"
+    method_name = "sample"
+    line = " ".join([command, name, context, context_name, quiet, meth, method_name])
     cell = "cell code"
 
     result = magic.spark(line, cell)
 
-    run_cell_method.assert_called_once_with(cell, name)
+    run_cell_method.assert_called_once_with(SQLQuery(cell, samplemethod=method_name), name)
     assert result is None
-    ipython_display.send_error.assert_called_once_with(error_message)
-
-
-@with_setup(_setup, _teardown)
-def test_run_hive_command_returns_none_when_exception():
-    error_message = "error"
-    run_cell_method = MagicMock(side_effect=DataFrameParseException(error_message))
-    run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_hive = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "hive"
-    line = " ".join([command, name, context, context_name])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_called_once_with(cell, name)
-    assert result is None
-    ipython_display.send_error.assert_called_once_with(error_message)
-
-
-@with_setup(_setup, _teardown)
-def test_run_sql_command_stores_variable_in_user_ns():
-    shell.user_ns = user_ns = dict()
-    run_cell_method = MagicMock()
-    run_cell_method.return_value = (True, "")
-    spark_controller.run_cell_sql = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "sql"
-    output = "-o"
-    output_name = "my_var"
-    line = " ".join([command, name, context, context_name, output, output_name])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_called_once_with(cell, name)
-    assert result is not None
-    assert result is user_ns[output_name]
-
-
-def test_get_livy_kind_covers_all_langs():
-    for lang in Constants.lang_supported:
-        RemoteSparkMagics._get_livy_kind(lang)
 
 
 @with_setup(_setup, _teardown)
