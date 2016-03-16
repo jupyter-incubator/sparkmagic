@@ -48,7 +48,7 @@ class SessionManager(object):
 
     def get_session_id_for_client(self, name):
         if name in self.get_sessions_list():
-            return self._sessions[name].session_id
+            return self._sessions[name].id
         return None
 
     def delete_client(self, name):
