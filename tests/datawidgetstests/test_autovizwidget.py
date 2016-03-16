@@ -49,23 +49,6 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
-def test_on_render_viz():
-    widget = AutoVizWidget(df, encoding, renderer, ipywidget_factory,
-                           encoding_widget, ipython_display, testing=True)
-
-    # on_render_viz is called in the constructor, so no need to call it here.
-    output.clear_output.assert_called_once()
-
-    renderer.render.assert_called_once_with(df, encoding, output)
-
-    encoding_widget.show_x.assert_called_once_with(True)
-    encoding_widget.show_y.assert_called_once_with(True)
-    encoding_widget.show_controls.assert_called_once_with(True)
-    encoding_widget.show_logarithmic_x_axis.assert_called_once_with(True)
-    encoding_widget.show_logarithmic_y_axis.assert_called_once_with(True)
-
-
-@with_setup(_setup, _teardown)
 def test_create_viz_types_buttons():
     df_single_column = pd.DataFrame([{u'buildingID': 0}])
     widget = AutoVizWidget(df_single_column, encoding, renderer, ipywidget_factory,
