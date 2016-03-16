@@ -76,13 +76,14 @@ class RemoteSparkMagics(SparkMagicBase):
            add
                Add a Livy session given a session name (-s), language (-l), and endpoint credentials.
                The -k argument, if present, will skip adding this session if it already exists.
-               e.g. `%%spark add -s test -l python -u https://sparkcluster.net/livy -a u -p -k`
+               e.g. `%spark add -s test -l python -u https://sparkcluster.net/livy -a u -p -k`
            config
                Override the livy session properties sent to Livy on session creation. All session creations will
                contain these config settings from then on.
                Expected value is a JSON key-value string to be sent as part of the Request Body for the POST /sessions
                endpoint in Livy.
-               e.g. `%%spark config {"driverMemory":"1000M", "executorCores":4}`
+               e.g. `%%spark config`
+                    `{"driverMemory":"1000M", "executorCores":4}`
            run
                Run Spark code against a session.
                e.g. `%%spark -s testsession` will execute the cell code against the testsession previously created
@@ -92,13 +93,13 @@ class RemoteSparkMagics(SparkMagicBase):
                         Python environment.
            logs
                Returns the logs for a given session.
-               e.g. `%%spark logs -s testsession` will return the logs for the testsession previously created
+               e.g. `%spark logs -s testsession` will return the logs for the testsession previously created
            delete
                Delete a Livy session.
-               e.g. `%%spark delete -s defaultlivy`
+               e.g. `%spark delete -s defaultlivy`
            cleanup
                Delete all Livy sessions created by the notebook. No arguments required.
-               e.g. `%%spark cleanup`
+               e.g. `%spark cleanup`
         """
         usage = "Please look at usage of %spark by executing `%spark?`."
         user_input = line
@@ -117,9 +118,7 @@ class RemoteSparkMagics(SparkMagicBase):
                     self._print_local_info()
             # config
             elif subcommand == "config":
-                # Would normally do " ".join(args.command[1:]) but parse_argstring removes quotes...
-                rest_of_line = user_input[7:]
-                conf.override(conf.session_configs.__name__, json.loads(rest_of_line))
+                conf.override(conf.session_configs.__name__, json.loads(cell))
             # add
             elif subcommand == "add":
                 if args.url is None:
