@@ -30,8 +30,8 @@ class ManageSessionWidget(AbstractMenuWidget):
             session_widgets.append(self.ipywidget_factory.get_html(value="<hr/>", width="600px"))
 
             # Sessions
-            for name, client in client_dict.items():
-                session_widgets.append(self.get_session_widget(name, client.session_id, client.kind, client.status))
+            for name, session in client_dict.items():
+                session_widgets.append(self.get_session_widget(name, session.id, session.kind, session.status))
 
             session_widgets.append(self.ipywidget_factory.get_html(value="<br/>", width="600px"))
         else:
@@ -43,7 +43,7 @@ class ManageSessionWidget(AbstractMenuWidget):
         hbox = self.ipywidget_factory.get_hbox()
 
         name_w = self.ipywidget_factory.get_html(value=name, width="200px", padding="4px")
-        id_w = self.ipywidget_factory.get_html(value=session_id, width="100px", padding="4px")
+        id_w = self.ipywidget_factory.get_html(value=str(session_id), width="100px", padding="4px")
         kind_w = self.ipywidget_factory.get_html(value=kind, width="100px", padding="4px")
         state_w = self.ipywidget_factory.get_html(value=state, width="100px", padding="4px")
 

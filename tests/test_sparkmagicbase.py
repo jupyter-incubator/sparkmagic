@@ -29,11 +29,11 @@ def test_df_execution_without_output_var():
     output_var = None
 
     magic.spark_controller = MagicMock()
-    magic.spark_controller.run_cell_sql = MagicMock(return_value=df)
+    magic.spark_controller.run_sqlquery = MagicMock(return_value=df)
 
     res = magic.execute_sqlquery(query, session, output_var, False)
 
-    magic.spark_controller.run_cell_sql.assert_called_once_with(query, session)
+    magic.spark_controller.run_sqlquery.assert_called_once_with(query, session)
     assert res == df
     assert_equals(list(shell.user_ns.keys()), [])
 
@@ -50,11 +50,11 @@ def test_df_execution_with_output_var():
     output_var = "var_name"
 
     magic.spark_controller = MagicMock()
-    magic.spark_controller.run_cell_sql = MagicMock(return_value=df)
+    magic.spark_controller.run_sqlquery = MagicMock(return_value=df)
 
     res = magic.execute_sqlquery(query, session, output_var, False)
 
-    magic.spark_controller.run_cell_sql.assert_called_once_with(query, session)
+    magic.spark_controller.run_sqlquery.assert_called_once_with(query, session)
     assert res == df
     assert shell.user_ns[output_var] == df
 
@@ -71,11 +71,11 @@ def test_df_execution_quiet_without_output_var():
     output_var = None
 
     magic.spark_controller = MagicMock()
-    magic.spark_controller.run_cell_sql = MagicMock(return_value=df)
+    magic.spark_controller.run_sqlquery = MagicMock(return_value=df)
 
     res = magic.execute_sqlquery(cell, session, output_var, True)
 
-    magic.spark_controller.run_cell_sql.assert_called_once_with(cell, session)
+    magic.spark_controller.run_sqlquery.assert_called_once_with(cell, session)
     assert res is None
     assert_equals(list(shell.user_ns.keys()), [])
 
@@ -92,11 +92,11 @@ def test_df_execution_quiet_with_output_var():
     output_var = "var_name"
 
     magic.spark_controller = MagicMock()
-    magic.spark_controller.run_cell_sql = MagicMock(return_value=df)
+    magic.spark_controller.run_sqlquery = MagicMock(return_value=df)
 
     res = magic.execute_sqlquery(cell, session, output_var, True)
 
-    magic.spark_controller.run_cell_sql.assert_called_once_with(cell, session)
+    magic.spark_controller.run_sqlquery.assert_called_once_with(cell, session)
     assert res is None
     assert shell.user_ns[output_var] == df
 
@@ -113,10 +113,10 @@ def test_df_execution_throws():
     output_var = "var_name"
 
     magic.spark_controller = MagicMock()
-    magic.spark_controller.run_cell_sql = MagicMock(side_effect=DataFrameParseException(error))
+    magic.spark_controller.run_sqlquery = MagicMock(side_effect=DataFrameParseException(error))
 
     res = magic.execute_sqlquery(query, session, output_var, False)
 
-    magic.spark_controller.run_cell_sql.assert_called_once_with(query, session)
+    magic.spark_controller.run_sqlquery.assert_called_once_with(query, session)
     assert res is None
     assert_equals(list(shell.user_ns.keys()), [])

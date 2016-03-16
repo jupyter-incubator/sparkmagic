@@ -90,26 +90,6 @@ def session_configs():
 
 
 @_override
-def serialize():
-    return False
-
-
-@_override
-def serialize_periodically():
-    return False
-
-
-@_override
-def serialize_period_seconds():
-    return 3
-
-
-@_override
-def default_chart_type():
-    return 'area'
-
-
-@_override
 def kernel_python_credentials():
     return {'username': '', 'password': '', 'url': 'http://localhost:8998'}
 
@@ -144,10 +124,9 @@ def logging_config():
         }
     }
 
-
 @_override
-def execute_timeout_seconds():
-    return 3600
+def events_handler_class():
+    return "remotespark.utils.eventshandler.EventsHandler"
 
 
 @_override
@@ -161,7 +140,12 @@ def statement_sleep_seconds():
 
 
 @_override
-def create_sql_context_timeout_seconds():
+def wait_for_idle_timeout_seconds():
+    return 15
+
+
+@_override
+def livy_session_startup_timeout_seconds():
     return 60
 
 
