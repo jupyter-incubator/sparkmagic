@@ -191,14 +191,14 @@ def test_configure():
 
     # Session not started
     conf.override_all({})
-    magic.configure('{"extra": "yes"}')
+    magic.configure('', '{"extra": "yes"}')
     assert conf.session_configs() == {"extra": "yes"}
     magic.info.assert_called_once_with("")
 
     # Session started - no -f
     magic.session_started = True
     conf.override_all({})
-    magic.configure("{\"extra\": \"yes\"}")
+    magic.configure('', "{\"extra\": \"yes\"}")
 
     assert conf.session_configs() == {}
     assert_equals(ipython_display.send_error.call_count, 1)
@@ -206,7 +206,7 @@ def test_configure():
     # Session started - with -f
     magic.info.reset_mock()
     conf.override_all({})
-    magic.configure("-f {\"extra\": \"yes\"}")
+    magic.configure("-f", "{\"extra\": \"yes\"}")
     assert conf.session_configs() == {"extra": "yes"}
     spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
