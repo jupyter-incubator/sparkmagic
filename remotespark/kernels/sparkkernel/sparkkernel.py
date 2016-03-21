@@ -13,6 +13,7 @@ class SparkKernel(SparkKernelBase):
         language_info = {
             'name': 'scala',
             'mimetype': 'text/x-scala',
+            'codemirror_mode': 'text/x-scala',
             'pygments_lexer': 'scala'
         }
 
