@@ -40,7 +40,7 @@ class AutoVizWidget(FlexBox):
             ipython_display = IpythonDisplay()
         self.ipython_display = ipython_display
 
-        self.df = df
+        self.df = self._convert_to_displayable_dataframe(df)
 
         self.encoding = encoding
 
@@ -114,3 +114,13 @@ class AutoVizWidget(FlexBox):
         button.on_click(on_render)
 
         children.append(button)
+
+    @staticmethod
+    def _convert_to_displayable_dataframe(df):
+        # Don't change the user's dataframe! Make a copy to make these changes.
+        df = df.copy()
+        # Convert all booleans to string because Plotly doesn't know how to plot booleans,
+        # but it does know how to plot strings.
+        bool_columns = list(df.select_dtypes(include=['bool']).columns)
+        df[bool_columns] = df[bool_columns].astype(str)
+        return df

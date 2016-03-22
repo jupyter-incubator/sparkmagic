@@ -4,6 +4,8 @@ from IPython.core.magic import magics_class
 
 from remotespark.kernels.kernelmagics import KernelMagics
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
+from remotespark.livyclientlib.endpoint import Endpoint
+from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.sqlquery import SQLQuery
 import remotespark.utils.constants as constants
 import remotespark.utils.configuration as conf
@@ -20,11 +22,10 @@ class TestKernelMagics(KernelMagics):
         super(TestKernelMagics, self).__init__(shell)
 
         self.language = constants.LANG_PYTHON
-        self.url = "url"
-        self.connection_string = "conn_str"
+        self.endpoint = Endpoint("url")
 
     def refresh_configuration(self):
-        self.url = "new_url"
+        self.endpoint = Endpoint("new_url")
 
 
 def _setup():
@@ -59,7 +60,7 @@ def test_start_session():
 
     assert ret
     assert magic.session_started
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
 
     # Call a second time
@@ -114,7 +115,7 @@ def test_change_language():
     magic._do_not_call_change_language(line)
 
     assert_equals(constants.LANG_SCALA, magic.language)
-    assert_equals("new_url", magic.url)
+    assert_equals(Endpoint("new_url"), magic.endpoint)
 
 
 @with_setup(_setup, _teardown)
@@ -127,7 +128,7 @@ def test_change_language_session_started():
 
     assert_equals(ipython_display.send_error.call_count, 1)
     assert_equals(constants.LANG_PYTHON, magic.language)
-    assert_equals("url", magic.url)
+    assert_equals(Endpoint("url"), magic.endpoint)
 
 
 @with_setup(_setup, _teardown)
@@ -139,7 +140,7 @@ def test_change_language_not_valid():
 
     assert_equals(ipython_display.send_error.call_count, 1)
     assert_equals(constants.LANG_PYTHON, magic.language)
-    assert_equals("url", magic.url)
+    assert_equals(Endpoint("url"), magic.endpoint)
 
 
 @with_setup(_setup, _teardown)
@@ -190,14 +191,14 @@ def test_configure():
 
     # Session not started
     conf.override_all({})
-    magic.configure('{"extra": "yes"}')
+    magic.configure('', '{"extra": "yes"}')
     assert conf.session_configs() == {"extra": "yes"}
     magic.info.assert_called_once_with("")
 
     # Session started - no -f
     magic.session_started = True
     conf.override_all({})
-    magic.configure("{\"extra\": \"yes\"}")
+    magic.configure('', "{\"extra\": \"yes\"}")
 
     assert conf.session_configs() == {}
     assert_equals(ipython_display.send_error.call_count, 1)
@@ -205,10 +206,10 @@ def test_configure():
     # Session started - with -f
     magic.info.reset_mock()
     conf.override_all({})
-    magic.configure("-f {\"extra\": \"yes\"}")
+    magic.configure("-f", "{\"extra\": \"yes\"}")
     assert conf.session_configs() == {"extra": "yes"}
     spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK, "extra": "yes"})
     magic.info.assert_called_once_with("")
 
@@ -227,28 +228,28 @@ def test_get_session_settings():
 def test_spark():
     line = ""
     cell = "some spark code"
-    spark_controller.run_cell = MagicMock(return_value=(True, line))
+    spark_controller.run_command = MagicMock(return_value=(True, line))
 
     magic.spark(line, cell)
 
     ipython_display.write.assert_called_once_with(line)
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
-    spark_controller.run_cell.assert_called_once_with(cell)
+    spark_controller.run_command.assert_called_once_with(Command(cell))
 
 
 @with_setup(_setup, _teardown)
 def test_spark_error():
     line = ""
     cell = "some spark code"
-    spark_controller.run_cell = MagicMock(return_value=(False, line))
+    spark_controller.run_command = MagicMock(return_value=(False, line))
 
     magic.spark(line, cell)
 
     ipython_display.send_error.assert_called_once_with(line)
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
-    spark_controller.run_cell.assert_called_once_with(cell)
+    spark_controller.run_command.assert_called_once_with(Command(cell))
 
 
 @with_setup(_setup, _teardown)
@@ -262,7 +263,7 @@ def test_spark_failed_session_start():
     assert_is(ret, None)
     assert_equals(ipython_display.write.call_count, 0)
     assert_equals(spark_controller.add_session.call_count, 0)
-    assert_equals(spark_controller.run_cell.call_count, 0)
+    assert_equals(spark_controller.run_command.call_count, 0)
 
 
 @with_setup(_setup, _teardown)
@@ -273,7 +274,7 @@ def test_sql_without_output():
 
     magic.sql(line, cell)
 
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
     magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, None, False)
 
@@ -286,7 +287,7 @@ def test_sql_with_output():
 
     magic.sql(line, cell)
 
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
     magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, "my_var", False)
 
@@ -312,7 +313,7 @@ def test_sql_quiet():
 
     ret = magic.sql(line, cell)
 
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
     magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, "Output", True)
 
@@ -325,7 +326,7 @@ def test_sql_sample_options():
 
     ret = magic.sql(line, cell)
 
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.connection_string, False,
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
     magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell, samplemethod="sample",
                                                             maxrows=142, samplefraction=0.3),
@@ -356,7 +357,7 @@ def test_cleanup_with_force():
 
     magic.cleanup(line, cell)
 
-    spark_controller.cleanup_endpoint.assert_called_once_with(magic.connection_string)
+    spark_controller.cleanup_endpoint.assert_called_once_with(magic.endpoint)
     spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
 
 
@@ -400,7 +401,7 @@ def test_delete_with_force_none_session():
     magic.delete(line, cell)
 
     spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
-    spark_controller.delete_session_by_id.assert_called_once_with(magic.connection_string, session_id)
+    spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)
 
 
 @with_setup(_setup, _teardown)
@@ -415,4 +416,4 @@ def test_delete_with_force_different_session():
     magic.delete(line, cell)
 
     spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
-    spark_controller.delete_session_by_id.assert_called_once_with(magic.connection_string, session_id)
+    spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)

@@ -5,12 +5,14 @@ from mock import patch, PropertyMock, MagicMock
 from nose.tools import raises, assert_equals, with_setup
 import requests
 
+from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.livyclientlib.linearretrypolicy import LinearRetryPolicy
 from remotespark.livyclientlib.reliablehttpclient import ReliableHttpClient
-from remotespark.utils.utils import get_connection_string
 
 retry_policy = None
 sequential_values = []
+
+endpoint = Endpoint("http://url.com", "username", "password")
 
 
 def _setup():
@@ -31,7 +33,7 @@ def return_sequential():
 
 @with_setup(_setup, _teardown)
 def test_compose_url():
-    client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+    client = ReliableHttpClient(endpoint, {}, retry_policy)
 
     composed = client.compose_url("r")
     assert_equals("http://url.com/r", composed)
@@ -39,7 +41,7 @@ def test_compose_url():
     composed = client.compose_url("/r")
     assert_equals("http://url.com/r", composed)
 
-    client = ReliableHttpClient("http://url.com/", {}, "username", "password", retry_policy)
+    client = ReliableHttpClient(endpoint, {}, retry_policy)
 
     composed = client.compose_url("r")
     assert_equals("http://url.com/r", composed)
@@ -53,7 +55,7 @@ def test_get():
     with patch('requests.get') as patched_get:
         type(patched_get.return_value).status_code = 200
 
-        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
 
         result = client.get("r", [200])
 
@@ -66,7 +68,7 @@ def test_get_throws():
     with patch('requests.get') as patched_get:
         type(patched_get.return_value).status_code = 500
 
-        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
 
         client.get("r", [200])
 
@@ -85,7 +87,7 @@ def test_get_will_retry():
         pm = PropertyMock()
         pm.side_effect = return_sequential
         type(patched_get.return_value).status_code = pm
-        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
 
         result = client.get("r", [200])
 
@@ -99,7 +101,7 @@ def test_post():
     with patch('requests.post') as patched_post:
         type(patched_post.return_value).status_code = 200
 
-        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
 
         result = client.post("r", [200], {})
 
@@ -112,7 +114,7 @@ def test_post_throws():
     with patch('requests.post') as patched_post:
         type(patched_post.return_value).status_code = 500
 
-        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
 
         client.post("r", [200], {})
 
@@ -131,7 +133,7 @@ def test_post_will_retry():
         pm = PropertyMock()
         pm.side_effect = return_sequential
         type(patched_post.return_value).status_code = pm
-        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
 
         result = client.post("r", [200], {})
 
@@ -145,7 +147,7 @@ def test_delete():
     with patch('requests.delete') as patched_delete:
         type(patched_delete.return_value).status_code = 200
 
-        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
 
         result = client.delete("r", [200])
 
@@ -158,7 +160,7 @@ def test_delete_throws():
     with patch('requests.delete') as patched_delete:
         type(patched_delete.return_value).status_code = 500
 
-        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
 
         client.delete("r", [200])
 
@@ -177,7 +179,7 @@ def test_delete_will_retry():
         pm = PropertyMock()
         pm.side_effect = return_sequential
         type(patched_delete.return_value).status_code = pm
-        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
 
         result = client.delete("r", [200])
 
@@ -195,7 +197,7 @@ def test_will_retry_error_no():
 
     with patch('requests.get') as patched_get:
         patched_get.side_effect = requests.exceptions.ConnectionError()
-        client = ReliableHttpClient("http://url.com", {}, "username", "password", retry_policy)
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
 
         try:
             client.get("r", [200])
@@ -204,11 +206,3 @@ def test_will_retry_error_no():
             retry_policy.should_retry.assert_called_once_with(None, True, 0)
 
 
-@with_setup(_setup, _teardown)
-def test_compose_serialize():
-    url = "url"
-    username = "username"
-    password = "password"
-    client = ReliableHttpClient(url, {}, username, password, retry_policy)
-
-    assert client.connection_string == get_connection_string(url, username, password)

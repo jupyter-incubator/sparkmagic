@@ -13,10 +13,11 @@ from IPython.core.magic import needs_local_scope, cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 import remotespark.utils.configuration as conf
+from remotespark.livyclientlib.command import Command
+from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
-from remotespark.utils.utils import get_connection_string
 
 
 @magics_class
@@ -30,8 +31,7 @@ class KernelMagics(SparkMagicBase):
 
         # In order to set these following 3 properties, call %%_do_not_call_change_language -l language
         self.language = ""
-        self.url = None
-        self.connection_string = None
+        self.endpoint = None
         self.fatal_error = False
         self.fatal_error_message = ""
 
@@ -103,14 +103,14 @@ class KernelMagics(SparkMagicBase):
 
     @cell_magic
     def info(self, line, cell="", local_ns=None):
-        self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.url))
+        self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.endpoint.url))
 
         self.ipython_display.writeln("Current session ID number:\n\t{}\n".format(
                 self.spark_controller.get_session_id_for_client(self.session_name)))
 
         self.ipython_display.writeln("Session configs:\n\t{}\n".format(conf.get_session_properties(self.language)))
 
-        info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.connection_string)
+        info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.endpoint)
         self.print_endpoint_info(info_sessions)
 
     @cell_magic
@@ -127,17 +127,8 @@ class KernelMagics(SparkMagicBase):
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
-    @argument("settings", type=str, default=[""], nargs="*", help="Settings to configure session with.")
     def configure(self, line, cell="", local_ns=None):
         args = parse_argstring(self.configure, line)
-
-        # We ignore args.settings because argparse removes quotes. Instead, we get them ourselves.
-        settings = self.get_session_settings(line, args.force)
-
-        if settings is None:
-            self.ipython_display.send_error("Force flag must be at the beginning or end of the line as '-f'.")
-            return
-
         if self.session_started:
             if not args.force:
                 self.ipython_display.send_error("A session has already been started. If you intend to recreate the "
@@ -145,17 +136,16 @@ class KernelMagics(SparkMagicBase):
                 return
             else:
                 self._do_not_call_delete_session("")
-                self._override_session_settings(settings)
+                self._override_session_settings(cell)
                 self._do_not_call_start_session("")
         else:
-            self._override_session_settings(settings)
-
+            self._override_session_settings(cell)
         self.info("")
 
     @cell_magic
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
-            (success, out) = self.spark_controller.run_cell(cell)
+            (success, out) = self.spark_controller.run_command(Command(cell))
             if success:
                 self.ipython_display.write(out)
             else:
@@ -189,7 +179,7 @@ class KernelMagics(SparkMagicBase):
         if args.force:
             self._do_not_call_delete_session("")
 
-            self.spark_controller.cleanup_endpoint(self.connection_string)
+            self.spark_controller.cleanup_endpoint(self.endpoint)
         else:
             self.ipython_display.send_error("When you clean up the endpoint, all sessions will be lost, including the "
                                             "one used for this notebook. Include the -f parameter if that's your "
@@ -212,7 +202,7 @@ class KernelMagics(SparkMagicBase):
                                                 "delete all sessions for this endpoint.".format(id))
                 return None
 
-            self.spark_controller.delete_session_by_id(self.connection_string, session)
+            self.spark_controller.delete_session_by_id(self.endpoint, session)
         else:
             self.ipython_display.send_error("Include the -f parameter if you understand that all statements executed"
                                             "in this session will be lost.")
@@ -233,7 +223,7 @@ class KernelMagics(SparkMagicBase):
 
             try:
                 self.session_started = True
-                self.spark_controller.add_session(self.session_name, self.connection_string, skip, properties)
+                self.spark_controller.add_session(self.session_name, self.endpoint, skip, properties)
             except Exception as e:
                 self.fatal_error = True
                 self.fatal_error_message = conf.fatal_error_suggestion().format(e)
@@ -269,12 +259,8 @@ class KernelMagics(SparkMagicBase):
 
     def refresh_configuration(self):
         credentials = getattr(conf, 'kernel_' + self.language + '_credentials')()
-        ret = (credentials['username'], credentials['password'], credentials['url'])
-        assert(ret[2])
-
-        (username, password, url) = ret
-        self.url = url
-        self.connection_string = get_connection_string(url, username, password)
+        (username, password, url) = (credentials['username'], credentials['password'], credentials['url'])
+        self.endpoint = Endpoint(url, username, password)
 
     def get_session_settings(self, line, force):
         line = line.strip()

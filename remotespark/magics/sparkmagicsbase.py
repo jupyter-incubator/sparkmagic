@@ -25,27 +25,11 @@ class SparkMagicBase(Magics):
         self.ipython_display = IpythonDisplay()
         self.spark_controller = SparkController(self.ipython_display)
 
-        try:
-            should_serialize = conf.serialize()
-            if should_serialize:
-                self.logger.debug("Serialization enabled.")
-
-                self.magics_home_path = get_magics_home_path()
-                path_to_serialize = join_paths(self.magics_home_path, "state.json")
-
-                self.logger.debug("Will serialize to {}.".format(path_to_serialize))
-
-                self.spark_controller = SparkController(self.ipython_display, serialize_path=path_to_serialize)
-            else:
-                self.logger.debug("Serialization NOT enabled.")
-        except KeyError:
-            self.logger.error("Could not read env vars for serialization.")
-
         self.logger.debug("Initialized spark magics.")
 
     def execute_sqlquery(self, sqlquery, session, output_var, quiet):
         try:
-            df = self.spark_controller.run_cell_sql(sqlquery, session)
+            df = self.spark_controller.run_sqlquery(sqlquery, session)
             if output_var is not None:
                 self.shell.user_ns[output_var] = df
             if quiet:
