@@ -428,6 +428,7 @@ class TestLivySession:
 
         session.create_sql_context()
         assert ipython_display.writeln.call_count == 2
+        assert session.created_sql_context
 
         # Second call should not issue a post request
         session.create_sql_context()
@@ -435,6 +436,21 @@ class TestLivySession:
         assert call(0, {"code": "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"}) \
                in http_client.post_statement.call_args_list
         assert len(http_client.post_statement.call_args_list) == 1
+
+        session._get_sql_context_creation_command = MagicMock()
+
+        session._get_sql_context_creation_command.return_value.execute.return_value = (True, "Success")
+        session.created_sql_context = None
+        session.create_sql_context()
+        assert session.created_sql_context
+
+        session._get_sql_context_creation_command.return_value.execute.return_value = (False, "Exception")
+        session.created_sql_context = None
+        try:
+            session.create_sql_context()
+        except ValueError as ex:
+            assert session.created_sql_context is None
+            assert ex.message == "Failed to create the SqlContext.\nError {}".format("Exception")
 
     def test_create_sql_context_spark(self):
         kind = constants.SESSION_KIND_SPARK
