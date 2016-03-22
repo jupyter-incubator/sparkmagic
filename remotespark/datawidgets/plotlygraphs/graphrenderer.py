@@ -8,6 +8,7 @@ from .piegraph import PieGraph
 from .linegraph import LineGraph
 from .areagraph import AreaGraph
 from .bargraph import BarGraph
+from .scattergraph import ScatterGraph
 from remotespark.datawidgets.encoding import Encoding
 
 
@@ -43,7 +44,9 @@ class GraphRenderer(object):
 
     @staticmethod
     def _get_graph(chart_type):
-        if chart_type == Encoding.chart_type_line:
+        if chart_type == Encoding.chart_type_scatter:
+            graph = ScatterGraph()
+        elif chart_type == Encoding.chart_type_line:
             graph = LineGraph()
         elif chart_type == Encoding.chart_type_area:
             graph = AreaGraph()

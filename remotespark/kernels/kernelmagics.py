@@ -127,17 +127,8 @@ class KernelMagics(SparkMagicBase):
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
-    @argument("settings", type=str, default=[""], nargs="*", help="Settings to configure session with.")
     def configure(self, line, cell="", local_ns=None):
         args = parse_argstring(self.configure, line)
-
-        # We ignore args.settings because argparse removes quotes. Instead, we get them ourselves.
-        settings = self.get_session_settings(line, args.force)
-
-        if settings is None:
-            self.ipython_display.send_error("Force flag must be at the beginning or end of the line as '-f'.")
-            return
-
         if self.session_started:
             if not args.force:
                 self.ipython_display.send_error("A session has already been started. If you intend to recreate the "
@@ -145,11 +136,10 @@ class KernelMagics(SparkMagicBase):
                 return
             else:
                 self._do_not_call_delete_session("")
-                self._override_session_settings(settings)
+                self._override_session_settings(cell)
                 self._do_not_call_start_session("")
         else:
-            self._override_session_settings(settings)
-
+            self._override_session_settings(cell)
         self.info("")
 
     @cell_magic

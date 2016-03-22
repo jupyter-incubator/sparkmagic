@@ -85,7 +85,7 @@ def test_add_sessions_command_parses():
 @with_setup(_setup, _teardown)
 def test_add_sessions_command_extra_properties():
     conf.override_all({})
-    magic.spark("config {\"extra\": \"yes\"}")
+    magic.spark("config", "{\"extra\": \"yes\"}")
     assert conf.session_configs() == {"extra": "yes"}
 
     add_sessions_mock = MagicMock()
