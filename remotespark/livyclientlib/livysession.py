@@ -77,7 +77,6 @@ class LivySession(ObjectWithGuid):
         except LivyClientTimeoutError:
             raise LivyClientTimeoutError("Session {} did not start up in {} seconds."\
                                          .format(self.id, conf.livy_session_startup_timeout_seconds()))
-
         if create_sql_context:
             self.create_sql_context()
         self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status)
@@ -90,11 +89,14 @@ class LivySession(ObjectWithGuid):
         self.ipython_display.writeln("Creating HiveContext as 'sqlContext'")
         command = self._get_sql_context_creation_command()
         try:
-            command.execute(self)
+            (success, out) = command.execute(self)
         except LivyClientTimeoutError:
             raise LivyClientTimeoutError("Failed to create the SqlContext in time. Timed out after {} seconds."
                                          .format(self._wait_for_idle_timeout_seconds))
-        self.created_sql_context = True
+        if success:
+            self.created_sql_context = True
+        else:
+            raise ValueError("Failed to create the SqlContext.\nError {}".format(out))
 
     def get_logs(self):
         log_array = self._http_client.get_all_session_logs(self.id)['log']
