@@ -450,7 +450,6 @@ class TestLivySession:
             session.create_sql_context()
         except ValueError as ex:
             assert session.created_sql_context is None
-            assert ex.message == "Failed to create the SqlContext.\nError {}".format("Exception")
 
     def test_create_sql_context_spark(self):
         kind = constants.SESSION_KIND_SPARK
