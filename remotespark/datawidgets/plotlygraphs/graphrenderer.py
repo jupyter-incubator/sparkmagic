@@ -20,6 +20,7 @@ class GraphRenderer(object):
             init_notebook_mode()
         GraphRenderer._get_graph(encoding.chart_type).render(df, encoding, output)
 
+
     @staticmethod
     def display_x(chart_type):
         return GraphRenderer._get_graph(chart_type).display_x()

@@ -73,6 +73,16 @@ def test_create_viz_types_buttons():
 
 
 @with_setup(_setup, _teardown)
+def test_create_viz_empty_df():
+    df = pd.DataFrame([])
+    widget = AutoVizWidget(df, encoding, renderer, ipywidget_factory,
+                           encoding_widget, ipython_display, testing=True)
+
+    ipywidget_factory.get_button.assert_not_called()
+    ipywidget_factory.get_html.assert_called_once_with("No results.")
+    ipython_display.display.assert_called_with(ipywidget_factory.get_html.return_value)
+
+@with_setup(_setup, _teardown)
 def test_convert_to_displayable_dataframe():
     bool_df = pd.DataFrame([{u'bool_col': True, u'int_col': 0, u'float_col': 3.0},
                             {u'bool_col': False, u'int_col': 100, u'float_col': 0.7}])
