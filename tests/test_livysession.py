@@ -1,5 +1,4 @@
 ﻿import json
-import unittest
 from mock import MagicMock, call
 from nose.tools import raises, assert_equals
 
@@ -26,7 +25,7 @@ class DummyResponse:
 CONN_STR = 'url=https://www.DFAS90D82309F0W9ASD0F9ZX.com;username=abcd;password=1234'
 
 
-class TestLivySession(unittest.TestCase):
+class TestLivySession():
 
     pi_result = "Pi is roughly 3.14336"
 
@@ -39,8 +38,7 @@ class TestLivySession(unittest.TestCase):
     ready_statement_json = json.loads('{"id":0,"state":"available","output":{"status":"ok","execution_count":0,"data":{"text/plain":"Pi is roughly 3.14336"}}}')
     log_json = json.loads('{"id":6,"from":0,"total":212,"log":["hi","hi"]}')
 
-    def __init__(self, methodName="test_create_sql_hive_context_happens_once"):
-        super(TestLivySession, self).__init__(methodName)
+    def __init__(self):
         self.get_statement_responses = []
         self.post_statement_responses = []
         self.get_session_responses = []
@@ -448,8 +446,10 @@ class TestLivySession(unittest.TestCase):
         session._get_sql_context_creation_command.return_value.execute.return_value = (False, "Exception")
         session.created_sql_context = None
 
-        with self.assertRaises(ValueError):
+        try:
             session.create_sql_context()
+            assert False
+        except ValueError:
             assert session.created_sql_context is None
 
     def test_create_sql_context_spark(self):
