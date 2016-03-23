@@ -24,7 +24,6 @@ def test_sqlquery_initializes():
     assert_equals(sqlquery.samplemethod, samplemethod)
     assert_equals(sqlquery.maxrows, maxrows)
     assert_equals(sqlquery.samplefraction, samplefraction)
-    assert_false(sqlquery.only_columns)
 
 
 @with_setup(teardown=_teardown)
@@ -41,20 +40,6 @@ def test_sqlquery_loads_defaults():
     assert_equals(sqlquery.samplemethod, defaults[conf.default_samplemethod.__name__])
     assert_equals(sqlquery.maxrows, defaults[conf.default_maxrows.__name__])
     assert_equals(sqlquery.samplefraction, defaults[conf.default_samplefraction.__name__])
-    assert_false(sqlquery.only_columns)
-
-
-def test_sqlquery_only_columns():
-    query = "HERE IS MY SQL QUERY SELECT * FROM CREATE DROP TABLE"
-    samplemethod = "take"
-    maxrows = 120
-    samplefraction = 0.6
-    sqlquery = SQLQuery(query, samplemethod, maxrows, samplefraction)
-    assert_false(sqlquery.only_columns)
-    sqlquery2 = sqlquery.to_only_columns_query()
-
-    sqlquery.only_columns = True
-    assert_equals(sqlquery, sqlquery2)
 
 
 @raises(AssertionError)
@@ -91,24 +76,6 @@ def test_pyspark_livy_sql_options():
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
                                   LONG_RANDOM_VARIABLE_NAME)))
 
-    sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1, only_columns=True)
-    assert_equals(sqlquery._pyspark_command(),
-                  Command('for {} in sqlContext.sql("""{}""").columns: print({})'\
-                          .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                  LONG_RANDOM_VARIABLE_NAME)))
-
-    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.999, maxrows=-1, only_columns=True)
-    assert_equals(sqlquery._pyspark_command(),
-                  Command('for {} in sqlContext.sql("""{}""").columns: print({})'\
-                          .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                  LONG_RANDOM_VARIABLE_NAME)))
-
-    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.01, maxrows=3, only_columns=True)
-    assert_equals(sqlquery._pyspark_command(),
-                  Command('for {} in sqlContext.sql("""{}""").columns: print({})'\
-                          .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                  LONG_RANDOM_VARIABLE_NAME)))
-
 
 def test_scala_livy_sql_options():
     query = "abc"
@@ -128,18 +95,6 @@ def test_scala_livy_sql_options():
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
     assert_equals(sqlquery._scala_command(),
                   Command('sqlContext.sql("""{}""").toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(query)))
-
-    sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1, only_columns=True)
-    assert_equals(sqlquery._scala_command(),
-                  Command('sqlContext.sql("""{}""").columns.foreach(println)'.format(query)))
-
-    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.999, maxrows=-1, only_columns=True)
-    assert_equals(sqlquery._scala_command(),
-                  Command('sqlContext.sql("""{}""").columns.foreach(println)'.format(query)))
-
-    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.01, maxrows=3, only_columns=True)
-    assert_equals(sqlquery._scala_command(),
-                  Command('sqlContext.sql("""{}""").columns.foreach(println)'.format(query)))
 
 
 def test_execute_sql():
@@ -165,15 +120,14 @@ def test_execute_sql_no_results():
     result1 = ""
     result2 = """column_a
 THE_SECOND_COLUMN"""
-    result_data = pd.DataFrame.from_records([], columns=['column_a', 'THE_SECOND_COLUMN'])
+    result_data = pd.DataFrame([])
     mock_spark_session = MagicMock()
     sqlquery.to_command.return_value.execute.return_value = (True, result1)
-    sqlquery.to_only_columns_query.return_value.to_command.return_value.execute.return_value = (True, result2)
     mock_spark_session.kind = "spark"
     result = sqlquery.execute(mock_spark_session)
     assert_frame_equal(result, result_data)
     sqlquery.to_command.return_value.execute.assert_called_once_with(mock_spark_session)
-    sqlquery.to_only_columns_query.return_value.to_command.return_value.execute.assert_called_once_with(mock_spark_session)
+
 
 
 

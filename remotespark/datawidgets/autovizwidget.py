@@ -17,12 +17,13 @@ class AutoVizWidget(FlexBox):
         assert encoding is not None
         assert df is not None
         assert type(df) is pd.DataFrame
-        assert len(df.columns) > 0
 
         kwargs['orientation'] = 'vertical'
 
         if not testing:
             super(AutoVizWidget, self).__init__((), **kwargs)
+
+        self.df = self._convert_to_displayable_dataframe(df)
 
         if renderer is None:
             renderer = GraphRenderer()
@@ -33,14 +34,12 @@ class AutoVizWidget(FlexBox):
         self.ipywidget_factory = ipywidget_factory
 
         if encoding_widget is None:
-            encoding_widget = EncodingWidget(df, encoding, self.on_render_viz)
+            encoding_widget = EncodingWidget(self.df, encoding, self.on_render_viz)
         self.encoding_widget = encoding_widget
 
         if ipython_display is None:
             ipython_display = IpythonDisplay()
         self.ipython_display = ipython_display
-
-        self.df = self._convert_to_displayable_dataframe(df)
 
         self.encoding = encoding
 
@@ -73,8 +72,11 @@ class AutoVizWidget(FlexBox):
         self.encoding_widget.show_controls(self.renderer.display_controls(self.encoding.chart_type))
         self.encoding_widget.show_logarithmic_x_axis(self.renderer.display_logarithmic_x_axis(self.encoding.chart_type))
         self.encoding_widget.show_logarithmic_y_axis(self.renderer.display_logarithmic_y_axis(self.encoding.chart_type))
-
-        self.renderer.render(self.df, self.encoding, self.to_display)
+        if len(self.df) > 0:
+            self.renderer.render(self.df, self.encoding, self.to_display)
+        else:
+            with self.to_display:
+                self.ipython_display.display(self.ipywidget_factory.get_html('No results.'))
 
     def _create_controls_widget(self):
         # Create types of viz hbox
@@ -89,17 +91,18 @@ class AutoVizWidget(FlexBox):
         hbox = self.ipywidget_factory.get_hbox()
         children = list()
 
-        self.heading = self.ipywidget_factory.get_html('Type:', width='80px', height='32px')
-        children.append(self.heading)
+        if len(self.df) > 0:
+            self.heading = self.ipywidget_factory.get_html('Type:', width='80px', height='32px')
+            children.append(self.heading)
 
-        self._create_type_button(Encoding.chart_type_table, children)
-        self._create_type_button(Encoding.chart_type_pie, children)
+            self._create_type_button(Encoding.chart_type_table, children)
+            self._create_type_button(Encoding.chart_type_pie, children)
 
-        if len(self.df.columns) > 1:
-            self._create_type_button(Encoding.chart_type_scatter, children)
-            self._create_type_button(Encoding.chart_type_line, children)
-            self._create_type_button(Encoding.chart_type_area, children)
-            self._create_type_button(Encoding.chart_type_bar, children)
+            if len(self.df.columns) > 1:
+                self._create_type_button(Encoding.chart_type_scatter, children)
+                self._create_type_button(Encoding.chart_type_line, children)
+                self._create_type_button(Encoding.chart_type_area, children)
+                self._create_type_button(Encoding.chart_type_bar, children)
 
         hbox.children = children
 
