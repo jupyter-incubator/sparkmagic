@@ -11,7 +11,6 @@ from remotespark.utils.sparkevents import SparkEvents
 from .command import Command
 from .livyclienttimeouterror import LivyClientTimeoutError
 from .livyunexpectedstatuserror import LivyUnexpectedStatusError
-from .livyreliablehttpclient import LivyReliableHttpClient
 
 
 class LivySession(ObjectWithGuid):
