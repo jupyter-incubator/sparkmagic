@@ -18,6 +18,17 @@ from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
+from remotespark.utils.sparkevents import SparkEvents
+from remotespark.utils.utils import generate_uuid
+
+
+def _event(f):
+    def wrapped(self, *args, **kwargs):
+        guid = generate_uuid()
+        self._spark_events.emit_magic_execution_start_event(f.__name__, self.language, guid)
+        f(self, *args, **kwargs)
+        self._spark_events.emit_magic_execution_end_event(f.__name__, self.language, guid)
+    return wrapped
 
 
 @magics_class
@@ -34,7 +45,9 @@ class KernelMagics(SparkMagicBase):
         self.endpoint = None
         self.fatal_error = False
         self.fatal_error_message = ""
+        self._spark_events = SparkEvents()
 
+    @_event
     @cell_magic
     def help(self, line, cell="", local_ns=None):
         help_html = """
@@ -96,11 +109,13 @@ class KernelMagics(SparkMagicBase):
 """
         self.ipython_display.html(help_html)
 
+    @_event
     @cell_magic
     def local(self, line, cell="", local_ns=None):
         # This should not be reachable thanks to UserCodeParser. Registering it here so that it auto-completes with tab.
         raise NotImplementedError("UserCodeParser should have prevented code execution from reaching here.")
 
+    @_event
     @cell_magic
     def info(self, line, cell="", local_ns=None):
         self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.endpoint.url))
@@ -113,6 +128,7 @@ class KernelMagics(SparkMagicBase):
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.endpoint)
         self.print_endpoint_info(info_sessions)
 
+    @_event
     @cell_magic
     def logs(self, line, cell="", local_ns=None):
         if self.session_started:
@@ -124,6 +140,7 @@ class KernelMagics(SparkMagicBase):
         else:
             self.ipython_display.write("No logs yet.")
 
+    @_event
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
@@ -142,6 +159,7 @@ class KernelMagics(SparkMagicBase):
             self._override_session_settings(cell)
         self.info("")
 
+    @_event
     @cell_magic
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
@@ -153,6 +171,7 @@ class KernelMagics(SparkMagicBase):
         else:
             return None
 
+    @_event
     @magic_arguments()
     @cell_magic
     @needs_local_scope
@@ -171,6 +190,7 @@ class KernelMagics(SparkMagicBase):
         else:
             return None
 
+    @_event
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
@@ -186,6 +206,7 @@ class KernelMagics(SparkMagicBase):
                                             "intention.")
             return None
 
+    @_event
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")

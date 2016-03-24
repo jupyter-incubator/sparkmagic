@@ -80,6 +80,25 @@ class SparkEvents:
 
         self._send_to_handler(kwargs_list)
 
+    def emit_magic_execution_start_event(self, magic_name, language, magic_guid):
+        self._emit_magic_execution_event(constants.MAGIC_EXECUTION_START_EVENT, magic_name, language, magic_guid)
+
+    def emit_magic_execution_end_event(self, magic_name, language, magic_guid):
+        self._emit_magic_execution_event(constants.MAGIC_EXECUTION_END_EVENT, magic_name, language, magic_guid)
+
+    def _emit_magic_execution_event(self, event_name, magic_name, language, magic_guid):
+        self._verify_language_ok(language)
+        time_stamp = SparkEvents.get_utc_date_time()
+
+        kwargs_list = [(constants.EVENT_NAME, event_name),
+                       (constants.TIMESTAMP, time_stamp),
+                       (constants.MAGIC_NAME, magic_name),
+                       (constants.LIVY_KIND, language),
+                       (constants.MAGIC_GUID, magic_guid)]
+
+        self._send_to_handler(kwargs_list)
+
+
     @staticmethod
     def _verify_language_ok(language):
         assert language in constants.SESSION_KINDS_SUPPORTED
