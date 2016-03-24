@@ -11,12 +11,16 @@ SESSION_KINDS_SUPPORTED = [SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIN
 
 SESSION_CREATION_START_EVENT = "notebookSessionCreationStart"
 SESSION_CREATION_END_EVENT = "notebookSessionCreationEnd"
+STATEMENT_EXECUTION_START_EVENT = "notebookStatementExecutionStart"
+STATEMENT_EXECUTION_END_EVENT = "notebookStatementExecutionEnd"
 
 INSTANCE_ID = "InstanceId"
 TIMESTAMP = "Timestamp"
 EVENT_NAME = "EventName"
 SESSION_ID = "SessionId"
 SESSION_GUID = "SessionGuid"
+STATEMENT_ID = "StatementId"
+STATEMENT_GUID = "StatementGuid"
 LIVY_KIND = "LivyKind"
 STATUS = "Status"
 

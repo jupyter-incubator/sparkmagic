@@ -21,10 +21,7 @@ class SparkEvents:
         return datetime.utcnow()
 
     def emit_session_creation_start_event(self, session_guid, language):
-        """
-        Emitting Start Session Event
-        """
-        assert language in constants.SESSION_KINDS_SUPPORTED
+        self._verify_language_ok(language)
 
         event_name = constants.SESSION_CREATION_START_EVENT
         time_stamp = SparkEvents.get_utc_date_time()
@@ -37,10 +34,7 @@ class SparkEvents:
         self._send_to_handler(kwargs_list)
 
     def emit_session_creation_end_event(self, session_guid, language, session_id, status):
-        """
-        Emitting End Session Event
-        """
-        assert language in constants.SESSION_KINDS_SUPPORTED
+        self._verify_language_ok(language)
         assert session_id >= 0
 
         event_name = constants.SESSION_CREATION_END_EVENT
@@ -54,6 +48,41 @@ class SparkEvents:
                        (constants.STATUS, status)]
 
         self._send_to_handler(kwargs_list)
+
+    def emit_statement_execution_start_event(self, session_guid, language, session_id, statement_guid):
+        self._verify_language_ok(language)
+
+        event_name = constants.STATEMENT_EXECUTION_START_EVENT
+        time_stamp = SparkEvents.get_utc_date_time()
+
+        kwargs_list = [(constants.EVENT_NAME, event_name),
+                       (constants.TIMESTAMP, time_stamp),
+                       (constants.SESSION_GUID, session_guid),
+                       (constants.LIVY_KIND, language),
+                       (constants.SESSION_ID, session_id),
+                       (constants.STATEMENT_GUID, statement_guid)]
+
+        self._send_to_handler(kwargs_list)
+
+    def emit_statement_execution_end_event(self, session_guid, language, session_id, statement_guid, statement_id):
+        self._verify_language_ok(language)
+
+        event_name = constants.STATEMENT_EXECUTION_END_EVENT
+        time_stamp = SparkEvents.get_utc_date_time()
+
+        kwargs_list = [(constants.EVENT_NAME, event_name),
+                       (constants.TIMESTAMP, time_stamp),
+                       (constants.SESSION_GUID, session_guid),
+                       (constants.LIVY_KIND, language),
+                       (constants.SESSION_ID, session_id),
+                       (constants.STATEMENT_GUID, statement_guid),
+                       (constants.STATEMENT_ID, statement_id)]
+
+        self._send_to_handler(kwargs_list)
+
+    @staticmethod
+    def _verify_language_ok(language):
+        assert language in constants.SESSION_KINDS_SUPPORTED
 
     def _send_to_handler(self, kwargs_list):
         kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id())] + kwargs_list
