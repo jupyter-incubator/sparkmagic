@@ -5,6 +5,8 @@ from nose.tools import raises, assert_equals
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
 from remotespark.livyclientlib.livyunexpectedstatuserror import LivyUnexpectedStatusError
 from remotespark.livyclientlib.livysession import LivySession
+from remotespark.kernels.kernelmagics import KernelMagics
+from remotespark.livyclientlib.sparkcontroller import SparkController
 import remotespark.utils.configuration as conf
 import remotespark.utils.constants as constants
 
@@ -449,8 +451,35 @@ class TestLivySession():
         try:
             session.create_sql_context()
             assert False
-        except ValueError:
+        except ValueError as ex:
+            assert str(ex) == "Failed to create the SqlContext.\nError, '{}'".format("Exception")
             assert session.created_sql_context is None
+
+        kernelMagics = KernelMagics(shell=None)
+        kernelMagics.spark_controller = MagicMock()
+        kernelMagics.spark_controller.add_session = self.dummy_create_sql_context
+        kernelMagics.language = constants.LANG_SCALA
+        kernelMagics.ipython_display = ipython_display
+        kernelMagics.ipython_display.send_error = MagicMock()
+
+        kernelMagics._do_not_call_start_session("Test Line")
+        assert kernelMagics.fatal_error
+        assert kernelMagics.fatal_error_message == conf.fatal_error_suggestion().format("Failed to create the SqlContext.\nError, '{}'".format("Exception"))
+
+        sparkController = SparkController(ipython_display)
+        sparkController._livy_session = MagicMock()
+        sparkController._livy_session.return_value = session
+        sparkController.session_manager = MagicMock()
+
+        try:
+            sparkController.add_session("session", None, False, None)
+            assert False
+        except ValueError as ex:
+            assert str(ex) == "Failed to create the SqlContext.\nError, '{}'".format("Exception")
+            assert session.created_sql_context is None
+
+    def dummy_create_sql_context(self, *args):
+         raise ValueError("Failed to create the SqlContext.\nError, '{}'".format("Exception"))
 
     def test_create_sql_context_spark(self):
         kind = constants.SESSION_KIND_SPARK

@@ -96,7 +96,7 @@ class LivySession(ObjectWithGuid):
         if success:
             self.created_sql_context = True
         else:
-            raise ValueError("Failed to create the SqlContext.\nError {}".format(out))
+            raise ValueError("Failed to create the SqlContext.\nError, '{}'".format(out))
 
     def get_logs(self):
         log_array = self._http_client.get_all_session_logs(self.id)['log']
