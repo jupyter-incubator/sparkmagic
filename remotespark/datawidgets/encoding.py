@@ -3,6 +3,7 @@
 
 
 class Encoding(object):
+    chart_type_scatter = "Scatter"
     chart_type_line = "Line"
     chart_type_area = "Area"
     chart_type_bar = "Bar"
