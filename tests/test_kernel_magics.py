@@ -37,6 +37,7 @@ def _setup():
     magic.shell = shell = MagicMock()
     magic.ipython_display = ipython_display = MagicMock()
     magic.spark_controller = spark_controller = MagicMock()
+    magic._spark_events = MagicMock()
 
 
 def _teardown():

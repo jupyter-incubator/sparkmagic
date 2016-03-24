@@ -47,8 +47,8 @@ class KernelMagics(SparkMagicBase):
         self.fatal_error_message = ""
         self._spark_events = SparkEvents()
 
-    @_event
     @cell_magic
+    @_event
     def help(self, line, cell="", local_ns=None):
         help_html = """
 <table>
@@ -109,14 +109,14 @@ class KernelMagics(SparkMagicBase):
 """
         self.ipython_display.html(help_html)
 
-    @_event
     @cell_magic
+    @_event
     def local(self, line, cell="", local_ns=None):
         # This should not be reachable thanks to UserCodeParser. Registering it here so that it auto-completes with tab.
         raise NotImplementedError("UserCodeParser should have prevented code execution from reaching here.")
 
-    @_event
     @cell_magic
+    @_event
     def info(self, line, cell="", local_ns=None):
         self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.endpoint.url))
 
@@ -128,8 +128,8 @@ class KernelMagics(SparkMagicBase):
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.endpoint)
         self.print_endpoint_info(info_sessions)
 
-    @_event
     @cell_magic
+    @_event
     def logs(self, line, cell="", local_ns=None):
         if self.session_started:
             (success, out) = self.spark_controller.get_logs()
@@ -140,10 +140,10 @@ class KernelMagics(SparkMagicBase):
         else:
             self.ipython_display.write("No logs yet.")
 
-    @_event
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @_event
     def configure(self, line, cell="", local_ns=None):
         args = parse_argstring(self.configure, line)
         if self.session_started:
@@ -159,8 +159,8 @@ class KernelMagics(SparkMagicBase):
             self._override_session_settings(cell)
         self.info("")
 
-    @_event
     @cell_magic
+    @_event
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             (success, out) = self.spark_controller.run_command(Command(cell))
@@ -171,7 +171,6 @@ class KernelMagics(SparkMagicBase):
         else:
             return None
 
-    @_event
     @magic_arguments()
     @cell_magic
     @needs_local_scope
@@ -182,6 +181,7 @@ class KernelMagics(SparkMagicBase):
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the server for SQL queries")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
+    @_event
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)
@@ -190,10 +190,10 @@ class KernelMagics(SparkMagicBase):
         else:
             return None
 
-    @_event
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @_event
     def cleanup(self, line, cell="", local_ns=None):
         args = parse_argstring(self.cleanup, line)
         if args.force:
@@ -206,11 +206,11 @@ class KernelMagics(SparkMagicBase):
                                             "intention.")
             return None
 
-    @_event
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
     @argument("-s", "--session", type=str, nargs=1, help="Session id number to delete.")
+    @_event
     def delete(self, line, cell="", local_ns=None):
         args = parse_argstring(self.delete, line)
         session = args.session[0]
