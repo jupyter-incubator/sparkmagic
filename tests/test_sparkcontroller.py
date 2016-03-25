@@ -193,3 +193,24 @@ def test_get_logs():
 def test_get_session_id_for_client():
     assert controller.get_session_id_for_client("name") is not None
     client_manager.get_session_id_for_client.assert_called_once_with("name")
+
+
+@with_setup(_setup, _teardown)
+def test_start_throw_exception():
+    name = "name"
+    properties = {"kind": "spark"}
+    endpoint = Endpoint("http://location:port", "name", "word")
+    session = MagicMock()
+
+    controller._livy_session = MagicMock(return_value=session)
+    controller._http_client = MagicMock(return_value=MagicMock())
+    session.start = dummy_create_sql_context
+
+    try:
+        controller.add_session(name, endpoint, False, properties)
+        assert False
+    except ValueError as ex:
+        assert str(ex) == "Failed to create the SqlContext.\nError, '{}'".format("Exception")
+
+def dummy_create_sql_context(*args):
+    raise ValueError("Failed to create the SqlContext.\nError, '{}'".format("Exception"))

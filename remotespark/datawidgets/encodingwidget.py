@@ -13,7 +13,6 @@ class EncodingWidget(FlexBox):
         assert encoding is not None
         assert df is not None
         assert type(df) is pd.DataFrame
-        assert len(df.columns) > 0
 
         kwargs['orientation'] = 'vertical'
         if not testing:

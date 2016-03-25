@@ -8,6 +8,14 @@ from remotespark.livyclientlib.dataframeparseexception import DataFrameParseExce
 from remotespark.livyclientlib.sqlquery import SQLQuery
 
 
+def test_load_emits_event():
+    spark_events = MagicMock()
+
+    SparkMagicBase(None, spark_events=spark_events)
+
+    spark_events.emit_library_loaded_event.assert_called_once_with()
+
+
 def test_get_livy_kind_covers_all_langs():
     for lang in LANGS_SUPPORTED:
         get_livy_kind(lang)

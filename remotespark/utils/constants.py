@@ -9,15 +9,22 @@ SESSION_KIND_PYSPARK = "pyspark"
 SESSION_KIND_SPARKR = "sparkr"
 SESSION_KINDS_SUPPORTED = [SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_SPARKR]
 
+LIBRARY_LOADED_EVENT = "notebookLoaded"
 SESSION_CREATION_START_EVENT = "notebookSessionCreationStart"
 SESSION_CREATION_END_EVENT = "notebookSessionCreationEnd"
+SESSION_DELETION_START_EVENT = "notebookSessionDeletionStart"
+SESSION_DELETION_END_EVENT = "notebookSessionDeletionEnd"
 
+INSTANCE_ID = "InstanceId"
 TIMESTAMP = "Timestamp"
 EVENT_NAME = "EventName"
 SESSION_ID = "SessionId"
 SESSION_GUID = "SessionGuid"
 LIVY_KIND = "LivyKind"
 STATUS = "Status"
+SUCCESS = "Success"
+EXCEPTION_TYPE = "ExceptionType"
+EXCEPTION_MESSAGE = "ExceptionMessage"
 
 CONTEXT_NAME_SPARK = "spark"
 CONTEXT_NAME_SQL = "sql"

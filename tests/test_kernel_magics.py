@@ -417,3 +417,20 @@ def test_delete_with_force_different_session():
 
     spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
     spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)
+
+
+@with_setup(_setup, _teardown)
+def test_add_session_throw_exception():
+    magic.spark_controller.add_session = dummy_add_session
+    magic.language = constants.LANG_SCALA
+    magic.ipython_display = ipython_display
+    magic.ipython_display.send_error = MagicMock()
+
+    magic._do_not_call_start_session("Test Line")
+    assert magic.fatal_error
+    assert magic.fatal_error_message == conf.fatal_error_suggestion().format(
+        "Failed to create the SqlContext.\nError, '{}'".format("Exception"))
+
+
+def dummy_add_session(*args):
+    raise ValueError("Failed to create the SqlContext.\nError, '{}'".format("Exception"))
