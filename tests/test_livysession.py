@@ -36,7 +36,8 @@ class TestLivySession:
     busy_sessions_json = json.loads('{"id":0,"state":"busy","kind":"spark","log":[""]}')
     post_statement_json = json.loads('{"id":0,"state":"running","output":null}')
     running_statement_json = json.loads('{"id":0,"state":"running","output":null}')
-    ready_statement_json = json.loads('{"id":0,"state":"available","output":{"status":"ok","execution_count":0,"data":{"text/plain":"Pi is roughly 3.14336"}}}')
+    ready_statement_json = json.loads('{"id":0,"state":"available","output":{"status":"ok",'
+                                      '"execution_count":0,"data":{"text/plain":"Pi is roughly 3.14336"}}}')
     log_json = json.loads('{"id":6,"from":0,"total":212,"log":["hi","hi"]}')
 
     def __init__(self):
@@ -66,11 +67,14 @@ class TestLivySession:
         return val
 
     @staticmethod
-    def _create_session(kind=constants.SESSION_KIND_SPARK, session_id=-1, sql_created=False, http_client=None):
+    def _create_session(kind=constants.SESSION_KIND_SPARK, session_id=-1,
+                        sql_created=False, http_client=None, spark_events=None):
         if http_client is None:
             http_client = MagicMock()
+        if spark_events is None:
+            spark_events = MagicMock()
         ipython_display = MagicMock()
-        session = LivySession(http_client, {"kind": kind}, ipython_display, session_id, sql_created)
+        session = LivySession(http_client, {"kind": kind}, ipython_display, session_id, sql_created, spark_events)
         return session
 
     @raises(AssertionError)
@@ -115,7 +119,7 @@ class TestLivySession:
             "statement_sleep_seconds": 2,
             "create_sql_context_timeout_seconds": 60
         })
-        session_id = "1"
+        session_id = 1
         session = self._create_session(session_id=session_id, sql_created=True)
         conf.load()
 
@@ -233,7 +237,6 @@ class TestLivySession:
         http_client.post_session.assert_called_with({"kind": "pyspark"})
         session.create_sql_context.assert_not_called()
 
-
     def test_start_passes_in_all_properties(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
@@ -291,7 +294,7 @@ class TestLivySession:
 
     def test_wait_for_idle_returns_when_in_state(self):
         http_client = MagicMock()
-        http_client.post_session.return_value =  self.session_create_json
+        http_client.post_session.return_value = self.session_create_json
         self.get_session_responses = [self.ready_sessions_json,
                                       self.busy_sessions_json,
                                       self.ready_sessions_json]
@@ -444,7 +447,8 @@ class TestLivySession:
         http_client.post_statement.side_effect = self._next_statement_response_post
         self.get_session_responses = [self.ready_sessions_json, self.ready_sessions_json]
         http_client.get_session.side_effect = self._next_session_response_get
-        self.get_statement_responses = [self.running_statement_json, self.ready_statement_json, self.ready_statement_json]
+        self.get_statement_responses = [self.running_statement_json, self.ready_statement_json,
+                                        self.ready_statement_json]
         http_client.get_statement.side_effect = self._next_statement_response_get
         conf.override_all({
             "status_sleep_seconds": 0.01,
@@ -463,7 +467,8 @@ class TestLivySession:
         http_client.post_session.return_value = self.session_create_json
         http_client.post_statement.return_value = self.post_statement_json
         http_client.get_session.return_value = self.ready_sessions_json
-        self.get_statement_responses = [self.running_statement_json, self.ready_statement_json, self.ready_statement_json]
+        self.get_statement_responses = [self.running_statement_json, self.ready_statement_json,
+                                        self.ready_statement_json]
         http_client.get_statement.side_effect = self._next_statement_response_get
         conf.override_all({
             "status_sleep_seconds": 0.01,
@@ -498,3 +503,91 @@ class TestLivySession:
         for kind in constants.SESSION_KINDS_SUPPORTED:
             session = self._create_session(kind=kind)
             session._get_sql_context_creation_command()
+
+    def test_start_emits_start_end_session(self):
+        http_client = MagicMock()
+        http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
+
+        spark_events = MagicMock()
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        kind = constants.SESSION_KIND_SPARK
+        session = self._create_session(kind=kind, http_client=http_client, spark_events=spark_events)
+        session.create_sql_context = MagicMock()
+        session.start()
+        conf.load()
+
+        spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
+        spark_events.emit_session_creation_end_event.assert_called_once_with(session.guid, kind, session.id,
+                                                                             session.status, True, "", "")
+
+    @raises(ValueError)
+    def test_start_emits_start_end_failed_session_when_sql_fails(self):
+        http_client = MagicMock()
+        http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
+
+        spark_events = MagicMock()
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        kind = constants.SESSION_KIND_SPARK
+        session = self._create_session(kind=kind, http_client=http_client, spark_events=spark_events)
+        session.create_sql_context = MagicMock(side_effect=ValueError)
+        session.start()
+        conf.load()
+
+        spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
+        spark_events.emit_session_creation_end_event.assert_called_once_with(session.guid, kind, session.id,
+                                                                             session.status, False, "ValueError", "")
+
+    @raises(ValueError)
+    def test_start_emits_start_end_failed_session_when_bad_status(self):
+        http_client = MagicMock()
+        http_client.post_session.side_effect = ValueError
+        http_client.get_session.return_value = self.ready_sessions_json
+
+        spark_events = MagicMock()
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        kind = constants.SESSION_KIND_SPARK
+        session = self._create_session(kind=kind, http_client=http_client, spark_events=spark_events)
+        session.create_sql_context = MagicMock()
+        session.start()
+        conf.load()
+
+        spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
+        spark_events.emit_session_creation_end_event.assert_called_once_with(session.guid, kind, session.id,
+                                                                             session.status, False, "ValueError", "")
+
+    @raises(ValueError)
+    def test_start_emits_start_end_failed_session_when_wait_for_idle_throws(self):
+        http_client = MagicMock()
+        http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
+
+        spark_events = MagicMock()
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        kind = constants.SESSION_KIND_SPARK
+        session = self._create_session(kind=kind, http_client=http_client, spark_events=spark_events)
+        session.create_sql_context = MagicMock()
+        session.wait_for_idle = MagicMock(side_effect=ValueError)
+        session.start()
+        conf.load()
+
+        spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
+        spark_events.emit_session_creation_end_event.assert_called_once_with(session.guid, kind, session.id,
+                                                                             session.status, False, "ValueError", "")
