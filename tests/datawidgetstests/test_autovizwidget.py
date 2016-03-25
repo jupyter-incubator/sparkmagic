@@ -52,6 +52,34 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
+def test_on_render_viz():
+    widget = AutoVizWidget(df, encoding, renderer, ipywidget_factory,
+                           encoding_widget, ipython_display, spark_events=spark_events, testing=True)
+
+    # on_render_viz is called in the constructor, so no need to call it here.
+    output.clear_output.assert_called_once_with()
+
+    assert_equals(len(renderer.render.mock_calls), 1)
+    assert_equals(len(renderer.render.mock_calls[0]), 3)
+    assert_equals(renderer.render.mock_calls[0][1][1], encoding)
+    assert_equals(renderer.render.mock_calls[0][1][2], output)
+    assert_frame_equal(renderer.render.mock_calls[0][1][0], df)
+
+    encoding_widget.show_x.assert_called_once_with(True)
+    encoding_widget.show_y.assert_called_once_with(True)
+    encoding_widget.show_controls.assert_called_once_with(True)
+    encoding_widget.show_logarithmic_x_axis.assert_called_once_with(True)
+    encoding_widget.show_logarithmic_y_axis.assert_called_once_with(True)
+
+    spark_events.emit_graph_render_event.assert_called_once_with(encoding.chart_type)
+
+    encoding._chart_type = Encoding.chart_type_scatter
+    widget.on_render_viz()
+    assert_equals(len(spark_events.emit_graph_render_event.mock_calls), 2)
+    assert_equals(spark_events.emit_graph_render_event.call_args, call(Encoding.chart_type_scatter))
+
+
+@with_setup(_setup, _teardown)
 def test_create_viz_types_buttons():
     df_single_column = pd.DataFrame([{u'buildingID': 0}])
     widget = AutoVizWidget(df_single_column, encoding, renderer, ipywidget_factory,

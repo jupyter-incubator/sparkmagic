@@ -169,7 +169,6 @@ class KernelMagics(SparkMagicBase):
         self.info("")
 
     @cell_magic
-    @_event
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             (success, out) = self.spark_controller.run_command(Command(cell))
@@ -190,7 +189,6 @@ class KernelMagics(SparkMagicBase):
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the server for SQL queries")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
-    @_event
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)

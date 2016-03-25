@@ -286,7 +286,6 @@ def test_spark():
     spark_controller.run_command = MagicMock(return_value=(True, line))
 
     magic.spark(line, cell)
-    _assert_magic_successful_event_emitted_once('spark')
 
     ipython_display.write.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
@@ -301,7 +300,6 @@ def test_spark_error():
     spark_controller.run_command = MagicMock(return_value=(False, line))
 
     magic.spark(line, cell)
-    _assert_magic_successful_event_emitted_once('spark')
 
     ipython_display.send_error.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
@@ -316,7 +314,6 @@ def test_spark_failed_session_start():
     magic._do_not_call_start_session = MagicMock(return_value=False)
 
     ret = magic.spark(line, cell)
-    _assert_magic_successful_event_emitted_once('spark')
 
     assert_is(ret, None)
     assert_equals(ipython_display.write.call_count, 0)
@@ -335,7 +332,6 @@ def test_spark_exception():
         assert False
     except Exception as e:
         spark_controller.run_command.assert_called_once_with(Command(cell))
-        _assert_magic_failure_event_emitted_once('spark', e)
         assert_equals(e, spark_controller.run_command.side_effect)
 
 
@@ -346,7 +342,6 @@ def test_sql_without_output():
     magic.execute_sqlquery = MagicMock()
 
     magic.sql(line, cell)
-    _assert_magic_successful_event_emitted_once('sql')
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
@@ -360,8 +355,6 @@ def test_sql_with_output():
     magic.execute_sqlquery = MagicMock()
 
     magic.sql(line, cell)
-
-    _assert_magic_successful_event_emitted_once('sql')
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
@@ -378,7 +371,6 @@ def test_sql_exception():
         magic.sql(line, cell)
         assert False
     except ValueError as e:
-        _assert_magic_failure_event_emitted_once('sql', e)
         magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, "my_var", False)
         assert_equals(e, magic.execute_sqlquery.side_effect)
 
@@ -390,8 +382,6 @@ def test_sql_failed_session_start():
     magic._do_not_call_start_session = MagicMock(return_value=False)
 
     ret = magic.sql(line, cell)
-
-    _assert_magic_successful_event_emitted_once('sql')
 
     assert_is(ret, None)
     assert_equals(spark_controller.add_session.call_count, 0)
@@ -405,7 +395,6 @@ def test_sql_quiet():
     magic.execute_sqlquery = MagicMock()
 
     ret = magic.sql(line, cell)
-    _assert_magic_successful_event_emitted_once('sql')
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
@@ -419,7 +408,6 @@ def test_sql_sample_options():
     magic.execute_sqlquery = MagicMock()
 
     ret = magic.sql(line, cell)
-    _assert_magic_successful_event_emitted_once('sql')
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
