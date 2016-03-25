@@ -21,9 +21,6 @@ class SparkEvents:
         return datetime.utcnow()
 
     def emit_session_creation_start_event(self, session_guid, language):
-        """
-        Emitting Start Session Event
-        """
         assert language in constants.SESSION_KINDS_SUPPORTED
 
         event_name = constants.SESSION_CREATION_START_EVENT
@@ -38,13 +35,49 @@ class SparkEvents:
 
     def emit_session_creation_end_event(self, session_guid, language, session_id, status,
                                         success, exception_type, exception_message):
-        """
-        Emitting End Session Event
-        """
         assert language in constants.SESSION_KINDS_SUPPORTED
         assert session_id >= 0
+        assert status in constants.POSSIBLE_SESSION_STATUS
 
         event_name = constants.SESSION_CREATION_END_EVENT
+        time_stamp = SparkEvents.get_utc_date_time()
+
+        kwargs_list = [(constants.EVENT_NAME, event_name),
+                       (constants.TIMESTAMP, time_stamp),
+                       (constants.SESSION_GUID, session_guid),
+                       (constants.LIVY_KIND, language),
+                       (constants.SESSION_ID, session_id),
+                       (constants.STATUS, status),
+                       (constants.SUCCESS, success),
+                       (constants.EXCEPTION_TYPE, exception_type),
+                       (constants.EXCEPTION_MESSAGE, exception_message)]
+
+        self._send_to_handler(kwargs_list)
+
+    def emit_session_deletion_start_event(self, session_guid, language, session_id, status):
+        assert language in constants.SESSION_KINDS_SUPPORTED
+        assert session_id >= 0
+        assert status in constants.POSSIBLE_SESSION_STATUS
+
+        event_name = constants.SESSION_DELETION_START_EVENT
+        time_stamp = SparkEvents.get_utc_date_time()
+
+        kwargs_list = [(constants.EVENT_NAME, event_name),
+                       (constants.TIMESTAMP, time_stamp),
+                       (constants.SESSION_GUID, session_guid),
+                       (constants.LIVY_KIND, language),
+                       (constants.SESSION_ID, session_id),
+                       (constants.STATUS, status)]
+
+        self._send_to_handler(kwargs_list)
+
+    def emit_session_deletion_end_event(self, session_guid, language, session_id, status,
+                                        success, exception_type, exception_message):
+        assert language in constants.SESSION_KINDS_SUPPORTED
+        assert session_id >= 0
+        assert status in constants.POSSIBLE_SESSION_STATUS
+
+        event_name = constants.SESSION_DELETION_END_EVENT
         time_stamp = SparkEvents.get_utc_date_time()
 
         kwargs_list = [(constants.EVENT_NAME, event_name),

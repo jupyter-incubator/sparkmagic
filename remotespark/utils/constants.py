@@ -12,6 +12,9 @@ SESSION_KINDS_SUPPORTED = [SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIN
 SESSION_CREATION_START_EVENT = "notebookSessionCreationStart"
 SESSION_CREATION_END_EVENT = "notebookSessionCreationEnd"
 
+SESSION_DELETION_START_EVENT = "notebookSessionDeletionStart"
+SESSION_DELETION_END_EVENT = "notebookSessionDeletionEnd"
+
 INSTANCE_ID = "InstanceId"
 TIMESTAMP = "Timestamp"
 EVENT_NAME = "EventName"
