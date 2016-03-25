@@ -86,6 +86,7 @@ class LivySession(ObjectWithGuid):
         except Exception as e:
             self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status,
                                                                False, e.__class__.__name__, str(e))
+            raise
         else:
             self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status, True, "", "")
 
