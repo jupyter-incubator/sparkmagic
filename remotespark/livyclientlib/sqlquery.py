@@ -44,7 +44,8 @@ class SQLQuery(ObjectWithGuid):
             raise ValueError("Kind '{}' is not supported.".format(kind))
 
     def execute(self, session):
-        self._spark_events.emit_sql_execution_start_event(session.guid, session.kind, session.id, self.guid)
+        self._spark_events.emit_sql_execution_start_event(session.guid, session.kind, session.id, self.guid,
+                                                          self.samplemethod, self.maxrows, self.samplefraction)
         command_guid = ''
         try:
             command = self.to_command(session.kind)

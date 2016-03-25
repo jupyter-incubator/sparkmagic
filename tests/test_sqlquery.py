@@ -134,7 +134,9 @@ def test_execute_sql_no_results():
     assert_frame_equal(result, result_data)
     sqlquery.to_command.return_value.execute.assert_called_once_with(session)
     spark_events.emit_sql_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                         session.id, sqlquery.guid)
+                                                                         session.id, sqlquery.guid,
+                                                                         sqlquery.samplemethod, sqlquery.maxrows,
+                                                                         sqlquery.samplefraction)
     spark_events.emit_sql_execution_end_event._assert_called_once_with(session.guid, session.kind,
                                                                        session.id, sqlquery.guid,
                                                                        sqlquery.to_command.return_value.guid,

@@ -37,7 +37,7 @@ def test_execute():
                                                                                       0, True, "", "")
 
 
-def test_execute_failure_emits_event():
+def test_execute_failure_wait_for_session_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
     http_client = MagicMock()
@@ -58,9 +58,68 @@ def test_execute_failure_emits_event():
     try:
         result = command.execute(session)
         assert False
-    except ValueError:
+    except ValueError as e:
         spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                                            session.id, command.guid)
+                                                                                   session.id, command.guid)
         spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                                            session.id, command.guid,
-                                                                                            -1, False, "ValueError", "yo")
+                                                                                   session.id, command.guid,
+                                                                                   -1, False, "ValueError", "yo")
+        assert_equals(e, session.wait_for_idle.side_effect)
+
+
+def test_execute_failure_post_statement_emits_event():
+    spark_events = MagicMock()
+    kind = SESSION_KIND_SPARK
+    http_client = MagicMock()
+    http_client.post_statement.side_effect = KeyError('Something bad happened here')
+    conf.override_all({
+        "status_sleep_seconds": 0.01,
+        "statement_sleep_seconds": 0.01
+    })
+    session = tls.TestLivySession._create_session(kind=kind, http_client=http_client)
+    session.wait_for_idle = MagicMock()
+    conf.load()
+    session.start(create_sql_context=False)
+    session.wait_for_idle = MagicMock()
+    command = Command("command", spark_events=spark_events)
+
+    try:
+        result = command.execute(session)
+        assert False
+    except KeyError as e:
+        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+                                                                                   session.id, command.guid)
+        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+                                                                                   session.id, command.guid,
+                                                                                   -1, False, "KeyError",
+                                                                                   "Something bad happened here")
+        assert_equals(e, http_client.post_statement.side_effect)
+
+
+def test_execute_failure_get_statement_output_emits_event():
+    spark_events = MagicMock()
+    kind = SESSION_KIND_SPARK
+    http_client = MagicMock()
+    conf.override_all({
+        "status_sleep_seconds": 0.01,
+        "statement_sleep_seconds": 0.01
+    })
+    session = tls.TestLivySession._create_session(kind=kind, http_client=http_client)
+    session.wait_for_idle = MagicMock()
+    conf.load()
+    session.start(create_sql_context=False)
+    session.wait_for_idle = MagicMock()
+    command = Command("command", spark_events=spark_events)
+    command._get_statement_output = MagicMock(side_effect=AttributeError('OHHHH'))
+
+    try:
+        result = command.execute(session)
+        assert False
+    except AttributeError as e:
+        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+                                                                                   session.id, command.guid)
+        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+                                                                                   session.id, command.guid,
+                                                                                   -1, False, "AttributeError",
+                                                                                   "OHHHH")
+        assert_equals(e, command._get_statement_output.side_effect)
