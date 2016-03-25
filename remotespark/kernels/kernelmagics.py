@@ -41,7 +41,7 @@ def _event(f):
 
 @magics_class
 class KernelMagics(SparkMagicBase):
-    def __init__(self, shell, data=None):
+    def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
 
@@ -53,7 +53,9 @@ class KernelMagics(SparkMagicBase):
         self.endpoint = None
         self.fatal_error = False
         self.fatal_error_message = ""
-        self._spark_events = SparkEvents()
+        if spark_events is None:
+            spark_events = SparkEvents()
+        self._spark_events = spark_events
 
     @cell_magic
     @_event

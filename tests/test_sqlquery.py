@@ -98,9 +98,9 @@ def test_scala_livy_sql_options():
 
 
 def test_execute_sql():
-    sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2)
+    spark_events = MagicMock()
+    sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2, spark_events=spark_events)
     sqlquery.to_command = MagicMock(return_value=MagicMock())
-    sqlquery._spark_events = MagicMock()
     result = """{"z":100,"y":50}
 {"z":25,"y":10}"""
     sqlquery.to_command.return_value.execute = MagicMock(return_value=(True, result))
@@ -110,21 +110,21 @@ def test_execute_sql():
     result = sqlquery.execute(session)
     assert_frame_equal(result, result_data)
     sqlquery.to_command.return_value.execute.assert_called_once_with(session)
-    sqlquery._spark_events.emit_sql_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, sqlquery.guid)
-    sqlquery._spark_events.emit_sql_execution_end_event._assert_called_once_with(session.guid, session.kind,
-                                                                                 session.id, sqlquery.guid,
-                                                                                 sqlquery.to_command.return_value.guid,
-                                                                                 True, "", "")
+    spark_events.emit_sql_execution_start_event._assert_called_once_with(session.guid, session.kind,
+                                                                         session.id, sqlquery.guid)
+    spark_events.emit_sql_execution_end_event._assert_called_once_with(session.guid, session.kind,
+                                                                       session.id, sqlquery.guid,
+                                                                       sqlquery.to_command.return_value.guid,
+                                                                       True, "", "")
 
 
 def test_execute_sql_no_results():
     global executed_once
     executed_once = False
-    sqlquery = SQLQuery("SHOW TABLES", "take", maxrows=-1)
+    spark_events = MagicMock()
+    sqlquery = SQLQuery("SHOW TABLES", "take", maxrows=-1, spark_events=spark_events)
     sqlquery.to_command = MagicMock()
     sqlquery.to_only_columns_query = MagicMock()
-    sqlquery._spark_events = MagicMock()
     result1 = ""
     result_data = pd.DataFrame([])
     session = MagicMock()
@@ -133,19 +133,19 @@ def test_execute_sql_no_results():
     result = sqlquery.execute(session)
     assert_frame_equal(result, result_data)
     sqlquery.to_command.return_value.execute.assert_called_once_with(session)
-    sqlquery._spark_events.emit_sql_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, sqlquery.guid)
-    sqlquery._spark_events.emit_sql_execution_end_event._assert_called_once_with(session.guid, session.kind,
-                                                                                 session.id, sqlquery.guid,
-                                                                                 sqlquery.to_command.return_value.guid,
-                                                                                 True, "", "")
+    spark_events.emit_sql_execution_start_event._assert_called_once_with(session.guid, session.kind,
+                                                                         session.id, sqlquery.guid)
+    spark_events.emit_sql_execution_end_event._assert_called_once_with(session.guid, session.kind,
+                                                                       session.id, sqlquery.guid,
+                                                                       sqlquery.to_command.return_value.guid,
+                                                                       True, "", "")
 
 
 def test_execute_sql_failure_emits_event():
-    sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2)
+    spark_events = MagicMock()
+    sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2, spark_events)
     sqlquery.to_command = MagicMock()
     sqlquery.to_command.return_value.execute = MagicMock(side_effect=ValueError('yo'))
-    sqlquery._spark_events = MagicMock()
     session = MagicMock()
     session.kind = "pyspark"
     try:
@@ -153,12 +153,12 @@ def test_execute_sql_failure_emits_event():
         assert False
     except ValueError:
         sqlquery.to_command.return_value.execute.assert_called_once_with(session)
-        sqlquery._spark_events.emit_sql_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                                       session.id, sqlquery.guid)
-        sqlquery._spark_events.emit_sql_execution_end_event._assert_called_once_with(session.guid, session.kind,
-                                                                                     session.id, sqlquery.guid,
-                                                                                     sqlquery.to_command.return_value.guid,
-                                                                                     True, "ValueError", "yo")
+        spark_events.emit_sql_execution_start_event._assert_called_once_with(session.guid, session.kind,
+                                                                             session.id, sqlquery.guid)
+        spark_events.emit_sql_execution_end_event._assert_called_once_with(session.guid, session.kind,
+                                                                           session.id, sqlquery.guid,
+                                                                           sqlquery.to_command.return_value.guid,
+                                                                           True, "ValueError", "yo")
 
 
 

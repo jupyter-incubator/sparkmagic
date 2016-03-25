@@ -8,6 +8,7 @@ from . import test_livysession as tls
 
 
 def test_execute():
+    spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
     http_client = MagicMock()
     http_client.post_session.return_value = tls.TestLivySession.session_create_json
@@ -21,8 +22,7 @@ def test_execute():
     session = tls.TestLivySession._create_session(kind=kind, http_client=http_client)
     conf.load()
     session.start(create_sql_context=False)
-    command = Command("command")
-    command._spark_events = MagicMock()
+    command = Command("command", spark_events=spark_events)
 
     result = command.execute(session)
 
@@ -30,14 +30,15 @@ def test_execute():
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
     assert_equals(tls.TestLivySession.pi_result, result[1])
-    command._spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+    spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
                                                                                         session.id, command.guid)
-    command._spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
+    spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
                                                                                       session.id, command.guid,
                                                                                       0, True, "", "")
 
 
 def test_execute_failure_emits_event():
+    spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
     http_client = MagicMock()
     http_client.post_session.return_value = tls.TestLivySession.session_create_json
@@ -52,15 +53,14 @@ def test_execute_failure_emits_event():
     conf.load()
     session.start(create_sql_context=False)
     session.wait_for_idle = MagicMock(side_effect=ValueError("yo"))
-    command = Command("command")
-    command._spark_events = MagicMock()
+    command = Command("command", spark_events=spark_events)
 
     try:
         result = command.execute(session)
         assert False
     except ValueError:
-        command._spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
                                                                                             session.id, command.guid)
-        command._spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
                                                                                             session.id, command.guid,
                                                                                             -1, False, "ValueError", "yo")

@@ -14,31 +14,31 @@ magic = None
 spark_controller = None
 shell = None
 ipython_display = MagicMock()
+spark_events = None
 
 
 @magics_class
 class TestKernelMagics(KernelMagics):
-    def __init__(self, shell, data=None):
-        super(TestKernelMagics, self).__init__(shell)
+    def __init__(self, shell, data=None, spark_events=None):
+        super(TestKernelMagics, self).__init__(shell, spark_events=spark_events)
 
         self.language = constants.LANG_PYTHON
         self.endpoint = Endpoint("url")
-        self._spark_events = MagicMock()
 
     def refresh_configuration(self):
         self.endpoint = Endpoint("new_url")
 
 
 def _setup():
-    global magic, spark_controller, shell, ipython_display
+    global magic, spark_controller, shell, ipython_display, spark_events
 
     conf.override_all({})
+    spark_events = MagicMock()
 
-    magic = TestKernelMagics(shell=None)
+    magic = TestKernelMagics(shell=None, spark_events=spark_events)
     magic.shell = shell = MagicMock()
     magic.ipython_display = ipython_display = MagicMock()
     magic.spark_controller = spark_controller = MagicMock()
-    magic._spark_events = MagicMock()
     magic._generate_uuid = MagicMock(return_value='0000')
 
 
@@ -449,9 +449,9 @@ def test_delete_with_force_different_session():
 
 def _assert_magic_successful_event_omitted_once(name):
     magic._generate_uuid.assert_called_once_with()
-    magic._spark_events.emit_magic_execution_start_event.assert_called_once_with(name,
+    spark_events.emit_magic_execution_start_event.assert_called_once_with(name,
                                                                                  constants.SESSION_KIND_PYSPARK,
                                                                                  magic._generate_uuid.return_value)
-    magic._spark_events.emit_magic_execution_end_event.assert_called_once_with(name, constants.SESSION_KIND_PYSPARK,
+    spark_events.emit_magic_execution_end_event.assert_called_once_with(name, constants.SESSION_KIND_PYSPARK,
                                                                                magic._generate_uuid.return_value, True,
                                                                                '', '')

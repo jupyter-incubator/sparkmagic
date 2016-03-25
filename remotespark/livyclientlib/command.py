@@ -5,11 +5,13 @@ from remotespark.utils.log import Log
 from remotespark.utils.sparkevents import SparkEvents
 
 class Command(ObjectWithGuid):
-    def __init__(self, code):
+    def __init__(self, code, spark_events=None):
         super(Command, self).__init__()
         self.code = textwrap.dedent(code)
         self.logger = Log("Command")
-        self._spark_events = SparkEvents()
+        if spark_events is None:
+            spark_events = SparkEvents()
+        self._spark_events = spark_events
 
     def __eq__(self, other):
         return self.code == other.code

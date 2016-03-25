@@ -12,7 +12,7 @@ from .dataframeparseexception import DataFrameParseException
 
 
 class SQLQuery(ObjectWithGuid):
-    def __init__(self, query, samplemethod=None, maxrows=None, samplefraction=None):
+    def __init__(self, query, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None):
         super(SQLQuery, self).__init__()
         if samplemethod is None:
             samplemethod = conf.default_samplemethod()
@@ -29,7 +29,9 @@ class SQLQuery(ObjectWithGuid):
         self.samplemethod = samplemethod
         self.maxrows = maxrows
         self.samplefraction = samplefraction
-        self._spark_events = SparkEvents()
+        if spark_events is None:
+            spark_events = SparkEvents()
+        self._spark_events = spark_events
 
     def to_command(self, kind):
         if kind == constants.SESSION_KIND_PYSPARK:

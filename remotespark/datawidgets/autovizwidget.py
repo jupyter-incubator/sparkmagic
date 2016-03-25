@@ -14,7 +14,7 @@ from .plotlygraphs.graphrenderer import GraphRenderer
 
 class AutoVizWidget(FlexBox):
     def __init__(self, df, encoding, renderer=None, ipywidget_factory=None, encoding_widget=None, ipython_display=None,
-                 nested_widget_mode=False, testing=False, **kwargs):
+                 nested_widget_mode=False, spark_events=None, testing=False, **kwargs):
         assert encoding is not None
         assert df is not None
         assert type(df) is pd.DataFrame
@@ -55,7 +55,9 @@ class AutoVizWidget(FlexBox):
 
         self.controls = self._create_controls_widget()
 
-        self._spark_events = SparkEvents()
+        if spark_events is None:
+            spark_events = SparkEvents()
+        self._spark_events = spark_events
 
         if nested_widget_mode:
             self.widget.children = [self.controls, self.output]
