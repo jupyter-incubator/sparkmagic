@@ -19,14 +19,22 @@ class Command(ObjectWithGuid):
 
     def execute(self, session):
         self._spark_events.emit_statement_execution_start_event(session.guid, session.kind, session.id, self.guid)
-        session.wait_for_idle()
-        data = {"code": self.code}
-        response = session.http_client.post_statement(session.id, data)
-        statement_id = response['id']
-        output = self._get_statement_output(session, statement_id)
-        self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
-                                                              self.guid, statement_id)
-        return output
+        statement_id = -1
+        try:
+            session.wait_for_idle()
+            data = {"code": self.code}
+            response = session.http_client.post_statement(session.id, data)
+            statement_id = response['id']
+            output = self._get_statement_output(session, statement_id)
+        except Exception as e:
+            self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
+                                                                  self.guid, statement_id, False, str(type(e)),
+                                                                  str(e))
+            raise
+        else:
+            self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
+                                                                  self.guid, statement_id, True, "", "")
+            return output
 
     def _get_statement_output(self, session, statement_id):
         statement_running = True

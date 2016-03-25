@@ -26,8 +26,15 @@ def _event(f):
     def wrapped(self, *args, **kwargs):
         guid = generate_uuid()
         self._spark_events.emit_magic_execution_start_event(f.__name__, self.language, guid)
-        f(self, *args, **kwargs)
-        self._spark_events.emit_magic_execution_end_event(f.__name__, self.language, guid)
+        try:
+            result = f(self, *args, **kwargs)
+        except Exception as e:
+            self._spark_events.emit_magic_execution_end_event(f.__name__, self.language, guid,
+                                                              False, str(type(e)), str(e))
+            raise
+        else:
+            self._spark_events.emit_magic_execution_end_event(f.__name__, self.language, guid, True, "", "")
+            return result
     return wrapped
 
 
