@@ -66,7 +66,7 @@ class KernelMagics(SparkMagicBase):
   </tr>
   <tr>
     <td>configure</td>
-    <td>%%configure -f {"executorMemory": "1000M", "executorCores": 4}</td>
+    <td>%%configure -f<br/>{"executorMemory": "1000M", "executorCores": 4}</td>
     <td>Configure the session creation parameters. The force flag is mandatory if a session has already been
     created and the session will be dropped and recreated.<br/>Look at <a href="https://github.com/cloudera/livy#request-body">
     Livy's POST /sessions Request Body</a> for a list of valid parameters. Parameters must be passed in as a JSON string.</td>
