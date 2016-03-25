@@ -7,17 +7,16 @@ Provides the %spark magic."""
 from __future__ import print_function
 from IPython.core.magic import Magics, magics_class
 
-import remotespark.utils.configuration as conf
 from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.utils.log import Log
-from remotespark.utils.utils import get_magics_home_path, join_paths
+from remotespark.utils.sparkevents import SparkEvents
 from remotespark.livyclientlib.sparkcontroller import SparkController
 from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
 
 
 @magics_class
 class SparkMagicBase(Magics):
-    def __init__(self, shell, data=None):
+    def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(SparkMagicBase, self).__init__(shell)
 
@@ -26,6 +25,10 @@ class SparkMagicBase(Magics):
         self.spark_controller = SparkController(self.ipython_display)
 
         self.logger.debug("Initialized spark magics.")
+
+        if spark_events is None:
+            spark_events = SparkEvents()
+        spark_events.emit_library_loaded_event()
 
     def execute_sqlquery(self, sqlquery, session, output_var, quiet):
         try:

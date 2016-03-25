@@ -20,6 +20,19 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
+def test_emit_library_loaded_event():
+    event_name = constants.LIBRARY_LOADED_EVENT
+    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
+                   (constants.EVENT_NAME, event_name),
+                   (constants.TIMESTAMP, time_stamp)]
+
+    spark_events.emit_library_loaded_event()
+
+    spark_events.get_utc_date_time.assert_called_with()
+    spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
+
+
+@with_setup(_setup, _teardown)
 def test_emit_session_creation_start_event():
     language = constants.SESSION_KIND_SPARK
     event_name = constants.SESSION_CREATION_START_EVENT

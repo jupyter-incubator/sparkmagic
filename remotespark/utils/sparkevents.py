@@ -20,6 +20,15 @@ class SparkEvents:
     def get_utc_date_time():
         return datetime.utcnow()
 
+    def emit_library_loaded_event(self):
+        event_name = constants.LIBRARY_LOADED_EVENT
+        time_stamp = SparkEvents.get_utc_date_time()
+
+        kwargs_list = [(constants.EVENT_NAME, event_name),
+                       (constants.TIMESTAMP, time_stamp)]
+
+        self._send_to_handler(kwargs_list)
+
     def emit_session_creation_start_event(self, session_guid, language):
         assert language in constants.SESSION_KINDS_SUPPORTED
 
