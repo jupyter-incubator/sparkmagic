@@ -19,21 +19,22 @@ from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
 from remotespark.utils.sparkevents import SparkEvents
-from remotespark.utils.utils import generate_uuid
+from remotespark.utils.utils import generate_uuid, get_livy_kind
 
 
 def _event(f):
     def wrapped(self, *args, **kwargs):
-        guid = generate_uuid()
-        self._spark_events.emit_magic_execution_start_event(f.__name__, self.language, guid)
+        guid = self._generate_uuid()
+        self._spark_events.emit_magic_execution_start_event(f.__name__, get_livy_kind(self.language), guid)
         try:
             result = f(self, *args, **kwargs)
         except Exception as e:
-            self._spark_events.emit_magic_execution_end_event(f.__name__, self.language, guid,
+            self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
                                                               False, e.__class__.__name__, str(e))
             raise
         else:
-            self._spark_events.emit_magic_execution_end_event(f.__name__, self.language, guid, True, "", "")
+            self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
+                                                              True, "", "")
             return result
     return wrapped
 
@@ -117,7 +118,6 @@ class KernelMagics(SparkMagicBase):
         self.ipython_display.html(help_html)
 
     @cell_magic
-    @_event
     def local(self, line, cell="", local_ns=None):
         # This should not be reachable thanks to UserCodeParser. Registering it here so that it auto-completes with tab.
         raise NotImplementedError("UserCodeParser should have prevented code execution from reaching here.")
@@ -305,6 +305,10 @@ class KernelMagics(SparkMagicBase):
     @staticmethod
     def _override_session_settings(settings):
         conf.override(conf.session_configs.__name__, json.loads(settings))
+
+    @staticmethod
+    def _generate_uuid():
+        return generate_uuid()
 
 
 def load_ipython_extension(ip):
