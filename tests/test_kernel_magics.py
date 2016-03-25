@@ -157,7 +157,22 @@ def test_info():
 
     print_info_mock.assert_called_once_with(session_info)
     spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
-    _assert_magic_successful_event_omitted_once('info')
+    _assert_magic_successful_event_emitted_once('info')
+
+
+@with_setup(_setup, _teardown)
+def test_info_failure():
+    magic.print_endpoint_info = MagicMock()
+    line = ""
+    spark_controller.get_all_sessions_endpoint_info = MagicMock(side_effect=AssertionError('utter failure'))
+
+    try:
+        magic.info(line)
+        assert False
+    except AssertionError as e:
+        spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
+        _assert_magic_failure_event_emitted_once('info', e)
+        assert_equals(e, spark_controller.get_all_sessions_endpoint_info.side_effect)
 
 
 @with_setup(_setup, _teardown)
@@ -165,7 +180,7 @@ def test_help():
     magic.help("")
 
     assert_equals(ipython_display.html.call_count, 1)
-    _assert_magic_successful_event_omitted_once('help')
+    _assert_magic_successful_event_emitted_once('help')
 
 
 @with_setup(_setup, _teardown)
@@ -175,7 +190,7 @@ def test_logs():
 
     magic.logs(line)
     ipython_display.write.assert_called_once_with("No logs yet.")
-    _assert_magic_successful_event_omitted_once('logs')
+    _assert_magic_successful_event_emitted_once('logs')
 
     ipython_display.write.reset_mock()
 
@@ -184,12 +199,29 @@ def test_logs():
     spark_controller.get_logs = MagicMock(return_value=(True, logs))
     magic.logs(line)
     ipython_display.write.assert_called_once_with(logs)
-
+    spark_controller.get_logs.assert_called_once_with()
 
 
     spark_controller.get_logs = MagicMock(return_value=(False, logs))
     magic.logs(line)
     ipython_display.send_error.assert_called_once_with(logs)
+
+
+@with_setup(_setup, _teardown)
+def test_logs_failure():
+    line = ""
+
+    magic.session_started = True
+
+    spark_controller.get_logs = MagicMock(side_effect=SyntaxError('There was some sort of error'))
+    try:
+        magic.logs(line)
+        assert False
+    except SyntaxError as e:
+        spark_controller.get_logs.assert_called_once_with()
+        _assert_magic_failure_event_emitted_once('logs', e)
+        assert_equals(e, spark_controller.get_logs.side_effect)
+
 
 
 @with_setup(_setup, _teardown)
@@ -201,7 +233,7 @@ def test_configure():
     conf.override_all({})
     magic.configure('', '{"extra": "yes"}')
     assert conf.session_configs() == {"extra": "yes"}
-    _assert_magic_successful_event_omitted_once('configure')
+    _assert_magic_successful_event_emitted_once('configure')
     magic.info.assert_called_once_with("")
 
     # Session started - no -f
@@ -224,6 +256,20 @@ def test_configure():
 
 
 @with_setup(_setup, _teardown)
+def test_configure_failure():
+    magic.info = MagicMock()
+
+    magic._override_session_settings = MagicMock(side_effect=ValueError('help'))
+    try:
+        magic.configure('', '{"extra": "yes"}')
+        assert False
+    except ValueError as e:
+        _assert_magic_failure_event_emitted_once('configure', e)
+        assert_equals(e, magic._override_session_settings.side_effect)
+
+
+
+@with_setup(_setup, _teardown)
 def test_get_session_settings():
     assert magic.get_session_settings("something", False) == "something"
     assert magic.get_session_settings("something    ", False) == "something"
@@ -240,7 +286,7 @@ def test_spark():
     spark_controller.run_command = MagicMock(return_value=(True, line))
 
     magic.spark(line, cell)
-    _assert_magic_successful_event_omitted_once('spark')
+    _assert_magic_successful_event_emitted_once('spark')
 
     ipython_display.write.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
@@ -255,6 +301,7 @@ def test_spark_error():
     spark_controller.run_command = MagicMock(return_value=(False, line))
 
     magic.spark(line, cell)
+    _assert_magic_successful_event_emitted_once('spark')
 
     ipython_display.send_error.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
@@ -269,11 +316,27 @@ def test_spark_failed_session_start():
     magic._do_not_call_start_session = MagicMock(return_value=False)
 
     ret = magic.spark(line, cell)
+    _assert_magic_successful_event_emitted_once('spark')
 
     assert_is(ret, None)
     assert_equals(ipython_display.write.call_count, 0)
     assert_equals(spark_controller.add_session.call_count, 0)
     assert_equals(spark_controller.run_command.call_count, 0)
+
+
+@with_setup(_setup, _teardown)
+def test_spark_exception():
+    line = ""
+    cell = "some spark code"
+    spark_controller.run_command = MagicMock(side_effect=Exception('oups'))
+
+    try:
+        magic.spark(line, cell)
+        assert False
+    except Exception as e:
+        spark_controller.run_command.assert_called_once_with(Command(cell))
+        _assert_magic_failure_event_emitted_once('spark', e)
+        assert_equals(e, spark_controller.run_command.side_effect)
 
 
 @with_setup(_setup, _teardown)
@@ -283,7 +346,7 @@ def test_sql_without_output():
     magic.execute_sqlquery = MagicMock()
 
     magic.sql(line, cell)
-    _assert_magic_successful_event_omitted_once('sql')
+    _assert_magic_successful_event_emitted_once('sql')
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
@@ -298,11 +361,26 @@ def test_sql_with_output():
 
     magic.sql(line, cell)
 
-    _assert_magic_successful_event_omitted_once('sql')
+    _assert_magic_successful_event_emitted_once('sql')
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
     magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, "my_var", False)
+
+
+@with_setup(_setup, _teardown)
+def test_sql_exception():
+    line = "-o my_var"
+    cell = "some spark code"
+    magic.execute_sqlquery = MagicMock(side_effect=ValueError('HAHAHAHAH'))
+
+    try:
+        magic.sql(line, cell)
+        assert False
+    except ValueError as e:
+        _assert_magic_failure_event_emitted_once('sql', e)
+        magic.execute_sqlquery.assert_called_once_with(SQLQuery(cell), None, "my_var", False)
+        assert_equals(e, magic.execute_sqlquery.side_effect)
 
 
 @with_setup(_setup, _teardown)
@@ -313,7 +391,7 @@ def test_sql_failed_session_start():
 
     ret = magic.sql(line, cell)
 
-    _assert_magic_successful_event_omitted_once('sql')
+    _assert_magic_successful_event_emitted_once('sql')
 
     assert_is(ret, None)
     assert_equals(spark_controller.add_session.call_count, 0)
@@ -327,7 +405,7 @@ def test_sql_quiet():
     magic.execute_sqlquery = MagicMock()
 
     ret = magic.sql(line, cell)
-    _assert_magic_successful_event_omitted_once('sql')
+    _assert_magic_successful_event_emitted_once('sql')
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
@@ -341,7 +419,7 @@ def test_sql_sample_options():
     magic.execute_sqlquery = MagicMock()
 
     ret = magic.sql(line, cell)
-    _assert_magic_successful_event_omitted_once('sql')
+    _assert_magic_successful_event_emitted_once('sql')
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
@@ -360,7 +438,7 @@ def test_cleanup_without_force():
 
     magic.cleanup(line, cell)
 
-    _assert_magic_successful_event_omitted_once('cleanup')
+    _assert_magic_successful_event_emitted_once('cleanup')
 
     assert_equals(ipython_display.send_error.call_count, 1)
     assert_equals(spark_controller.cleanup_endpoint.call_count, 0)
@@ -376,10 +454,26 @@ def test_cleanup_with_force():
 
     magic.cleanup(line, cell)
 
-    _assert_magic_successful_event_omitted_once('cleanup')
+    _assert_magic_successful_event_emitted_once('cleanup')
 
     spark_controller.cleanup_endpoint.assert_called_once_with(magic.endpoint)
     spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
+
+
+@with_setup(_setup, _teardown)
+def test_cleanup_exception():
+    line = "-f"
+    cell = ""
+    magic.session_started = True
+    spark_controller.cleanup_endpoint = MagicMock(side_effect=ArithmeticError('DIVISION BY ZERO OH NO'))
+
+    try:
+        magic.cleanup(line, cell)
+        assert False
+    except ArithmeticError as e:
+        _assert_magic_failure_event_emitted_once('cleanup', e)
+        spark_controller.cleanup_endpoint.assert_called_once_with(magic.endpoint)
+        assert_equals(e, spark_controller.cleanup_endpoint.side_effect)
 
 
 @with_setup(_setup, _teardown)
@@ -392,7 +486,7 @@ def test_delete_without_force():
 
     magic.delete(line, cell)
 
-    _assert_magic_successful_event_omitted_once('delete')
+    _assert_magic_successful_event_emitted_once('delete')
 
     assert_equals(ipython_display.send_error.call_count, 1)
     assert_equals(spark_controller.delete_session_by_id.call_count, 0)
@@ -408,7 +502,7 @@ def test_delete_with_force_same_session():
 
     magic.delete(line, cell)
 
-    _assert_magic_successful_event_omitted_once('delete')
+    _assert_magic_successful_event_emitted_once('delete')
 
     assert_equals(ipython_display.send_error.call_count, 1)
     assert_equals(spark_controller.delete_session_by_id.call_count, 0)
@@ -425,7 +519,7 @@ def test_delete_with_force_none_session():
 
     magic.delete(line, cell)
 
-    _assert_magic_successful_event_omitted_once('delete')
+    _assert_magic_successful_event_emitted_once('delete')
 
     spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
     spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)
@@ -442,16 +536,43 @@ def test_delete_with_force_different_session():
 
     magic.delete(line, cell)
 
-    _assert_magic_successful_event_omitted_once('delete')
+    _assert_magic_successful_event_emitted_once('delete')
 
     spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
     spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)
 
-def _assert_magic_successful_event_omitted_once(name):
+
+@with_setup(_setup, _teardown)
+def test_delete_exception():
+    # This happens when session has not been created
+    session_id = "0"
+    line = "-f -s {}".format(session_id)
+    cell = ""
+    spark_controller.delete_session_by_id = MagicMock(side_effect=ImportError('wow'))
+    spark_controller.get_session_id_for_client = MagicMock()
+
+    try:
+        magic.delete(line, cell)
+        assert False
+    except ImportError as e:
+        _assert_magic_failure_event_emitted_once('delete', e)
+        assert_equals(e, spark_controller.delete_session_by_id.side_effect)
+        spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
+        spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)
+
+
+def _assert_magic_successful_event_emitted_once(name):
     magic._generate_uuid.assert_called_once_with()
-    spark_events.emit_magic_execution_start_event.assert_called_once_with(name,
-                                                                                 constants.SESSION_KIND_PYSPARK,
-                                                                                 magic._generate_uuid.return_value)
+    spark_events.emit_magic_execution_start_event.assert_called_once_with(name, constants.SESSION_KIND_PYSPARK,
+                                                                          magic._generate_uuid.return_value)
     spark_events.emit_magic_execution_end_event.assert_called_once_with(name, constants.SESSION_KIND_PYSPARK,
-                                                                               magic._generate_uuid.return_value, True,
-                                                                               '', '')
+                                                                        magic._generate_uuid.return_value, True,
+                                                                        '', '')
+
+def _assert_magic_failure_event_emitted_once(name, error):
+    magic._generate_uuid.assert_called_once_with()
+    spark_events.emit_magic_execution_start_event.assert_called_once_with(name, constants.SESSION_KIND_PYSPARK,
+                                                                          magic._generate_uuid.return_value)
+    spark_events.emit_magic_execution_end_event.assert_called_once_with(name, constants.SESSION_KIND_PYSPARK,
+                                                                        magic._generate_uuid.return_value, False,
+                                                                        error.__class__.__name__, str(error))
