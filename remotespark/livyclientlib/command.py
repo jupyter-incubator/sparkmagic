@@ -28,7 +28,7 @@ class Command(ObjectWithGuid):
             output = self._get_statement_output(session, statement_id)
         except Exception as e:
             self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
-                                                                  self.guid, statement_id, False, str(type(e)),
+                                                                  self.guid, statement_id, False, e.__class__.__name__,
                                                                   str(e))
             raise
         else:

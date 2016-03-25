@@ -30,7 +30,7 @@ def _event(f):
             result = f(self, *args, **kwargs)
         except Exception as e:
             self._spark_events.emit_magic_execution_end_event(f.__name__, self.language, guid,
-                                                              False, str(type(e)), str(e))
+                                                              False, e.__class__.__name__, str(e))
             raise
         else:
             self._spark_events.emit_magic_execution_end_event(f.__name__, self.language, guid, True, "", "")

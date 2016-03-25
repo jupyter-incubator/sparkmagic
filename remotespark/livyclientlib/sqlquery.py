@@ -53,7 +53,7 @@ class SQLQuery(ObjectWithGuid):
             result = self._records_to_dataframe(records_text)
         except Exception as e:
             self._spark_events.emit_sql_execution_end_event(session.guid, session.kind, session.id, self.guid,
-                                                            command_guid, False, str(type(e)), str(e))
+                                                            command_guid, False, e.__class__.__name__, str(e))
             raise
         else:
             self._spark_events.emit_sql_execution_end_event(session.guid, session.kind, session.id, self.guid,
