@@ -542,6 +542,7 @@ class TestLivySession:
 
         try:
             session.start()
+            assert False
         except ValueError:
             pass
 
@@ -568,6 +569,7 @@ class TestLivySession:
 
         try:
             session.start()
+            assert False
         except ValueError:
             pass
 
@@ -595,6 +597,7 @@ class TestLivySession:
 
         try:
             session.start()
+            assert False
         except ValueError:
             pass
 
@@ -651,6 +654,7 @@ class TestLivySession:
 
         try:
             session.delete()
+            assert False
         except ValueError:
             pass
 
