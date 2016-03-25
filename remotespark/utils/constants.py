@@ -9,8 +9,11 @@ SESSION_KIND_PYSPARK = "pyspark"
 SESSION_KIND_SPARKR = "sparkr"
 SESSION_KINDS_SUPPORTED = [SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_SPARKR]
 
+LIBRARY_LOADED_EVENT = "notebookLoaded"
 SESSION_CREATION_START_EVENT = "notebookSessionCreationStart"
 SESSION_CREATION_END_EVENT = "notebookSessionCreationEnd"
+SESSION_DELETION_START_EVENT = "notebookSessionDeletionStart"
+SESSION_DELETION_END_EVENT = "notebookSessionDeletionEnd"
 STATEMENT_EXECUTION_START_EVENT = "notebookStatementExecutionStart"
 STATEMENT_EXECUTION_END_EVENT = "notebookStatementExecutionEnd"
 SQL_EXECUTION_START_EVENT = "notebookSqlExecutionStart"

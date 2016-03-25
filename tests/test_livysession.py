@@ -525,7 +525,6 @@ class TestLivySession:
         spark_events.emit_session_creation_end_event.assert_called_once_with(session.guid, kind, session.id,
                                                                              session.status, True, "", "")
 
-    @raises(ValueError)
     def test_start_emits_start_end_failed_session_when_sql_fails(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
@@ -540,14 +539,18 @@ class TestLivySession:
         kind = constants.SESSION_KIND_SPARK
         session = self._create_session(kind=kind, http_client=http_client, spark_events=spark_events)
         session.create_sql_context = MagicMock(side_effect=ValueError)
-        session.start()
+
+        try:
+            session.start()
+        except ValueError:
+            pass
+
         conf.load()
 
         spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
         spark_events.emit_session_creation_end_event.assert_called_once_with(session.guid, kind, session.id,
                                                                              session.status, False, "ValueError", "")
 
-    @raises(ValueError)
     def test_start_emits_start_end_failed_session_when_bad_status(self):
         http_client = MagicMock()
         http_client.post_session.side_effect = ValueError
@@ -562,14 +565,18 @@ class TestLivySession:
         kind = constants.SESSION_KIND_SPARK
         session = self._create_session(kind=kind, http_client=http_client, spark_events=spark_events)
         session.create_sql_context = MagicMock()
-        session.start()
+
+        try:
+            session.start()
+        except ValueError:
+            pass
+
         conf.load()
 
         spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
         spark_events.emit_session_creation_end_event.assert_called_once_with(session.guid, kind, session.id,
                                                                              session.status, False, "ValueError", "")
 
-    @raises(ValueError)
     def test_start_emits_start_end_failed_session_when_wait_for_idle_throws(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
@@ -585,9 +592,100 @@ class TestLivySession:
         session = self._create_session(kind=kind, http_client=http_client, spark_events=spark_events)
         session.create_sql_context = MagicMock()
         session.wait_for_idle = MagicMock(side_effect=ValueError)
-        session.start()
+
+        try:
+            session.start()
+        except ValueError:
+            pass
+
         conf.load()
 
         spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
         spark_events.emit_session_creation_end_event.assert_called_once_with(session.guid, kind, session.id,
                                                                              session.status, False, "ValueError", "")
+
+    def test_delete_session_emits_start_end(self):
+        http_client = MagicMock()
+        http_client.post_session.return_value = self.session_create_json
+        http_client.get_session.return_value = self.ready_sessions_json
+
+        spark_events = MagicMock()
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = self._create_session(http_client=http_client, spark_events=spark_events)
+        conf.load()
+        session.start(create_sql_context=False)
+        end_id = session.id
+        end_status = constants.BUSY_SESSION_STATUS
+        session.status = end_status
+
+        session.delete()
+
+        spark_events.emit_session_deletion_start_event.assert_called_once_with(session.guid, session.kind, end_id,
+                                                                               end_status)
+        spark_events.emit_session_deletion_end_event.assert_called_once_with(session.guid, session.kind, -1,
+                                                                             constants.DEAD_SESSION_STATUS,
+                                                                             True, "", "")
+
+    def test_delete_session_emits_start_failed_end_when_delete_throws(self):
+        http_client = MagicMock()
+        http_client.delete_session.side_effect = ValueError
+        http_client.get_session.return_value = self.ready_sessions_json
+
+        spark_events = MagicMock()
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = self._create_session(http_client=http_client, spark_events=spark_events)
+        conf.load()
+        session.start(create_sql_context=False)
+        session.id = 0
+        end_id = session.id
+        end_status = constants.BUSY_SESSION_STATUS
+        session.status = end_status
+
+        try:
+            session.delete()
+        except ValueError:
+            pass
+
+        spark_events.emit_session_deletion_start_event.assert_called_once_with(session.guid, session.kind, end_id,
+                                                                               end_status)
+        spark_events.emit_session_deletion_end_event.assert_called_once_with(session.guid, session.kind, end_id,
+                                                                             end_status,
+                                                                             False, "ValueError", "")
+
+    def test_delete_session_emits_start_failed_end_when_in_bad_state(self):
+        http_client = MagicMock()
+        http_client.get_session.return_value = self.ready_sessions_json
+
+        spark_events = MagicMock()
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = self._create_session(http_client=http_client, spark_events=spark_events)
+        conf.load()
+        session.start(create_sql_context=False)
+        session.id = 0
+        end_id = session.id
+        end_status = constants.DEAD_SESSION_STATUS
+        session.status = end_status
+
+        try:
+            session.delete()
+            assert False
+        except ValueError:
+            pass
+
+        spark_events.emit_session_deletion_start_event.assert_called_once_with(session.guid, session.kind, end_id,
+                                                                               end_status)
+        spark_events.emit_session_deletion_end_event.assert_called_once_with(
+                session.guid, session.kind, session.id, constants.DEAD_SESSION_STATUS, False, "ValueError",
+                "Cannot delete session {} that is in state '{}'.".format(session.id, end_status))
