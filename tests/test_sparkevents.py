@@ -46,8 +46,11 @@ def test_emit_session_creation_end_event():
                    (constants.SESSION_GUID, guid),
                    (constants.LIVY_KIND, language),
                    (constants.SESSION_ID, session_id),
-                   (constants.STATUS, status)]
+                   (constants.STATUS, status),
+                   (constants.SUCCESS, True),
+                   (constants.EXCEPTION_TYPE, ""),
+                   (constants.EXCEPTION_MESSAGE, "")]
 
-    spark_events.emit_session_creation_end_event(guid, language, session_id, status)
+    spark_events.emit_session_creation_end_event(guid, language, session_id, status, True, "", "")
     spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)

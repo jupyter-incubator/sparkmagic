@@ -17,13 +17,16 @@ class LivySession(ObjectWithGuid):
     """Session that is livy specific."""
 
     def __init__(self, http_client, properties, ipython_display,
-                 session_id=-1, sql_created=None):
+                 session_id=-1, sql_created=None, spark_events=None):
         super(LivySession, self).__init__()
         assert "kind" in list(properties.keys())
         kind = properties["kind"]
         self.properties = properties
         self.ipython_display = ipython_display
-        self._spark_events = SparkEvents()
+
+        if spark_events is None:
+            spark_events = SparkEvents()
+        self._spark_events = spark_events
 
         status_sleep_seconds = conf.status_sleep_seconds()
         statement_sleep_seconds = conf.statement_sleep_seconds()
@@ -65,21 +68,27 @@ class LivySession(ObjectWithGuid):
         """Start the session against actual livy server."""
         self._spark_events.emit_session_creation_start_event(self.guid, self.kind)
 
-        r = self._http_client.post_session(self.properties)
-        self.id = r["id"]
-        self.status = str(r["state"])
-
-        self.ipython_display.writeln("Creating SparkContext as 'sc'")
-        # We wait for livy_session_startup_timeout_seconds() for the session to start up.
         try:
-            self.wait_for_idle(conf.livy_session_startup_timeout_seconds())
-        except LivyClientTimeoutError:
-            raise LivyClientTimeoutError("Session {} did not start up in {} seconds."\
-                                         .format(self.id, conf.livy_session_startup_timeout_seconds()))
+            r = self._http_client.post_session(self.properties)
+            self.id = r["id"]
+            self.status = str(r["state"])
 
-        if create_sql_context:
-            self.create_sql_context()
-        self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status)
+            self.ipython_display.writeln("Creating SparkContext as 'sc'")
+            # We wait for livy_session_startup_timeout_seconds() for the session to start up.
+            try:
+                self.wait_for_idle(conf.livy_session_startup_timeout_seconds())
+            except LivyClientTimeoutError:
+                raise LivyClientTimeoutError("Session {} did not start up in {} seconds."\
+                                             .format(self.id, conf.livy_session_startup_timeout_seconds()))
+
+            if create_sql_context:
+                self.create_sql_context()
+        except Exception as e:
+            self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status,
+                                                               False, e.__class__.__name__, str(e))
+            raise
+        else:
+            self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status, True, "", "")
 
     def create_sql_context(self):
         """Create a sqlContext object on the session. Object will be accessible via variable 'sqlContext'."""
@@ -135,10 +144,10 @@ class LivySession(ObjectWithGuid):
                 return
 
             if self.status in constants.FINAL_STATUS:
-                error = "Session {} unexpectedly reached final status '{}'. See logs:\n{}"\
-                    .format(self.id, self.status, self.get_logs())
+                error = "Session {} unexpectedly reached final status '{}'."\
+                    .format(self.id, self.status)
                 self.logger.error(error)
-                raise LivyUnexpectedStatusError(error)
+                raise LivyUnexpectedStatusError('{} See logs:\n{}'.format(error, self.get_logs()))
 
             if seconds_to_wait <= 0.0:
                 error = "Session {} did not reach idle status in time. Current status is {}."\

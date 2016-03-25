@@ -33,7 +33,8 @@ class SparkEvents:
 
         self._send_to_handler(kwargs_list)
 
-    def emit_session_creation_end_event(self, session_guid, language, session_id, status):
+    def emit_session_creation_end_event(self, session_guid, language, session_id, status,
+                                        success, exception_type, exception_message):
         self._verify_language_ok(language)
         assert session_id >= 0
 
@@ -45,7 +46,10 @@ class SparkEvents:
                        (constants.SESSION_GUID, session_guid),
                        (constants.LIVY_KIND, language),
                        (constants.SESSION_ID, session_id),
-                       (constants.STATUS, status)]
+                       (constants.STATUS, status),
+                       (constants.SUCCESS, success),
+                       (constants.EXCEPTION_TYPE, exception_type),
+                       (constants.EXCEPTION_MESSAGE, exception_message)]
 
         self._send_to_handler(kwargs_list)
 
