@@ -447,7 +447,7 @@ class TestLivySession(object):
         session.create_sql_context()
         assert session.created_sql_context
 
-    def test_create_sql_context_throw_exception(self):
+    def test_create_sql_context_throws_when_command_fails(self):
         kind = constants.SESSION_KIND_SPARK
         http_client = MagicMock()
         ipython_display = MagicMock()

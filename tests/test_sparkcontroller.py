@@ -196,7 +196,7 @@ def test_get_session_id_for_client():
 
 
 @with_setup(_setup, _teardown)
-def test_start_throw_exception():
+def test_add_session_throws_when_session_start_fails():
     name = "name"
     properties = {"kind": "spark"}
     endpoint = Endpoint("http://location:port", "name", "word")
@@ -211,5 +211,5 @@ def test_start_throw_exception():
         controller.add_session(name, endpoint, False, properties)
         assert False
     except ValueError as ex:
-        assert str(ex) == "Failed to create the SqlContext.\nError, '{}'".format("Exception")
+        assert str(ex) == str(e)
         session.start.assert_called_once_with()
