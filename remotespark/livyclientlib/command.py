@@ -2,13 +2,16 @@ import textwrap
 
 from remotespark.utils.guid import ObjectWithGuid
 from remotespark.utils.log import Log
-
+from remotespark.utils.sparkevents import SparkEvents
 
 class Command(ObjectWithGuid):
-    def __init__(self, code):
+    def __init__(self, code, spark_events=None):
         super(Command, self).__init__()
         self.code = textwrap.dedent(code)
         self.logger = Log("Command")
+        if spark_events is None:
+            spark_events = SparkEvents()
+        self._spark_events = spark_events
 
     def __eq__(self, other):
         return self.code == other.code
@@ -17,11 +20,23 @@ class Command(ObjectWithGuid):
         return not self == other
 
     def execute(self, session):
-        session.wait_for_idle()
-        data = {"code": self.code}
-        response = session.http_client.post_statement(session.id, data)
-        statement_id = response['id']
-        return self._get_statement_output(session, statement_id)
+        self._spark_events.emit_statement_execution_start_event(session.guid, session.kind, session.id, self.guid)
+        statement_id = -1
+        try:
+            session.wait_for_idle()
+            data = {"code": self.code}
+            response = session.http_client.post_statement(session.id, data)
+            statement_id = response['id']
+            output = self._get_statement_output(session, statement_id)
+        except Exception as e:
+            self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
+                                                                  self.guid, statement_id, False, e.__class__.__name__,
+                                                                  str(e))
+            raise
+        else:
+            self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
+                                                                  self.guid, statement_id, True, "", "")
+            return output
 
     def _get_statement_output(self, session, statement_id):
         statement_running = True

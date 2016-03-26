@@ -18,11 +18,30 @@ from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
+from remotespark.utils.sparkevents import SparkEvents
+from remotespark.utils.utils import generate_uuid, get_livy_kind
+
+
+def _event(f):
+    def wrapped(self, *args, **kwargs):
+        guid = self._generate_uuid()
+        self._spark_events.emit_magic_execution_start_event(f.__name__, get_livy_kind(self.language), guid)
+        try:
+            result = f(self, *args, **kwargs)
+        except Exception as e:
+            self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
+                                                              False, e.__class__.__name__, str(e))
+            raise
+        else:
+            self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
+                                                              True, "", "")
+            return result
+    return wrapped
 
 
 @magics_class
 class KernelMagics(SparkMagicBase):
-    def __init__(self, shell, data=None):
+    def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
 
@@ -34,8 +53,12 @@ class KernelMagics(SparkMagicBase):
         self.endpoint = None
         self.fatal_error = False
         self.fatal_error_message = ""
+        if spark_events is None:
+            spark_events = SparkEvents()
+        self._spark_events = spark_events
 
     @cell_magic
+    @_event
     def help(self, line, cell="", local_ns=None):
         help_html = """
 <table>
@@ -102,6 +125,7 @@ class KernelMagics(SparkMagicBase):
         raise NotImplementedError("UserCodeParser should have prevented code execution from reaching here.")
 
     @cell_magic
+    @_event
     def info(self, line, cell="", local_ns=None):
         self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.endpoint.url))
 
@@ -114,6 +138,7 @@ class KernelMagics(SparkMagicBase):
         self.print_endpoint_info(info_sessions)
 
     @cell_magic
+    @_event
     def logs(self, line, cell="", local_ns=None):
         if self.session_started:
             (success, out) = self.spark_controller.get_logs()
@@ -127,6 +152,7 @@ class KernelMagics(SparkMagicBase):
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @_event
     def configure(self, line, cell="", local_ns=None):
         args = parse_argstring(self.configure, line)
         if self.session_started:
@@ -174,6 +200,7 @@ class KernelMagics(SparkMagicBase):
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @_event
     def cleanup(self, line, cell="", local_ns=None):
         args = parse_argstring(self.cleanup, line)
         if args.force:
@@ -190,6 +217,7 @@ class KernelMagics(SparkMagicBase):
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
     @argument("-s", "--session", type=str, nargs=1, help="Session id number to delete.")
+    @_event
     def delete(self, line, cell="", local_ns=None):
         args = parse_argstring(self.delete, line)
         session = args.session[0]
@@ -277,6 +305,10 @@ class KernelMagics(SparkMagicBase):
     @staticmethod
     def _override_session_settings(settings):
         conf.override(conf.session_configs.__name__, json.loads(settings))
+
+    @staticmethod
+    def _generate_uuid():
+        return generate_uuid()
 
 
 def load_ipython_extension(ip):

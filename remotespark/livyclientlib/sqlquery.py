@@ -3,14 +3,17 @@ import pandas as pd
 
 import remotespark.utils.configuration as conf
 import remotespark.utils.constants as constants
+from remotespark.utils.guid import ObjectWithGuid
+from remotespark.utils.sparkevents import SparkEvents
 from remotespark.utils.utils import coerce_pandas_df_to_numeric_datetime
 
 from .command import Command
 from .dataframeparseexception import DataFrameParseException
 
 
-class SQLQuery(object):
-    def __init__(self, query, samplemethod=None, maxrows=None, samplefraction=None):
+class SQLQuery(ObjectWithGuid):
+    def __init__(self, query, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None):
+        super(SQLQuery, self).__init__()
         if samplemethod is None:
             samplemethod = conf.default_samplemethod()
         if maxrows is None:
@@ -26,6 +29,9 @@ class SQLQuery(object):
         self.samplemethod = samplemethod
         self.maxrows = maxrows
         self.samplefraction = samplefraction
+        if spark_events is None:
+            spark_events = SparkEvents()
+        self._spark_events = spark_events
 
     def to_command(self, kind):
         if kind == constants.SESSION_KIND_PYSPARK:
@@ -38,13 +44,24 @@ class SQLQuery(object):
             raise ValueError("Kind '{}' is not supported.".format(kind))
 
     def execute(self, session):
-        (success, records_text) = self._get_records(session)
-        if not success:
-            raise DataFrameParseException(records_text)
-        return self._records_to_dataframe(records_text)
-
-    def _get_records(self, session):
-        return self.to_command(session.kind).execute(session)
+        self._spark_events.emit_sql_execution_start_event(session.guid, session.kind, session.id, self.guid,
+                                                          self.samplemethod, self.maxrows, self.samplefraction)
+        command_guid = ''
+        try:
+            command = self.to_command(session.kind)
+            command_guid = command.guid
+            (success, records_text) = command.execute(session)
+            if not success:
+                raise DataFrameParseException(records_text)
+            result = self._records_to_dataframe(records_text)
+        except Exception as e:
+            self._spark_events.emit_sql_execution_end_event(session.guid, session.kind, session.id, self.guid,
+                                                            command_guid, False, e.__class__.__name__, str(e))
+            raise
+        else:
+            self._spark_events.emit_sql_execution_end_event(session.guid, session.kind, session.id, self.guid,
+                                                            command_guid, True, "", "")
+            return result
 
     @staticmethod
     def _records_to_dataframe(records_text):
