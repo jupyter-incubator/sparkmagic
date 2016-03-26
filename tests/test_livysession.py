@@ -5,8 +5,6 @@ from nose.tools import raises, assert_equals
 from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
 from remotespark.livyclientlib.livyunexpectedstatuserror import LivyUnexpectedStatusError
 from remotespark.livyclientlib.livysession import LivySession
-from remotespark.kernels.kernelmagics import KernelMagics
-from remotespark.livyclientlib.sparkcontroller import SparkController
 import remotespark.utils.configuration as conf
 import remotespark.utils.constants as constants
 

@@ -545,6 +545,7 @@ def test_start_session_displays_fatal_error_when_session_throws():
     assert magic.fatal_error
     assert magic.fatal_error_message == conf.fatal_error_suggestion().format(str(e))
 
+
 @with_setup(_setup, _teardown)
 def test_delete_exception():
     # This happens when session has not been created
@@ -571,6 +572,7 @@ def _assert_magic_successful_event_emitted_once(name):
     spark_events.emit_magic_execution_end_event.assert_called_once_with(name, constants.SESSION_KIND_PYSPARK,
                                                                         magic._generate_uuid.return_value, True,
                                                                         '', '')
+
 
 def _assert_magic_failure_event_emitted_once(name, error):
     magic._generate_uuid.assert_called_once_with()
