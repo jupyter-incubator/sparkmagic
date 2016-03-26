@@ -6,6 +6,7 @@ from ipywidgets import FlexBox
 
 from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
+from remotespark.utils.sparkevents import SparkEvents
 from .encoding import Encoding
 from .encodingwidget import EncodingWidget
 from .plotlygraphs.graphrenderer import GraphRenderer
@@ -13,7 +14,7 @@ from .plotlygraphs.graphrenderer import GraphRenderer
 
 class AutoVizWidget(FlexBox):
     def __init__(self, df, encoding, renderer=None, ipywidget_factory=None, encoding_widget=None, ipython_display=None,
-                 nested_widget_mode=False, testing=False, **kwargs):
+                 nested_widget_mode=False, spark_events=None, testing=False, **kwargs):
         assert encoding is not None
         assert df is not None
         assert type(df) is pd.DataFrame
@@ -54,6 +55,10 @@ class AutoVizWidget(FlexBox):
 
         self.controls = self._create_controls_widget()
 
+        if spark_events is None:
+            spark_events = SparkEvents()
+        self._spark_events = spark_events
+
         if nested_widget_mode:
             self.widget.children = [self.controls, self.output]
             self.children = [self.widget]
@@ -64,7 +69,7 @@ class AutoVizWidget(FlexBox):
         self.on_render_viz()
 
     def on_render_viz(self, *args):
-        # self.controls.children
+        self._spark_events.emit_graph_render_event(self.encoding.chart_type)
         self.to_display.clear_output()
 
         self.encoding_widget.show_x(self.renderer.display_x(self.encoding.chart_type))
