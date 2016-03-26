@@ -531,6 +531,22 @@ def test_delete_with_force_different_session():
 
 
 @with_setup(_setup, _teardown)
+def test_start_session_displays_fatal_error_when_session_throws():
+    e = ValueError("Failed to create the SqlContext.\nError, '{}'".format("Exception"))
+    magic.spark_controller.add_session = MagicMock(side_effect=e)
+    magic.language = constants.LANG_SCALA
+    magic.ipython_display = ipython_display
+    magic.ipython_display.send_error = MagicMock()
+
+    magic._do_not_call_start_session("Test Line")
+
+    magic.spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
+                                                               {"kind": constants.SESSION_KIND_SPARK})
+    assert magic.fatal_error
+    assert magic.fatal_error_message == conf.fatal_error_suggestion().format(str(e))
+
+
+@with_setup(_setup, _teardown)
 def test_delete_exception():
     # This happens when session has not been created
     session_id = "0"
@@ -556,6 +572,7 @@ def _assert_magic_successful_event_emitted_once(name):
     spark_events.emit_magic_execution_end_event.assert_called_once_with(name, constants.SESSION_KIND_PYSPARK,
                                                                         magic._generate_uuid.return_value, True,
                                                                         '', '')
+
 
 def _assert_magic_failure_event_emitted_once(name, error):
     magic._generate_uuid.assert_called_once_with()

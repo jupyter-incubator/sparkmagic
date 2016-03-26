@@ -1,5 +1,4 @@
 ﻿import json
-
 from mock import MagicMock, call
 from nose.tools import raises, assert_equals
 
@@ -14,7 +13,7 @@ class DummyResponse:
     def __init__(self, status_code, json_text):
         self._status_code = status_code
         self._json_text = json_text
-    
+
     def json(self):
         return json.loads(self._json_text)
 
@@ -26,8 +25,7 @@ class DummyResponse:
 CONN_STR = 'url=https://www.DFAS90D82309F0W9ASD0F9ZX.com;username=abcd;password=1234'
 
 
-class TestLivySession:
-
+class TestLivySession(object):
     pi_result = "Pi is roughly 3.14336"
 
     session_create_json = json.loads('{"id":0,"state":"starting","kind":"spark","log":[]}')
@@ -385,7 +383,7 @@ class TestLivySession:
         conf.load()
 
         session.delete()
-    
+
         assert_equals("dead", session.status)
         assert_equals(-1, session.id)
 
@@ -431,6 +429,7 @@ class TestLivySession:
 
         session.create_sql_context()
         assert ipython_display.writeln.call_count == 2
+        assert session.created_sql_context
 
         # Second call should not issue a post request
         session.create_sql_context()
@@ -438,6 +437,32 @@ class TestLivySession:
         assert call(0, {"code": "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"}) \
                in http_client.post_statement.call_args_list
         assert len(http_client.post_statement.call_args_list) == 1
+
+        session._get_sql_context_creation_command = MagicMock()
+
+        session._get_sql_context_creation_command.return_value.execute.return_value = (True, "Success")
+        session.created_sql_context = None
+        session.create_sql_context()
+        assert session.created_sql_context
+
+    def test_create_sql_context_throws_when_command_fails(self):
+        kind = constants.SESSION_KIND_SPARK
+        http_client = MagicMock()
+        ipython_display = MagicMock()
+
+        session = self._create_session(kind=kind, http_client=http_client)
+        session.ipython_display = ipython_display
+        session._get_sql_context_creation_command = MagicMock()
+
+        session._get_sql_context_creation_command.return_value.execute.return_value = (False, "Exception")
+        session.created_sql_context = None
+
+        try:
+            session.create_sql_context()
+            assert False
+        except ValueError as ex:
+            assert str(ex) == "Failed to create the SqlContext.\nError, '{}'".format("Exception")
+            assert session.created_sql_context is None
 
     def test_create_sql_context_spark(self):
         kind = constants.SESSION_KIND_SPARK
@@ -479,7 +504,7 @@ class TestLivySession:
         session.start()
 
         assert call(0, {"code": "from pyspark.sql import HiveContext\n"
-                                  "sqlContext = HiveContext(sc)"}) \
+                                "sqlContext = HiveContext(sc)"}) \
                in http_client.post_statement.call_args_list
 
     @raises(ValueError)
@@ -691,5 +716,5 @@ class TestLivySession:
         spark_events.emit_session_deletion_start_event.assert_called_once_with(session.guid, session.kind, end_id,
                                                                                end_status)
         spark_events.emit_session_deletion_end_event.assert_called_once_with(
-                session.guid, session.kind, session.id, constants.DEAD_SESSION_STATUS, False, "ValueError",
-                "Cannot delete session {} that is in state '{}'.".format(session.id, end_status))
+            session.guid, session.kind, session.id, constants.DEAD_SESSION_STATUS, False, "ValueError",
+            "Cannot delete session {} that is in state '{}'.".format(session.id, end_status))
