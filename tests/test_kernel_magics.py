@@ -565,6 +565,21 @@ def test_delete_exception():
         spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)
 
 
+@with_setup(_setup, _teardown)
+def test_kernel_magics_names():
+    """The magics machinery in IPython depends on the docstrings and
+    method names matching up correctly"""
+    assert_equals(magic.help.__name__, 'help')
+    assert_equals(magic.local.__name__, 'local')
+    assert_equals(magic.info.__name__, 'info')
+    assert_equals(magic.logs.__name__, 'logs')
+    assert_equals(magic.configure.__name__, 'configure')
+    assert_equals(magic.spark.__name__, 'spark')
+    assert_equals(magic.sql.__name__, 'sql')
+    assert_equals(magic.cleanup.__name__, 'cleanup')
+    assert_equals(magic.delete.__name__, 'delete')
+
+
 def _assert_magic_successful_event_emitted_once(name):
     magic._generate_uuid.assert_called_once_with()
     spark_events.emit_magic_execution_start_event.assert_called_once_with(name, constants.SESSION_KIND_PYSPARK,
