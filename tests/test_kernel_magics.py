@@ -567,6 +567,8 @@ def test_delete_exception():
 
 @with_setup(_setup, _teardown)
 def test_kernel_magics_names():
+    """The magics machinery in IPython depends on the docstrings and
+    method names matching up correctly"""
     assert_equals(magic.help.__name__, 'help')
     assert_equals(magic.local.__name__, 'local')
     assert_equals(magic.info.__name__, 'info')
