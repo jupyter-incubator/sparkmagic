@@ -121,24 +121,25 @@ class LivySession(ObjectWithGuid):
         return status in constants.FINAL_STATUS
 
     def delete(self):
-        self._spark_events.emit_session_deletion_start_event(self.guid, self.kind, self.id, self.status)
+        session_id = self.id
+        self._spark_events.emit_session_deletion_start_event(self.guid, self.kind, session_id, self.status)
 
         try:
-            self.logger.debug("Deleting session '{}'".format(self.id))
+            self.logger.debug("Deleting session '{}'".format(session_id))
 
             if self.status != constants.NOT_STARTED_SESSION_STATUS and self.status != constants.DEAD_SESSION_STATUS:
-                self._http_client.delete_session(self.id)
+                self._http_client.delete_session(session_id)
                 self.status = constants.DEAD_SESSION_STATUS
                 self.id = -1
             else:
                 raise ValueError("Cannot delete session {} that is in state '{}'."
-                                 .format(self.id, self.status))
+                                 .format(session_id, self.status))
         except Exception as e:
-            self._spark_events.emit_session_deletion_end_event(self.guid, self.kind, self.id, self.status, False,
+            self._spark_events.emit_session_deletion_end_event(self.guid, self.kind, session_id, self.status, False,
                                                                e.__class__.__name__, str(e))
             raise
         else:
-            self._spark_events.emit_session_deletion_end_event(self.guid, self.kind, self.id, self.status, True, "", "")
+            self._spark_events.emit_session_deletion_end_event(self.guid, self.kind, session_id, self.status, True, "", "")
 
     def wait_for_idle(self, seconds_to_wait=None):
         """Wait for session to go to idle status. Sleep meanwhile. Calls done every status_sleep_seconds as

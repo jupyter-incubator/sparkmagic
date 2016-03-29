@@ -652,9 +652,10 @@ class TestLivySession(object):
 
         session.delete()
 
+        assert_equals(session.id, -1)
         spark_events.emit_session_deletion_start_event.assert_called_once_with(session.guid, session.kind, end_id,
                                                                                end_status)
-        spark_events.emit_session_deletion_end_event.assert_called_once_with(session.guid, session.kind, -1,
+        spark_events.emit_session_deletion_end_event.assert_called_once_with(session.guid, session.kind, end_id,
                                                                              constants.DEAD_SESSION_STATUS,
                                                                              True, "", "")
 
