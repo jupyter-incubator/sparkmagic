@@ -87,7 +87,6 @@ def test_create_viz_types_buttons():
 
     # create_viz_types_buttons is called in the constructor, so no need to call it here.
     assert call(description=Encoding.chart_type_table) in ipywidget_factory.get_button.mock_calls
-    assert call(description=Encoding.chart_type_pie) in ipywidget_factory.get_button.mock_calls
     assert call(description=Encoding.chart_type_line) not in ipywidget_factory.get_button.mock_calls
     assert call(description=Encoding.chart_type_area) not in ipywidget_factory.get_button.mock_calls
     assert call(description=Encoding.chart_type_bar) not in ipywidget_factory.get_button.mock_calls
@@ -98,7 +97,6 @@ def test_create_viz_types_buttons():
 
     # create_viz_types_buttons is called in the constructor, so no need to call it here.
     assert call(description=Encoding.chart_type_table) in ipywidget_factory.get_button.mock_calls
-    assert call(description=Encoding.chart_type_pie) in ipywidget_factory.get_button.mock_calls
     assert call(description=Encoding.chart_type_line) in ipywidget_factory.get_button.mock_calls
     assert call(description=Encoding.chart_type_area) in ipywidget_factory.get_button.mock_calls
     assert call(description=Encoding.chart_type_bar) in ipywidget_factory.get_button.mock_calls
