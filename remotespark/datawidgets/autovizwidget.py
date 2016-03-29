@@ -101,7 +101,6 @@ class AutoVizWidget(FlexBox):
             children.append(self.heading)
 
             self._create_type_button(Encoding.chart_type_table, children)
-            self._create_type_button(Encoding.chart_type_pie, children)
 
             if len(self.df.columns) > 1:
                 self._create_type_button(Encoding.chart_type_scatter, children)

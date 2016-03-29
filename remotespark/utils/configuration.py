@@ -184,7 +184,3 @@ def default_samplemethod():
 def default_samplefraction():
     return 0.1
 
-
-@_override
-def max_slices_pie_graph():
-    return 100

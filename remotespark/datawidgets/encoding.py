@@ -7,9 +7,8 @@ class Encoding(object):
     chart_type_line = "Line"
     chart_type_area = "Area"
     chart_type_bar = "Bar"
-    chart_type_pie = "Pie"
     chart_type_table = "Table"
-    supported_chart_types = [chart_type_line, chart_type_area, chart_type_bar, chart_type_pie, chart_type_table]
+    supported_chart_types = [chart_type_line, chart_type_area, chart_type_bar, chart_type_table]
 
     y_agg_avg = "Avg"
     y_agg_min = "Min"

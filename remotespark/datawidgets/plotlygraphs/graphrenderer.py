@@ -4,7 +4,6 @@
 from plotly.offline import init_notebook_mode
 
 from .datagraph import DataGraph
-from .piegraph import PieGraph
 from .linegraph import LineGraph
 from .areagraph import AreaGraph
 from .bargraph import BarGraph
@@ -52,8 +51,6 @@ class GraphRenderer(object):
             graph = AreaGraph()
         elif chart_type == Encoding.chart_type_bar:
             graph = BarGraph()
-        elif chart_type == Encoding.chart_type_pie:
-            graph = PieGraph()
         elif chart_type == Encoding.chart_type_table:
             graph = DataGraph()
         else:
