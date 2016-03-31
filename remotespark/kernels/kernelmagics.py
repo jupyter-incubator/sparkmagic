@@ -36,6 +36,8 @@ def _event(f):
             self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
                                                               True, "", "")
             return result
+    wrapped.__name__ = f.__name__
+    wrapped.__doc__ = f.__doc__
     return wrapped
 
 

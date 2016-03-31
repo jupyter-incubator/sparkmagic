@@ -2,7 +2,6 @@
 # Distributed under the terms of the Modified BSD License.
 
 from remotespark.utils.log import Log
-from remotespark.utils.sparkevents import SparkEvents
 from .sessionmanager import SessionManager
 from .livyreliablehttpclient import LivyReliableHttpClient
 from .livysession import LivySession
@@ -16,8 +15,12 @@ class SparkController(object):
         self.session_manager = SessionManager()
 
     def get_logs(self, client_name=None):
-        session_to_use = self.get_session_by_name_or_default(client_name)
-        return session_to_use.get_logs()
+        try:
+            session_to_use = self.get_session_by_name_or_default(client_name)
+            out = session_to_use.get_logs()
+            return True, out
+        except ValueError as err:
+            return False, "{}".format(err)
 
     def run_command(self, command, client_name=None):
         session_to_use = self.get_session_by_name_or_default(client_name)

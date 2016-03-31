@@ -1,5 +1,5 @@
 from mock import MagicMock, patch
-from nose.tools import with_setup
+from nose.tools import with_setup, assert_equals
 import json
 
 from remotespark.livyclientlib.sparkcontroller import SparkController
@@ -184,9 +184,18 @@ def test_get_logs():
     chosen_client = MagicMock()
     controller.get_session_by_name_or_default = MagicMock(return_value=chosen_client)
 
-    controller.get_logs()
-
+    result = controller.get_logs()
+    assert_equals(result, (True, chosen_client.get_logs.return_value))
     chosen_client.get_logs.assert_called_with()
+
+
+@with_setup(_setup, _teardown)
+def test_get_logs_error():
+    chosen_client = MagicMock()
+    controller.get_session_by_name_or_default = MagicMock(side_effect=ValueError('THERE WAS A SPOOKY GHOST'))
+
+    result = controller.get_logs()
+    assert_equals(result, (False, str(controller.get_session_by_name_or_default.side_effect)))
 
 
 @with_setup(_setup, _teardown)
