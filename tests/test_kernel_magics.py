@@ -3,10 +3,11 @@ from nose.tools import with_setup, raises, assert_equals, assert_is
 from IPython.core.magic import magics_class
 
 from remotespark.kernels.kernelmagics import KernelMagics
-from remotespark.livyclientlib.exceptions import LivyClientTimeoutException
+from remotespark.livyclientlib.exceptions import LivyClientTimeoutException, BadUserDataException,\
+    FailedToCreateSqlContextException, LivyUnexpectedStatusException, SessionManagementException,\
+    HttpClientException, DataFrameParseException
 from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.livyclientlib.command import Command
-from remotespark.livyclientlib.sqlquery import SQLQuery
 import remotespark.utils.constants as constants
 import remotespark.utils.configuration as conf
 
@@ -109,6 +110,20 @@ def test_delete_session():
 
 
 @with_setup(_setup, _teardown)
+def test_delete_session_expected_exception():
+    line = ""
+    magic.session_started = True
+    spark_controller.delete_session_by_name.side_effect = BadUserDataException('hey')
+
+    magic._do_not_call_delete_session(line)
+
+    assert not magic.session_started
+    spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
+    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+                                                       .format(spark_controller.delete_session_by_name.side_effect))
+
+
+@with_setup(_setup, _teardown)
 def test_change_language():
     language = constants.LANG_SCALA.upper()
     line = "-l {}".format(language)
@@ -159,15 +174,29 @@ def test_info():
 
 
 @with_setup(_setup, _teardown)
-def test_info_failure():
+def test_info_unexpected_exception():
     magic.print_endpoint_info = MagicMock()
     line = ""
-    spark_controller.get_all_sessions_endpoint_info = MagicMock(side_effect=AssertionError('utter failure'))
+    spark_controller.get_all_sessions_endpoint_info = MagicMock(side_effect=ValueError('utter failure'))
 
     magic.info(line)
     spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
     _assert_magic_failure_event_emitted_once('info', spark_controller.get_all_sessions_endpoint_info.side_effect)
-    assert_equals(ipython_display.send_error.call_count, 1)
+    ipython_display.send_error.assert_called_once_with(constants.INTERNAL_ERROR_MSG
+                                                       .format(spark_controller.get_all_sessions_endpoint_info.side_effect))
+
+
+@with_setup(_setup, _teardown)
+def test_info_expected_exception():
+    magic.print_endpoint_info = MagicMock()
+    line = ""
+    spark_controller.get_all_sessions_endpoint_info = MagicMock(side_effect=FailedToCreateSqlContextException('utter failure'))
+
+    magic.info(line)
+    spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
+    _assert_magic_failure_event_emitted_once('info', spark_controller.get_all_sessions_endpoint_info.side_effect)
+    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+                                                       .format(spark_controller.get_all_sessions_endpoint_info.side_effect))
 
 
 @with_setup(_setup, _teardown)
@@ -203,7 +232,7 @@ def test_logs():
 
 
 @with_setup(_setup, _teardown)
-def test_logs_failure():
+def test_logs_unexpected_exception():
     line = ""
 
     magic.session_started = True
@@ -212,8 +241,22 @@ def test_logs_failure():
     magic.logs(line)
     spark_controller.get_logs.assert_called_once_with()
     _assert_magic_failure_event_emitted_once('logs', spark_controller.get_logs.side_effect)
-    assert_equals(ipython_display.send_error.call_count, 1)
+    ipython_display.send_error.assert_called_once_with(constants.INTERNAL_ERROR_MSG
+                                                       .format(spark_controller.get_logs.side_effect))
 
+
+@with_setup(_setup, _teardown)
+def test_logs_expected_exception():
+    line = ""
+
+    magic.session_started = True
+
+    spark_controller.get_logs = MagicMock(side_effect=LivyUnexpectedStatusException('There was some sort of error'))
+    magic.logs(line)
+    spark_controller.get_logs.assert_called_once_with()
+    _assert_magic_failure_event_emitted_once('logs', spark_controller.get_logs.side_effect)
+    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+                                                       .format(spark_controller.get_logs.side_effect))
 
 
 @with_setup(_setup, _teardown)
@@ -248,14 +291,25 @@ def test_configure():
 
 
 @with_setup(_setup, _teardown)
-def test_configure_failure():
+def test_configure_unexpected_exception():
     magic.info = MagicMock()
 
     magic._override_session_settings = MagicMock(side_effect=ValueError('help'))
     magic.configure('', '{"extra": "yes"}')
     _assert_magic_failure_event_emitted_once('configure', magic._override_session_settings.side_effect)
-    assert_equals(ipython_display.send_error.call_count, 1)
+    ipython_display.send_error.assert_called_once_with(constants.INTERNAL_ERROR_MSG\
+                                                       .format(magic._override_session_settings.side_effect))
 
+
+@with_setup(_setup, _teardown)
+def test_configure_expected_exception():
+    magic.info = MagicMock()
+
+    magic._override_session_settings = MagicMock(side_effect=BadUserDataException('help'))
+    magic.configure('', '{"extra": "yes"}')
+    _assert_magic_failure_event_emitted_once('configure', magic._override_session_settings.side_effect)
+    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG\
+                                                       .format(magic._override_session_settings.side_effect))
 
 
 @with_setup(_setup, _teardown)
@@ -311,14 +365,28 @@ def test_spark_failed_session_start():
 
 
 @with_setup(_setup, _teardown)
-def test_spark_exception():
+def test_spark_unexpected_exception():
     line = ""
     cell = "some spark code"
     spark_controller.run_command = MagicMock(side_effect=Exception('oups'))
 
     magic.spark(line, cell)
     spark_controller.run_command.assert_called_once_with(Command(cell))
-    assert_equals(ipython_display.send_error.call_count, 1)
+    ipython_display.send_error.assert_called_once_with(constants.INTERNAL_ERROR_MSG
+                                                       .format(spark_controller.run_command.side_effect))
+
+
+@with_setup(_setup, _teardown)
+def test_spark_expected_exception():
+    line = ""
+    cell = "some spark code"
+    spark_controller.run_command = MagicMock(side_effect=SessionManagementException('oups'))
+
+    magic.spark(line, cell)
+    spark_controller.run_command.assert_called_once_with(Command(cell))
+    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+                                                       .format(spark_controller.run_command.side_effect))
+
 
 
 @with_setup(_setup, _teardown)
@@ -355,7 +423,20 @@ def test_sql_exception():
 
     magic.sql(line, cell)
     magic.execute_sqlquery.assert_called_once_with(cell, None, None, None, None, "my_var", False)
-    assert_equals(ipython_display.send_error.call_count, 1)
+    ipython_display.send_error.assert_called_once_with(constants.INTERNAL_ERROR_MSG
+                                                       .format(magic.execute_sqlquery.side_effect))
+
+
+@with_setup(_setup, _teardown)
+def test_sql_expected_exception():
+    line = "-o my_var"
+    cell = "some spark code"
+    magic.execute_sqlquery = MagicMock(side_effect=HttpClientException('HAHAHAHAH'))
+
+    magic.sql(line, cell)
+    magic.execute_sqlquery.assert_called_once_with(cell, None, None, None, None, "my_var", False)
+    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+                                                       .format(magic.execute_sqlquery.side_effect))
 
 
 @with_setup(_setup, _teardown)
@@ -439,7 +520,8 @@ def test_cleanup_exception():
     magic.cleanup(line, cell)
     _assert_magic_failure_event_emitted_once('cleanup', spark_controller.cleanup_endpoint.side_effect)
     spark_controller.cleanup_endpoint.assert_called_once_with(magic.endpoint)
-    assert_equals(ipython_display.send_error.call_count, 1)
+    ipython_display.send_error.assert_called_once_with(constants.INTERNAL_ERROR_MSG
+                                                       .format(spark_controller.cleanup_endpoint.side_effect))
 
 
 @with_setup(_setup, _teardown)
@@ -525,6 +607,40 @@ def test_delete_with_force_different_session():
 
 
 @with_setup(_setup, _teardown)
+def test_delete_exception():
+    # This happens when session has not been created
+    session_id = "0"
+    line = "-f -s {}".format(session_id)
+    cell = ""
+    spark_controller.delete_session_by_id = MagicMock(side_effect=DataFrameParseException('wow'))
+    spark_controller.get_session_id_for_client = MagicMock()
+
+    magic.delete(line, cell)
+    _assert_magic_failure_event_emitted_once('delete', spark_controller.delete_session_by_id.side_effect)
+    spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
+    spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)
+    ipython_display.send_error.assert_called_once_with(constants.INTERNAL_ERROR_MSG
+                                                       .format(spark_controller.delete_session_by_id.side_effect))
+
+
+@with_setup(_setup, _teardown)
+def test_delete_expected_exception():
+    # This happens when session has not been created
+    session_id = "0"
+    line = "-f -s {}".format(session_id)
+    cell = ""
+    spark_controller.delete_session_by_id = MagicMock(side_effect=LivyClientTimeoutException('wow'))
+    spark_controller.get_session_id_for_client = MagicMock()
+
+    magic.delete(line, cell)
+    _assert_magic_failure_event_emitted_once('delete', spark_controller.delete_session_by_id.side_effect)
+    spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
+    spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)
+    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+                                                       .format(spark_controller.delete_session_by_id.side_effect))
+
+
+@with_setup(_setup, _teardown)
 def test_start_session_displays_fatal_error_when_session_throws():
     e = ValueError("Failed to create the SqlContext.\nError, '{}'".format("Exception"))
     magic.spark_controller.add_session = MagicMock(side_effect=e)
@@ -538,22 +654,6 @@ def test_start_session_displays_fatal_error_when_session_throws():
                                                                {"kind": constants.SESSION_KIND_SPARK})
     assert magic.fatal_error
     assert magic.fatal_error_message == conf.fatal_error_suggestion().format(str(e))
-
-
-@with_setup(_setup, _teardown)
-def test_delete_exception():
-    # This happens when session has not been created
-    session_id = "0"
-    line = "-f -s {}".format(session_id)
-    cell = ""
-    spark_controller.delete_session_by_id = MagicMock(side_effect=ImportError('wow'))
-    spark_controller.get_session_id_for_client = MagicMock()
-
-    magic.delete(line, cell)
-    _assert_magic_failure_event_emitted_once('delete', spark_controller.delete_session_by_id.side_effect)
-    spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
-    spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)
-    assert_equals(ipython_display.send_error.call_count, 1)
 
 
 @with_setup(_setup, _teardown)

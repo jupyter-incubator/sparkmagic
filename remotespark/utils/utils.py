@@ -13,7 +13,8 @@ import traceback
 
 from .filesystemreaderwriter import FileSystemReaderWriter
 from .constants import LANG_SCALA, LANG_PYTHON, LANG_R, \
-    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, INTERNAL_ERROR_MSG, \
+    EXPECTED_ERROR_MSG
 
 
 first_run = True
@@ -34,19 +35,21 @@ def handle_expected_exceptions(f):
     import remotespark.livyclientlib.exceptions as e
     exceptions_to_handle = (e.BadUserDataException, e.LivyUnexpectedStatusException, e.FailedToCreateSqlContextException,
                             e.HttpClientException, e.LivyClientTimeoutException, e.SessionManagementException)
+
     # Notice that we're NOT handling e.DataFrameParseException here. That's because DataFrameParseException
     # is an internal error that suggests something is wrong with LivyClientLib's implementation.
     def wrapped(self, *args, **kwargs):
         try:
             out = f(self, *args, **kwargs)
-        except exceptions_to_handle as e:
-            self.ipython_display("An error was encountered:\n{}".format(e))
+        except exceptions_to_handle as err:
+            self.ipython_display.send_error(EXPECTED_ERROR_MSG.format(err))
             return None
         else:
             return out
     wrapped.__name__ = f.__name__
     wrapped.__doc__ = f.__doc__
     return wrapped
+
 
 def wrap_unexpected_exceptions(f, execute_if_error=None):
     """A decorator that catches all exceptions from the function f and alerts the user about them.
@@ -63,9 +66,7 @@ def wrap_unexpected_exceptions(f, execute_if_error=None):
             out = f(self, *args, **kwargs)
         except Exception as e:
             self.logger.error("ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(e, traceback.format_exc()))
-            self.ipython_display.send_error("An internal error was encountered.\n"
-                                            "Please file an issue at https://github.com/jupyter-incubator/sparkmagic\n"
-                                            "Error:\n{}".format(e))
+            self.ipython_display.send_error(INTERNAL_ERROR_MSG.format(e))
             return None if execute_if_error is None else execute_if_error()
         else:
             return out

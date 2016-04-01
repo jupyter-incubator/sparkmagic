@@ -287,8 +287,10 @@ class KernelMagics(SparkMagicBase):
     @cell_magic
     @handle_expected_exceptions
     def _do_not_call_delete_session(self, line, cell="", local_ns=None):
-        if self.session_started:
-            self.spark_controller.delete_session_by_name(self.session_name)
+        try:
+            if self.session_started:
+                self.spark_controller.delete_session_by_name(self.session_name)
+        finally:
             self.session_started = False
 
     @magic_arguments()
