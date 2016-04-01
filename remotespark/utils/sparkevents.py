@@ -41,8 +41,6 @@ class SparkEvents:
     def emit_session_creation_end_event(self, session_guid, language, session_id, status,
                                         success, exception_type, exception_message):
         self._verify_language_ok(language)
-        assert session_id >= 0
-        assert status in constants.POSSIBLE_SESSION_STATUS
 
         event_name = constants.SESSION_CREATION_END_EVENT
         time_stamp = self._get_utc_date_time()
@@ -61,8 +59,6 @@ class SparkEvents:
 
     def emit_session_deletion_start_event(self, session_guid, language, session_id, status):
         self._verify_language_ok(language)
-        assert session_id >= 0
-        assert status in constants.POSSIBLE_SESSION_STATUS
 
         event_name = constants.SESSION_DELETION_START_EVENT
         time_stamp = self._get_utc_date_time()
@@ -79,8 +75,6 @@ class SparkEvents:
     def emit_session_deletion_end_event(self, session_guid, language, session_id, status,
                                         success, exception_type, exception_message):
         self._verify_language_ok(language)
-        assert session_id >= 0
-        assert status in constants.POSSIBLE_SESSION_STATUS
 
         event_name = constants.SESSION_DELETION_END_EVENT
         time_stamp = self._get_utc_date_time()
