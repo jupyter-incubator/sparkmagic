@@ -2,8 +2,8 @@
 from mock import MagicMock, call
 from nose.tools import raises, assert_equals
 
-from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
-from remotespark.livyclientlib.livyunexpectedstatuserror import LivyUnexpectedStatusError
+from remotespark.livyclientlib.exceptions import LivyClientTimeoutException, LivyUnexpectedStatusException,\
+    BadUserDataException, FailedToCreateSqlContextException
 from remotespark.livyclientlib.livysession import LivySession
 import remotespark.utils.configuration as conf
 import remotespark.utils.constants as constants
@@ -95,7 +95,7 @@ class TestLivySession(object):
         self._create_session()
         conf.load()
 
-    @raises(ValueError)
+    @raises(BadUserDataException)
     def test_constructor_throws_invalid_session_sql_combo(self):
         conf.override_all({
             "status_sleep_seconds": 2,
@@ -266,7 +266,7 @@ class TestLivySession(object):
         conf.load()
         session.start(create_sql_context=False)
 
-        session._refresh_status()
+        session.refresh_status()
         state = session.status
 
         assert_equals("idle", state)
@@ -312,7 +312,7 @@ class TestLivySession(object):
         http_client.get_session.assert_called_with(0)
         assert_equals(3, http_client.get_session.call_count)
 
-    @raises(LivyUnexpectedStatusError)
+    @raises(LivyUnexpectedStatusException)
     def test_wait_for_idle_throws_when_in_final_status(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
@@ -334,7 +334,7 @@ class TestLivySession(object):
 
         session.wait_for_idle(30)
 
-    @raises(LivyClientTimeoutError)
+    @raises(LivyClientTimeoutException)
     def test_wait_for_idle_times_out(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
@@ -371,7 +371,6 @@ class TestLivySession(object):
 
         assert_equals("dead", session.status)
 
-    @raises(ValueError)
     def test_delete_session_when_not_started(self):
         http_client = MagicMock()
         http_client.post_session.return_value = self.session_create_json
@@ -384,10 +383,8 @@ class TestLivySession(object):
 
         session.delete()
 
-        assert_equals("dead", session.status)
-        assert_equals(-1, session.id)
+        assert_equals(session.ipython_display.send_error.call_count, 1)
 
-    @raises(ValueError)
     def test_delete_session_when_dead_throws(self):
         http_client = MagicMock()
         http_client.post.return_value = self.session_create_json
@@ -400,6 +397,8 @@ class TestLivySession(object):
         session.status = "dead"
 
         session.delete()
+
+        assert_equals(session.ipython_display.send_error.call_count, 1)
 
     def test_create_sql_hive_context_happens_once(self):
         kind = constants.SESSION_KIND_SPARK
@@ -460,8 +459,8 @@ class TestLivySession(object):
         try:
             session.create_sql_context()
             assert False
-        except ValueError as ex:
-            assert str(ex) == "Failed to create the SqlContext.\nError, '{}'".format("Exception")
+        except FailedToCreateSqlContextException as ex:
+            assert_equals(str(ex), "Failed to create the SqlContext.\nError: '{}'".format("Exception"))
             assert session.created_sql_context is None
 
     def test_create_sql_context_spark(self):
@@ -507,7 +506,7 @@ class TestLivySession(object):
                                 "sqlContext = HiveContext(sc)"}) \
                in http_client.post_statement.call_args_list
 
-    @raises(ValueError)
+    @raises(BadUserDataException)
     def test_create_sql_hive_context_unknown_throws(self):
         kind = "unknown"
         http_client = MagicMock()
@@ -708,14 +707,11 @@ class TestLivySession(object):
         end_status = constants.DEAD_SESSION_STATUS
         session.status = end_status
 
-        try:
-            session.delete()
-            assert False
-        except ValueError:
-            pass
+        session.delete()
 
+        assert_equals(1, session.ipython_display.send_error.call_count)
         spark_events.emit_session_deletion_start_event.assert_called_once_with(session.guid, session.kind, end_id,
                                                                                end_status)
-        spark_events.emit_session_deletion_end_event.assert_called_once_with(
-            session.guid, session.kind, session.id, constants.DEAD_SESSION_STATUS, False, "ValueError",
-            "Cannot delete session {} that is in state '{}'.".format(session.id, end_status))
+        spark_events.emit_session_deletion_end_event.assert_called_once_with(session.guid, session.kind, session.id,
+                                                                             constants.DEAD_SESSION_STATUS, True, "",
+                                                                             "")

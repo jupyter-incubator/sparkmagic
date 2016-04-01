@@ -1,10 +1,11 @@
 ﻿from mock import MagicMock
 from nose.tools import raises, assert_equals
 
+from remotespark.livyclientlib.exceptions import SessionManagementException
 from remotespark.livyclientlib.sessionmanager import SessionManager
 
 
-@raises(ValueError)
+@raises(SessionManagementException)
 def test_get_client_throws_when_client_not_exists():
     manager = SessionManager()
 
@@ -20,7 +21,7 @@ def test_get_client():
     assert_equals(client, manager.get_session("name"))
 
 
-@raises(ValueError)
+@raises(SessionManagementException)
 def test_delete_client():
     client = MagicMock()
     manager = SessionManager()
@@ -31,14 +32,14 @@ def test_delete_client():
     manager.get_session("name")
 
 
-@raises(ValueError)
+@raises(SessionManagementException)
 def test_delete_client_throws_when_client_not_exists():
     manager = SessionManager()
 
     manager.delete_client("name")
 
 
-@raises(ValueError)
+@raises(SessionManagementException)
 def test_add_client_throws_when_client_exists():
     client = MagicMock()
     manager = SessionManager()
@@ -66,14 +67,14 @@ def test_get_any_client():
     assert_equals(client, manager.get_any_session())
 
 
-@raises(AssertionError)
+@raises(SessionManagementException)
 def test_get_any_client_raises_exception_with_no_client():
     manager = SessionManager()
 
     manager.get_any_session()
 
 
-@raises(AssertionError)
+@raises(SessionManagementException)
 def test_get_any_client_raises_exception_with_two_clients():
     client = MagicMock()
     manager = SessionManager()

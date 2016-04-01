@@ -4,6 +4,9 @@ from remotespark.utils.guid import ObjectWithGuid
 from remotespark.utils.log import Log
 from remotespark.utils.sparkevents import SparkEvents
 
+from .exceptions import LivyUnexpectedStatusException
+
+
 class Command(ObjectWithGuid):
     def __init__(self, code, spark_events=None):
         super(Command, self).__init__()
@@ -59,6 +62,7 @@ class Command(ObjectWithGuid):
                     out = (False,
                            statement_output["evalue"] + "\n" + "".join(statement_output["traceback"]))
                 else:
-                    raise ValueError("Unknown output status: '{}'".format(statement_output["status"]))
+                    raise LivyUnexpectedStatusException("Unknown output status from Livy: '{}'"
+                                                        .format(statement_output["status"]))
 
         return out

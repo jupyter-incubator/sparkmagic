@@ -239,7 +239,7 @@ def test_run_sql_command_knows_how_to_be_quiet():
 def test_logs_subcommand():
     get_logs_method = MagicMock()
     result_value = ""
-    get_logs_method.return_value = (True, result_value)
+    get_logs_method.return_value = result_value
     spark_controller.get_logs = get_logs_method
 
     command = "logs -s"
@@ -247,19 +247,8 @@ def test_logs_subcommand():
     line = " ".join([command, name])
     cell = "cell code"
 
-    # Could get results
     result = magic.spark(line, cell)
 
     get_logs_method.assert_called_once_with(name)
     assert result is None
     ipython_display.write.assert_called_once_with(result_value)
-
-    # Could not get results
-    get_logs_method.reset_mock()
-    get_logs_method.return_value = (False, result_value)
-
-    result = magic.spark(line, cell)
-
-    get_logs_method.assert_called_once_with(name)
-    assert result is None
-    ipython_display.send_error.assert_called_once_with(result_value)

@@ -2,11 +2,10 @@
 # Distributed under the terms of the Modified BSD License.
 
 from remotespark.utils.log import Log
+from remotespark.livyclientlib.exceptions import SessionManagementException
 
 
 class SessionManager(object):
-    """Livy session manager"""
-
     def __init__(self):
         self.logger = Log("SessionManager")
 
@@ -24,8 +23,8 @@ class SessionManager(object):
 
     def add_session(self, name, session):
         if name in self._sessions:
-            raise ValueError("Session with name '{}' already exists. Please delete the session"
-                             " first if you intend to replace it.".format(name))
+            raise SessionManagementException("Session with name '{}' already exists. Please delete the session"
+                                             " first if you intend to replace it.".format(name))
 
         self._sessions[name] = session
 
@@ -35,15 +34,15 @@ class SessionManager(object):
             key = self.get_sessions_list()[0]
             return self._sessions[key]
         elif number_of_sessions == 0:
-            raise AssertionError("You need to have at least 1 client created to execute commands.")
+            raise SessionManagementException("You need to have at least 1 client created to execute commands.")
         else:
-            raise AssertionError("Please specify the client to use. Possible sessions are {}".format(
+            raise SessionManagementException("Please specify the client to use. Possible sessions are {}".format(
                 self.get_sessions_list()))
         
     def get_session(self, name):
         if name in self._sessions:
             return self._sessions[name]
-        raise ValueError("Could not find '{}' session in list of saved sessions. Possible sessions are {}".format(
+        raise SessionManagementException("Could not find '{}' session in list of saved sessions. Possible sessions are {}".format(
             name, self.get_sessions_list()))
 
     def get_session_id_for_client(self, name):
@@ -63,5 +62,5 @@ class SessionManager(object):
             self._sessions[name].delete()
             del self._sessions[name]
         else:
-            raise ValueError("Could not find '{}' session in list of saved sessions. Possible sessions are {}"
-                             .format(name, self.get_sessions_list()))
+            raise SessionManagementException("Could not find '{}' session in list of saved sessions. Possible sessions are {}"
+                                             .format(name, self.get_sessions_list()))

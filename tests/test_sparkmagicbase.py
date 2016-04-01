@@ -4,7 +4,7 @@ from nose.tools import assert_equals
 from remotespark.utils.constants import LANGS_SUPPORTED
 from remotespark.utils.utils import get_livy_kind
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
-from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
+from remotespark.livyclientlib.exceptions import DataFrameParseException
 from remotespark.livyclientlib.sqlquery import SQLQuery
 
 

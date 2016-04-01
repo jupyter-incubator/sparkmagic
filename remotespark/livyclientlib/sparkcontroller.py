@@ -8,19 +8,14 @@ from .livysession import LivySession
 
 
 class SparkController(object):
-
     def __init__(self, ipython_display):
         self.logger = Log("SparkController")
         self.ipython_display = ipython_display
         self.session_manager = SessionManager()
 
     def get_logs(self, client_name=None):
-        try:
-            session_to_use = self.get_session_by_name_or_default(client_name)
-            out = session_to_use.get_logs()
-            return True, out
-        except ValueError as err:
-            return False, "{}".format(err)
+        session_to_use = self.get_session_by_name_or_default(client_name)
+        return session_to_use.get_logs()
 
     def run_command(self, command, client_name=None):
         session_to_use = self.get_session_by_name_or_default(client_name)
@@ -37,7 +32,7 @@ class SparkController(object):
                                            self.ipython_display, s["id"])
                         for s in sessions]
         for s in session_list:
-            s._refresh_status()
+            s.refresh_status()
         return session_list
 
     def get_all_sessions_endpoint_info(self, endpoint):
@@ -56,15 +51,11 @@ class SparkController(object):
 
     def delete_session_by_id(self, endpoint, session_id):
         http_client = self._http_client(endpoint)
-        try:
-            response = http_client.get_session(session_id)
-            http_client = self._http_client(endpoint)
-            session = self._livy_session(http_client, {"kind": response["kind"]},
-                                         self.ipython_display, session_id, False)
-            session.delete()
-        except ValueError:
-            # Session does not exist; do nothing
-            pass
+        response = http_client.get_session(session_id)
+        http_client = self._http_client(endpoint)
+        session = self._livy_session(http_client, {"kind": response["kind"]},
+                                     self.ipython_display, session_id, False)
+        session.delete()
 
     def add_session(self, name, endpoint, skip_if_exists, properties):
         if skip_if_exists and (name in self.session_manager.get_sessions_list()):

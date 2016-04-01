@@ -3,7 +3,7 @@ from nose.tools import with_setup, raises, assert_equals, assert_is
 from IPython.core.magic import magics_class
 
 from remotespark.kernels.kernelmagics import KernelMagics
-from remotespark.livyclientlib.livyclienttimeouterror import LivyClientTimeoutError
+from remotespark.livyclientlib.exceptions import LivyClientTimeoutException
 from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.sqlquery import SQLQuery
@@ -49,9 +49,7 @@ def _teardown():
 @with_setup(_setup, _teardown)
 @raises(NotImplementedError)
 def test_local():
-    line = ""
-
-    magic.local(line)
+    magic.local("")
 
 
 @with_setup(_setup, _teardown)
@@ -76,7 +74,7 @@ def test_start_session():
 @with_setup(_setup, _teardown)
 def test_start_session_times_out():
     line = ""
-    spark_controller.add_session = MagicMock(side_effect=LivyClientTimeoutError)
+    spark_controller.add_session = MagicMock(side_effect=LivyClientTimeoutException)
     assert not magic.session_started
 
     ret = magic._do_not_call_start_session(line)

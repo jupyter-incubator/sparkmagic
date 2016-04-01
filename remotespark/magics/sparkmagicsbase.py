@@ -32,11 +32,7 @@ class SparkMagicBase(Magics):
 
     def execute_sqlquery(self, cell, samplemethod, maxrows, samplefraction,
                          session, output_var, quiet):
-        try:
-            sqlquery = self._sqlquery(cell, samplemethod, maxrows, samplefraction)
-        except ValueError as e:
-            self.ipython_display.send_error('Cannot create SQL query with given options: "{}"'.format(str(e)))
-            return None
+        sqlquery = self._sqlquery(cell, samplemethod, maxrows, samplefraction)
         df = self.spark_controller.run_sqlquery(sqlquery, session)
         if output_var is not None:
             self.shell.user_ns[output_var] = df

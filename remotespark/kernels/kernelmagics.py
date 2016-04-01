@@ -18,7 +18,8 @@ from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
 from remotespark.utils.sparkevents import SparkEvents
-from remotespark.utils.utils import generate_uuid, get_livy_kind, wrap_unexpected_exceptions
+from remotespark.utils.utils import generate_uuid, get_livy_kind, wrap_unexpected_exceptions, \
+    handle_expected_exceptions
 
 
 def _event(f):
@@ -60,6 +61,7 @@ class KernelMagics(SparkMagicBase):
 
     @cell_magic
     @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def help(self, line, cell="", local_ns=None):
         help_html = """
@@ -128,6 +130,7 @@ class KernelMagics(SparkMagicBase):
 
     @cell_magic
     @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def info(self, line, cell="", local_ns=None):
         self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.endpoint.url))
@@ -142,6 +145,7 @@ class KernelMagics(SparkMagicBase):
 
     @cell_magic
     @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def logs(self, line, cell="", local_ns=None):
         if self.session_started:
@@ -157,6 +161,7 @@ class KernelMagics(SparkMagicBase):
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
     @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def configure(self, line, cell="", local_ns=None):
         args = parse_argstring(self.configure, line)
@@ -175,6 +180,7 @@ class KernelMagics(SparkMagicBase):
 
     @cell_magic
     @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             (success, out) = self.spark_controller.run_command(Command(cell))
@@ -196,18 +202,20 @@ class KernelMagics(SparkMagicBase):
                                                                         "from the server for SQL queries")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
     @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)
             return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
                                          None, args.output, args.quiet)
         else:
-            return None
+            return
 
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
     @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def cleanup(self, line, cell="", local_ns=None):
         args = parse_argstring(self.cleanup, line)
@@ -226,6 +234,7 @@ class KernelMagics(SparkMagicBase):
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
     @argument("-s", "--session", type=str, help="Session id number to delete.")
     @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def delete(self, line, cell="", local_ns=None):
         args = parse_argstring(self.delete, line)
@@ -252,6 +261,8 @@ class KernelMagics(SparkMagicBase):
     def _do_not_call_start_session(self, line, cell="", local_ns=None):
         # Starts a session unless session is already created or a fatal error occurred. Returns True when session is
         # created successfully.
+        # No need to add the handle_expected_exceptions decorator to this since we manually catch all
+        # exceptions when starting the session.
 
         if self.fatal_error:
             self.ipython_display.send_error(self.fatal_error_message)
@@ -260,9 +271,9 @@ class KernelMagics(SparkMagicBase):
         if not self.session_started:
             skip = False
             properties = conf.get_session_properties(self.language)
+            self.session_started = True
 
             try:
-                self.session_started = True
                 self.spark_controller.add_session(self.session_name, self.endpoint, skip, properties)
             except Exception as e:
                 self.fatal_error = True
@@ -274,6 +285,7 @@ class KernelMagics(SparkMagicBase):
         return self.session_started
 
     @cell_magic
+    @handle_expected_exceptions
     def _do_not_call_delete_session(self, line, cell="", local_ns=None):
         if self.session_started:
             self.spark_controller.delete_session_by_name(self.session_name)
@@ -288,11 +300,11 @@ class KernelMagics(SparkMagicBase):
 
         if language not in LANGS_SUPPORTED:
             self.ipython_display.send_error("'{}' language not supported in kernel magics.".format(language))
-            return None
+            return
 
         if self.session_started:
             self.ipython_display.send_error("Cannot change the language if a session has been started.")
-            return None
+            return
 
         self.language = language
         self.refresh_configuration()
