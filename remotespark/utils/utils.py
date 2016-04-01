@@ -5,19 +5,40 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from collections import namedtuple
 import os
 import uuid
 import pandas as pd
 import numpy as np
+import traceback
 
 from .filesystemreaderwriter import FileSystemReaderWriter
 from .constants import LANG_SCALA, LANG_PYTHON, LANG_R, \
     SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK
 
-
 first_run = True
 instance_id = None
+
+
+def wrap_unexpected_exceptions(f, execute_if_error=None):
+    """A decorator that catches all exceptions from the function f and alerts the user about them.
+    Self can be any object with a "logger" attribute and a "ipython_display" attribute.
+    All exceptions are logged as "unexpected" exceptions, and a request is made to the user to file an issue
+    at the Github repository. If there is an error, returns None if execute_if_error is None, or else
+    returns the output of the function execute_if_error."""
+    def wrapped(self, *args, **kwargs):
+        try:
+            out = f(self, *args, **kwargs)
+        except Exception as e:
+            self.logger.error("ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(e, traceback.format_exc()))
+            self.ipython_display.send_error("An internal error was encountered.\n"
+                                            "Please file an issue at https://github.com/jupyter-incubator/sparkmagic\n"
+                                            "Error:\n{}".format(e))
+            return None if execute_if_error is None else execute_if_error()
+        else:
+            return out
+    wrapped.__name__ = f.__name__
+    wrapped.__doc__ = f.__doc__
+    return wrapped
 
 
 def expand_path(path):

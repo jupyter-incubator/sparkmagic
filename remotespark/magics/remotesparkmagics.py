@@ -107,76 +107,74 @@ class RemoteSparkMagics(SparkMagicBase):
 
         subcommand = args.command[0].lower()
 
-        try:
-            # info
-            if subcommand == "info":
-                if args.url is not None:
-                    endpoint = Endpoint(args.url, args.user, args.password)
-                    info_sessions = self.spark_controller.get_all_sessions_endpoint_info(endpoint)
-                    self.print_endpoint_info(info_sessions)
-                else:
-                    self._print_local_info()
-            # config
-            elif subcommand == "config":
-                conf.override(conf.session_configs.__name__, json.loads(cell))
-            # add
-            elif subcommand == "add":
-                if args.url is None:
-                    raise ValueError("Need to supply URL argument (e.g. -u https://example.com/livyendpoint")
-
-                name = args.session
-                language = args.language
+        # info
+        if subcommand == "info":
+            if args.url is not None:
                 endpoint = Endpoint(args.url, args.user, args.password)
-                skip = args.skip
+                info_sessions = self.spark_controller.get_all_sessions_endpoint_info(endpoint)
+                self.print_endpoint_info(info_sessions)
+            else:
+                self._print_local_info()
+        # config
+        elif subcommand == "config":
+            conf.override(conf.session_configs.__name__, json.loads(cell))
+        # add
+        elif subcommand == "add":
+            if args.url is None:
+                self.ipython_display.send_error("Need to supply URL argument (e.g. -u https://example.com/livyendpoint")
+                return
 
-                properties = conf.get_session_properties(language)
+            name = args.session
+            language = args.language
+            endpoint = Endpoint(args.url, args.user, args.password)
+            skip = args.skip
 
-                self.spark_controller.add_session(name, endpoint, skip, properties)
-            # delete
-            elif subcommand == "delete":
-                if args.session is not None:
-                    self.spark_controller.delete_session_by_name(args.session)
-                elif args.url is not None:
-                    if args.id is None:
-                        raise ValueError("Must provide --id or -i option to delete session at endpoint from URL")
-                    endpoint = Endpoint(args.url, args.user, args.password)
-                    session_id = args.id
-                    self.spark_controller.delete_session_by_id(endpoint, session_id)
-                else:
-                    raise ValueError("Subcommand 'delete' requires a session name or a URL and session ID")
-            # cleanup
-            elif subcommand == "cleanup":
-                if args.url is not None:
-                    endpoint = Endpoint(args.url, args.user, args.password)
-                    self.spark_controller.cleanup_endpoint(endpoint)
-                else:
-                    self.spark_controller.cleanup()
-            # logs
-            elif subcommand == "logs":
-                (success, out) = self.spark_controller.get_logs(args.session)
+            properties = conf.get_session_properties(language)
+
+            self.spark_controller.add_session(name, endpoint, skip, properties)
+        # delete
+        elif subcommand == "delete":
+            if args.session is not None:
+                self.spark_controller.delete_session_by_name(args.session)
+            elif args.url is not None:
+                if args.id is None:
+                    self.ipython_display.send_error("Must provide --id or -i option to delete session at endpoint from URL")
+                    return
+                endpoint = Endpoint(args.url, args.user, args.password)
+                session_id = args.id
+                self.spark_controller.delete_session_by_id(endpoint, session_id)
+            else:
+                self.ipython_display.send_error("Subcommand 'delete' requires a session name or a URL and session ID")
+        # cleanup
+        elif subcommand == "cleanup":
+            if args.url is not None:
+                endpoint = Endpoint(args.url, args.user, args.password)
+                self.spark_controller.cleanup_endpoint(endpoint)
+            else:
+                self.spark_controller.cleanup()
+        # logs
+        elif subcommand == "logs":
+            (success, out) = self.spark_controller.get_logs(args.session)
+            if success:
+                self.ipython_display.write(out)
+            else:
+                self.ipython_display.send_error(out)
+        # run
+        elif len(subcommand) == 0:
+            if args.context == CONTEXT_NAME_SPARK:
+                (success, out) = self.spark_controller.run_command(Command(cell), args.session)
                 if success:
                     self.ipython_display.write(out)
                 else:
                     self.ipython_display.send_error(out)
-            # run
-            elif len(subcommand) == 0:
-                if args.context == CONTEXT_NAME_SPARK:
-                    (success, out) = self.spark_controller.run_command(Command(cell), args.session)
-                    if success:
-                        self.ipython_display.write(out)
-                    else:
-                        self.ipython_display.send_error(out)
-                elif args.context == CONTEXT_NAME_SQL:
-                    sqlquery = SQLQuery(cell, args.samplemethod, args.maxrows, args.samplefraction)
-                    return self.execute_sqlquery(sqlquery, args.session, args.output,
-                                                 args.quiet)
-                else:
-                    raise ValueError("Context '{}' not found".format(args.context))
-            # error
+            elif args.context == CONTEXT_NAME_SQL:
+                return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
+                                             args.session, args.output, args.quiet)
             else:
-                raise ValueError("Subcommand '{}' not found. {}".format(subcommand, usage))
-        except ValueError as err:
-            self.ipython_display.send_error("{}".format(err))
+                self.ipython_display.send_error("Context '{}' not found".format(args.context))
+        # error
+        else:
+            self.ipython_display.send_error("Subcommand '{}' not found. {}".format(subcommand, usage))
 
     def _print_local_info(self):
         sessions_info = ["        {}".format(i) for i in self.spark_controller.get_manager_sessions_str()]

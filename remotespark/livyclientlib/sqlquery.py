@@ -21,9 +21,12 @@ class SQLQuery(ObjectWithGuid):
         if samplefraction is None:
             samplefraction = conf.default_samplefraction()
 
-        assert samplemethod == 'take' or samplemethod == 'sample'
-        assert isinstance(maxrows, int)
-        assert 0.0 <= samplefraction <= 1.0
+        if samplemethod not in {'take', 'sample'}:
+            raise ValueError('samplemethod (-m) must be one of (take, sample)')
+        if not isinstance(maxrows, int):
+            raise ValueError('maxrows (-n) must be an integer')
+        if not 0.0 <= samplefraction <= 1.0:
+            raise ValueError('samplefraction (-r) must be a float between 0.0 and 1.0')
 
         self.query = query
         self.samplemethod = samplemethod

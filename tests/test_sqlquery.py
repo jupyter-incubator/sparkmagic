@@ -42,7 +42,7 @@ def test_sqlquery_loads_defaults():
     assert_equals(sqlquery.samplefraction, defaults[conf.default_samplefraction.__name__])
 
 
-@raises(AssertionError)
+@raises(ValueError)
 def test_sqlquery_rejects_bad_data():
     query = "HERE IS MY SQL QUERY SELECT * FROM CREATE DROP TABLE"
     samplemethod = "foo"
