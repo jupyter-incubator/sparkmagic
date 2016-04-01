@@ -2,7 +2,7 @@ from mock import MagicMock
 from nose.tools import with_setup
 
 import remotespark.utils.configuration as conf
-import remotespark.utils.constants as constants
+from remotespark.utils.constants import EXPECTED_ERROR_MSG
 from remotespark.magics.remotesparkmagics import RemoteSparkMagics
 from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.endpoint import Endpoint
@@ -63,7 +63,7 @@ def test_info_command_exception():
     magic.spark(command)
 
     print_info_mock.assert_called_once_with()
-    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(print_info_mock.side_effect))
 
 
@@ -113,7 +113,7 @@ def test_add_sessions_command_exception():
 
     add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", "sdf", "w"),
                                               False, {"kind": "pyspark"})
-    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(add_sessions_mock.side_effect))
 
 
@@ -160,7 +160,7 @@ def test_delete_sessions_command_exception():
     command = "delete -s name"
     magic.spark(command)
     mock_method.assert_called_once_with("name")
-    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(mock_method.side_effect))
 
 
@@ -183,7 +183,7 @@ def test_cleanup_command_exception():
 
     magic.spark(line)
     mock_method.assert_called_once_with()
-    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(mock_method.side_effect))
 
 
@@ -265,7 +265,7 @@ def test_run_cell_command_exception():
 
     run_cell_method.assert_called_once_with(Command(cell), name)
     assert result is None
-    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(run_cell_method.side_effect))
 
 
@@ -308,7 +308,7 @@ def test_run_sql_command_exception():
     result = magic.spark(line, cell)
 
     run_cell_method.assert_called_once_with(SQLQuery(cell, samplemethod=method_name), name)
-    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(run_cell_method.side_effect))
 
 
@@ -369,5 +369,5 @@ def test_logs_exception():
 
     get_logs_method.assert_called_once_with(name)
     assert result is None
-    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(get_logs_method.side_effect))

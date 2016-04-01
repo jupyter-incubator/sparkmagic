@@ -25,13 +25,9 @@ def handle_expected_exceptions(f):
     """A decorator that handles expected exceptions. Self can be any object with
     an "ipython_display" attribute.
     Usage:
-    @handle_expected_exceptions()
+    @handle_expected_exceptions
     def fn(self, ...):
-
-    or
-
-    @handle_expected_exceptions(value_to_return)
-    def fn(self, ...)"""
+        etc..."""
     import remotespark.livyclientlib.exceptions as e
     exceptions_to_handle = (e.BadUserDataException, e.LivyUnexpectedStatusException, e.FailedToCreateSqlContextException,
                             e.HttpClientException, e.LivyClientTimeoutException, e.SessionManagementException)
