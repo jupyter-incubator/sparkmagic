@@ -68,3 +68,7 @@ FINAL_STATUS = [DEAD_SESSION_STATUS, ERROR_SESSION_STATUS]
 DELETE_SESSION_ACTION = "delete"
 START_SESSION_ACTION = "start"
 DO_NOTHING_ACTION = "nothing"
+
+INTERNAL_ERROR_MSG = "An internal error was encountered.\n" \
+                     "Please file an issue at https://github.com/jupyter-incubator/sparkmagic\nError:\n{}"
+EXPECTED_ERROR_MSG = "An error was encountered:\n{}"

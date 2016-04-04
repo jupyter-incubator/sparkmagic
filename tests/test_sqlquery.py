@@ -7,6 +7,7 @@ from pandas.util.testing import assert_frame_equal
 from remotespark.utils.constants import LONG_RANDOM_VARIABLE_NAME
 from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.livyclientlib.command import Command
+from remotespark.livyclientlib.exceptions import BadUserDataException
 import remotespark.utils.configuration as conf
 
 
@@ -42,7 +43,7 @@ def test_sqlquery_loads_defaults():
     assert_equals(sqlquery.samplefraction, defaults[conf.default_samplefraction.__name__])
 
 
-@raises(AssertionError)
+@raises(BadUserDataException)
 def test_sqlquery_rejects_bad_data():
     query = "HERE IS MY SQL QUERY SELECT * FROM CREATE DROP TABLE"
     samplemethod = "foo"

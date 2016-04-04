@@ -11,7 +11,7 @@ from remotespark.utils.ipythondisplay import IpythonDisplay
 from remotespark.utils.log import Log
 from remotespark.utils.sparkevents import SparkEvents
 from remotespark.livyclientlib.sparkcontroller import SparkController
-from remotespark.livyclientlib.dataframeparseexception import DataFrameParseException
+from remotespark.livyclientlib.sqlquery import SQLQuery
 
 
 @magics_class
@@ -30,18 +30,20 @@ class SparkMagicBase(Magics):
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
-    def execute_sqlquery(self, sqlquery, session, output_var, quiet):
-        try:
-            df = self.spark_controller.run_sqlquery(sqlquery, session)
-            if output_var is not None:
-                self.shell.user_ns[output_var] = df
-            if quiet:
-                return None
-            else:
-                return df
-        except DataFrameParseException as e:
-            self.ipython_display.send_error(e.out)
+    def execute_sqlquery(self, cell, samplemethod, maxrows, samplefraction,
+                         session, output_var, quiet):
+        sqlquery = self._sqlquery(cell, samplemethod, maxrows, samplefraction)
+        df = self.spark_controller.run_sqlquery(sqlquery, session)
+        if output_var is not None:
+            self.shell.user_ns[output_var] = df
+        if quiet:
             return None
+        else:
+            return df
+
+    @staticmethod
+    def _sqlquery(cell, samplemethod, maxrows, samplefraction):
+        return SQLQuery(cell, samplemethod, maxrows, samplefraction)
 
     @staticmethod
     def print_endpoint_info(info_sessions):

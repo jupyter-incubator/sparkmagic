@@ -8,7 +8,7 @@ from remotespark.utils.sparkevents import SparkEvents
 from remotespark.utils.utils import coerce_pandas_df_to_numeric_datetime
 
 from .command import Command
-from .dataframeparseexception import DataFrameParseException
+from .exceptions import DataFrameParseException, BadUserDataException
 
 
 class SQLQuery(ObjectWithGuid):
@@ -21,9 +21,12 @@ class SQLQuery(ObjectWithGuid):
         if samplefraction is None:
             samplefraction = conf.default_samplefraction()
 
-        assert samplemethod == 'take' or samplemethod == 'sample'
-        assert isinstance(maxrows, int)
-        assert 0.0 <= samplefraction <= 1.0
+        if samplemethod not in {'take', 'sample'}:
+            raise BadUserDataException('samplemethod (-m) must be one of (take, sample)')
+        if not isinstance(maxrows, int):
+            raise BadUserDataException('maxrows (-n) must be an integer')
+        if not 0.0 <= samplefraction <= 1.0:
+            raise BadUserDataException('samplefraction (-r) must be a float between 0.0 and 1.0')
 
         self.query = query
         self.samplemethod = samplemethod
@@ -41,7 +44,7 @@ class SQLQuery(ObjectWithGuid):
         elif kind == constants.SESSION_KIND_SPARKR:
             return self._r_command()
         else:
-            raise ValueError("Kind '{}' is not supported.".format(kind))
+            raise BadUserDataException("Kind '{}' is not supported.".format(kind))
 
     def execute(self, session):
         self._spark_events.emit_sql_execution_start_event(session.guid, session.kind, session.id, self.guid,

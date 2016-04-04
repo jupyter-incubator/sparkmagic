@@ -8,14 +8,13 @@ import remotespark.utils.constants as constants
 from remotespark.utils.guid import ObjectWithGuid
 from remotespark.utils.log import Log
 from remotespark.utils.sparkevents import SparkEvents
+
 from .command import Command
-from .livyclienttimeouterror import LivyClientTimeoutError
-from .livyunexpectedstatuserror import LivyUnexpectedStatusError
+from .exceptions import FailedToCreateSqlContextException, LivyClientTimeoutException, \
+    LivyUnexpectedStatusException, BadUserDataException
 
 
 class LivySession(ObjectWithGuid):
-    """Session that is livy specific."""
-
     def __init__(self, http_client, properties, ipython_display,
                  session_id=-1, sql_created=None, spark_events=None):
         super(LivySession, self).__init__()
@@ -36,14 +35,14 @@ class LivySession(ObjectWithGuid):
         assert statement_sleep_seconds > 0
         assert wait_for_idle_timeout_seconds > 0
         if session_id == -1 and sql_created is True:
-            raise ValueError("Cannot indicate sql state without session id.")
+            raise BadUserDataException("Cannot indicate sql state without session id.")
 
         self.logger = Log("LivySession")
 
         kind = kind.lower()
         if kind not in constants.SESSION_KINDS_SUPPORTED:
-            raise ValueError("Session of kind '{}' not supported. Session must be of kinds {}."
-                             .format(kind, ", ".join(constants.SESSION_KINDS_SUPPORTED)))
+            raise BadUserDataException("Session of kind '{}' not supported. Session must be of kinds {}."
+                                       .format(kind, ", ".join(constants.SESSION_KINDS_SUPPORTED)))
 
         if session_id == -1:
             self.status = constants.NOT_STARTED_SESSION_STATUS
@@ -77,9 +76,9 @@ class LivySession(ObjectWithGuid):
             # We wait for livy_session_startup_timeout_seconds() for the session to start up.
             try:
                 self.wait_for_idle(conf.livy_session_startup_timeout_seconds())
-            except LivyClientTimeoutError:
-                raise LivyClientTimeoutError("Session {} did not start up in {} seconds."\
-                                             .format(self.id, conf.livy_session_startup_timeout_seconds()))
+            except LivyClientTimeoutException:
+                raise LivyClientTimeoutException("Session {} did not start up in {} seconds."
+                                                 .format(self.id, conf.livy_session_startup_timeout_seconds()))
 
             if create_sql_context:
                 self.create_sql_context()
@@ -99,13 +98,13 @@ class LivySession(ObjectWithGuid):
         command = self._get_sql_context_creation_command()
         try:
             (success, out) = command.execute(self)
-        except LivyClientTimeoutError:
-            raise LivyClientTimeoutError("Failed to create the SqlContext in time. Timed out after {} seconds."
-                                         .format(self._wait_for_idle_timeout_seconds))
+        except LivyClientTimeoutException:
+            raise LivyClientTimeoutException("Failed to create the SqlContext in time. Timed out after {} seconds."
+                                             .format(self._wait_for_idle_timeout_seconds))
         if success:
             self.created_sql_context = True
         else:
-            raise ValueError("Failed to create the SqlContext.\nError, '{}'".format(out))
+            raise FailedToCreateSqlContextException("Failed to create the SqlContext.\nError: '{}'".format(out))
 
     def get_logs(self):
         log_array = self._http_client.get_all_session_logs(self.id)['log']
@@ -132,8 +131,8 @@ class LivySession(ObjectWithGuid):
                 self.status = constants.DEAD_SESSION_STATUS
                 self.id = -1
             else:
-                raise ValueError("Cannot delete session {} that is in state '{}'."
-                                 .format(session_id, self.status))
+                self.ipython_display.send_error("Cannot delete session {} that is in state '{}'."
+                                                .format(session_id, self.status))
         except Exception as e:
             self._spark_events.emit_session_deletion_end_event(self.guid, self.kind, session_id, self.status, False,
                                                                e.__class__.__name__, str(e))
@@ -152,7 +151,7 @@ class LivySession(ObjectWithGuid):
             seconds_to_wait = self._wait_for_idle_timeout_seconds
 
         while True:
-            self._refresh_status()
+            self.refresh_status()
             if self.status == constants.IDLE_SESSION_STATUS:
                 return
 
@@ -160,13 +159,13 @@ class LivySession(ObjectWithGuid):
                 error = "Session {} unexpectedly reached final status '{}'."\
                     .format(self.id, self.status)
                 self.logger.error(error)
-                raise LivyUnexpectedStatusError('{} See logs:\n{}'.format(error, self.get_logs()))
+                raise LivyUnexpectedStatusException('{} See logs:\n{}'.format(error, self.get_logs()))
 
             if seconds_to_wait <= 0.0:
                 error = "Session {} did not reach idle status in time. Current status is {}."\
                     .format(self.id, self.status)
                 self.logger.error(error)
-                raise LivyClientTimeoutError(error)
+                raise LivyClientTimeoutException(error)
 
             start_time = time()
             self.logger.debug("Session {} in state {}. Sleeping {} seconds."
@@ -177,13 +176,13 @@ class LivySession(ObjectWithGuid):
     def sleep(self):
         sleep(self._statement_sleep_seconds)
 
-    def _refresh_status(self):
+    def refresh_status(self):
         status = self._http_client.get_session(self.id)['state']
 
         if status in constants.POSSIBLE_SESSION_STATUS:
             self.status = status
         else:
-            raise ValueError("Status '{}' not supported by session.".format(status))
+            raise LivyUnexpectedStatusException("Status '{}' not supported by session.".format(status))
 
         return self.status
 
@@ -195,6 +194,6 @@ class LivySession(ObjectWithGuid):
         elif self.kind == constants.SESSION_KIND_SPARKR:
             sql_context_command = "sqlContext <- sparkRHive.init(sc)"
         else:
-            raise ValueError("Do not know how to create HiveContext in session of kind {}.".format(self.kind))
+            raise BadUserDataException("Do not know how to create HiveContext in session of kind {}.".format(self.kind))
 
         return Command(sql_context_command)

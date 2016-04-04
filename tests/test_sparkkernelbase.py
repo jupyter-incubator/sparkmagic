@@ -28,7 +28,7 @@ def _setup():
     kernel._execute_cell_for_user = execute_cell_mock = MagicMock(return_value={'test': 'ing', 'a': 'b',
                                                                                 'status': 'ok'})
     kernel._do_shutdown_ipykernel = do_shutdown_mock = MagicMock()
-    kernel._ipython_display = ipython_display = MagicMock()
+    kernel.ipython_display = ipython_display = MagicMock()
 
 
 def _teardown():
