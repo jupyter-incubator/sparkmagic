@@ -165,6 +165,11 @@ class KernelMagics(SparkMagicBase):
     @_event
     def configure(self, line, cell="", local_ns=None):
         args = parse_argstring(self.configure, line)
+        try:
+            dictionary = json.loads(cell)
+        except ValueError:
+            self.ipython_display.send_error("Could not parse JSON object from input '{}'".format(cell))
+            return
         if self.session_started:
             if not args.force:
                 self.ipython_display.send_error("A session has already been started. If you intend to recreate the "
@@ -172,10 +177,10 @@ class KernelMagics(SparkMagicBase):
                 return
             else:
                 self._do_not_call_delete_session("")
-                self._override_session_settings(cell)
+                self._override_session_settings(dictionary)
                 self._do_not_call_start_session("")
         else:
-            self._override_session_settings(cell)
+            self._override_session_settings(dictionary)
         self.info("")
 
     @cell_magic
@@ -333,7 +338,7 @@ class KernelMagics(SparkMagicBase):
 
     @staticmethod
     def _override_session_settings(settings):
-        conf.override(conf.session_configs.__name__, json.loads(settings))
+        conf.override(conf.session_configs.__name__, settings)
 
     @staticmethod
     def _generate_uuid():
