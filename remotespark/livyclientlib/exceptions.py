@@ -12,8 +12,8 @@ class LivyClientLibException(Exception):
 
     We distinguish between "expected" errors, which represent errors that a user is likely
     to encounter in normal use, and "internal" errors, which represents exceptions that happen
-    due to a bug in the underlying source. Check the source for the wrap_unexpected_exceptions
-    function to see which exceptions are considered internal."""
+    due to a bug in the library. Check EXPECTED_EXCEPTIONS to see which exceptions
+    are considered "expected"."""
 
 
 class FailedToCreateSqlContextException(LivyClientLibException):
@@ -45,10 +45,14 @@ class SessionManagementException(LivyClientLibException):
 
 class BadUserDataException(LivyClientLibException):
     """An exception that is thrown when data provided by the user is invalid
-    in some way"""
+    in some way."""
 
 
 # == DECORATORS FOR EXCEPTION HANDLING ==
+EXPECTED_EXCEPTIONS = [BadUserDataException, LivyUnexpectedStatusException, FailedToCreateSqlContextException,
+                       HttpClientException, LivyClientTimeoutException, SessionManagementException]
+
+
 def handle_expected_exceptions(f):
     """A decorator that handles expected exceptions. Self can be any object with
     an "ipython_display" attribute.
@@ -56,8 +60,7 @@ def handle_expected_exceptions(f):
     @handle_expected_exceptions
     def fn(self, ...):
         etc..."""
-    exceptions_to_handle = (BadUserDataException, LivyUnexpectedStatusException, FailedToCreateSqlContextException,
-                            HttpClientException, LivyClientTimeoutException, SessionManagementException)
+    exceptions_to_handle = tuple(EXPECTED_EXCEPTIONS)
 
     # Notice that we're NOT handling e.DataFrameParseException here. That's because DataFrameParseException
     # is an internal error that suggests something is wrong with LivyClientLib's implementation.
