@@ -267,7 +267,7 @@ def test_configure():
     # Session not started
     conf.override_all({})
     magic.configure('', '{"extra": "yes"}')
-    assert conf.session_configs() == {"extra": "yes"}
+    assert_equals(conf.session_configs(), {"extra": "yes"})
     _assert_magic_successful_event_emitted_once('configure')
     magic.info.assert_called_once_with("")
 
@@ -310,6 +310,16 @@ def test_configure_expected_exception():
     _assert_magic_failure_event_emitted_once('configure', magic._override_session_settings.side_effect)
     ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG\
                                                        .format(magic._override_session_settings.side_effect))
+
+
+@with_setup(_setup, _teardown)
+def test_configure_cant_parse_object_as_json():
+    magic.info = MagicMock()
+
+    magic._override_session_settings = MagicMock(side_effect=BadUserDataException('help'))
+    magic.configure('', "I CAN'T PARSE THIS AS JSON")
+    _assert_magic_successful_event_emitted_once('configure')
+    assert_equals(ipython_display.send_error.call_count, 1)
 
 
 @with_setup(_setup, _teardown)
