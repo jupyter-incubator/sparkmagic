@@ -5,7 +5,7 @@ from ipykernel.ipkernel import IPythonKernel
 from remotespark.utils.ipythondisplay import IpythonDisplay
 
 import remotespark.utils.configuration as conf
-from remotespark.utils.utils import wrap_unexpected_exceptions
+from remotespark.livyclientlib.exceptions import wrap_unexpected_exceptions
 from remotespark.utils.log import Log
 from remotespark.kernels.wrapperkernel.usercodeparser import UserCodeParser
 

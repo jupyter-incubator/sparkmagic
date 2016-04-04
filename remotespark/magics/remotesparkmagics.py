@@ -19,7 +19,7 @@ from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
 from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
-from remotespark.utils.utils import handle_expected_exceptions
+from remotespark.livyclientlib.exceptions import handle_expected_exceptions
 
 
 @magics_class

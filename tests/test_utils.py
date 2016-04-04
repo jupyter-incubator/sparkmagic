@@ -1,10 +1,8 @@
 from mock import MagicMock
 from nose.tools import with_setup, assert_equals, assert_is, raises
 
-from remotespark.utils.constants import EXPECTED_ERROR_MSG, INTERNAL_ERROR_MSG
 from remotespark.livyclientlib.exceptions import *
-from remotespark.utils.utils import handle_expected_exceptions, wrap_unexpected_exceptions
-
+from remotespark.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions
 
 self = None
 ipython_display = None

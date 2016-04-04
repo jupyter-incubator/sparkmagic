@@ -11,7 +11,6 @@ from remotespark.livyclientlib.exceptions import BadUserDataException
 import remotespark.utils.configuration as conf
 
 
-
 def _teardown():
     conf.load()
 

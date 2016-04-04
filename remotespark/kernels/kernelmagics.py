@@ -18,8 +18,8 @@ from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
 from remotespark.utils.sparkevents import SparkEvents
-from remotespark.utils.utils import generate_uuid, get_livy_kind, wrap_unexpected_exceptions, \
-    handle_expected_exceptions
+from remotespark.utils.utils import generate_uuid, get_livy_kind
+from remotespark.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions
 
 
 def _event(f):
@@ -290,6 +290,9 @@ class KernelMagics(SparkMagicBase):
         try:
             if self.session_started:
                 self.spark_controller.delete_session_by_name(self.session_name)
+        except:
+            # The exception will be logged and handled in the frontend.
+            raise
         finally:
             self.session_started = False
 
