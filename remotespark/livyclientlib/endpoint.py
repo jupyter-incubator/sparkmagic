@@ -1,7 +1,10 @@
+from .exceptions import BadUserDataException
+
+
 class Endpoint(object):
     def __init__(self, url, username="", password=""):
         if not url:
-            raise ValueError("URL must not be empty")
+            raise BadUserDataException("URL must not be empty")
         self.url = url.rstrip("/")
         self.username = username
         self.password = password

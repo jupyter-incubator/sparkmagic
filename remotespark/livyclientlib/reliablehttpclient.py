@@ -8,6 +8,7 @@ import requests
 
 import remotespark.utils.configuration as conf
 from remotespark.utils.log import Log
+from remotespark.livyclientlib.exceptions import HttpClientException
 
 
 class ReliableHttpClient(object):
@@ -74,6 +75,6 @@ class ReliableHttpClient(object):
                     retry_count += 1
                     continue
                 else:
-                    raise ValueError("Invalid status code '{}' or error '{}' from {}"
-                                     .format(status, error, url))
+                    raise HttpClientException("Invalid status code '{}' or error '{}' from {}"
+                                              .format(status, error, url))
             return r

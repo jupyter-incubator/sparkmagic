@@ -5,6 +5,7 @@ from ipykernel.ipkernel import IPythonKernel
 from remotespark.utils.ipythondisplay import IpythonDisplay
 
 import remotespark.utils.configuration as conf
+from remotespark.livyclientlib.exceptions import wrap_unexpected_exceptions
 from remotespark.utils.log import Log
 from remotespark.kernels.wrapperkernel.usercodeparser import UserCodeParser
 
@@ -24,9 +25,9 @@ class SparkKernelBase(IPythonKernel):
 
         super(SparkKernelBase, self).__init__(**kwargs)
 
-        self._logger = Log("_jupyter_kernel".format(self.session_language))
+        self.logger = Log("_jupyter_kernel".format(self.session_language))
         self._fatal_error = None
-        self._ipython_display = IpythonDisplay()
+        self.ipython_display = IpythonDisplay()
 
         if user_code_parser is None:
             self.user_code_parser = UserCodeParser()
@@ -43,14 +44,12 @@ class SparkKernelBase(IPythonKernel):
                 self._register_auto_viz()
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
-        try:
+        def f(self):
             if self._fatal_error is not None:
                 return self._repeat_fatal_error()
 
             return self._do_execute(code, silent, store_history, user_expressions, allow_stdin)
-        except Exception as e:
-            self._show_internal_error(e)
-            return self._complete_cell()
+        return wrap_unexpected_exceptions(f, self._complete_cell)(self)
 
     def do_shutdown(self, restart):
         # Cleanup
@@ -69,13 +68,13 @@ class SparkKernelBase(IPythonKernel):
         register_magics_code = "%load_ext remotespark.kernels"
         self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to load the Spark kernels magics library.")
-        self._logger.debug("Loaded magics.")
+        self.logger.debug("Loaded magics.")
 
     def _change_language(self):
         register_magics_code = "%%_do_not_call_change_language -l {}\n ".format(self.session_language)
         self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to change language to {}.".format(self.session_language))
-        self._logger.debug("Changed language.")
+        self.logger.debug("Changed language.")
 
     def _register_auto_viz(self):
         register_auto_viz_code = """from remotespark.datawidgets.utils import display_dataframe
@@ -83,7 +82,7 @@ ip = get_ipython()
 ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.frame', 'DataFrame', display_dataframe)"""
         self._execute_cell(register_auto_viz_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to register auto viz for notebook.")
-        self._logger.debug("Registered auto viz.")
+        self.logger.debug("Registered auto viz.")
 
     def _delete_session(self):
         code = "%%_do_not_call_delete_session\n "
@@ -114,14 +113,8 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
         return self._execute_cell("None", False, True, None, False)
 
     def _show_user_error(self, message):
-        self._logger.error(message)
-        self._ipython_display.send_error(message)
-
-    def _show_internal_error(self, e):
-        self._logger.error("ENCOUNTERED AN INTERNAL ERROR: {}".format(e))
-        self._ipython_display.send_error("An internal error was encountered.\n"
-                                         "Please file an issue at https://github.com/jupyter-incubator/sparkmagic\n"
-                                         "Error:\n{}".format(e))
+        self.logger.error(message)
+        self.ipython_display.send_error(message)
 
     def _queue_fatal_error(self, message):
         """Queues up a fatal error to be thrown when the next cell is executed; does not
@@ -137,6 +130,6 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
     def _repeat_fatal_error(self):
         """Throws an error that has already been queued."""
         error = conf.fatal_error_suggestion().format(self._fatal_error)
-        self._logger.error(error)
-        self._ipython_display.send_error(error)
+        self.logger.error(error)
+        self.ipython_display.send_error(error)
         return self._complete_cell()

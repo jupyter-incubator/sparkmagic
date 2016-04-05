@@ -5,16 +5,15 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from collections import namedtuple
 import os
 import uuid
-import pandas as pd
-import numpy as np
 
-from .filesystemreaderwriter import FileSystemReaderWriter
+import numpy as np
+import pandas as pd
+
 from .constants import LANG_SCALA, LANG_PYTHON, LANG_R, \
     SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK
-
+from .filesystemreaderwriter import FileSystemReaderWriter
 
 first_run = True
 instance_id = None

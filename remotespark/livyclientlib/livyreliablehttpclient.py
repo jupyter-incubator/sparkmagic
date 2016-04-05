@@ -6,8 +6,8 @@ from .reliablehttpclient import ReliableHttpClient
 
 
 class LivyReliableHttpClient(object):
-    """Default headers."""
-
+    """A Livy-specific Http client which wraps the normal ReliableHttpClient. Propagates
+    HttpClientExceptions up."""
     def __init__(self, http_client):
         self._http_client = http_client
 

@@ -6,6 +6,7 @@ from nose.tools import raises, assert_equals, with_setup
 import requests
 
 from remotespark.livyclientlib.endpoint import Endpoint
+from remotespark.livyclientlib.exceptions import HttpClientException
 from remotespark.livyclientlib.linearretrypolicy import LinearRetryPolicy
 from remotespark.livyclientlib.reliablehttpclient import ReliableHttpClient
 
@@ -62,7 +63,7 @@ def test_get():
         assert_equals(200, result.status_code)
 
 
-@raises(ValueError)
+@raises(HttpClientException)
 @with_setup(_setup, _teardown)
 def test_get_throws():
     with patch('requests.get') as patched_get:
@@ -108,7 +109,7 @@ def test_post():
         assert_equals(200, result.status_code)
 
 
-@raises(ValueError)
+@raises(HttpClientException)
 @with_setup(_setup, _teardown)
 def test_post_throws():
     with patch('requests.post') as patched_post:
@@ -154,7 +155,7 @@ def test_delete():
         assert_equals(200, result.status_code)
 
 
-@raises(ValueError)
+@raises(HttpClientException)
 @with_setup(_setup, _teardown)
 def test_delete_throws():
     with patch('requests.delete') as patched_delete:
@@ -202,7 +203,7 @@ def test_will_retry_error_no():
         try:
             client.get("r", [200])
             assert False
-        except ValueError:
+        except HttpClientException:
             retry_policy.should_retry.assert_called_once_with(None, True, 0)
 
 

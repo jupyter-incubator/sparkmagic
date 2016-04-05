@@ -1,9 +1,10 @@
 from mock import MagicMock, patch
-from nose.tools import with_setup, assert_equals
+from nose.tools import with_setup, assert_equals, raises
 import json
 
 from remotespark.livyclientlib.sparkcontroller import SparkController
 from remotespark.livyclientlib.endpoint import Endpoint
+from remotespark.livyclientlib.exceptions import SessionManagementException, HttpClientException
 
 client_manager = None
 controller = None
@@ -166,17 +167,15 @@ def test_delete_session_by_id_existent():
 
 
 @with_setup(_setup, _teardown)
+@raises(HttpClientException)
 def test_delete_session_by_id_non_existent():
     http_client = MagicMock()
-    http_client.get_session.side_effect = ValueError
+    http_client.get_session.side_effect = HttpClientException
     controller._http_client = MagicMock(return_value=http_client)
     session = MagicMock()
     controller._livy_session = MagicMock(return_value=session)
 
     controller.delete_session_by_id("conn_str", 0)
-
-    assert len(controller._livy_session.mock_calls) == 0
-    assert len(session.delete.mock_calls) == 0
 
 
 @with_setup(_setup, _teardown)
@@ -185,17 +184,17 @@ def test_get_logs():
     controller.get_session_by_name_or_default = MagicMock(return_value=chosen_client)
 
     result = controller.get_logs()
-    assert_equals(result, (True, chosen_client.get_logs.return_value))
+    assert_equals(result, chosen_client.get_logs.return_value)
     chosen_client.get_logs.assert_called_with()
 
 
 @with_setup(_setup, _teardown)
+@raises(SessionManagementException)
 def test_get_logs_error():
     chosen_client = MagicMock()
-    controller.get_session_by_name_or_default = MagicMock(side_effect=ValueError('THERE WAS A SPOOKY GHOST'))
+    controller.get_session_by_name_or_default = MagicMock(side_effect=SessionManagementException('THERE WAS A SPOOKY GHOST'))
 
     result = controller.get_logs()
-    assert_equals(result, (False, str(controller.get_session_by_name_or_default.side_effect)))
 
 
 @with_setup(_setup, _teardown)

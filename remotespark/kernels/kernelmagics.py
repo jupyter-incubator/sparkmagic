@@ -15,11 +15,11 @@ from IPython.core.magic_arguments import argument, magic_arguments, parse_argstr
 import remotespark.utils.configuration as conf
 from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.endpoint import Endpoint
-from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
 from remotespark.utils.sparkevents import SparkEvents
 from remotespark.utils.utils import generate_uuid, get_livy_kind
+from remotespark.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions
 
 
 def _event(f):
@@ -60,6 +60,8 @@ class KernelMagics(SparkMagicBase):
         self._spark_events = spark_events
 
     @cell_magic
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def help(self, line, cell="", local_ns=None):
         help_html = """
@@ -127,6 +129,8 @@ class KernelMagics(SparkMagicBase):
         raise NotImplementedError("UserCodeParser should have prevented code execution from reaching here.")
 
     @cell_magic
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def info(self, line, cell="", local_ns=None):
         self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.endpoint.url))
@@ -140,6 +144,8 @@ class KernelMagics(SparkMagicBase):
         self.print_endpoint_info(info_sessions)
 
     @cell_magic
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def logs(self, line, cell="", local_ns=None):
         if self.session_started:
@@ -154,9 +160,16 @@ class KernelMagics(SparkMagicBase):
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def configure(self, line, cell="", local_ns=None):
         args = parse_argstring(self.configure, line)
+        try:
+            dictionary = json.loads(cell)
+        except ValueError:
+            self.ipython_display.send_error("Could not parse JSON object from input '{}'".format(cell))
+            return
         if self.session_started:
             if not args.force:
                 self.ipython_display.send_error("A session has already been started. If you intend to recreate the "
@@ -164,13 +177,15 @@ class KernelMagics(SparkMagicBase):
                 return
             else:
                 self._do_not_call_delete_session("")
-                self._override_session_settings(cell)
+                self._override_session_settings(dictionary)
                 self._do_not_call_start_session("")
         else:
-            self._override_session_settings(cell)
+            self._override_session_settings(dictionary)
         self.info("")
 
     @cell_magic
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             (success, out) = self.spark_controller.run_command(Command(cell))
@@ -191,17 +206,21 @@ class KernelMagics(SparkMagicBase):
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the server for SQL queries")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring(self.sql, line)
-            sql_query = SQLQuery(cell, args.samplemethod, args.maxrows, args.samplefraction)
-            return self.execute_sqlquery(sql_query, None, args.output, args.quiet)
+            return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
+                                         None, args.output, args.quiet)
         else:
-            return None
+            return
 
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def cleanup(self, line, cell="", local_ns=None):
         args = parse_argstring(self.cleanup, line)
@@ -213,16 +232,22 @@ class KernelMagics(SparkMagicBase):
             self.ipython_display.send_error("When you clean up the endpoint, all sessions will be lost, including the "
                                             "one used for this notebook. Include the -f parameter if that's your "
                                             "intention.")
-            return None
+            return
 
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
-    @argument("-s", "--session", type=str, nargs=1, help="Session id number to delete.")
+    @argument("-s", "--session", type=str, help="Session id number to delete.")
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     @_event
     def delete(self, line, cell="", local_ns=None):
         args = parse_argstring(self.delete, line)
-        session = args.session[0]
+        session = args.session
+
+        if args.session is None:
+            self.ipython_display.send_error('You must provide a session ID (-s argument).')
+            return
 
         if args.force:
             id = self.spark_controller.get_session_id_for_client(self.session_name)
@@ -230,18 +255,19 @@ class KernelMagics(SparkMagicBase):
                 self.ipython_display.send_error("Cannot delete this kernel's session ({}). Specify a different session,"
                                                 " shutdown the kernel to delete this session, or run %cleanup to "
                                                 "delete all sessions for this endpoint.".format(id))
-                return None
+                return
 
             self.spark_controller.delete_session_by_id(self.endpoint, session)
         else:
-            self.ipython_display.send_error("Include the -f parameter if you understand that all statements executed"
+            self.ipython_display.send_error("Include the -f parameter if you understand that all statements executed "
                                             "in this session will be lost.")
-            return None
 
     @cell_magic
     def _do_not_call_start_session(self, line, cell="", local_ns=None):
         # Starts a session unless session is already created or a fatal error occurred. Returns True when session is
         # created successfully.
+        # No need to add the handle_expected_exceptions decorator to this since we manually catch all
+        # exceptions when starting the session.
 
         if self.fatal_error:
             self.ipython_display.send_error(self.fatal_error_message)
@@ -250,9 +276,9 @@ class KernelMagics(SparkMagicBase):
         if not self.session_started:
             skip = False
             properties = conf.get_session_properties(self.language)
+            self.session_started = True
 
             try:
-                self.session_started = True
                 self.spark_controller.add_session(self.session_name, self.endpoint, skip, properties)
             except Exception as e:
                 self.fatal_error = True
@@ -264,9 +290,15 @@ class KernelMagics(SparkMagicBase):
         return self.session_started
 
     @cell_magic
+    @handle_expected_exceptions
     def _do_not_call_delete_session(self, line, cell="", local_ns=None):
-        if self.session_started:
-            self.spark_controller.delete_session_by_name(self.session_name)
+        try:
+            if self.session_started:
+                self.spark_controller.delete_session_by_name(self.session_name)
+        except:
+            # The exception will be logged and handled in the frontend.
+            raise
+        finally:
             self.session_started = False
 
     @magic_arguments()
@@ -278,11 +310,11 @@ class KernelMagics(SparkMagicBase):
 
         if language not in LANGS_SUPPORTED:
             self.ipython_display.send_error("'{}' language not supported in kernel magics.".format(language))
-            return None
+            return
 
         if self.session_started:
             self.ipython_display.send_error("Cannot change the language if a session has been started.")
-            return None
+            return
 
         self.language = language
         self.refresh_configuration()
@@ -306,7 +338,7 @@ class KernelMagics(SparkMagicBase):
 
     @staticmethod
     def _override_session_settings(settings):
-        conf.override(conf.session_configs.__name__, json.loads(settings))
+        conf.override(conf.session_configs.__name__, settings)
 
     @staticmethod
     def _generate_uuid():
