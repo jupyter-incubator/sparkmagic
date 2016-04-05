@@ -149,11 +149,8 @@ class KernelMagics(SparkMagicBase):
     @_event
     def logs(self, line, cell="", local_ns=None):
         if self.session_started:
-            (success, out) = self.spark_controller.get_logs()
-            if success:
-                self.ipython_display.write(out)
-            else:
-                self.ipython_display.send_error(out)
+            out = self.spark_controller.get_logs()
+            self.ipython_display.write(out)
         else:
             self.ipython_display.write("No logs yet.")
 
