@@ -10,7 +10,7 @@ import json
 
 from IPython.core.magic import magics_class
 from IPython.core.magic import needs_local_scope, cell_magic
-from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
+from IPython.core.magic_arguments import argument, magic_arguments
 
 import remotespark.utils.configuration as conf
 from remotespark.livyclientlib.command import Command
@@ -18,7 +18,8 @@ from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
 from remotespark.utils.sparkevents import SparkEvents
-from remotespark.utils.utils import generate_uuid, get_livy_kind
+
+from remotespark.utils.utils import generate_uuid, get_livy_kind, parse_argstring_or_throw
 from remotespark.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
     BadUserDataException
 
@@ -165,12 +166,12 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     @_event
     def configure(self, line, cell="", local_ns=None):
-        args = parse_argstring(self.configure, line)
         try:
             dictionary = json.loads(cell)
         except ValueError:
             self.ipython_display.send_error("Could not parse JSON object from input '{}'".format(cell))
             return
+        args = parse_argstring_or_throw(self.configure, line)
         if self.session_started:
             if not args.force:
                 self.ipython_display.send_error("A session has already been started. If you intend to recreate the "
@@ -211,7 +212,7 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
-            args = parse_argstring(self.sql, line)
+            args = parse_argstring_or_throw(self.sql, line)
             return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
                                          None, args.output, args.quiet)
         else:
@@ -225,7 +226,7 @@ class KernelMagics(SparkMagicBase):
     @_event
     def cleanup(self, line, cell="", local_ns=None):
         self._assure_cell_body_is_empty(KernelMagics.cleanup.__name__, cell)
-        args = parse_argstring(self.cleanup, line)
+        args = parse_argstring_or_throw(self.cleanup, line)
         if args.force:
             self._do_not_call_delete_session("")
 
@@ -245,7 +246,7 @@ class KernelMagics(SparkMagicBase):
     @_event
     def delete(self, line, cell="", local_ns=None):
         self._assure_cell_body_is_empty(KernelMagics.delete.__name__, cell)
-        args = parse_argstring(self.delete, line)
+        args = parse_argstring_or_throw(self.delete, line)
         session = args.session
 
         if args.session is None:
@@ -308,7 +309,7 @@ class KernelMagics(SparkMagicBase):
     @cell_magic
     @argument("-l", "--language", type=str, help="Language to use.")
     def _do_not_call_change_language(self, line, cell="", local_ns=None):
-        args = parse_argstring(self._do_not_call_change_language, line)
+        args = parse_argstring_or_throw(self._do_not_call_change_language, line)
         language = args.language.lower()
 
         if language not in LANGS_SUPPORTED:
