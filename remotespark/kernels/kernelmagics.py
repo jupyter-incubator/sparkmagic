@@ -234,7 +234,7 @@ class KernelMagics(SparkMagicBase):
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
-    @argument("-s", "--session", type=str, help="Session id number to delete.")
+    @argument("-s", "--session", type=int, help="Session id number to delete.")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     @_event
