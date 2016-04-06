@@ -531,7 +531,7 @@ def test_cleanup_exception():
 
 @with_setup(_setup, _teardown)
 def test_delete_without_force():
-    session_id = "0"
+    session_id = 0
     line = "-s {}".format(session_id)
     cell = ""
     spark_controller.delete_session_by_id = MagicMock()
@@ -547,7 +547,7 @@ def test_delete_without_force():
 
 @with_setup(_setup, _teardown)
 def test_delete_without_session_id():
-    session_id = "0"
+    session_id = 0
     line = ""
     cell = ""
     spark_controller.delete_session_by_id = MagicMock()
@@ -563,7 +563,7 @@ def test_delete_without_session_id():
 
 @with_setup(_setup, _teardown)
 def test_delete_with_force_same_session():
-    session_id = "0"
+    session_id = 0
     line = "-f -s {}".format(session_id)
     cell = ""
     spark_controller.delete_session_by_id = MagicMock()
@@ -580,7 +580,7 @@ def test_delete_with_force_same_session():
 @with_setup(_setup, _teardown)
 def test_delete_with_force_none_session():
     # This happens when session has not been created
-    session_id = "0"
+    session_id = 0
     line = "-f -s {}".format(session_id)
     cell = ""
     spark_controller.delete_session_by_id = MagicMock()
@@ -597,7 +597,7 @@ def test_delete_with_force_none_session():
 @with_setup(_setup, _teardown)
 def test_delete_with_force_different_session():
     # This happens when session has not been created
-    session_id = "0"
+    session_id = 0
     line = "-f -s {}".format(session_id)
     cell = ""
     spark_controller.delete_session_by_id = MagicMock()
@@ -614,7 +614,7 @@ def test_delete_with_force_different_session():
 @with_setup(_setup, _teardown)
 def test_delete_exception():
     # This happens when session has not been created
-    session_id = "0"
+    session_id = 0
     line = "-f -s {}".format(session_id)
     cell = ""
     spark_controller.delete_session_by_id = MagicMock(side_effect=DataFrameParseException('wow'))
@@ -631,7 +631,7 @@ def test_delete_exception():
 @with_setup(_setup, _teardown)
 def test_delete_expected_exception():
     # This happens when session has not been created
-    session_id = "0"
+    session_id = 0
     line = "-f -s {}".format(session_id)
     cell = ""
     spark_controller.delete_session_by_id = MagicMock(side_effect=LivyClientTimeoutException('wow'))
