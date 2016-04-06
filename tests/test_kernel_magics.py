@@ -190,6 +190,20 @@ def test_info_with_cell_content():
 
 
 @with_setup(_setup, _teardown)
+def test_info_with_argument():
+    magic.print_endpoint_info = print_info_mock = MagicMock()
+    line = "hey"
+    session_info = ["1", "2"]
+    spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=session_info)
+
+    magic.info(line)
+
+    print_info_mock.assert_not_called()
+    assert_equals(ipython_display.send_error.call_count, 1)
+    spark_controller.get_session_id_for_client.assert_not_called()
+
+
+@with_setup(_setup, _teardown)
 def test_info_unexpected_exception():
     magic.print_endpoint_info = MagicMock()
     line = ""
@@ -234,6 +248,14 @@ def test_help_with_cell_content():
 
 
 @with_setup(_setup, _teardown)
+def test_help_with_argument():
+    magic.help("argument here")
+
+    assert_equals(ipython_display.send_error.call_count, 1)
+    assert_equals(ipython_display.html.call_count, 0)
+
+
+@with_setup(_setup, _teardown)
 def test_logs():
     logs = "logs"
     line = ""
@@ -261,6 +283,14 @@ def test_logs_with_cell_content():
     magic.logs(line, cell="BOOP")
     assert_equals(ipython_display.send_error.call_count, 1)
     _assert_magic_failure_event_emitted_once('logs', BadUserDataException(msg))
+
+
+@with_setup(_setup, _teardown)
+def test_logs_with_argument():
+    line = "-h"
+
+    magic.logs(line)
+    assert_equals(ipython_display.send_error.call_count, 1)
 
 
 @with_setup(_setup, _teardown)
@@ -376,6 +406,17 @@ def test_spark():
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
     spark_controller.run_command.assert_called_once_with(Command(cell))
+
+
+@with_setup(_setup, _teardown)
+def test_spark_with_argument():
+    line = "-z"
+    cell = "some spark code"
+    spark_controller.run_command = MagicMock(return_value=(True, line))
+
+    magic.spark(line, cell)
+
+    assert_equals(ipython_display.send_error.call_count, 1)
 
 
 @with_setup(_setup, _teardown)
