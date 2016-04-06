@@ -66,6 +66,6 @@ setup(name=NAME,
           'numpy',
           'ipykernel>=4.2.2,<5',
           'ipywidgets',
-          'plotly>=1.9.4,<2'
+          'plotly>=1.9.7,<2'
       ])
 
