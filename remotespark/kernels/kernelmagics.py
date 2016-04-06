@@ -19,7 +19,8 @@ from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
 from remotespark.utils.sparkevents import SparkEvents
 from remotespark.utils.utils import generate_uuid, get_livy_kind
-from remotespark.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions
+from remotespark.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
+    BadUserDataException
 
 
 def _event(f):
@@ -64,6 +65,7 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     @_event
     def help(self, line, cell="", local_ns=None):
+        self._assure_cell_body_is_empty(KernelMagics.help.__name__, cell)
         help_html = """
 <table>
   <tr>
@@ -133,6 +135,7 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     @_event
     def info(self, line, cell="", local_ns=None):
+        self._assure_cell_body_is_empty(KernelMagics.info.__name__, cell)
         self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.endpoint.url))
 
         self.ipython_display.writeln("Current session ID number:\n\t{}\n".format(
@@ -148,6 +151,7 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     @_event
     def logs(self, line, cell="", local_ns=None):
+        self._assure_cell_body_is_empty(KernelMagics.logs.__name__, cell)
         if self.session_started:
             out = self.spark_controller.get_logs()
             self.ipython_display.write(out)
@@ -220,6 +224,7 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     @_event
     def cleanup(self, line, cell="", local_ns=None):
+        self._assure_cell_body_is_empty(KernelMagics.cleanup.__name__, cell)
         args = parse_argstring(self.cleanup, line)
         if args.force:
             self._do_not_call_delete_session("")
@@ -239,6 +244,7 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     @_event
     def delete(self, line, cell="", local_ns=None):
+        self._assure_cell_body_is_empty(KernelMagics.delete.__name__, cell)
         args = parse_argstring(self.delete, line)
         session = args.session
 
@@ -340,6 +346,12 @@ class KernelMagics(SparkMagicBase):
     @staticmethod
     def _generate_uuid():
         return generate_uuid()
+
+    @staticmethod
+    def _assure_cell_body_is_empty(magic_name, cell):
+        if cell.strip():
+            raise BadUserDataException("Cell body for %%{} magic must be empty; got '{}' instead"
+                                       .format(magic_name, cell))
 
 
 def load_ipython_extension(ip):

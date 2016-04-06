@@ -6,16 +6,15 @@ from remotespark.kernels.kernelmagics import KernelMagics
 
 def test_empty_string():
     parser = UserCodeParser()
-    cell = ""
 
-    assert_equals("%%spark\n\n ", parser.get_code_to_run(cell))
+    assert_equals("", parser.get_code_to_run(""))
 
 
 def test_spark_code():
     parser = UserCodeParser()
     cell = "my code\nand more"
 
-    assert_equals("%%spark\nmy code\nand more\n ", parser.get_code_to_run(cell))
+    assert_equals("%%spark\nmy code\nand more", parser.get_code_to_run(cell))
 
 
 def test_local_single():
@@ -25,7 +24,7 @@ hi
 hi
 hi"""
 
-    assert_equals("hi\nhi\nhi\n ", parser.get_code_to_run(cell))
+    assert_equals("hi\nhi\nhi", parser.get_code_to_run(cell))
 
 
 def test_local_double():
@@ -35,7 +34,7 @@ hi
 hi
 hi"""
 
-    assert_equals("hi\nhi\nhi\n ", parser.get_code_to_run(cell))
+    assert_equals("hi\nhi\nhi", parser.get_code_to_run(cell))
 
 
 def test_our_line_magics():
@@ -63,7 +62,7 @@ hi
 hi
 hi"""
 
-    assert_equals("{}\n ".format(cell), parser.get_code_to_run(cell))
+    assert_equals("{}".format(cell), parser.get_code_to_run(cell))
 
 
 def test_other_line_magic():
@@ -83,4 +82,4 @@ def test_scala_code():
 val fruits = sc.textFile("wasb:///example/data/fruits.txt")
 val yellowThings = sc.textFile("wasb:///example/data/yellowthings.txt")"""
 
-    assert_equals("%%spark\n{}\n ".format(cell), parser.get_code_to_run(cell))
+    assert_equals("%%spark\n{}".format(cell), parser.get_code_to_run(cell))
