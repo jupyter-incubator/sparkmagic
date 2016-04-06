@@ -10,7 +10,7 @@ import json
 
 from IPython.core.magic import line_cell_magic, needs_local_scope
 from IPython.core.magic import magics_class
-from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
+from IPython.core.magic_arguments import argument, magic_arguments
 
 import remotespark.utils.configuration as conf
 from remotespark.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
@@ -19,6 +19,7 @@ from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
 from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
+from remotespark.utils.utils import parse_argstring_or_throw
 from remotespark.livyclientlib.exceptions import handle_expected_exceptions
 
 
@@ -104,7 +105,7 @@ class RemoteSparkMagics(SparkMagicBase):
         """
         usage = "Please look at usage of %spark by executing `%spark?`."
         user_input = line
-        args = parse_argstring(self.spark, user_input)
+        args = parse_argstring_or_throw(self.spark, user_input)
 
         subcommand = args.command[0].lower()
 
