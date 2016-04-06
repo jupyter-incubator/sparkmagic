@@ -174,6 +174,36 @@ def test_info():
 
 
 @with_setup(_setup, _teardown)
+def test_info_with_cell_content():
+    magic.print_endpoint_info = print_info_mock = MagicMock()
+    line = ""
+    session_info = ["1", "2"]
+    spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=session_info)
+    error_msg = "Cell body for %%info magic must be empty; got 'howdy' instead"
+
+    magic.info(line, cell='howdy')
+
+    print_info_mock.assert_not_called()
+    assert_equals(ipython_display.send_error.call_count, 1)
+    spark_controller.get_session_id_for_client.assert_not_called()
+    _assert_magic_failure_event_emitted_once('info', BadUserDataException(error_msg))
+
+
+@with_setup(_setup, _teardown)
+def test_info_with_argument():
+    magic.print_endpoint_info = print_info_mock = MagicMock()
+    line = "hey"
+    session_info = ["1", "2"]
+    spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=session_info)
+
+    magic.info(line)
+
+    print_info_mock.assert_not_called()
+    assert_equals(ipython_display.send_error.call_count, 1)
+    spark_controller.get_session_id_for_client.assert_not_called()
+
+
+@with_setup(_setup, _teardown)
 def test_info_unexpected_exception():
     magic.print_endpoint_info = MagicMock()
     line = ""
@@ -208,6 +238,24 @@ def test_help():
 
 
 @with_setup(_setup, _teardown)
+def test_help_with_cell_content():
+    msg = "Cell body for %%help magic must be empty; got 'HAHAH' instead"
+    magic.help("", cell="HAHAH")
+
+    assert_equals(ipython_display.send_error.call_count, 1)
+    assert_equals(ipython_display.html.call_count, 0)
+    _assert_magic_failure_event_emitted_once('help', BadUserDataException(msg))
+
+
+@with_setup(_setup, _teardown)
+def test_help_with_argument():
+    magic.help("argument here")
+
+    assert_equals(ipython_display.send_error.call_count, 1)
+    assert_equals(ipython_display.html.call_count, 0)
+
+
+@with_setup(_setup, _teardown)
 def test_logs():
     logs = "logs"
     line = ""
@@ -224,6 +272,25 @@ def test_logs():
     magic.logs(line)
     ipython_display.write.assert_called_once_with(logs)
     spark_controller.get_logs.assert_called_once_with()
+
+
+@with_setup(_setup, _teardown)
+def test_logs_with_cell_content():
+    logs = "logs"
+    line = ""
+    msg = "Cell body for %%logs magic must be empty; got 'BOOP' instead"
+
+    magic.logs(line, cell="BOOP")
+    assert_equals(ipython_display.send_error.call_count, 1)
+    _assert_magic_failure_event_emitted_once('logs', BadUserDataException(msg))
+
+
+@with_setup(_setup, _teardown)
+def test_logs_with_argument():
+    line = "-h"
+
+    magic.logs(line)
+    assert_equals(ipython_display.send_error.call_count, 1)
 
 
 @with_setup(_setup, _teardown)
@@ -339,6 +406,17 @@ def test_spark():
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
     spark_controller.run_command.assert_called_once_with(Command(cell))
+
+
+@with_setup(_setup, _teardown)
+def test_spark_with_argument():
+    line = "-z"
+    cell = "some spark code"
+    spark_controller.run_command = MagicMock(return_value=(True, line))
+
+    magic.spark(line, cell)
+
+    assert_equals(ipython_display.send_error.call_count, 1)
 
 
 @with_setup(_setup, _teardown)
@@ -516,6 +594,20 @@ def test_cleanup_with_force():
 
 
 @with_setup(_setup, _teardown)
+def test_cleanup_with_cell_content():
+    line = "-f"
+    cell = "HEHEHE"
+    msg = "Cell body for %%cleanup magic must be empty; got 'HEHEHE' instead"
+    magic.session_started = True
+    spark_controller.cleanup_endpoint = MagicMock()
+    spark_controller.delete_session_by_name = MagicMock()
+
+    magic.cleanup(line, cell)
+    assert_equals(ipython_display.send_error.call_count, 1)
+    _assert_magic_failure_event_emitted_once('cleanup', BadUserDataException(msg))
+
+
+@with_setup(_setup, _teardown)
 def test_cleanup_exception():
     line = "-f"
     cell = ""
@@ -592,6 +684,22 @@ def test_delete_with_force_none_session():
 
     spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
     spark_controller.delete_session_by_id.assert_called_once_with(magic.endpoint, session_id)
+
+
+@with_setup(_setup, _teardown)
+def test_delete_with_cell_content():
+    # This happens when session has not been created
+    session_id = 0
+    line = "-f -s {}".format(session_id)
+    cell = "~~~"
+    msg = "Cell body for %%delete magic must be empty; got '~~~' instead"
+    spark_controller.delete_session_by_id = MagicMock()
+    spark_controller.get_session_id_for_client = MagicMock(return_value=None)
+
+    magic.delete(line, cell)
+
+    _assert_magic_failure_event_emitted_once('delete', BadUserDataException(msg))
+    assert_equals(ipython_display.send_error.call_count, 1)
 
 
 @with_setup(_setup, _teardown)
