@@ -220,15 +220,10 @@ def test_logs():
 
     magic.session_started = True
 
-    spark_controller.get_logs = MagicMock(return_value=(True, logs))
+    spark_controller.get_logs = MagicMock(return_value=logs)
     magic.logs(line)
     ipython_display.write.assert_called_once_with(logs)
     spark_controller.get_logs.assert_called_once_with()
-
-
-    spark_controller.get_logs = MagicMock(return_value=(False, logs))
-    magic.logs(line)
-    ipython_display.send_error.assert_called_once_with(logs)
 
 
 @with_setup(_setup, _teardown)
