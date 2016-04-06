@@ -351,7 +351,7 @@ class KernelMagics(SparkMagicBase):
     def _assure_cell_body_is_empty(magic_name, cell):
         if cell.strip():
             raise BadUserDataException("Cell body for %%{} magic must be empty; got '{}' instead"
-                                       .format(magic_name, cell))
+                                       .format(magic_name, cell.strip()))
 
 
 def load_ipython_extension(ip):
