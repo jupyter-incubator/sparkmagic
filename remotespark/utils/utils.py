@@ -8,6 +8,8 @@
 import os
 import uuid
 
+from IPython.core.error import UsageError
+from IPython.core.magic_arguments import parse_argstring
 import numpy as np
 import pandas as pd
 
@@ -80,3 +82,13 @@ def get_livy_kind(language):
     else:
         raise ValueError("Cannot get session kind for {}.".format(language))
 
+
+def parse_argstring_or_throw(magic_func, argstring, parse_argstring=parse_argstring):
+    """An alternative to the parse_argstring method from IPython.core.magic_arguments.
+    Catches IPython.core.error.UsageError and propagates it as a
+    livyclientlib.exceptions.BadUserDataException."""
+    try:
+        return parse_argstring(magic_func, argstring)
+    except UsageError as e:
+        from remotespark.livyclientlib.exceptions import BadUserDataException
+        raise BadUserDataException(str(e))
