@@ -119,5 +119,5 @@ def display_dataframe(df):
                         y_aggregation=Encoding.y_agg_max)
     return AutoVizWidget(df, encoding)
 
-def new_method():
+def new_method_2():
     return
