@@ -118,3 +118,6 @@ def display_dataframe(df):
     encoding = Encoding(chart_type=Encoding.chart_type_table, x=selected_x, y=selected_y,
                         y_aggregation=Encoding.y_agg_max)
     return AutoVizWidget(df, encoding)
+
+def new_method_2():
+    return
