@@ -10,7 +10,7 @@ import json
 
 from IPython.core.magic import magics_class
 from IPython.core.magic import needs_local_scope, cell_magic
-from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
+from IPython.core.magic_arguments import argument, magic_arguments
 
 import remotespark.utils.configuration as conf
 from remotespark.livyclientlib.command import Command
@@ -18,8 +18,9 @@ from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.utils.constants import LANGS_SUPPORTED
 from remotespark.utils.sparkevents import SparkEvents
-from remotespark.utils.utils import generate_uuid, get_livy_kind
-from remotespark.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions
+from remotespark.utils.utils import generate_uuid, get_livy_kind, parse_argstring_or_throw
+from remotespark.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
+    BadUserDataException
 
 
 def _event(f):
@@ -59,11 +60,14 @@ class KernelMagics(SparkMagicBase):
             spark_events = SparkEvents()
         self._spark_events = spark_events
 
+    @magic_arguments()
     @cell_magic
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     @_event
     def help(self, line, cell="", local_ns=None):
+        parse_argstring_or_throw(self.help, line)
+        self._assure_cell_body_is_empty(KernelMagics.help.__name__, cell)
         help_html = """
 <table>
   <tr>
@@ -128,11 +132,14 @@ class KernelMagics(SparkMagicBase):
         # This should not be reachable thanks to UserCodeParser. Registering it here so that it auto-completes with tab.
         raise NotImplementedError("UserCodeParser should have prevented code execution from reaching here.")
 
+    @magic_arguments()
     @cell_magic
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     @_event
     def info(self, line, cell="", local_ns=None):
+        parse_argstring_or_throw(self.info, line)
+        self._assure_cell_body_is_empty(KernelMagics.info.__name__, cell)
         self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.endpoint.url))
 
         self.ipython_display.writeln("Current session ID number:\n\t{}\n".format(
@@ -143,11 +150,14 @@ class KernelMagics(SparkMagicBase):
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.endpoint)
         self.print_endpoint_info(info_sessions)
 
+    @magic_arguments()
     @cell_magic
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     @_event
     def logs(self, line, cell="", local_ns=None):
+        parse_argstring_or_throw(self.logs, line)
+        self._assure_cell_body_is_empty(KernelMagics.logs.__name__, cell)
         if self.session_started:
             out = self.spark_controller.get_logs()
             self.ipython_display.write(out)
@@ -161,12 +171,12 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     @_event
     def configure(self, line, cell="", local_ns=None):
-        args = parse_argstring(self.configure, line)
         try:
             dictionary = json.loads(cell)
         except ValueError:
             self.ipython_display.send_error("Could not parse JSON object from input '{}'".format(cell))
             return
+        args = parse_argstring_or_throw(self.configure, line)
         if self.session_started:
             if not args.force:
                 self.ipython_display.send_error("A session has already been started. If you intend to recreate the "
@@ -180,10 +190,12 @@ class KernelMagics(SparkMagicBase):
             self._override_session_settings(dictionary)
         self.info("")
 
+    @magic_arguments()
     @cell_magic
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
+        parse_argstring_or_throw(self.spark, line)
         if self._do_not_call_start_session(""):
             (success, out) = self.spark_controller.run_command(Command(cell))
             if success:
@@ -207,7 +219,7 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
-            args = parse_argstring(self.sql, line)
+            args = parse_argstring_or_throw(self.sql, line)
             return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
                                          None, args.output, args.quiet)
         else:
@@ -220,7 +232,8 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     @_event
     def cleanup(self, line, cell="", local_ns=None):
-        args = parse_argstring(self.cleanup, line)
+        self._assure_cell_body_is_empty(KernelMagics.cleanup.__name__, cell)
+        args = parse_argstring_or_throw(self.cleanup, line)
         if args.force:
             self._do_not_call_delete_session("")
 
@@ -239,7 +252,8 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     @_event
     def delete(self, line, cell="", local_ns=None):
-        args = parse_argstring(self.delete, line)
+        self._assure_cell_body_is_empty(KernelMagics.delete.__name__, cell)
+        args = parse_argstring_or_throw(self.delete, line)
         session = args.session
 
         if args.session is None:
@@ -302,7 +316,7 @@ class KernelMagics(SparkMagicBase):
     @cell_magic
     @argument("-l", "--language", type=str, help="Language to use.")
     def _do_not_call_change_language(self, line, cell="", local_ns=None):
-        args = parse_argstring(self._do_not_call_change_language, line)
+        args = parse_argstring_or_throw(self._do_not_call_change_language, line)
         language = args.language.lower()
 
         if language not in LANGS_SUPPORTED:
@@ -340,6 +354,12 @@ class KernelMagics(SparkMagicBase):
     @staticmethod
     def _generate_uuid():
         return generate_uuid()
+
+    @staticmethod
+    def _assure_cell_body_is_empty(magic_name, cell):
+        if cell.strip():
+            raise BadUserDataException("Cell body for %%{} magic must be empty; got '{}' instead"
+                                       .format(magic_name, cell.strip()))
 
 
 def load_ipython_extension(ip):

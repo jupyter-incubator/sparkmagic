@@ -1,79 +1,23 @@
+from IPython.core.error import UsageError
 from mock import MagicMock
-from nose.tools import with_setup, assert_equals, assert_is, raises
+from nose.tools import assert_equals, assert_is
 
-from remotespark.livyclientlib.exceptions import *
-from remotespark.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions
-
-self = None
-ipython_display = None
-logger = None
+from remotespark.livyclientlib.exceptions import BadUserDataException
+from remotespark.utils.utils import parse_argstring_or_throw
 
 
-def _setup():
-    global self, ipython_display, logger
-    self = MagicMock()
-    ipython_display = self.ipython_display
-    logger = self.logger
 
+def test_parse_argstring_or_throw():
+    parse_argstring = MagicMock(side_effect=UsageError('OOGABOOGABOOGA'))
+    try:
+        parse_argstring_or_throw(MagicMock(), MagicMock(), parse_argstring=parse_argstring)
+        assert False
+    except BadUserDataException as e:
+        assert_equals(str(e), str(parse_argstring.side_effect))
 
-@with_setup(_setup)
-def test_handle_expected_exceptions():
-    mock_method = MagicMock()
-    mock_method.__name__ = 'MockMethod'
-    decorated = handle_expected_exceptions(mock_method)
-    assert_equals(decorated.__name__, mock_method.__name__)
-
-    result = decorated(self, 1, 2, 3)
-    assert_equals(result, mock_method.return_value)
-    assert_equals(ipython_display.send_error.call_count, 0)
-    mock_method.assert_called_once_with(self, 1, 2, 3)
-
-
-@with_setup(_setup)
-def test_handle_expected_exceptions_handle():
-    mock_method = MagicMock(side_effect=LivyUnexpectedStatusException('ridiculous'))
-    mock_method.__name__ = 'MockMethod2'
-    decorated = handle_expected_exceptions(mock_method)
-    assert_equals(decorated.__name__, mock_method.__name__)
-
-    result = decorated(self, 1, kwarg='foo')
-    assert_is(result, None)
-    assert_equals(ipython_display.send_error.call_count, 1)
-    mock_method.assert_called_once_with(self, 1, kwarg='foo')
-
-
-@raises(ValueError)
-@with_setup(_setup)
-def test_handle_expected_exceptions_throw():
-    mock_method = MagicMock(side_effect=ValueError('HALP'))
-    mock_method.__name__ = 'mock_meth'
-    decorated = handle_expected_exceptions(mock_method)
-    assert_equals(decorated.__name__, mock_method.__name__)
-
-    result = decorated(self, 1, kwarg='foo')
-
-
-@with_setup(_setup)
-def test_wrap_unexpected_exceptions():
-    mock_method = MagicMock()
-    mock_method.__name__ = 'tos'
-    decorated = wrap_unexpected_exceptions(mock_method)
-    assert_equals(decorated.__name__, mock_method.__name__)
-
-    result = decorated(self, 0.0)
-    assert_equals(result, mock_method.return_value)
-    assert_equals(ipython_display.send_error.call_count, 0)
-    mock_method.assert_called_once_with(self, 0.0)
-
-
-@with_setup(_setup)
-def test_wrap_unexpected_exceptions_handle():
-    mock_method = MagicMock(side_effect=ValueError('~~~~~~'))
-    mock_method.__name__ = 'tos'
-    decorated = wrap_unexpected_exceptions(mock_method)
-    assert_equals(decorated.__name__, mock_method.__name__)
-
-    result = decorated(self, 'FOOBAR', FOOBAR='FOOBAR')
-    assert_is(result, None)
-    assert_equals(ipython_display.send_error.call_count, 1)
-    mock_method.assert_called_once_with(self, 'FOOBAR', FOOBAR='FOOBAR')
+    parse_argstring = MagicMock(side_effect=ValueError('AN UNKNOWN ERROR HAPPENED'))
+    try:
+        parse_argstring_or_throw(MagicMock(), MagicMock(), parse_argstring=parse_argstring)
+        assert False
+    except ValueError as e:
+        assert_is(e, parse_argstring.side_effect)
