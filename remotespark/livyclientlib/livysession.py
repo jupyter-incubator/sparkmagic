@@ -50,6 +50,7 @@ class LivySession(ObjectWithGuid):
         else:
             self.status = constants.BUSY_SESSION_STATUS
 
+        self._app_id = None
         self._logs = u""
         self._http_client = http_client
         self._status_sleep_seconds = status_sleep_seconds
@@ -106,10 +107,37 @@ class LivySession(ObjectWithGuid):
         else:
             raise FailedToCreateSqlContextException(u"Failed to create the SqlContext.\nError: '{}'".format(out))
 
+    def get_app_id(self):
+        if self._app_id is None:
+            session = self._http_client.get_session(self.id)
+            self._app_id = session['appId']
+        return self._app_id
+
+    def get_app_info(self):
+        session = self._http_client.get_session(self.id)
+        if 'appInfo' in session:
+            return session['appInfo']
+        else:
+            return {}
+
+    def get_app_info_member(self, member_name, default_value):
+        app_info = self.get_app_info()
+
+        if member_name in app_info and app_info[member_name] is not None:
+            return app_info[member_name]
+        else:
+            return default_value
+
+    def get_driver_log_url(self):
+        return self.get_app_info_member("driverLogUrl", "No driver log URL is available yet.")
+
     def get_logs(self):
         log_array = self._http_client.get_all_session_logs(self.id)[u'log']
         self._logs = "\n".join(log_array)
         return self._logs
+
+    def get_spark_ui_url(self):
+        return self.get_app_info_member("sparkUiUrl", "No Spark UI URL is available yet.")
 
     @property
     def http_client(self):

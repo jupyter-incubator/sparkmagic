@@ -147,6 +147,16 @@ class KernelMagics(SparkMagicBase):
 
         self.ipython_display.writeln(u"Session configs:\n\t{}\n".format(conf.get_session_properties(self.language)))
 
+        if self.session_started:
+            app_id = self.spark_controller.get_app_id()
+            driver_log_url = self.spark_controller.get_driver_log_url()
+            spark_ui_url = self.spark_controller.get_spark_ui_url()
+        else:
+            app_id = driver_log_url = spark_ui_url = "Session hasn't started."
+        self.ipython_display.writeln("Driver log:\n\t{}\n".format(driver_log_url))
+        self.ipython_display.writeln("Spark UI:\n\t{}\n".format(spark_ui_url))
+        self.ipython_display.writeln("YARN Application ID:\n\t{}\n".format(app_id))
+
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.endpoint)
         self.print_endpoint_info(info_sessions)
 

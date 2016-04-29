@@ -715,3 +715,57 @@ class TestLivySession(object):
         spark_events.emit_session_deletion_end_event.assert_called_once_with(session.guid, session.kind, session.id,
                                                                              constants.DEAD_SESSION_STATUS, True, "",
                                                                              "")
+
+    def test_get_empty_app_id(self):
+        self.verify_get_app_id("null", None)
+
+    def test_get_normal_app_id(self):
+        self.verify_get_app_id("\"app_id_123\"", "app_id_123")
+
+    def verify_get_app_id(self, mock_app_id, expected_app_id):
+        http_client = MagicMock()
+        http_client.get_session.return_value = json.loads(
+            '{"id":0,"state":"idle","output":null,"appId":%s}' % mock_app_id)
+        session = self._create_session(http_client=http_client)
+        session.start(create_sql_context=False)
+
+        app_id = session.get_app_id()
+
+        assert_equals(expected_app_id, app_id)
+        assert_equals(2, http_client.get_session.call_count)
+
+    def test_get_empty_driver_log_url(self):
+        self.verify_get_driver_log_url("null", "No driver log URL is available yet.")
+
+    def test_get_normal_driver_log_url(self):
+        self.verify_get_driver_log_url("\"http://example.com\"", "http://example.com")
+
+    def verify_get_driver_log_url(self, mock_driver_log_url, expected_url):
+        http_client = MagicMock()
+        http_client.get_session.return_value = json.loads(
+            '{"id":0,"state":"idle","output":null,"appInfo":{"driverLogUrl": %s}}' % mock_driver_log_url)
+        session = self._create_session(http_client=http_client)
+        session.start(create_sql_context=False)
+
+        driver_log_url = session.get_driver_log_url()
+
+        assert_equals(expected_url, driver_log_url)
+        assert_equals(2, http_client.get_session.call_count)
+
+    def test_get_empty_spark_ui_url(self):
+        self.verify_get_spark_ui_url("null", "No Spark UI URL is available yet.")
+
+    def test_get_normal_spark_ui_url(self):
+        self.verify_get_spark_ui_url("\"http://example.com\"", "http://example.com")
+
+    def verify_get_spark_ui_url(self, mock_spark_ui_url, expected_url):
+        http_client = MagicMock()
+        http_client.get_session.return_value = json.loads(
+            '{"id":0,"state":"idle","output":null,"appInfo":{"sparkUiUrl": %s}}' % mock_spark_ui_url)
+        session = self._create_session(http_client=http_client)
+        session.start(create_sql_context=False)
+
+        spark_ui_url = session.get_spark_ui_url()
+
+        assert_equals(expected_url, spark_ui_url)
+        assert_equals(2, http_client.get_session.call_count)
