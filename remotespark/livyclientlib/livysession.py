@@ -62,7 +62,8 @@ class LivySession(ObjectWithGuid):
         self.created_sql_context = sql_created
 
     def __str__(self):
-        return u"Session id: {}\tKind: {}\tState: {}".format(self.id, self.kind, self.status)
+        return u"Session id: {}\tYARN id: {}\tKind: {}\tState: {}\n\tSpark UI: {}\n\tDriver Log: {}"\
+            .format(self.id, self.get_app_id(), self.kind, self.status, self.get_spark_ui_url(), self.get_driver_log_url())
 
     def start(self, create_sql_context=True):
         """Start the session against actual livy server."""
