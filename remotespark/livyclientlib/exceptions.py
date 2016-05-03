@@ -91,7 +91,7 @@ def wrap_unexpected_exceptions(f, execute_if_error=None):
         try:
             out = f(self, *args, **kwargs)
         except Exception as e:
-            self.logger.error("ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(e, traceback.format_exc()))
+            self.logger.error(u"ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(e, traceback.format_exc()))
             self.ipython_display.send_error(INTERNAL_ERROR_MSG.format(e))
             return None if execute_if_error is None else execute_if_error()
         else:

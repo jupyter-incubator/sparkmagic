@@ -32,5 +32,5 @@ class Log(object):
         self.logger = logging.getLogger(MAGICS_LOGGER_NAME)
 
     def _transform_log_message(self, message):
-        return '{}\t{}'.format(self._caller_name, message)
+        return u'{}\t{}'.format(self._caller_name, message)
     
