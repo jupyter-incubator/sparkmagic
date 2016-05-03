@@ -8,6 +8,7 @@ from remotespark.livyclientlib.livysession import LivySession
 import remotespark.utils.configuration as conf
 import remotespark.utils.constants as constants
 
+
 class DummyResponse:
     def __init__(self, status_code, json_text):
         self._status_code = status_code
@@ -20,9 +21,13 @@ class DummyResponse:
     def status_code(self):
         return self._status_code
 
+
 CONN_STR = 'url=https://www.DFAS90D82309F0W9ASD0F9ZX.com;username=abcd;password=1234'
 
+
 class TestLivySession(object):
+    _multiprocess_can_split_ = True
+
     pi_result = "Pi is roughly 3.14336"
 
     session_create_json = json.loads('{"id":0,"state":"starting","kind":"spark","log":[]}')
