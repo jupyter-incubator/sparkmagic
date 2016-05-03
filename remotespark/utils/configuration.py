@@ -3,8 +3,10 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-import json
+import base64
 import copy
+import json
+import sys
 
 from remotespark.utils.constants import CONFIG_JSON
 from remotespark.utils.utils import join_paths, get_magics_home_path, get_livy_kind
@@ -89,14 +91,38 @@ def session_configs():
     return {}
 
 
-@_override
+def _credentials_override(f):
+    """A decorator that provide special handling for credentials. It still calls _override().
+    If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.
+    If 'base64_password' is not set, it will fallback to to 'password' in config.
+    """
+    def ret():
+        credentials = _override(f)()
+        base64_decoded_credentials = {k: credentials.get(k) for k in ('username', 'password', 'url')}
+        base64_password = credentials.get('base64_password')
+        if base64_password is not None:
+            try:
+                base64_decoded_credentials['password'] = base64.b64decode(base64_password).decode()
+            except Exception:
+                exception_type, exception, traceback = sys.exc_info()
+                msg = "base64_password for %s contains invalid base64 string: %s %s" % (f.__name__, exception_type, exception)
+                raise RuntimeError(msg)
+        return base64_decoded_credentials
+
+    # Hack! We do this so that we can query the .__name__ of the function
+    # later to get the name of the configuration dynamically, e.g. for unit tests
+    ret.__name__ = f.__name__
+    return ret
+
+
+@_credentials_override
 def kernel_python_credentials():
-    return {u'username': u'', u'password': u'', u'url': u'http://localhost:8998'}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
 
 
-@_override
+@_credentials_override
 def kernel_scala_credentials():
-    return {u'username': u'', u'password': u'', u'url': u'http://localhost:8998'}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
 
 
 @_override
