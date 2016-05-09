@@ -90,9 +90,10 @@ class SQLQuery(ObjectWithGuid):
             command = u'{}.take({})'.format(command, self.maxrows)
         else:
             command = u'{}.collect()'.format(command)
-        command = u'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
+        command = u'for {} in {}: print({}.encode("{}"))'.format(constants.LONG_RANDOM_VARIABLE_NAME,
                                                     command,
-                                                    constants.LONG_RANDOM_VARIABLE_NAME)
+                                                    constants.LONG_RANDOM_VARIABLE_NAME,
+                                                    conf.pyspark_sql_encoding())
         return Command(command)
 
     def _scala_command(self):
