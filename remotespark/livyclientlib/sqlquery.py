@@ -4,6 +4,7 @@ import pandas as pd
 import remotespark.utils.configuration as conf
 import remotespark.utils.constants as constants
 from remotespark.utils.guid import ObjectWithGuid
+from remotespark.utils.log import Log
 from remotespark.utils.sparkevents import SparkEvents
 from remotespark.utils.utils import coerce_pandas_df_to_numeric_datetime
 
@@ -35,6 +36,7 @@ class SQLQuery(ObjectWithGuid):
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
+        self.logger = Log('SQLQuery')
 
     def to_command(self, kind):
         if kind == constants.SESSION_KIND_PYSPARK:
@@ -51,6 +53,7 @@ class SQLQuery(ObjectWithGuid):
                                                           self.samplemethod, self.maxrows, self.samplefraction)
         command_guid = ''
         try:
+            self.logger.info(u"Running SQL Query " + self.query)
             command = self.to_command(session.kind)
             command_guid = command.guid
             (success, records_text) = command.execute(session)
@@ -80,27 +83,27 @@ class SQLQuery(ObjectWithGuid):
             raise DataFrameParseException("Cannot parse object as JSON: '{}'".format(strings))
 
     def _pyspark_command(self):
-        command = 'sqlContext.sql("""{}""").toJSON()'.format(self.query)
+        command = u'sqlContext.sql(u"""{}""").toJSON()'.format(self.query)
         if self.samplemethod == 'sample':
-            command = '{}.sample(False, {})'.format(command, self.samplefraction)
+            command = u'{}.sample(False, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
-            command = '{}.take({})'.format(command, self.maxrows)
+            command = u'{}.take({})'.format(command, self.maxrows)
         else:
-            command = '{}.collect()'.format(command)
-        command = 'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                   command,
-                                                   constants.LONG_RANDOM_VARIABLE_NAME)
+            command = u'{}.collect()'.format(command)
+        command = u'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
+                                                    command,
+                                                    constants.LONG_RANDOM_VARIABLE_NAME)
         return Command(command)
 
     def _scala_command(self):
-        command = 'sqlContext.sql("""{}""").toJSON'.format(self.query)
+        command = u'sqlContext.sql("""{}""").toJSON'.format(self.query)
         if self.samplemethod == 'sample':
-            command = '{}.sample(false, {})'.format(command, self.samplefraction)
+            command = u'{}.sample(false, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
-            command = '{}.take({})'.format(command, self.maxrows)
+            command = u'{}.take({})'.format(command, self.maxrows)
         else:
-            command = '{}.collect'.format(command)
-        return Command('{}.foreach(println)'.format(command))
+            command = u'{}.collect'.format(command)
+        return Command(u'{}.foreach(println)'.format(command))
 
     def _r_command(self):
         raise NotImplementedError()

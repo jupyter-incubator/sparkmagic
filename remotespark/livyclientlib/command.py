@@ -26,6 +26,7 @@ class Command(ObjectWithGuid):
         self._spark_events.emit_statement_execution_start_event(session.guid, session.kind, session.id, self.guid)
         statement_id = -1
         try:
+            self.logger.info(u"Running command: " + self.code)
             session.wait_for_idle()
             data = {"code": self.code}
             response = session.http_client.post_statement(session.id, data)
