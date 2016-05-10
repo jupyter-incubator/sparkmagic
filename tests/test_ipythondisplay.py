@@ -9,7 +9,7 @@ def test_stdout_flush():
     ipython_display._ipython_shell = ipython_shell
     sys.stdout = MagicMock()
 
-    ipython_display.write(u'Testing Stderr Flush è')
+    ipython_display.write(u'Testing Stdout Flush è')
     assert sys.stdout.flush.call_count == 1
 
 def test_stderr_flush():
