@@ -68,6 +68,7 @@ def handle_expected_exceptions(f):
         try:
             out = f(self, *args, **kwargs)
         except exceptions_to_handle as err:
+            # Do not log! as some messages may contain private client information
             self.ipython_display.send_error(EXPECTED_ERROR_MSG.format(err))
             return None
         else:
