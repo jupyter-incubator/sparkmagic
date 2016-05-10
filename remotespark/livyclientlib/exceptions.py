@@ -48,6 +48,11 @@ class BadUserDataException(LivyClientLibException):
     in some way."""
 
 
+class BadUserConfigurationException(LivyClientLibException):
+    """An exception that is thrown when configuration provided by the user is invalid
+    in some way."""
+
+
 # == DECORATORS FOR EXCEPTION HANDLING ==
 EXPECTED_EXCEPTIONS = [BadUserDataException, LivyUnexpectedStatusException, FailedToCreateSqlContextException,
                        HttpClientException, LivyClientTimeoutException, SessionManagementException]

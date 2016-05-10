@@ -1,6 +1,7 @@
 import remotespark.utils.configuration as conf
 from mock import MagicMock
 from nose.tools import assert_equals, assert_not_equals, raises, with_setup
+from remotespark.livyclientlib.exceptions import BadUserConfigurationException
 import json
 
 def _setup():
@@ -86,7 +87,7 @@ def test_configuration_override_fallback_to_password():
     assert_equals(conf.kernel_python_credentials(), kpc)
 
 
-@raises(RuntimeError)
+@raises(BadUserConfigurationException)
 @with_setup(_setup)
 def test_configuration_raise_error_for_bad_base64_password():
     kpc = { 'username': 'U', 'base64_password': 'P', 'url': 'L' }

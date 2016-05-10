@@ -8,10 +8,10 @@ import copy
 import json
 import sys
 
+from remotespark.livyclientlib.exceptions import BadUserConfigurationException
 from remotespark.utils.constants import CONFIG_JSON
 from remotespark.utils.utils import join_paths, get_magics_home_path, get_livy_kind
 from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
-
 _overrides = None
 
 
@@ -106,7 +106,7 @@ def _credentials_override(f):
             except Exception:
                 exception_type, exception, traceback = sys.exc_info()
                 msg = "base64_password for %s contains invalid base64 string: %s %s" % (f.__name__, exception_type, exception)
-                raise RuntimeError(msg)
+                raise BadUserConfigurationException(msg)
         return base64_decoded_credentials
 
     # Hack! We do this so that we can query the .__name__ of the function
