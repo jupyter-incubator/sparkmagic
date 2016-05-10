@@ -32,8 +32,8 @@ def load(fsrw_class=None):
     config_file = fsrw_class(join_paths(home_path.path, CONFIG_JSON))
     config_file.ensure_file_exists()
     config_text = config_file.read_lines()
-    line = "".join(config_text).strip()
-    if line == "":
+    line = u"".join(config_text).strip()
+    if line == u"":
         overrides = {}
     else:
         overrides = json.loads(line)
@@ -74,7 +74,7 @@ def _override(f):
 
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
-    properties["kind"] = get_livy_kind(language)
+    properties[u"kind"] = get_livy_kind(language)
     return properties
 
 
@@ -91,42 +91,42 @@ def session_configs():
 
 @_override
 def kernel_python_credentials():
-    return {'username': '', 'password': '', 'url': 'http://localhost:8998'}
+    return {u'username': u'', u'password': u'', u'url': u'http://localhost:8998'}
 
 
 @_override
 def kernel_scala_credentials():
-    return {'username': '', 'password': '', 'url': 'http://localhost:8998'}
+    return {u'username': u'', u'password': u'', u'url': u'http://localhost:8998'}
 
 
 @_override
 def logging_config():
     return {
-        "version": 1,
-        "formatters": {
-            "magicsFormatter": {
-                "format": "%(asctime)s\t%(levelname)s\t%(message)s",
-                "datefmt": ""
+        u"version": 1,
+        u"formatters": {
+            u"magicsFormatter": {
+                u"format": u"%(asctime)s\t%(levelname)s\t%(message)s",
+                u"datefmt": u""
             }
         },
-        "handlers": {
-            "magicsHandler": {
-                "class": "remotespark.utils.filehandler.MagicsFileHandler",
-                "formatter": "magicsFormatter"
+        u"handlers": {
+            u"magicsHandler": {
+                u"class": u"remotespark.utils.filehandler.MagicsFileHandler",
+                u"formatter": u"magicsFormatter"
             }
         },
-        "loggers": {
-            "magicsLogger": {
-                "handlers": ["magicsHandler"],
-                "level": "DEBUG",
-                "propagate": 0
+        u"loggers": {
+            u"magicsLogger": {
+                u"handlers": [u"magicsHandler"],
+                u"level": u"DEBUG",
+                u"propagate": 0
             }
         }
     }
 
 @_override
 def events_handler_class():
-    return "remotespark.utils.eventshandler.EventsHandler"
+    return u"remotespark.utils.eventshandler.EventsHandler"
 
 
 @_override
@@ -151,7 +151,7 @@ def livy_session_startup_timeout_seconds():
 
 @_override
 def fatal_error_suggestion():
-    return """The code failed because of a fatal error:
+    return u"""The code failed because of a fatal error:
 \t{}.
 
 Some things to try:
@@ -188,3 +188,8 @@ def default_samplefraction():
 @_override
 def max_slices_pie_graph():
     return 100
+
+
+@_override
+def pyspark_sql_encoding():
+    return u'utf-8'

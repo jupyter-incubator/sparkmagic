@@ -21,12 +21,12 @@ class SQLQuery(ObjectWithGuid):
         if samplefraction is None:
             samplefraction = conf.default_samplefraction()
 
-        if samplemethod not in {'take', 'sample'}:
-            raise BadUserDataException('samplemethod (-m) must be one of (take, sample)')
+        if samplemethod not in {u'take', u'sample'}:
+            raise BadUserDataException(u'samplemethod (-m) must be one of (take, sample)')
         if not isinstance(maxrows, int):
-            raise BadUserDataException('maxrows (-n) must be an integer')
+            raise BadUserDataException(u'maxrows (-n) must be an integer')
         if not 0.0 <= samplefraction <= 1.0:
-            raise BadUserDataException('samplefraction (-r) must be a float between 0.0 and 1.0')
+            raise BadUserDataException(u'samplefraction (-r) must be a float between 0.0 and 1.0')
 
         self.query = query
         self.samplemethod = samplemethod
@@ -44,7 +44,7 @@ class SQLQuery(ObjectWithGuid):
         elif kind == constants.SESSION_KIND_SPARKR:
             return self._r_command()
         else:
-            raise BadUserDataException("Kind '{}' is not supported.".format(kind))
+            raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
     def execute(self, session):
         self._spark_events.emit_sql_execution_start_event(session.guid, session.kind, session.id, self.guid,
@@ -77,30 +77,31 @@ class SQLQuery(ObjectWithGuid):
             coerce_pandas_df_to_numeric_datetime(df)
             return df
         except ValueError:
-            raise DataFrameParseException("Cannot parse object as JSON: '{}'".format(strings))
+            raise DataFrameParseException(u"Cannot parse object as JSON: '{}'".format(strings))
 
     def _pyspark_command(self):
-        command = 'sqlContext.sql("""{}""").toJSON()'.format(self.query)
-        if self.samplemethod == 'sample':
-            command = '{}.sample(False, {})'.format(command, self.samplefraction)
+        command = u'sqlContext.sql(u"""{}""").toJSON()'.format(self.query)
+        if self.samplemethod == u'sample':
+            command = u'{}.sample(False, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
-            command = '{}.take({})'.format(command, self.maxrows)
+            command = u'{}.take({})'.format(command, self.maxrows)
         else:
-            command = '{}.collect()'.format(command)
-        command = 'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                   command,
-                                                   constants.LONG_RANDOM_VARIABLE_NAME)
+            command = u'{}.collect()'.format(command)
+        command = u'for {} in {}: print({}.encode("{}"))'.format(constants.LONG_RANDOM_VARIABLE_NAME,
+                                                    command,
+                                                    constants.LONG_RANDOM_VARIABLE_NAME,
+                                                    conf.pyspark_sql_encoding())
         return Command(command)
 
     def _scala_command(self):
-        command = 'sqlContext.sql("""{}""").toJSON'.format(self.query)
-        if self.samplemethod == 'sample':
-            command = '{}.sample(false, {})'.format(command, self.samplefraction)
+        command = u'sqlContext.sql("""{}""").toJSON'.format(self.query)
+        if self.samplemethod == u'sample':
+            command = u'{}.sample(false, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
-            command = '{}.take({})'.format(command, self.maxrows)
+            command = u'{}.take({})'.format(command, self.maxrows)
         else:
-            command = '{}.collect'.format(command)
-        return Command('{}.foreach(println)'.format(command))
+            command = u'{}.collect'.format(command)
+        return Command(u'{}.foreach(println)'.format(command))
 
     def _r_command(self):
         raise NotImplementedError()

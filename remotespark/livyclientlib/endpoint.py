@@ -4,8 +4,8 @@ from .exceptions import BadUserDataException
 class Endpoint(object):
     def __init__(self, url, username="", password=""):
         if not url:
-            raise BadUserDataException("URL must not be empty")
-        self.url = url.rstrip("/")
+            raise BadUserDataException(u"URL must not be empty")
+        self.url = url.rstrip(u"/")
         self.username = username
         self.password = password
         self.authenticate = False if username == '' and password == '' else True
@@ -19,4 +19,4 @@ class Endpoint(object):
         return not self == other
 
     def __str__(self):
-        return "Endpoint({})".format(self.url)
+        return u"Endpoint({})".format(self.url)

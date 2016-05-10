@@ -18,15 +18,15 @@ class ReliableHttpClient(object):
         self._endpoint = endpoint
         self._headers = headers
         self._retry_policy = retry_policy
-        self.logger = Log("ReliableHttpClient")
+        self.logger = Log(u"ReliableHttpClient")
 
         self.verify_ssl = not conf.ignore_ssl_errors()
         if not self.verify_ssl:
-            self.logger.debug("ATTENTION: Will ignore SSL errors. This might render you vulnerable to attacks.")
+            self.logger.debug(u"ATTENTION: Will ignore SSL errors. This might render you vulnerable to attacks.")
             requests.packages.urllib3.disable_warnings()
 
     def compose_url(self, relative_url):
-        r_u = "/{}".format(relative_url.rstrip("/").lstrip("/"))
+        r_u = "/{}".format(relative_url.rstrip(u"/").lstrip(u"/"))
         return self._endpoint.url + r_u
 
     def get(self, relative_url, accepted_status_codes):
@@ -64,7 +64,7 @@ class ReliableHttpClient(object):
                 r = None
                 status = None
 
-                self.logger.error("Request to '{}' failed with '{}'".format(url, e))
+                self.logger.error(u"Request to '{}' failed with '{}'".format(url, e))
             else:
                 error = False
                 status = r.status_code
@@ -75,6 +75,6 @@ class ReliableHttpClient(object):
                     retry_count += 1
                     continue
                 else:
-                    raise HttpClientException("Invalid status code '{}' or error '{}' from {}"
+                    raise HttpClientException(u"Invalid status code '{}' or error '{}' from {}"
                                               .format(status, error, url))
             return r
