@@ -1,3 +1,4 @@
+# coding=utf-8
 from mock import MagicMock, call
 from nose.tools import with_setup, assert_equals, assert_false, raises
 import pandas as pd
@@ -164,5 +165,19 @@ def test_execute_sql_failure_emits_event():
                                                                            True, "ValueError", "yo")
 
 
+def test_unicode_sql():
+    query = u"SELECT 'è'"
 
+    sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
+    assert_equals(sqlquery._pyspark_command(),
+                  Command(u'for {} in sqlContext.sql(u"""{}""").toJSON().take(120): print({}.encode("{}"))'\
+                          .format(LONG_RANDOM_VARIABLE_NAME, query,
+                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
+    assert_equals(sqlquery._scala_command(),
+                  Command(u'sqlContext.sql("""{}""").toJSON.take(120).foreach(println)'.format(query)))
 
+    try:
+        sqlquery._r_command()
+        assert False
+    except NotImplementedError:
+        pass

@@ -57,12 +57,8 @@ class ReliableHttpClient(object):
                         r = function(url, headers=self._headers, auth=(self._endpoint.username, self._endpoint.password),
                                      verify=self.verify_ssl)
                     else:
-                        self.logger.info(data)
-                        j = json.dumps(data)
-                        self.logger.info(u"Data = " + j)
-                        self.logger.info(type(j))
                         r = function(url, headers=self._headers, auth=(self._endpoint.username, self._endpoint.password),
-                                     data=j, verify=self.verify_ssl)
+                                     data=json.dumps(data), verify=self.verify_ssl)
             except requests.exceptions.RequestException as e:
                 error = True
                 r = None
