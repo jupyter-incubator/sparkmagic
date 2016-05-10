@@ -190,5 +190,6 @@ def max_slices_pie_graph():
     return 100
 
 
+@_override
 def pyspark_sql_encoding():
     return u'utf-8'
