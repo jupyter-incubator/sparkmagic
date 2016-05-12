@@ -13,9 +13,21 @@ class SparkController(object):
         self.ipython_display = ipython_display
         self.session_manager = SessionManager()
 
+    def get_app_id(self, client_name=None):
+        session_to_use = self.get_session_by_name_or_default(client_name)
+        return session_to_use.get_app_id()
+
+    def get_driver_log_url(self, client_name=None):
+        session_to_use = self.get_session_by_name_or_default(client_name)
+        return session_to_use.get_driver_log_url()
+
     def get_logs(self, client_name=None):
         session_to_use = self.get_session_by_name_or_default(client_name)
         return session_to_use.get_logs()
+
+    def get_spark_ui_url(self, client_name=None):
+        session_to_use = self.get_session_by_name_or_default(client_name)
+        return session_to_use.get_spark_ui_url()
 
     def run_command(self, command, client_name=None):
         session_to_use = self.get_session_by_name_or_default(client_name)
