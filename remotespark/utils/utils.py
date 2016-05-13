@@ -61,7 +61,7 @@ def coerce_pandas_df_to_numeric_datetime(df):
             try:
                 df[column_name] = pd.to_datetime(df[column_name], errors="raise")
                 coerced = True
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, OverflowError):
                 pass
 
         if not coerced and df[column_name].dtype == np.dtype("object"):
