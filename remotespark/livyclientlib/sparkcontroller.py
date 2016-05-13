@@ -9,13 +9,25 @@ from .livysession import LivySession
 
 class SparkController(object):
     def __init__(self, ipython_display):
-        self.logger = Log("SparkController")
+        self.logger = Log(u"SparkController")
         self.ipython_display = ipython_display
         self.session_manager = SessionManager()
+
+    def get_app_id(self, client_name=None):
+        session_to_use = self.get_session_by_name_or_default(client_name)
+        return session_to_use.get_app_id()
+
+    def get_driver_log_url(self, client_name=None):
+        session_to_use = self.get_session_by_name_or_default(client_name)
+        return session_to_use.get_driver_log_url()
 
     def get_logs(self, client_name=None):
         session_to_use = self.get_session_by_name_or_default(client_name)
         return session_to_use.get_logs()
+
+    def get_spark_ui_url(self, client_name=None):
+        session_to_use = self.get_session_by_name_or_default(client_name)
+        return session_to_use.get_spark_ui_url()
 
     def run_command(self, command, client_name=None):
         session_to_use = self.get_session_by_name_or_default(client_name)
@@ -27,9 +39,9 @@ class SparkController(object):
 
     def get_all_sessions_endpoint(self, endpoint):
         http_client = self._http_client(endpoint)
-        sessions = http_client.get_sessions()["sessions"]
-        session_list = [self._livy_session(http_client, {"kind": s["kind"]},
-                                           self.ipython_display, s["id"])
+        sessions = http_client.get_sessions()[u"sessions"]
+        session_list = [self._livy_session(http_client, {u"kind": s[u"kind"]},
+                                           self.ipython_display, s[u"id"])
                         for s in sessions]
         for s in session_list:
             s.refresh_status()
@@ -53,13 +65,13 @@ class SparkController(object):
         http_client = self._http_client(endpoint)
         response = http_client.get_session(session_id)
         http_client = self._http_client(endpoint)
-        session = self._livy_session(http_client, {"kind": response["kind"]},
+        session = self._livy_session(http_client, {u"kind": response[u"kind"]},
                                      self.ipython_display, session_id, False)
         session.delete()
 
     def add_session(self, name, endpoint, skip_if_exists, properties):
         if skip_if_exists and (name in self.session_manager.get_sessions_list()):
-            self.logger.debug("Skipping {} because it already exists in list of sessions.".format(name))
+            self.logger.debug(u"Skipping {} because it already exists in list of sessions.".format(name))
             return
         http_client = self._http_client(endpoint)
         session = self._livy_session(http_client, properties, self.ipython_display)

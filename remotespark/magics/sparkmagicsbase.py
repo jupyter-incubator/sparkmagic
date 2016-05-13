@@ -47,7 +47,7 @@ class SparkMagicBase(Magics):
 
     @staticmethod
     def print_endpoint_info(info_sessions):
-        sessions_info = ["        {}".format(i) for i in info_sessions]
+        sessions_info = ["        {}\n".format(i) for i in info_sessions]
         print("""Info for endpoint:
     Sessions:
 {}

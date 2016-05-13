@@ -1,3 +1,4 @@
+# coding=utf-8
 import logging
 
 from remotespark.utils.log import Log
@@ -39,3 +40,18 @@ def test_log_returnvalue():
     logger.info('word3')
     assert mock.level == 'INFO'
     assert mock.message == 'test2\tword3'
+
+
+def test_log_unicode():
+    logger = MockLog('test2')
+    assert isinstance(logger.logger, MockLogger)
+    mock = logger.logger
+    logger.debug(u'word1è')
+    assert mock.level == 'DEBUG'
+    assert mock.message == u'test2\tword1è'
+    logger.error(u'word2è')
+    assert mock.level == 'ERROR'
+    assert mock.message == u'test2\tword2è'
+    logger.info(u'word3è')
+    assert mock.level == 'INFO'
+    assert mock.message == u'test2\tword3è'

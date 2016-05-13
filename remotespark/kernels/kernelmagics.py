@@ -35,7 +35,7 @@ def _event(f):
             raise
         else:
             self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
-                                                              True, "", "")
+                                                              True, u"", u"")
             return result
     wrapped.__name__ = f.__name__
     wrapped.__doc__ = f.__doc__
@@ -48,14 +48,14 @@ class KernelMagics(SparkMagicBase):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
 
-        self.session_name = "session_name"
+        self.session_name = u"session_name"
         self.session_started = False
 
         # In order to set these following 3 properties, call %%_do_not_call_change_language -l language
-        self.language = ""
+        self.language = u""
         self.endpoint = None
         self.fatal_error = False
-        self.fatal_error_message = ""
+        self.fatal_error_message = u""
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
@@ -68,7 +68,7 @@ class KernelMagics(SparkMagicBase):
     def help(self, line, cell="", local_ns=None):
         parse_argstring_or_throw(self.help, line)
         self._assure_cell_body_is_empty(KernelMagics.help.__name__, cell)
-        help_html = """
+        help_html = u"""
 <table>
   <tr>
     <th>Magic</th>
@@ -128,24 +128,35 @@ class KernelMagics(SparkMagicBase):
         self.ipython_display.html(help_html)
 
     @cell_magic
-    def local(self, line, cell="", local_ns=None):
+    def local(self, line, cell=u"", local_ns=None):
         # This should not be reachable thanks to UserCodeParser. Registering it here so that it auto-completes with tab.
-        raise NotImplementedError("UserCodeParser should have prevented code execution from reaching here.")
+        raise NotImplementedError(u"UserCodeParser should have prevented code execution from reaching here.")
 
     @magic_arguments()
     @cell_magic
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     @_event
-    def info(self, line, cell="", local_ns=None):
+    def info(self, line, cell=u"", local_ns=None):
         parse_argstring_or_throw(self.info, line)
         self._assure_cell_body_is_empty(KernelMagics.info.__name__, cell)
-        self.ipython_display.writeln("Endpoint:\n\t{}\n".format(self.endpoint.url))
+        app_id = driver_log_url = spark_ui_url = None
+        if self.session_started:
+            app_id = self.spark_controller.get_app_id()
+            driver_log_url = self.spark_controller.get_driver_log_url()
+            spark_ui_url = self.spark_controller.get_spark_ui_url()
 
-        self.ipython_display.writeln("Current session ID number:\n\t{}\n".format(
+        self.ipython_display.writeln(u"Endpoint:\n\t{}\n".format(self.endpoint.url))
+
+        self.ipython_display.writeln(u"Current session ID number:\n\t{}\n".format(
                 self.spark_controller.get_session_id_for_client(self.session_name)))
 
-        self.ipython_display.writeln("Session configs:\n\t{}\n".format(conf.get_session_properties(self.language)))
+        self.ipython_display.writeln(u"YARN Application ID:\n\t{}\n".format(app_id))
+
+        self.ipython_display.writeln(u"Session configs:\n\t{}\n".format(conf.get_session_properties(self.language)))
+
+        self.ipython_display.writeln(u"Driver log:\n\t{}\n".format(driver_log_url))
+        self.ipython_display.writeln(u"Spark UI:\n\t{}\n".format(spark_ui_url))
 
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.endpoint)
         self.print_endpoint_info(info_sessions)
@@ -162,7 +173,7 @@ class KernelMagics(SparkMagicBase):
             out = self.spark_controller.get_logs()
             self.ipython_display.write(out)
         else:
-            self.ipython_display.write("No logs yet.")
+            self.ipython_display.write(u"No logs yet.")
 
     @magic_arguments()
     @cell_magic
@@ -174,21 +185,21 @@ class KernelMagics(SparkMagicBase):
         try:
             dictionary = json.loads(cell)
         except ValueError:
-            self.ipython_display.send_error("Could not parse JSON object from input '{}'".format(cell))
+            self.ipython_display.send_error(u"Could not parse JSON object from input '{}'".format(cell))
             return
         args = parse_argstring_or_throw(self.configure, line)
         if self.session_started:
             if not args.force:
-                self.ipython_display.send_error("A session has already been started. If you intend to recreate the "
-                                                "session with new configurations, please include the -f argument.")
+                self.ipython_display.send_error(u"A session has already been started. If you intend to recreate the "
+                                                u"session with new configurations, please include the -f argument.")
                 return
             else:
-                self._do_not_call_delete_session("")
+                self._do_not_call_delete_session(u"")
                 self._override_session_settings(dictionary)
-                self._do_not_call_start_session("")
+                self._do_not_call_start_session(u"")
         else:
             self._override_session_settings(dictionary)
-        self.info("")
+        self.info(u"")
 
     @magic_arguments()
     @cell_magic
@@ -196,7 +207,7 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
         parse_argstring_or_throw(self.spark, line)
-        if self._do_not_call_start_session(""):
+        if self._do_not_call_start_session(u""):
             (success, out) = self.spark_controller.run_command(Command(cell))
             if success:
                 self.ipython_display.write(out)
@@ -235,13 +246,13 @@ class KernelMagics(SparkMagicBase):
         self._assure_cell_body_is_empty(KernelMagics.cleanup.__name__, cell)
         args = parse_argstring_or_throw(self.cleanup, line)
         if args.force:
-            self._do_not_call_delete_session("")
+            self._do_not_call_delete_session(u"")
 
             self.spark_controller.cleanup_endpoint(self.endpoint)
         else:
-            self.ipython_display.send_error("When you clean up the endpoint, all sessions will be lost, including the "
-                                            "one used for this notebook. Include the -f parameter if that's your "
-                                            "intention.")
+            self.ipython_display.send_error(u"When you clean up the endpoint, all sessions will be lost, including the "
+                                            u"one used for this notebook. Include the -f parameter if that's your "
+                                            u"intention.")
             return
 
     @magic_arguments()
@@ -257,21 +268,21 @@ class KernelMagics(SparkMagicBase):
         session = args.session
 
         if args.session is None:
-            self.ipython_display.send_error('You must provide a session ID (-s argument).')
+            self.ipython_display.send_error(u'You must provide a session ID (-s argument).')
             return
 
         if args.force:
             id = self.spark_controller.get_session_id_for_client(self.session_name)
             if session == id:
-                self.ipython_display.send_error("Cannot delete this kernel's session ({}). Specify a different session,"
-                                                " shutdown the kernel to delete this session, or run %cleanup to "
-                                                "delete all sessions for this endpoint.".format(id))
+                self.ipython_display.send_error(u"Cannot delete this kernel's session ({}). Specify a different session,"
+                                                u" shutdown the kernel to delete this session, or run %cleanup to "
+                                                u"delete all sessions for this endpoint.".format(id))
                 return
 
             self.spark_controller.delete_session_by_id(self.endpoint, session)
         else:
-            self.ipython_display.send_error("Include the -f parameter if you understand that all statements executed "
-                                            "in this session will be lost.")
+            self.ipython_display.send_error(u"Include the -f parameter if you understand that all statements executed "
+                                            u"in this session will be lost.")
 
     @cell_magic
     def _do_not_call_start_session(self, line, cell="", local_ns=None):
@@ -294,7 +305,7 @@ class KernelMagics(SparkMagicBase):
             except Exception as e:
                 self.fatal_error = True
                 self.fatal_error_message = conf.fatal_error_suggestion().format(e)
-                self.logger.error("Error creating session: {}".format(e))
+                self.logger.error(u"Error creating session: {}".format(e))
                 self.ipython_display.send_error(self.fatal_error_message)
                 return False
 
@@ -320,11 +331,11 @@ class KernelMagics(SparkMagicBase):
         language = args.language.lower()
 
         if language not in LANGS_SUPPORTED:
-            self.ipython_display.send_error("'{}' language not supported in kernel magics.".format(language))
+            self.ipython_display.send_error(u"'{}' language not supported in kernel magics.".format(language))
             return
 
         if self.session_started:
-            self.ipython_display.send_error("Cannot change the language if a session has been started.")
+            self.ipython_display.send_error(u"Cannot change the language if a session has been started.")
             return
 
         self.language = language
@@ -358,7 +369,7 @@ class KernelMagics(SparkMagicBase):
     @staticmethod
     def _assure_cell_body_is_empty(magic_name, cell):
         if cell.strip():
-            raise BadUserDataException("Cell body for %%{} magic must be empty; got '{}' instead"
+            raise BadUserDataException(u"Cell body for %%{} magic must be empty; got '{}' instead"
                                        .format(magic_name, cell.strip()))
 
 

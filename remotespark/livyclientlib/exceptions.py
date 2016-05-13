@@ -43,13 +43,18 @@ class SessionManagementException(LivyClientLibException):
     given session name is invalid in some way."""
 
 
+class BadUserConfigurationException(LivyClientLibException):
+    """An exception that is thrown when configuration provided by the user is invalid
+    in some way."""
+
+
 class BadUserDataException(LivyClientLibException):
     """An exception that is thrown when data provided by the user is invalid
     in some way."""
 
 
 # == DECORATORS FOR EXCEPTION HANDLING ==
-EXPECTED_EXCEPTIONS = [BadUserDataException, LivyUnexpectedStatusException, FailedToCreateSqlContextException,
+EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, FailedToCreateSqlContextException,
                        HttpClientException, LivyClientTimeoutException, SessionManagementException]
 
 
@@ -68,6 +73,7 @@ def handle_expected_exceptions(f):
         try:
             out = f(self, *args, **kwargs)
         except exceptions_to_handle as err:
+            # Do not log! as some messages may contain private client information
             self.ipython_display.send_error(EXPECTED_ERROR_MSG.format(err))
             return None
         else:
@@ -91,7 +97,7 @@ def wrap_unexpected_exceptions(f, execute_if_error=None):
         try:
             out = f(self, *args, **kwargs)
         except Exception as e:
-            self.logger.error("ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(e, traceback.format_exc()))
+            self.logger.error(u"ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(e, traceback.format_exc()))
             self.ipython_display.send_error(INTERNAL_ERROR_MSG.format(e))
             return None if execute_if_error is None else execute_if_error()
         else:
