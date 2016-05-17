@@ -48,6 +48,7 @@ class SparkMagicBase(Magics):
         return SQLQuery(cell, samplemethod, maxrows, samplefraction)
 
     def _print_endpoint_info(self, info_sessions, current_session_id):
+        info_sessions = sorted(info_sessions, key=lambda s: s.id)
         html = u"""<table>
 <tr><th>ID</th><th>YARN application ID</th><th>Kind</th><th>State</th><th>Spark UI link</th><th>Driver log</th><th>Current session?</th></tr>""" + \
             u"".join([SparkMagicBase._session_row_html(session, current_session_id) for session in info_sessions]) + \

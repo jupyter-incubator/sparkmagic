@@ -135,7 +135,7 @@ def test_print_endpoint_info():
     session2.status = BUSY_SESSION_STATUS
     session2.get_spark_ui_url.return_value = None
     session2.get_driver_log_url.return_value = None
-    magic._print_endpoint_info([session1, session2], current_session_id)
+    magic._print_endpoint_info([session2, session1], current_session_id)
     magic.ipython_display.html.assert_called_once_with(u"""<table>
 <tr><th>ID</th><th>YARN application ID</th><th>Kind</th><th>State</th><th>Spark UI link</th><th>Driver log</th><th>Current session?</th></tr>\
 <tr><td>1</td><td>app1234</td><td>pyspark</td><td>idle</td><td><a href="https://microsoft.com/sparkui">https://microsoft.com/sparkui</a></td><td><a href="https://microsoft.com/driverlog">https://microsoft.com/driverlog</a></td><td>✔</td></tr>\
