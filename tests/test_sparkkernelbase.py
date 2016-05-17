@@ -138,8 +138,9 @@ def test_load_magics():
     assert call("%load_ext remotespark.kernels", True, False, None, False) in execute_cell_mock.mock_calls
 
 
-@with_setup(_setup(), _teardown())
+@with_setup(_setup, _teardown)
 def test_delete_session():
     kernel._delete_session()
 
     assert call("%%_do_not_call_delete_session\n ", True, False) in execute_cell_mock.mock_calls
+

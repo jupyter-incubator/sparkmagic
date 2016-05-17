@@ -140,26 +140,15 @@ class KernelMagics(SparkMagicBase):
     def info(self, line, cell=u"", local_ns=None):
         parse_argstring_or_throw(self.info, line)
         self._assure_cell_body_is_empty(KernelMagics.info.__name__, cell)
-        app_id = driver_log_url = spark_ui_url = None
         if self.session_started:
-            app_id = self.spark_controller.get_app_id()
-            driver_log_url = self.spark_controller.get_driver_log_url()
-            spark_ui_url = self.spark_controller.get_spark_ui_url()
+            current_session_id = self.spark_controller.get_session_id_for_client(self.session_name)
+        else:
+            current_session_id = None
 
-        self.ipython_display.writeln(u"Endpoint:\n\t{}\n".format(self.endpoint.url))
+        self.ipython_display.html(u"Endpoint: {}\n".format(self._link(self.endpoint.url)))
 
-        self.ipython_display.writeln(u"Current session ID number:\n\t{}\n".format(
-                self.spark_controller.get_session_id_for_client(self.session_name)))
-
-        self.ipython_display.writeln(u"YARN Application ID:\n\t{}\n".format(app_id))
-
-        self.ipython_display.writeln(u"Session configs:\n\t{}\n".format(conf.get_session_properties(self.language)))
-
-        self.ipython_display.writeln(u"Driver log:\n\t{}\n".format(driver_log_url))
-        self.ipython_display.writeln(u"Spark UI:\n\t{}\n".format(spark_ui_url))
-
-        info_sessions = self.spark_controller.get_all_sessions_endpoint_info(self.endpoint)
-        self.print_endpoint_info(info_sessions)
+        info_sessions = self.spark_controller.get_all_sessions_endpoint(self.endpoint)
+        self._print_endpoint_info(info_sessions, current_session_id)
 
     @magic_arguments()
     @cell_magic
