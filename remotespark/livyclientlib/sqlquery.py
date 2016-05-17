@@ -80,7 +80,7 @@ class SQLQuery(ObjectWithGuid):
             raise DataFrameParseException(u"Cannot parse object as JSON: '{}'".format(strings))
 
     def _pyspark_command(self):
-        command = u'sqlContext.sql(u"""{}""").toJSON()'.format(self.query)
+        command = u'sqlContext.sql(u"""{} """).toJSON()'.format(self.query)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
