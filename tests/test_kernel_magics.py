@@ -165,13 +165,34 @@ def test_info():
     line = ""
     session_info = ["1", "2"]
     spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=session_info)
+    magic.session_started = True
 
     magic.info(line)
 
     print_info_mock.assert_called_once_with(session_info)
     spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
+    spark_controller.get_app_id.assert_called_once_with()
+    spark_controller.get_driver_log_url.assert_called_once_with()
+    spark_controller.get_spark_ui_url.assert_called_once_with()
+
     _assert_magic_successful_event_emitted_once('info')
 
+@with_setup(_setup, _teardown)
+def test_info_without_active_session():
+    magic.print_endpoint_info = print_info_mock = MagicMock()
+    line = ""
+    session_info = ["1", "2"]
+    spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=session_info)
+
+    magic.info(line)
+
+    print_info_mock.assert_called_once_with(session_info)
+    spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
+    assert_equals(False, spark_controller.get_app_id.called)
+    assert_equals(False, spark_controller.get_driver_log_url.called)
+    assert_equals(False, spark_controller.get_spark_ui_url.called)
+
+    _assert_magic_successful_event_emitted_once('info')
 
 @with_setup(_setup, _teardown)
 def test_info_with_cell_content():

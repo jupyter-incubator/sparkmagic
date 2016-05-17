@@ -1,6 +1,7 @@
 import remotespark.utils.configuration as conf
 from mock import MagicMock
-from nose.tools import with_setup, assert_equals, assert_not_equals
+from nose.tools import assert_equals, assert_not_equals, raises, with_setup
+from remotespark.livyclientlib.exceptions import BadUserConfigurationException
 import json
 
 def _setup():
@@ -63,7 +64,19 @@ def test_configuration_load_not_lazy():
 
 
 @with_setup(_setup)
-def test_configuration_override():
+def test_configuration_override_base64_password():
+    kpc = { 'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L' }
+    overrides = { conf.kernel_python_credentials.__name__: kpc }
+    conf.override_all(overrides)
+    conf.override(conf.status_sleep_seconds.__name__, 1)
+    assert_equals(conf._overrides, { conf.kernel_python_credentials.__name__: kpc,
+                                     conf.status_sleep_seconds.__name__: 1 })
+    assert_equals(conf.status_sleep_seconds(), 1)
+    assert_equals(conf.kernel_python_credentials(), { 'username': 'U', 'password': 'password', 'url': 'L' })
+
+
+@with_setup(_setup)
+def test_configuration_override_fallback_to_password():
     kpc = { 'username': 'U', 'password': 'P', 'url': 'L' }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
@@ -72,6 +85,28 @@ def test_configuration_override():
                                      conf.status_sleep_seconds.__name__: 1 })
     assert_equals(conf.status_sleep_seconds(), 1)
     assert_equals(conf.kernel_python_credentials(), kpc)
+
+
+@with_setup(_setup)
+def test_configuration_override_work_with_empty_password():
+    kpc = { 'username': 'U', 'base64_password': '', 'password': '', 'url': '' }
+    overrides = { conf.kernel_python_credentials.__name__: kpc }
+    conf.override_all(overrides)
+    conf.override(conf.status_sleep_seconds.__name__, 1)
+    assert_equals(conf._overrides, { conf.kernel_python_credentials.__name__: kpc,
+                                     conf.status_sleep_seconds.__name__: 1 })
+    assert_equals(conf.status_sleep_seconds(), 1)
+    assert_equals(conf.kernel_python_credentials(),  { 'username': 'U', 'password': '', 'url': '' })
+
+
+@raises(BadUserConfigurationException)
+@with_setup(_setup)
+def test_configuration_raise_error_for_bad_base64_password():
+    kpc = { 'username': 'U', 'base64_password': 'P', 'url': 'L' }
+    overrides = { conf.kernel_python_credentials.__name__: kpc }
+    conf.override_all(overrides)
+    conf.override(conf.status_sleep_seconds.__name__, 1)
+    conf.kernel_python_credentials()
 
 
 @with_setup(_setup)
