@@ -1,7 +1,10 @@
+# -*- coding: UTF-8 -*-
+
 from mock import MagicMock
 from nose.tools import assert_equals
 
-from remotespark.utils.constants import LANGS_SUPPORTED
+from remotespark.utils.constants import LANGS_SUPPORTED, SESSION_KIND_PYSPARK, SESSION_KIND_SPARK, \
+    IDLE_SESSION_STATUS, BUSY_SESSION_STATUS
 from remotespark.utils.utils import get_livy_kind
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.livyclientlib.exceptions import DataFrameParseException
@@ -19,10 +22,6 @@ def test_load_emits_event():
 def test_get_livy_kind_covers_all_langs():
     for lang in LANGS_SUPPORTED:
         get_livy_kind(lang)
-
-
-def test_print_endpoint_info_doesnt_throw():
-    SparkMagicBase.print_endpoint_info(range(5))
 
 
 def test_df_execution_without_output_var():
@@ -107,3 +106,38 @@ def test_df_execution_quiet_with_output_var():
     magic.spark_controller.run_sqlquery.assert_called_once_with(cell, session)
     assert res is None
     assert shell.user_ns[output_var] == df
+
+
+def test_link():
+    url = u"https://microsoft.com"
+    magic = SparkMagicBase(None)
+    assert_equals(magic._link(url), u"""<a href="https://microsoft.com">https://microsoft.com</a>""")
+
+    url = None
+    assert_equals(magic._link(url), u"")
+
+
+def test_print_endpoint_info():
+    magic = SparkMagicBase(None)
+    magic.ipython_display = MagicMock()
+    current_session_id = 1
+    session1 = MagicMock()
+    session1.id = 1
+    session1.get_app_id.return_value = 'app1234'
+    session1.kind = SESSION_KIND_PYSPARK
+    session1.status = IDLE_SESSION_STATUS
+    session1.get_spark_ui_url.return_value = 'https://microsoft.com/sparkui'
+    session1.get_driver_log_url.return_value = 'https://microsoft.com/driverlog'
+    session2 = MagicMock()
+    session2.id = 3
+    session2.get_app_id.return_value = 'app5069'
+    session2.kind = SESSION_KIND_SPARK
+    session2.status = BUSY_SESSION_STATUS
+    session2.get_spark_ui_url.return_value = None
+    session2.get_driver_log_url.return_value = None
+    magic._print_endpoint_info([session2, session1], current_session_id)
+    magic.ipython_display.html.assert_called_once_with(u"""<table>
+<tr><th>ID</th><th>YARN application ID</th><th>Kind</th><th>State</th><th>Spark UI link</th><th>Driver log</th><th>Current session?</th></tr>\
+<tr><td>1</td><td>app1234</td><td>pyspark</td><td>idle</td><td><a href="https://microsoft.com/sparkui">https://microsoft.com/sparkui</a></td><td><a href="https://microsoft.com/driverlog">https://microsoft.com/driverlog</a></td><td>✔</td></tr>\
+<tr><td>3</td><td>app5069</td><td>spark</td><td>busy</td><td></td><td></td><td></td></tr>\
+</table>""")

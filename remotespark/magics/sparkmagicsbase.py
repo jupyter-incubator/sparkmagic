@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+
 """Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
 Provides the %spark magic."""
 
@@ -45,10 +47,25 @@ class SparkMagicBase(Magics):
     def _sqlquery(cell, samplemethod, maxrows, samplefraction):
         return SQLQuery(cell, samplemethod, maxrows, samplefraction)
 
+    def _print_endpoint_info(self, info_sessions, current_session_id):
+        info_sessions = sorted(info_sessions, key=lambda s: s.id)
+        html = u"""<table>
+<tr><th>ID</th><th>YARN application ID</th><th>Kind</th><th>State</th><th>Spark UI link</th><th>Driver log</th><th>Current session?</th></tr>""" + \
+            u"".join([SparkMagicBase._session_row_html(session, current_session_id) for session in info_sessions]) + \
+            u"</table>"
+        self.ipython_display.html(html)
+
     @staticmethod
-    def print_endpoint_info(info_sessions):
-        sessions_info = ["        {}\n".format(i) for i in info_sessions]
-        print("""Info for endpoint:
-    Sessions:
-{}
-""".format("\n".join(sessions_info)))
+    def _session_row_html(session, current_session_id):
+        return u"""<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td><td>{6}</td></tr>""".format(
+            session.id, session.get_app_id(), session.kind, session.status,
+            SparkMagicBase._link(session.get_spark_ui_url()), SparkMagicBase._link(session.get_driver_log_url()),
+            u"" if current_session_id is None or current_session_id != session.id else u"✔"
+        )
+
+    @staticmethod
+    def _link(url):
+        if url is not None:
+            return u"""<a href="{0}">{0}</a>""".format(url)
+        else:
+            return u""

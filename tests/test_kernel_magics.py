@@ -161,42 +161,35 @@ def test_change_language_not_valid():
 
 @with_setup(_setup, _teardown)
 def test_info():
-    magic.print_endpoint_info = print_info_mock = MagicMock()
+    magic._print_endpoint_info = print_info_mock = MagicMock()
     line = ""
-    session_info = ["1", "2"]
-    spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=session_info)
+    session_info = [MagicMock(), MagicMock()]
+    spark_controller.get_all_sessions_endpoint = MagicMock(return_value=session_info)
     magic.session_started = True
 
     magic.info(line)
 
-    print_info_mock.assert_called_once_with(session_info)
+    print_info_mock.assert_called_once_with(session_info, spark_controller.get_session_id_for_client.return_value)
     spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
-    spark_controller.get_app_id.assert_called_once_with()
-    spark_controller.get_driver_log_url.assert_called_once_with()
-    spark_controller.get_spark_ui_url.assert_called_once_with()
 
     _assert_magic_successful_event_emitted_once('info')
 
 @with_setup(_setup, _teardown)
 def test_info_without_active_session():
-    magic.print_endpoint_info = print_info_mock = MagicMock()
+    magic._print_endpoint_info = print_info_mock = MagicMock()
     line = ""
-    session_info = ["1", "2"]
-    spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=session_info)
+    session_info = [MagicMock(), MagicMock()]
+    spark_controller.get_all_sessions_endpoint = MagicMock(return_value=session_info)
 
     magic.info(line)
 
-    print_info_mock.assert_called_once_with(session_info)
-    spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
-    assert_equals(False, spark_controller.get_app_id.called)
-    assert_equals(False, spark_controller.get_driver_log_url.called)
-    assert_equals(False, spark_controller.get_spark_ui_url.called)
+    print_info_mock.assert_called_once_with(session_info, None)
 
     _assert_magic_successful_event_emitted_once('info')
 
 @with_setup(_setup, _teardown)
 def test_info_with_cell_content():
-    magic.print_endpoint_info = print_info_mock = MagicMock()
+    magic._print_endpoint_info = print_info_mock = MagicMock()
     line = ""
     session_info = ["1", "2"]
     spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=session_info)
@@ -212,7 +205,7 @@ def test_info_with_cell_content():
 
 @with_setup(_setup, _teardown)
 def test_info_with_argument():
-    magic.print_endpoint_info = print_info_mock = MagicMock()
+    magic._print_endpoint_info = print_info_mock = MagicMock()
     line = "hey"
     session_info = ["1", "2"]
     spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=session_info)
@@ -226,28 +219,26 @@ def test_info_with_argument():
 
 @with_setup(_setup, _teardown)
 def test_info_unexpected_exception():
-    magic.print_endpoint_info = MagicMock()
+    magic._print_endpoint_info = MagicMock()
     line = ""
-    spark_controller.get_all_sessions_endpoint_info = MagicMock(side_effect=ValueError('utter failure'))
+    spark_controller.get_all_sessions_endpoint = MagicMock(side_effect=ValueError('utter failure'))
 
     magic.info(line)
-    spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
-    _assert_magic_failure_event_emitted_once('info', spark_controller.get_all_sessions_endpoint_info.side_effect)
+    _assert_magic_failure_event_emitted_once('info', spark_controller.get_all_sessions_endpoint.side_effect)
     ipython_display.send_error.assert_called_once_with(constants.INTERNAL_ERROR_MSG
-                                                       .format(spark_controller.get_all_sessions_endpoint_info.side_effect))
+                                                       .format(spark_controller.get_all_sessions_endpoint.side_effect))
 
 
 @with_setup(_setup, _teardown)
 def test_info_expected_exception():
-    magic.print_endpoint_info = MagicMock()
+    magic._print_endpoint_info = MagicMock()
     line = ""
-    spark_controller.get_all_sessions_endpoint_info = MagicMock(side_effect=FailedToCreateSqlContextException('utter failure'))
+    spark_controller.get_all_sessions_endpoint = MagicMock(side_effect=FailedToCreateSqlContextException('utter failure'))
 
     magic.info(line)
-    spark_controller.get_session_id_for_client.assert_called_once_with(magic.session_name)
-    _assert_magic_failure_event_emitted_once('info', spark_controller.get_all_sessions_endpoint_info.side_effect)
+    _assert_magic_failure_event_emitted_once('info', spark_controller.get_all_sessions_endpoint.side_effect)
     ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
-                                                       .format(spark_controller.get_all_sessions_endpoint_info.side_effect))
+                                                       .format(spark_controller.get_all_sessions_endpoint.side_effect))
 
 
 @with_setup(_setup, _teardown)
