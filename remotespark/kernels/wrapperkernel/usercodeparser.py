@@ -21,9 +21,9 @@ class UserCodeParser(object):
         if code.startswith("%%local") or code.startswith("%local"):
             return all_but_first_line
         elif any(code.startswith("%%" + s) for s in self._magics_with_no_cell_body):
-            return "{}\n ".format(code)
+            return u"{}\n ".format(code)
         elif any(code.startswith("%" + s) for s in self._magics_with_no_cell_body):
-            return "%{}\n ".format(code)
+            return u"%{}\n ".format(code)
         elif code.startswith("%%") or code.startswith("%"):
             # If they use other line magics:
             #       %autosave
@@ -33,4 +33,4 @@ class UserCodeParser(object):
         elif not code:
             return code
         else:
-            return "%%spark\n{}".format(code)
+            return u"%%spark\n{}".format(code)

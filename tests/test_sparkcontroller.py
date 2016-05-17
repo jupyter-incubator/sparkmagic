@@ -177,6 +177,23 @@ def test_delete_session_by_id_non_existent():
 
     controller.delete_session_by_id("conn_str", 0)
 
+@with_setup(_setup, _teardown)
+def test_get_app_id():
+    chosen_client = MagicMock()
+    controller.get_session_by_name_or_default = MagicMock(return_value=chosen_client)
+
+    result = controller.get_app_id()
+    assert_equals(result, chosen_client.get_app_id.return_value)
+    chosen_client.get_app_id.assert_called_with()
+
+@with_setup(_setup, _teardown)
+def test_get_driver_log():
+    chosen_client = MagicMock()
+    controller.get_session_by_name_or_default = MagicMock(return_value=chosen_client)
+
+    result = controller.get_driver_log_url()
+    assert_equals(result, chosen_client.get_driver_log_url.return_value)
+    chosen_client.get_driver_log_url.assert_called_with()
 
 @with_setup(_setup, _teardown)
 def test_get_logs():
@@ -187,7 +204,6 @@ def test_get_logs():
     assert_equals(result, chosen_client.get_logs.return_value)
     chosen_client.get_logs.assert_called_with()
 
-
 @with_setup(_setup, _teardown)
 @raises(SessionManagementException)
 def test_get_logs_error():
@@ -196,12 +212,19 @@ def test_get_logs_error():
 
     result = controller.get_logs()
 
-
 @with_setup(_setup, _teardown)
 def test_get_session_id_for_client():
     assert controller.get_session_id_for_client("name") is not None
     client_manager.get_session_id_for_client.assert_called_once_with("name")
 
+@with_setup(_setup, _teardown)
+def test_get_spark_ui_url():
+    chosen_client = MagicMock()
+    controller.get_session_by_name_or_default = MagicMock(return_value=chosen_client)
+
+    result = controller.get_spark_ui_url()
+    assert_equals(result, chosen_client.get_spark_ui_url.return_value)
+    chosen_client.get_spark_ui_url.assert_called_with()
 
 @with_setup(_setup, _teardown)
 def test_add_session_throws_when_session_start_fails():

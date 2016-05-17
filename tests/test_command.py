@@ -2,10 +2,20 @@ from mock import MagicMock
 from nose.tools import assert_equals
 
 from remotespark.livyclientlib.command import Command
+from remotespark.livyclientlib.livysession import LivySession
 from remotespark.utils.constants import SESSION_KIND_SPARK
 import remotespark.utils.configuration as conf
 from . import test_livysession as tls
 
+def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
+                    sql_created=False, http_client=None, spark_events=None):
+    if http_client is None:
+        http_client = MagicMock()
+    if spark_events is None:
+        spark_events = MagicMock()
+    ipython_display = MagicMock()
+    session = LivySession(http_client, {"kind": kind}, ipython_display, session_id, sql_created, spark_events)
+    return session
 
 def test_execute():
     spark_events = MagicMock()
@@ -19,7 +29,7 @@ def test_execute():
         "status_sleep_seconds": 0.01,
         "statement_sleep_seconds": 0.01
     })
-    session = tls.TestLivySession._create_session(kind=kind, http_client=http_client)
+    session = _create_session(kind=kind, http_client=http_client)
     conf.load()
     session.start(create_sql_context=False)
     command = Command("command", spark_events=spark_events)
@@ -49,7 +59,7 @@ def test_execute_failure_wait_for_session_emits_event():
         "status_sleep_seconds": 0.01,
         "statement_sleep_seconds": 0.01
     })
-    session = tls.TestLivySession._create_session(kind=kind, http_client=http_client)
+    session = _create_session(kind=kind, http_client=http_client)
     conf.load()
     session.start(create_sql_context=False)
     session.wait_for_idle = MagicMock(side_effect=ValueError("yo"))
@@ -76,7 +86,7 @@ def test_execute_failure_post_statement_emits_event():
         "status_sleep_seconds": 0.01,
         "statement_sleep_seconds": 0.01
     })
-    session = tls.TestLivySession._create_session(kind=kind, http_client=http_client)
+    session = _create_session(kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
     conf.load()
     session.start(create_sql_context=False)
@@ -104,7 +114,7 @@ def test_execute_failure_get_statement_output_emits_event():
         "status_sleep_seconds": 0.01,
         "statement_sleep_seconds": 0.01
     })
-    session = tls.TestLivySession._create_session(kind=kind, http_client=http_client)
+    session = _create_session(kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
     conf.load()
     session.start(create_sql_context=False)

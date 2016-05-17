@@ -122,3 +122,12 @@ def test_df_dict_does_not_throw():
 """
     df = pd.read_json(json_str)
     coerce_pandas_df_to_numeric_datetime(df)
+
+
+def test_overflow_coercing():
+    records = [{'_c0':'12345678901'}]
+    desired_df = pd.DataFrame(records)
+    desired_df['_c0'] = pd.to_numeric(desired_df['_c0'])
+    df = pd.DataFrame(records)
+    coerce_pandas_df_to_numeric_datetime(df)
+    assert_frame_equal(desired_df, df)

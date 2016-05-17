@@ -3,13 +3,15 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-import json
+import base64
 import copy
+import json
+import sys
 
+from remotespark.livyclientlib.exceptions import BadUserConfigurationException
 from remotespark.utils.constants import CONFIG_JSON
 from remotespark.utils.utils import join_paths, get_magics_home_path, get_livy_kind
 from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
-
 _overrides = None
 
 
@@ -32,8 +34,8 @@ def load(fsrw_class=None):
     config_file = fsrw_class(join_paths(home_path.path, CONFIG_JSON))
     config_file.ensure_file_exists()
     config_text = config_file.read_lines()
-    line = "".join(config_text).strip()
-    if line == "":
+    line = u"".join(config_text).strip()
+    if line == u"":
         overrides = {}
     else:
         overrides = json.loads(line)
@@ -74,7 +76,7 @@ def _override(f):
 
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
-    properties["kind"] = get_livy_kind(language)
+    properties[u"kind"] = get_livy_kind(language)
     return properties
 
 
@@ -89,44 +91,68 @@ def session_configs():
     return {}
 
 
-@_override
+def _credentials_override(f):
+    """A decorator that provide special handling for credentials. It still calls _override().
+    If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.
+    If 'base64_password' is not set, it will fallback to to 'password' in config.
+    """
+    def ret():
+        credentials = _override(f)()
+        base64_decoded_credentials = {k: credentials.get(k) for k in ('username', 'password', 'url')}
+        base64_password = credentials.get('base64_password')
+        if base64_password is not None:
+            try:
+                base64_decoded_credentials['password'] = base64.b64decode(base64_password).decode()
+            except Exception:
+                exception_type, exception, traceback = sys.exc_info()
+                msg = "base64_password for %s contains invalid base64 string: %s %s" % (f.__name__, exception_type, exception)
+                raise BadUserConfigurationException(msg)
+        return base64_decoded_credentials
+
+    # Hack! We do this so that we can query the .__name__ of the function
+    # later to get the name of the configuration dynamically, e.g. for unit tests
+    ret.__name__ = f.__name__
+    return ret
+
+
+@_credentials_override
 def kernel_python_credentials():
-    return {'username': '', 'password': '', 'url': 'http://localhost:8998'}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
 
 
-@_override
+@_credentials_override
 def kernel_scala_credentials():
-    return {'username': '', 'password': '', 'url': 'http://localhost:8998'}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
 
 
 @_override
 def logging_config():
     return {
-        "version": 1,
-        "formatters": {
-            "magicsFormatter": {
-                "format": "%(asctime)s\t%(levelname)s\t%(message)s",
-                "datefmt": ""
+        u"version": 1,
+        u"formatters": {
+            u"magicsFormatter": {
+                u"format": u"%(asctime)s\t%(levelname)s\t%(message)s",
+                u"datefmt": u""
             }
         },
-        "handlers": {
-            "magicsHandler": {
-                "class": "remotespark.utils.filehandler.MagicsFileHandler",
-                "formatter": "magicsFormatter"
+        u"handlers": {
+            u"magicsHandler": {
+                u"class": u"remotespark.utils.filehandler.MagicsFileHandler",
+                u"formatter": u"magicsFormatter"
             }
         },
-        "loggers": {
-            "magicsLogger": {
-                "handlers": ["magicsHandler"],
-                "level": "DEBUG",
-                "propagate": 0
+        u"loggers": {
+            u"magicsLogger": {
+                u"handlers": [u"magicsHandler"],
+                u"level": u"DEBUG",
+                u"propagate": 0
             }
         }
     }
 
 @_override
 def events_handler_class():
-    return "remotespark.utils.eventshandler.EventsHandler"
+    return u"remotespark.utils.eventshandler.EventsHandler"
 
 
 @_override
@@ -151,7 +177,7 @@ def livy_session_startup_timeout_seconds():
 
 @_override
 def fatal_error_suggestion():
-    return """The code failed because of a fatal error:
+    return u"""The code failed because of a fatal error:
 \t{}.
 
 Some things to try:
@@ -188,3 +214,8 @@ def default_samplefraction():
 @_override
 def max_slices_pie_graph():
     return 100
+
+
+@_override
+def pyspark_sql_encoding():
+    return u'utf-8'

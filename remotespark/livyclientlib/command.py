@@ -11,7 +11,7 @@ class Command(ObjectWithGuid):
     def __init__(self, code, spark_events=None):
         super(Command, self).__init__()
         self.code = textwrap.dedent(code)
-        self.logger = Log("Command")
+        self.logger = Log(u"Command")
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
@@ -27,9 +27,9 @@ class Command(ObjectWithGuid):
         statement_id = -1
         try:
             session.wait_for_idle()
-            data = {"code": self.code}
+            data = {u"code": self.code}
             response = session.http_client.post_statement(session.id, data)
-            statement_id = response['id']
+            statement_id = response[u'id']
             output = self._get_statement_output(session, statement_id)
         except Exception as e:
             self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
@@ -43,26 +43,26 @@ class Command(ObjectWithGuid):
 
     def _get_statement_output(self, session, statement_id):
         statement_running = True
-        out = ""
+        out = u""
         while statement_running:
             statement = session.http_client.get_statement(session.id, statement_id)
-            status = statement["state"]
+            status = statement[u"state"]
 
-            self.logger.debug("Status of statement {} is {}.".format(statement_id, status))
+            self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
 
-            if status == "running":
+            if status == u"running":
                 session.sleep()
             else:
                 statement_running = False
 
-                statement_output = statement["output"]
-                if statement_output["status"] == "ok":
-                    out = (True, statement_output["data"]["text/plain"])
-                elif statement_output["status"] == "error":
+                statement_output = statement[u"output"]
+                if statement_output[u"status"] == u"ok":
+                    out = (True, statement_output[u"data"][u"text/plain"])
+                elif statement_output[u"status"] == u"error":
                     out = (False,
-                           statement_output["evalue"] + "\n" + "".join(statement_output["traceback"]))
+                           statement_output[u"evalue"] + u"\n" + u"".join(statement_output[u"traceback"]))
                 else:
-                    raise LivyUnexpectedStatusException("Unknown output status from Livy: '{}'"
-                                                        .format(statement_output["status"]))
+                    raise LivyUnexpectedStatusException(u"Unknown output status from Livy: '{}'"
+                                                        .format(statement_output[u"status"]))
 
         return out
