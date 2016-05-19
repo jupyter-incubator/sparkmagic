@@ -1,5 +1,5 @@
 # coding=utf-8
-from remotespark.utils.ipythondisplay import IpythonDisplay
+from remotesparkcommon.ipythondisplay import IpythonDisplay
 from mock import MagicMock
 import sys
 

@@ -1,6 +1,6 @@
 import os.path
 
-from remotespark.utils.filesystemreaderwriter import FileSystemReaderWriter
+from remotesparkcommon.filesystemreaderwriter import FileSystemReaderWriter
 
 
 def test_read():

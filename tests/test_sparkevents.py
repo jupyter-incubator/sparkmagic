@@ -1,6 +1,6 @@
-from remotespark.utils.sparkevents import SparkEvents
-import remotespark.utils.constants as constants
-from remotespark.utils import utils
+from remotesparkcommon.sparkevents import SparkEvents
+import remotesparkcommon.constants as constants
+from remotesparkcommon import utils
 from nose.tools import with_setup, raises
 from mock import MagicMock
 

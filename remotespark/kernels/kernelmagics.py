@@ -12,13 +12,13 @@ from IPython.core.magic import magics_class
 from IPython.core.magic import needs_local_scope, cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments
 
-import remotespark.utils.configuration as conf
+import remotesparkcommon.configuration as conf
 from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
-from remotespark.utils.constants import LANGS_SUPPORTED
-from remotespark.utils.sparkevents import SparkEvents
-from remotespark.utils.utils import generate_uuid, get_livy_kind, parse_argstring_or_throw
+from remotesparkcommon.constants import LANGS_SUPPORTED
+from remotesparkcommon.sparkevents import SparkEvents
+from remotesparkcommon.utils import generate_uuid, get_livy_kind, parse_argstring_or_throw
 from remotespark.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
     BadUserDataException
 

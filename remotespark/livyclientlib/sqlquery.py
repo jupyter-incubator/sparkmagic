@@ -1,11 +1,11 @@
 import json
 import pandas as pd
 
-import remotespark.utils.configuration as conf
-import remotespark.utils.constants as constants
-from remotespark.utils.guid import ObjectWithGuid
-from remotespark.utils.sparkevents import SparkEvents
-from remotespark.utils.utils import coerce_pandas_df_to_numeric_datetime
+import remotesparkcommon.configuration as conf
+import remotesparkcommon.constants as constants
+from remotesparkcommon.guid import ObjectWithGuid
+from remotesparkcommon.sparkevents import SparkEvents
+from remotesparkcommon.utils import coerce_pandas_df_to_numeric_datetime
 
 from .command import Command
 from .exceptions import DataFrameParseException, BadUserDataException

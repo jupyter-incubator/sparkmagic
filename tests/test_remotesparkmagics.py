@@ -1,8 +1,8 @@
 from mock import MagicMock
 from nose.tools import with_setup
 
-import remotespark.utils.configuration as conf
-from remotespark.utils.constants import EXPECTED_ERROR_MSG
+import remotesparkcommon.configuration as conf
+from remotesparkcommon.constants import EXPECTED_ERROR_MSG
 from remotespark.magics.remotesparkmagics import RemoteSparkMagics
 from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.endpoint import Endpoint

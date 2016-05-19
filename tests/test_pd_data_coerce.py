@@ -1,7 +1,7 @@
 from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
-from remotespark.utils.utils import coerce_pandas_df_to_numeric_datetime
+from remotesparkcommon.utils import coerce_pandas_df_to_numeric_datetime
 
 
 def test_no_coercing():

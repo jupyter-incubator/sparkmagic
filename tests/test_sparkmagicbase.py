@@ -1,8 +1,8 @@
 from mock import MagicMock
 from nose.tools import assert_equals
 
-from remotespark.utils.constants import LANGS_SUPPORTED
-from remotespark.utils.utils import get_livy_kind
+from remotesparkcommon.constants import LANGS_SUPPORTED
+from remotesparkcommon.utils import get_livy_kind
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
 from remotespark.livyclientlib.exceptions import DataFrameParseException
 from remotespark.livyclientlib.sqlquery import SQLQuery

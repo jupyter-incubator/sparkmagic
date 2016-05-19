@@ -1,7 +1,7 @@
 # coding=utf-8
 import logging
 
-from remotespark.utils.log import Log
+from remotesparkcommon.log import Log
 
 
 def test_log_init():

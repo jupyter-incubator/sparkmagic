@@ -5,11 +5,11 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 
-from remotespark.utils.constants import LONG_RANDOM_VARIABLE_NAME
+from remotesparkcommon.constants import LONG_RANDOM_VARIABLE_NAME
 from remotespark.livyclientlib.sqlquery import SQLQuery
 from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.exceptions import BadUserDataException
-import remotespark.utils.configuration as conf
+import remotesparkcommon.configuration as conf
 
 
 def _teardown():

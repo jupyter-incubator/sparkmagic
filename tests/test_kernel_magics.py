@@ -8,8 +8,8 @@ from remotespark.livyclientlib.exceptions import LivyClientTimeoutException, Bad
     HttpClientException, DataFrameParseException
 from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.livyclientlib.command import Command
-import remotespark.utils.constants as constants
-import remotespark.utils.configuration as conf
+import remotesparkcommon.constants as constants
+import remotesparkcommon.configuration as conf
 
 magic = None
 spark_controller = None

@@ -3,8 +3,8 @@
 import json
 
 from remotespark.controllerwidget.abstractmenuwidget import AbstractMenuWidget
-from remotespark.utils import configuration as conf
-from remotespark.utils.constants import LANG_SCALA, LANG_PYTHON
+from remotesparkcommon import configuration as conf
+from remotesparkcommon.constants import LANG_SCALA, LANG_PYTHON
 
 
 class CreateSessionWidget(AbstractMenuWidget):

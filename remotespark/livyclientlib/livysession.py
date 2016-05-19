@@ -3,11 +3,11 @@
 
 from time import sleep, time
 
-import remotespark.utils.configuration as conf
-import remotespark.utils.constants as constants
-from remotespark.utils.guid import ObjectWithGuid
-from remotespark.utils.log import Log
-from remotespark.utils.sparkevents import SparkEvents
+import remotesparkcommon.configuration as conf
+import remotesparkcommon.constants as constants
+from remotesparkcommon.guid import ObjectWithGuid
+from remotesparkcommon.log import Log
+from remotesparkcommon.sparkevents import SparkEvents
 
 from .command import Command
 from .exceptions import FailedToCreateSqlContextException, LivyClientTimeoutException, \

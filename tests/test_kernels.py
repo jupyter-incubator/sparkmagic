@@ -1,6 +1,6 @@
 from remotespark.kernels.sparkkernel.sparkkernel import SparkKernel
 from remotespark.kernels.pysparkkernel.pysparkkernel import PySparkKernel
-from remotespark.utils.constants import LANG_PYTHON, LANG_SCALA
+from remotesparkcommon.constants import LANG_PYTHON, LANG_SCALA
 
 
 class TestPyparkKernel(PySparkKernel):

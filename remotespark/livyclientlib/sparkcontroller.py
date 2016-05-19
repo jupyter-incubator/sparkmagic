@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from remotespark.utils.log import Log
+from remotesparkcommon.log import Log
 from .sessionmanager import SessionManager
 from .livyreliablehttpclient import LivyReliableHttpClient
 from .livysession import LivySession

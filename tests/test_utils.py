@@ -3,7 +3,7 @@ from mock import MagicMock
 from nose.tools import assert_equals, assert_is
 
 from remotespark.livyclientlib.exceptions import BadUserDataException
-from remotespark.utils.utils import parse_argstring_or_throw
+from remotesparkcommon.utils import parse_argstring_or_throw
 
 
 

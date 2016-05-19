@@ -1,6 +1,6 @@
 import traceback
 
-from remotespark.utils.constants import EXPECTED_ERROR_MSG, INTERNAL_ERROR_MSG
+from remotesparkcommon.constants import EXPECTED_ERROR_MSG, INTERNAL_ERROR_MSG
 
 
 # == EXCEPTIONS ==

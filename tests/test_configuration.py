@@ -1,4 +1,4 @@
-import remotespark.utils.configuration as conf
+import remotesparkcommon.configuration as conf
 from mock import MagicMock
 from nose.tools import assert_equals, assert_not_equals, raises, with_setup
 from remotespark.livyclientlib.exceptions import BadUserConfigurationException

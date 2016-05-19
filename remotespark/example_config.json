@@ -21,7 +21,7 @@
     },
     "handlers": {
       "magicsHandler": { 
-        "class": "remotespark.utils.filehandler.MagicsFileHandler",
+        "class": "remotesparkcommon.filehandler.MagicsFileHandler",
         "formatter": "magicsFormatter"
       }
     },

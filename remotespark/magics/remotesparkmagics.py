@@ -12,14 +12,14 @@ from IPython.core.magic import line_cell_magic, needs_local_scope
 from IPython.core.magic import magics_class
 from IPython.core.magic_arguments import argument, magic_arguments
 
-import remotespark.utils.configuration as conf
+import remotesparkcommon.configuration as conf
 from remotespark.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
 from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.endpoint import Endpoint
 from remotespark.magics.sparkmagicsbase import SparkMagicBase
-from remotespark.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
-from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
-from remotespark.utils.utils import parse_argstring_or_throw
+from remotesparkcommon.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
+from remotesparkcommon.ipywidgetfactory import IpyWidgetFactory
+from remotesparkcommon.utils import parse_argstring_or_throw
 from remotespark.livyclientlib.exceptions import handle_expected_exceptions
 
 

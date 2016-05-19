@@ -6,8 +6,8 @@ from time import sleep
 
 import requests
 
-import remotespark.utils.configuration as conf
-from remotespark.utils.log import Log
+import remotesparkcommon.configuration as conf
+from remotesparkcommon.log import Log
 from remotespark.livyclientlib.exceptions import HttpClientException
 
 

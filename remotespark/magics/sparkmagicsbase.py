@@ -7,9 +7,9 @@ Provides the %spark magic."""
 from __future__ import print_function
 from IPython.core.magic import Magics, magics_class
 
-from remotespark.utils.ipythondisplay import IpythonDisplay
-from remotespark.utils.log import Log
-from remotespark.utils.sparkevents import SparkEvents
+from remotesparkcommon.ipythondisplay import IpythonDisplay
+from remotesparkcommon.log import Log
+from remotesparkcommon.sparkevents import SparkEvents
 from remotespark.livyclientlib.sparkcontroller import SparkController
 from remotespark.livyclientlib.sqlquery import SQLQuery
 

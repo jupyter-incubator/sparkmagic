@@ -2,11 +2,11 @@
 # Distributed under the terms of the Modified BSD License.
 import requests
 from ipykernel.ipkernel import IPythonKernel
-from remotespark.utils.ipythondisplay import IpythonDisplay
+from remotesparkcommon.ipythondisplay import IpythonDisplay
 
-import remotespark.utils.configuration as conf
+import remotesparkcommon.configuration as conf
 from remotespark.livyclientlib.exceptions import wrap_unexpected_exceptions
-from remotespark.utils.log import Log
+from remotesparkcommon.log import Log
 from remotespark.kernels.wrapperkernel.usercodeparser import UserCodeParser
 
 

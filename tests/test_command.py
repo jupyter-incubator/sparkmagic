@@ -3,8 +3,8 @@ from nose.tools import assert_equals
 
 from remotespark.livyclientlib.command import Command
 from remotespark.livyclientlib.livysession import LivySession
-from remotespark.utils.constants import SESSION_KIND_SPARK
-import remotespark.utils.configuration as conf
+from remotesparkcommon.constants import SESSION_KIND_SPARK
+import remotesparkcommon.configuration as conf
 from . import test_livysession as tls
 
 def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,

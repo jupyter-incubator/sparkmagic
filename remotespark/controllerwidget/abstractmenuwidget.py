@@ -1,7 +1,7 @@
 from ipywidgets import Box
 
-from remotespark.utils.ipythondisplay import IpythonDisplay
-from remotespark.utils.ipywidgetfactory import IpyWidgetFactory
+from remotesparkcommon.ipythondisplay import IpythonDisplay
+from remotesparkcommon.ipywidgetfactory import IpyWidgetFactory
 
 
 class AbstractMenuWidget(Box):

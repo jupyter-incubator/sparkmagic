@@ -5,8 +5,8 @@ from nose.tools import raises, assert_equals
 from remotespark.livyclientlib.exceptions import LivyClientTimeoutException, LivyUnexpectedStatusException,\
     BadUserDataException, FailedToCreateSqlContextException
 from remotespark.livyclientlib.livysession import LivySession
-import remotespark.utils.configuration as conf
-import remotespark.utils.constants as constants
+import remotesparkcommon.configuration as conf
+import remotesparkcommon.constants as constants
 
 
 class DummyResponse:

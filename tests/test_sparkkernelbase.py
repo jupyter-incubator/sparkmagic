@@ -2,8 +2,8 @@ from mock import MagicMock, call
 from nose.tools import with_setup
 from remotespark.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 
-import remotespark.utils.configuration as conf
-from remotespark.utils.constants import LANG_PYTHON
+import remotesparkcommon.configuration as conf
+from remotesparkcommon.constants import LANG_PYTHON
 
 kernel = None
 execute_cell_mock = None

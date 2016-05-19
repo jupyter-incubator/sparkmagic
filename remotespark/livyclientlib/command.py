@@ -1,8 +1,8 @@
 import textwrap
 
-from remotespark.utils.guid import ObjectWithGuid
-from remotespark.utils.log import Log
-from remotespark.utils.sparkevents import SparkEvents
+from remotesparkcommon.guid import ObjectWithGuid
+from remotesparkcommon.log import Log
+from remotesparkcommon.sparkevents import SparkEvents
 
 from .exceptions import LivyUnexpectedStatusException
 
