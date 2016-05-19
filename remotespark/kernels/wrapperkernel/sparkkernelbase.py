@@ -77,7 +77,7 @@ class SparkKernelBase(IPythonKernel):
         self.logger.debug("Changed language.")
 
     def _register_auto_viz(self):
-        register_auto_viz_code = """from remotespark.datawidgets.utils import display_dataframe
+        register_auto_viz_code = """from datawidgets.utils import display_dataframe
 ip = get_ipython()
 ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.frame', 'DataFrame', display_dataframe)"""
         self._execute_cell(register_auto_viz_code, True, False, shutdown_if_error=True,
