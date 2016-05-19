@@ -1,8 +1,8 @@
-DESCRIPTION         = "RemoteSpark: Remote Spark execution with Livy"
-NAME                = "remotespark"
-PACKAGES            = ['remotespark']
-AUTHOR              = "Jupyter Development Team",
-AUTHOR_EMAIL        = "jupyter@googlegroups.org",
+DESCRIPTION         = "SparkMagic: Spark execution via Livy"
+NAME                = "sparkmagic"
+PACKAGES            = ['sparkmagic']
+AUTHOR              = "Jupyter Development Team"
+AUTHOR_EMAIL        = "jupyter@googlegroups.org"
 URL                 = 'https://github.com/jupyter-incubator/sparkmagic'
 DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/sparkmagic'
 LICENSE             = 'BSD 3-clause'
@@ -33,7 +33,7 @@ def version(path):
     raise RuntimeError("Unable to find version string.")
 
 
-VERSION = version('remotespark/__init__.py')
+VERSION = version('sparkmagic/__init__.py')
 
 
 
@@ -58,7 +58,7 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.4'],
       install_requires=[
           'requests',
-          'remotesparkcommon',
-          'datawidgets'
+          'hdijupyterutils',
+          'autovizwidget'
       ])
 

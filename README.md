@@ -31,12 +31,12 @@ Check out the [examples](examples) directory.
 
 2. (Optional) Install the wrapper kernels
 
-        jupyter-kernelspec install remotespark/kernels/sparkkernel
-        jupyter-kernelspec install remotespark/kernels/pysparkkernel
+        jupyter-kernelspec install sparkmagic/kernels/sparkkernel
+        jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
         
-3. (Optional) Copy the example configuration file to your home directory 
+3. (Optional) Copy the example configuration file to your home directory. Look at the example config at https://github.com/jupyter-incubator/hdijupyterutils
 
-        cp remotespark/example_config.json ~/.sparkmagic/config.json
+        touch ~/.sparkmagic/config.json
         
 ## Architecture
 
