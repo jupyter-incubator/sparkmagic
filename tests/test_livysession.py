@@ -394,7 +394,7 @@ class TestLivySession(object):
 
         session.delete()
 
-        assert_equals(session.ipython_display.send_error.call_count, 1)
+        assert_equals(session.ipython_display.send_error.call_count, 0)
 
     def test_create_sql_hive_context_happens_once(self):
         kind = constants.SESSION_KIND_SPARK
@@ -677,11 +677,11 @@ class TestLivySession(object):
 
         session.delete()
 
-        assert_equals(1, session.ipython_display.send_error.call_count)
+        assert_equals(0, session.ipython_display.send_error.call_count)
         self.spark_events.emit_session_deletion_start_event.assert_called_once_with(
             session.guid, session.kind, end_id, end_status)
         self.spark_events.emit_session_deletion_end_event.assert_called_once_with(
-            session.guid, session.kind, session.id, constants.DEAD_SESSION_STATUS, True, "", "")
+            session.guid, session.kind, end_id, constants.DEAD_SESSION_STATUS, True, "", "")
 
     def test_get_empty_app_id(self):
         self._verify_get_app_id("null", None)

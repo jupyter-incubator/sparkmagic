@@ -146,7 +146,7 @@ class LivySession(ObjectWithGuid):
         try:
             self.logger.debug(u"Deleting session '{}'".format(session_id))
 
-            if self.status != constants.NOT_STARTED_SESSION_STATUS and self.status != constants.DEAD_SESSION_STATUS:
+            if self.status != constants.NOT_STARTED_SESSION_STATUS:
                 self._http_client.delete_session(session_id)
                 self.status = constants.DEAD_SESSION_STATUS
                 self.id = -1
