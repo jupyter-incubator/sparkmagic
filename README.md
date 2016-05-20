@@ -27,10 +27,10 @@ Check out the [examples](examples) directory.
 
         pip install sparkmagic
 
-2. (Optional) Install the wrapper kernels
+2. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
 
-        jupyter-kernelspec install sparkmagic/kernels/sparkkernel
-        jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
+        jupyter-kernelspec install kernels/sparkkernel
+        jupyter-kernelspec install kernels/pysparkkernel
         
 3. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the example config at https://github.com/jupyter-incubator/hdijupyterutils
         
