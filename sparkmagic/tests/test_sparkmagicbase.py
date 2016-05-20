@@ -24,10 +24,6 @@ def test_get_livy_kind_covers_all_langs():
         get_livy_kind(lang)
 
 
-def test_print_endpoint_info_doesnt_throw():
-    SparkMagicBase.print_endpoint_info(range(5))
-
-
 def test_df_execution_without_output_var():
     shell = MagicMock()
     shell.user_ns = {}
