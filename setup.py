@@ -1,6 +1,6 @@
 DESCRIPTION         = "SparkMagic: Spark execution via Livy"
 NAME                = "sparkmagic"
-PACKAGES            = ['sparkmagic']
+PACKAGES            = ['sparkmagic', 'sparkmagic/controllerwidget', 'sparkmagic/kernels', 'sparkmagic/livyclientlib', 'sparkmagic/magics']
 AUTHOR              = "Jupyter Development Team"
 AUTHOR_EMAIL        = "jupyter@googlegroups.org"
 URL                 = 'https://github.com/jupyter-incubator/sparkmagic'
