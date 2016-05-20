@@ -57,8 +57,15 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4'],
       install_requires=[
-          'requests',
           'hdijupyterutils',
-          'autovizwidget'
+          'autovizwidget',
+          'ipython>=4.0.2,<5',		
+          'nose',		
+          'mock',		
+          'pandas>=0.17.1',
+          'numpy',		
+          'requests',
+          'ipykernel>=4.2.2,<5',		
+          'ipywidgets'
       ])
 

@@ -32,9 +32,7 @@ Check out the [examples](examples) directory.
         jupyter-kernelspec install sparkmagic/kernels/sparkkernel
         jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
         
-3. (Optional) Copy the example configuration file to your home directory. Look at the example config at https://github.com/jupyter-incubator/hdijupyterutils
-
-        touch ~/.sparkmagic/config.json
+3. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the example config at https://github.com/jupyter-incubator/hdijupyterutils
         
 ## Architecture
 
