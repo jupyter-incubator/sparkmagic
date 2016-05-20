@@ -119,7 +119,7 @@ def test_shutdown_cleans_up():
 def test_register_auto_viz():
     kernel._register_auto_viz()
 
-    assert call("from autovizwidget.utils import display_dataframe\nip = get_ipython()\nip.display_formatter"
+    assert call("from autovizwidget.widget.utils import display_dataframe\nip = get_ipython()\nip.display_formatter"
                 ".ipython_display_formatter.for_type_by_name('pandas.core.frame', 'DataFrame', display_dataframe)",
                 True, False, None, False) in execute_cell_mock.mock_calls
 
@@ -139,8 +139,9 @@ def test_load_magics():
     assert call("%load_ext sparkmagic.kernels", True, False, None, False) in execute_cell_mock.mock_calls
 
 
-@with_setup(_setup(), _teardown())
+@with_setup(_setup, _teardown)
 def test_delete_session():
     kernel._delete_session()
 
     assert call("%%_do_not_call_delete_session\n ", True, False) in execute_cell_mock.mock_calls
+

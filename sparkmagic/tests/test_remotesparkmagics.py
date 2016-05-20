@@ -45,7 +45,7 @@ def test_info_command_parses():
 @with_setup(_setup, _teardown)
 def test_info_endpoint_command_parses():
     print_info_mock = MagicMock()
-    magic.print_endpoint_info = print_info_mock
+    magic._print_endpoint_info = print_info_mock
     command = "info -u http://microsoft.com"
     spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=None)
 
