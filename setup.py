@@ -1,8 +1,15 @@
-DESCRIPTION         = "RemoteSpark: Remote Spark execution with Livy"
-NAME                = "remotespark"
-PACKAGES            = ['remotespark']
-AUTHOR              = "Jupyter Development Team",
-AUTHOR_EMAIL        = "jupyter@googlegroups.org",
+DESCRIPTION         = "SparkMagic: Spark execution via Livy"
+NAME                = "sparkmagic"
+PACKAGES            = ['sparkmagic',
+                       'sparkmagic/controllerwidget',
+                       'sparkmagic/kernels',
+                       'sparkmagic/livyclientlib',
+                       'sparkmagic/magics',
+                       'sparkmagic/kernels/pysparkkernel',
+                       'sparkmagic/kernels/sparkkernel',
+                       'sparkmagic/kernels/wrapperkernel']
+AUTHOR              = "Jupyter Development Team"
+AUTHOR_EMAIL        = "jupyter@googlegroups.org"
 URL                 = 'https://github.com/jupyter-incubator/sparkmagic'
 DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/sparkmagic'
 LICENSE             = 'BSD 3-clause'
@@ -33,7 +40,7 @@ def version(path):
     raise RuntimeError("Unable to find version string.")
 
 
-VERSION = version('remotespark/__init__.py')
+VERSION = version('sparkmagic/__init__.py')
 
 
 
@@ -46,6 +53,9 @@ setup(name=NAME,
       download_url=DOWNLOAD_URL,
       license=LICENSE,
       packages=PACKAGES,
+      include_package_data=True,
+      package_data={'sparkmagic': ['kernels/pysparkkernel/kernel.js', 'kernels/sparkkernel/kernel.js',
+                                   'kernels/pysparkkernel/kernel.json', 'kernels/sparkkernel/kernel.json']},
       classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -57,15 +67,15 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4'],
       install_requires=[
-          'ipython>=4.0.2,<5',
-          'nose',
-          'mock',
-          'requests',
-          'jupyter>=1,<2',
+          'hdijupyterutils',
+          'autovizwidget',
+          'ipython>=4.0.2,<5',		
+          'nose',		
+          'mock',		
           'pandas>=0.17.1',
-          'numpy',
-          'ipykernel>=4.2.2,<5',
-          'ipywidgets',
-          'plotly>=1.9.7,<2'
+          'numpy',		
+          'requests',
+          'ipykernel>=4.2.2,<5',		
+          'ipywidgets'
       ])
 

@@ -25,18 +25,14 @@ Check out the [examples](examples) directory.
 
 1. Install the library
 
-        git clone https://github.com/jupyter-incubator/sparkmagic
-        cd sparkmagic
-        pip install -e .
+        pip install sparkmagic
 
-2. (Optional) Install the wrapper kernels
+2. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
 
-        jupyter-kernelspec install remotespark/kernels/sparkkernel
-        jupyter-kernelspec install remotespark/kernels/pysparkkernel
+        jupyter-kernelspec install sparkmagic/kernels/sparkkernel
+        jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
         
-3. (Optional) Copy the example configuration file to your home directory 
-
-        cp remotespark/example_config.json ~/.sparkmagic/config.json
+3. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the example config at https://github.com/jupyter-incubator/hdijupyterutils
         
 ## Architecture
 
@@ -66,5 +62,11 @@ In practice this means that you must use Python for client-side data manipulatio
 
 We welcome contributions from everyone. 
 If you've made an improvement to our code, please send us a [pull request](https://github.com/jupyter-incubator/sparkmagic/pulls).
+
+To install, execute the following:
+
+        git clone https://github.com/jupyter-incubator/sparkmagic
+        cd sparkmagic
+        pip install -e .
 
 If you want to see an enhancement made but don't have time to work on it yourself, feel free to submit an [issue](https://github.com/jupyter-incubator/sparkmagic/issues) for us to deal with.
