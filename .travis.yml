@@ -7,4 +7,7 @@ install:
     - pip install -r autovizwidget/requirements.txt -e autovizwidget/.
     - pip install -r sparkmagic/requirements.txt -e sparkmagic/.
     - mkdir ~/.sparkmagic
-script: nosetests sparkmagic
+script:
+    - nosetests hdijupyterutils
+    - nosetests autovizwidget
+    - nosetests sparkmagic
