@@ -111,10 +111,10 @@ def test_df_execution_quiet_with_output_var():
 def test_link():
     url = u"https://microsoft.com"
     magic = SparkMagicBase(None)
-    assert_equals(magic._link(url), u"""<a href="https://microsoft.com">https://microsoft.com</a>""")
+    assert_equals(magic._link(u'Link', url), u"""<a target="_blank" href="https://microsoft.com">Link</a>""")
 
     url = None
-    assert_equals(magic._link(url), u"")
+    assert_equals(magic._link(u'Link', url), u"")
 
 
 def test_print_endpoint_info():
@@ -137,7 +137,16 @@ def test_print_endpoint_info():
     session2.get_driver_log_url.return_value = None
     magic._print_endpoint_info([session2, session1], current_session_id)
     magic.ipython_display.html.assert_called_once_with(u"""<table>
-<tr><th>ID</th><th>YARN application ID</th><th>Kind</th><th>State</th><th>Spark UI link</th><th>Driver log</th><th>Current session?</th></tr>\
-<tr><td>1</td><td>app1234</td><td>pyspark</td><td>idle</td><td><a href="https://microsoft.com/sparkui">https://microsoft.com/sparkui</a></td><td><a href="https://microsoft.com/driverlog">https://microsoft.com/driverlog</a></td><td>✔</td></tr>\
+<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>Current session?</th></tr>\
+<tr><td>1</td><td>app1234</td><td>pyspark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>\u2714</td></tr>\
 <tr><td>3</td><td>app5069</td><td>spark</td><td>busy</td><td></td><td></td><td></td></tr>\
 </table>""")
+
+
+def test_print_empty_endpoint_info():
+    magic = SparkMagicBase(None)
+    magic.ipython_display = MagicMock()
+    current_session_id = None
+    magic._print_endpoint_info([], current_session_id)
+    magic.ipython_display.html.assert_called_once_with(u'No active sessions.')
+

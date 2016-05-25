@@ -143,8 +143,7 @@ class KernelMagics(SparkMagicBase):
         else:
             current_session_id = None
 
-        self.ipython_display.html(u"Endpoint: {}<br>".format(self._link(self.endpoint.url)))
-        self.ipython_display.html(u"Session configs: <tt>{}</tt><br>".format(conf.get_session_properties(self.language)))
+        self.ipython_display.html(u"Current session configs: <tt>{}</tt><br>".format(conf.get_session_properties(self.language)))
 
         info_sessions = self.spark_controller.get_all_sessions_endpoint(self.endpoint)
         self._print_endpoint_info(info_sessions, current_session_id)
