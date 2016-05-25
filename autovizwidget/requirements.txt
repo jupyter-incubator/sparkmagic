@@ -1,0 +1,2 @@
+plotly==1.9.7
+hdijupyterutils

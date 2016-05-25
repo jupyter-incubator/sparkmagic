@@ -1,0 +1,7 @@
+nose
+mock
+ipywidgets
+ipython==4.0.2
+ipykernel==4.2.2
+pandas==0.17.1
+numpy
