@@ -10,8 +10,8 @@ PACKAGES            = ['sparkmagic',
                        'sparkmagic/kernels/wrapperkernel']
 AUTHOR              = "Jupyter Development Team"
 AUTHOR_EMAIL        = "jupyter@googlegroups.org"
-URL                 = 'https://github.com/jupyter-incubator/sparkmagic'
-DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/sparkmagic'
+URL                 = 'https://github.com/jupyter-incubator/sparkmagic/sparkmagic'
+DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/sparkmagic/sparkmagic'
 LICENSE             = 'BSD 3-clause'
 
 import io

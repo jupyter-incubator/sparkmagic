@@ -3,8 +3,8 @@ NAME                = "autovizwidget"
 PACKAGES            = ['autovizwidget', 'autovizwidget/plotlygraphs', 'autovizwidget/widget']
 AUTHOR              = "Jupyter Development Team"
 AUTHOR_EMAIL        = "jupyter@googlegroups.org"
-URL                 = 'https://github.com/jupyter-incubator/autovizwidget'
-DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/autovizwidget'
+URL                 = 'https://github.com/jupyter-incubator/sparkmagic/autovizwidget'
+DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/sparkmagic/autovizwidget'
 LICENSE             = 'BSD 3-clause'
 
 import io

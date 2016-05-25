@@ -3,9 +3,9 @@ python:
     - "2.7"
     - "3.3"
 install:
-    - pip install -r hdijupyterutils/requirements.txt -e hdijupyterutils/.
-    - pip install -r autovizwidget/requirements.txt -e autovizwidget/.
-    - pip install -r sparkmagic/requirements.txt -e sparkmagic/.
+    - pip install -r hdijupyterutils/requirements.txt -e hdijupyterutils
+    - pip install -r autovizwidget/requirements.txt -e autovizwidget
+    - pip install -r sparkmagic/requirements.txt -e sparkmagic
     - mkdir ~/.sparkmagic
 script:
     - nosetests hdijupyterutils

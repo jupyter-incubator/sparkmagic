@@ -3,8 +3,8 @@ NAME                = "hdijupyterutils"
 PACKAGES            = ['hdijupyterutils']
 AUTHOR              = "Jupyter Development Team"
 AUTHOR_EMAIL        = "jupyter@googlegroups.org"
-URL                 = 'https://github.com/jupyter-incubator/hdijupyterutils'
-DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/hdijupyterutils'
+URL                 = 'https://github.com/jupyter-incubator/sparkmagic/hdijupyterutils'
+DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/sparkmagic/hdijupyterutils'
 LICENSE             = 'BSD 3-clause'
 
 import io
