@@ -3,6 +3,8 @@ python:
     - "2.7"
     - "3.3"
 install:
-    - pip install -r requirements.txt -e .
+    - pip install -r hdijupyterutils/requirements.txt -e hdijupyterutils/.
+    - pip install -r autovizwidget/requirements.txt -e autovizwidget/.
+    - pip install -r sparkmagic/requirements.txt -e sparkmagic/.
     - mkdir ~/.sparkmagic
-script: nosetests
+script: nosetests sparkmagic
