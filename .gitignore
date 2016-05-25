@@ -61,3 +61,4 @@ target/
 
 .idea/*
 MANIFEST
+.vscode/tasks.json
