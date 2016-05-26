@@ -1,5 +1,5 @@
 import traceback
-from hdijupyterutils.constants import EXPECTED_ERROR_MSG, INTERNAL_ERROR_MSG
+from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, INTERNAL_ERROR_MSG
 
 
 # == EXCEPTIONS ==
