@@ -332,7 +332,7 @@ class KernelMagics(SparkMagicBase):
         self.refresh_configuration()
 
     def refresh_configuration(self):
-        credentials = getattr(conf, 'kernel_' + self.language + '_credentials')()
+        credentials = getattr(conf, 'base64_kernel_' + self.language + '_credentials')()
         (username, password, url) = (credentials['username'], credentials['password'], credentials['url'])
         self.endpoint = Endpoint(url, username, password)
 
