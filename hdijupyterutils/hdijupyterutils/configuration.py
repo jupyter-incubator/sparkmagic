@@ -7,19 +7,26 @@ from .utils import join_paths
 from .filesystemreaderwriter import FileSystemReaderWriter
 from .constants import LOGGING_CONFIG_CLASS_NAME
 
+_overrides = None
 
 class Configuration(object):
+    
     def __init__(self, home_path, config_file_name, fsrw_class=None):
-        self._overrides = None
         self.home_path = home_path
         self.config_file_name = config_file_name
         self.fsrw_class = fsrw_class
+        
+    @property
+    def overrides(self):
+        global _overrides
+        return _overrides
 
     def initialize(self):
         """Checks if the configuration is initialized. If so, initializes the
         global configuration object by reading from the configuration
         file, overwriting the current set of overrides if there is one"""
-        if self._overrides is None:
+        global _overrides
+        if _overrides is None:
             self.load()
 
     def load(self):
@@ -42,24 +49,28 @@ class Configuration(object):
     def override_all(self, obj):
         """Given a dictionary representing the overrided defaults for this
         configuration, initialize the global configuration."""
-        self._overrides = obj
+        global _overrides
+        _overrides = obj
 
     def override(self, config, value):
         """Given a string representing a configuration and a value for that configuration,
         override the configuration. Initialize the overrided configuration beforehand."""
+        global _overrides
         self.initialize()
-        self._overrides[config] = value
+        _overrides[config] = value
 
     @staticmethod
     def _override(f):
         """A decorator which first initializes the overrided configurations,
         then checks the global overrided defaults for the given configuration,
         calling the function to get the default result otherwise."""
+        global _overrides
+        
         def ret(self):
             self.initialize()
             name = f.__name__
-            if name in self._overrides:
-                return self._overrides[name]
+            if name in _overrides:
+                return _overrides[name]
             else:
                 return f()
         # Hack! We do this so that we can query the .__name__ of the function

@@ -10,7 +10,7 @@ def _setup():
     global conf
     
     conf = SparkMagicConfiguration()
-    conf._overrides = None
+    conf.override_all(None)
     
 
 @with_setup(_setup)
@@ -19,7 +19,7 @@ def test_configuration_override_base64_password():
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
     conf.override(conf.status_sleep_seconds.__name__, 1)
-    assert_equals(conf._overrides, { conf.kernel_python_credentials.__name__: kpc,
+    assert_equals(conf.overrides, { conf.kernel_python_credentials.__name__: kpc,
                                      conf.status_sleep_seconds.__name__: 1 })
     assert_equals(conf.status_sleep_seconds(), 1)
     assert_equals(conf.base64_kernel_python_credentials(), { 'username': 'U', 'password': 'password', 'url': 'L' })
@@ -31,7 +31,7 @@ def test_configuration_override_fallback_to_password():
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
     conf.override(conf.status_sleep_seconds.__name__, 1)
-    assert_equals(conf._overrides, { conf.kernel_python_credentials.__name__: kpc,
+    assert_equals(conf.overrides, { conf.kernel_python_credentials.__name__: kpc,
                                      conf.status_sleep_seconds.__name__: 1 })
     assert_equals(conf.status_sleep_seconds(), 1)
     assert_equals(conf.base64_kernel_python_credentials(), kpc)
@@ -43,7 +43,7 @@ def test_configuration_override_work_with_empty_password():
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
     conf.override(conf.status_sleep_seconds.__name__, 1)
-    assert_equals(conf._overrides, { conf.kernel_python_credentials.__name__: kpc,
+    assert_equals(conf.overrides, { conf.kernel_python_credentials.__name__: kpc,
                                      conf.status_sleep_seconds.__name__: 1 })
     assert_equals(conf.status_sleep_seconds(), 1)
     assert_equals(conf.base64_kernel_python_credentials(),  { 'username': 'U', 'password': '', 'url': '' })

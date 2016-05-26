@@ -353,15 +353,14 @@ def test_configure():
     magic.session_started = True
     conf.override_all({})
     magic.configure('', "{\"extra\": \"yes\"}")
-
-    assert conf.session_configs() == {}
+    assert_equals(conf.session_configs(), {})
     assert_equals(ipython_display.send_error.call_count, 1)
 
     # Session started - with -f
     magic.info.reset_mock()
     conf.override_all({})
     magic.configure("-f", "{\"extra\": \"yes\"}")
-    assert conf.session_configs() == {"extra": "yes"}
+    assert_equals(conf.session_configs(), {"extra": "yes"})
     spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK, "extra": "yes"})
