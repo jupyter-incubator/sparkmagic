@@ -1,9 +1,9 @@
 from mock import MagicMock
 from nose.tools import with_setup, raises, assert_equals, assert_is
 from IPython.core.magic import magics_class
-import hdijupyterutils.constants as constants
-import hdijupyterutils.configuration as conf
 
+import sparkmagic.utils.constants as constants
+from sparkmagic.utils.configuration import SparkMagicConfiguration
 from sparkmagic.kernels.kernelmagics import KernelMagics
 from sparkmagic.livyclientlib.exceptions import LivyClientTimeoutException, BadUserDataException,\
     FailedToCreateSqlContextException, LivyUnexpectedStatusException, SessionManagementException,\
@@ -11,11 +11,13 @@ from sparkmagic.livyclientlib.exceptions import LivyClientTimeoutException, BadU
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.command import Command
 
+
 magic = None
 spark_controller = None
 shell = None
 ipython_display = MagicMock()
 spark_events = None
+conf = None
 
 
 @magics_class
@@ -31,7 +33,9 @@ class TestKernelMagics(KernelMagics):
 
 
 def _setup():
-    global magic, spark_controller, shell, ipython_display, spark_events
+    global magic, spark_controller, shell, ipython_display, spark_events, conf
+    
+    conf = SparkMagicConfiguration()
 
     conf.override_all({})
     spark_events = MagicMock()

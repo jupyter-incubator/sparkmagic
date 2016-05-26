@@ -1,5 +1,4 @@
-from hdijupyterutils.constants import LANG_PYTHON, LANG_SCALA
-
+from sparkmagic.utils.constants import LANG_PYTHON, LANG_SCALA
 from sparkmagic.kernels.sparkkernel.sparkkernel import SparkKernel
 from sparkmagic.kernels.pysparkkernel.pysparkkernel import PySparkKernel
 

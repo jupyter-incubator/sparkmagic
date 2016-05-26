@@ -1,11 +1,8 @@
-﻿# Copyright (c) 2015  aggftw@gmail.com
-# Distributed under the terms of the Modified BSD License.
+﻿# Distributed under the terms of the Modified BSD License.
 
 import os
 import uuid
 
-from IPython.core.error import UsageError
-from IPython.core.magic_arguments import parse_argstring
 import numpy as np
 import pandas as pd
 

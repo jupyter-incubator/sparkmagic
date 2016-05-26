@@ -1,8 +1,7 @@
 from mock import MagicMock, call
 from nose.tools import with_setup
-import hdijupyterutils.configuration as conf
-from hdijupyterutils.constants import LANG_PYTHON
 
+from sparkmagic.utils.constants import LANG_PYTHON
 from sparkmagic.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 
 
@@ -33,7 +32,7 @@ def _setup():
 
 
 def _teardown():
-    conf.load()
+    pass
 
 
 @with_setup(_setup, _teardown)

@@ -10,8 +10,10 @@ from __future__ import print_function
 from IPython.core.magic import Magics, magics_class
 from hdijupyterutils.ipythondisplay import IpythonDisplay
 from hdijupyterutils.log import Log
-from hdijupyterutils.sparkevents import SparkEvents
 
+from sparkmagic.utils.sparkevents import SparkEvents
+from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
+from sparkmagic.utils.configuration import SparkMagicConfiguration
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 
@@ -22,7 +24,7 @@ class SparkMagicBase(Magics):
         # You must call the parent constructor
         super(SparkMagicBase, self).__init__(shell)
 
-        self.logger = Log("SparkMagics")
+        self.logger = Log(MAGICS_LOGGER_NAME, SparkMagicConfiguration().logging_config(), u"SparkMagics")
         self.ipython_display = IpythonDisplay()
         self.spark_controller = SparkController(self.ipython_display)
 

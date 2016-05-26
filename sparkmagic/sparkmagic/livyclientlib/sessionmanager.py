@@ -3,11 +3,13 @@
 from hdijupyterutils.log import Log
 
 from sparkmagic.livyclientlib.exceptions import SessionManagementException
+from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
+from sparkmagic.utils.configuration import SparkMagicConfiguration
 
 
 class SessionManager(object):
     def __init__(self):
-        self.logger = Log(u"SessionManager")
+        self.logger = Log(MAGICS_LOGGER_NAME, SparkMagicConfiguration().logging_config(), u"SessionManager")
 
         self._sessions = dict()
 

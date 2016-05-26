@@ -1,8 +1,8 @@
 from mock import MagicMock
 from nose.tools import with_setup
-import hdijupyterutils.configuration as conf
-from hdijupyterutils.constants import EXPECTED_ERROR_MSG
 
+from sparkmagic.utils.configuration import SparkMagicConfiguration
+from sparkmagic.utils.constants import EXPECTED_ERROR_MSG
 from sparkmagic.magics.remotesparkmagics import RemoteSparkMagics
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
@@ -14,11 +14,13 @@ magic = None
 spark_controller = None
 shell = None
 ipython_display = None
+conf = None
 
 
 def _setup():
-    global magic, spark_controller, shell, ipython_display
+    global magic, spark_controller, shell, ipython_display, conf
 
+    conf = SparkMagicConfiguration()    
     conf.override_all({})
 
     magic = RemoteSparkMagics(shell=None, widget=MagicMock())

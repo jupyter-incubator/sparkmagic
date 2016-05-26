@@ -1,5 +1,3 @@
-"""Utility to read configs for autovizwidget.
-"""
 # Distributed under the terms of the Modified BSD License.
 from hdijupyterutils.configuration import Configuration
 from hdijupyterutils.constants import EVENTS_HANDLER_CLASS_NAME, LOGGING_CONFIG_CLASS_NAME
@@ -8,6 +6,8 @@ from .constants import HOME_PATH, CONFIG_FILE
     
 
 class AutoVizConfiguration(Configuration):
+    """Utility to read configs for autovizwidget.
+    """
     def __init__(self):
         super(AutoVizConfiguration, self).__init__(HOME_PATH, CONFIG_FILE)
         

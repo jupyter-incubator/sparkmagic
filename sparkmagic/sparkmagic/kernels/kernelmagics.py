@@ -9,11 +9,12 @@ import json
 from IPython.core.magic import magics_class
 from IPython.core.magic import needs_local_scope, cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments
-from hdijupyterutils.constants import LANGS_SUPPORTED
-from hdijupyterutils.sparkevents import SparkEvents
-from hdijupyterutils.utils import generate_uuid, get_livy_kind, parse_argstring_or_throw
-import hdijupyterutils.configuration as conf
+from hdijupyterutils.utils import generate_uuid
 
+from sparkmagic.utils.configuration import SparkMagicConfiguration
+from sparkmagic.utils.utils import get_livy_kind, parse_argstring_or_throw
+from sparkmagic.utils.sparkevents import SparkEvents
+from sparkmagic.utils.constants import LANGS_SUPPORTED
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
@@ -45,6 +46,8 @@ class KernelMagics(SparkMagicBase):
     def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
+        
+        self.conf = SparkMagicConfiguration()
 
         self.session_name = u"session_name"
         self.session_started = False
@@ -143,7 +146,7 @@ class KernelMagics(SparkMagicBase):
         else:
             current_session_id = None
 
-        self.ipython_display.html(u"Current session configs: <tt>{}</tt><br>".format(conf.get_session_properties(self.language)))
+        self.ipython_display.html(u"Current session configs: <tt>{}</tt><br>".format(self.conf.get_session_properties(self.language)))
 
         info_sessions = self.spark_controller.get_all_sessions_endpoint(self.endpoint)
         self._print_endpoint_info(info_sessions, current_session_id)
@@ -284,14 +287,14 @@ class KernelMagics(SparkMagicBase):
 
         if not self.session_started:
             skip = False
-            properties = conf.get_session_properties(self.language)
+            properties = self.conf.get_session_properties(self.language)
             self.session_started = True
 
             try:
                 self.spark_controller.add_session(self.session_name, self.endpoint, skip, properties)
             except Exception as e:
                 self.fatal_error = True
-                self.fatal_error_message = conf.fatal_error_suggestion().format(e)
+                self.fatal_error_message = self.conf.fatal_error_suggestion().format(e)
                 self.logger.error(u"Error creating session: {}".format(e))
                 self.ipython_display.send_error(self.fatal_error_message)
                 return False
@@ -347,7 +350,7 @@ class KernelMagics(SparkMagicBase):
 
     @staticmethod
     def _override_session_settings(settings):
-        conf.override(conf.session_configs.__name__, settings)
+        self.conf.override(self.conf.session_configs.__name__, settings)
 
     @staticmethod
     def _generate_uuid():

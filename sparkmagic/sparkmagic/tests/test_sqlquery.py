@@ -3,18 +3,24 @@ from mock import MagicMock, call
 from nose.tools import with_setup, assert_equals, assert_false, raises
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
-from hdijupyterutils.constants import LONG_RANDOM_VARIABLE_NAME
-import hdijupyterutils.configuration as conf
 
+from sparkmagic.utils.configuration import SparkMagicConfiguration
+from sparkmagic.utils.constants import LONG_RANDOM_VARIABLE_NAME
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 
 
+def _setup():
+    global conf
+    conf = SparkMagicConfiguration()
+    
+
 def _teardown():
-    conf.load()
+    pass
 
 
+@with_setup(_setup, _teardown)
 def test_sqlquery_initializes():
     query = "HERE IS MY SQL QUERY SELECT * FROM CREATE DROP TABLE"
     samplemethod = "take"
@@ -27,7 +33,7 @@ def test_sqlquery_initializes():
     assert_equals(sqlquery.samplefraction, samplefraction)
 
 
-@with_setup(teardown=_teardown)
+@with_setup(_setup, _teardown)
 def test_sqlquery_loads_defaults():
     defaults = {
         conf.default_samplemethod.__name__: "sample",
@@ -43,6 +49,7 @@ def test_sqlquery_loads_defaults():
     assert_equals(sqlquery.samplefraction, defaults[conf.default_samplefraction.__name__])
 
 
+@with_setup(_setup, _teardown)
 @raises(BadUserDataException)
 def test_sqlquery_rejects_bad_data():
     query = "HERE IS MY SQL QUERY SELECT * FROM CREATE DROP TABLE"
@@ -50,6 +57,7 @@ def test_sqlquery_rejects_bad_data():
     _ = SQLQuery(query, samplemethod)
 
 
+@with_setup(_setup, _teardown)
 def test_pyspark_livy_sql_options():
     query = "abc"
 
@@ -80,6 +88,7 @@ def test_pyspark_livy_sql_options():
                                   LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
 
 
+@with_setup(_setup, _teardown)
 def test_scala_livy_sql_options():
     query = "abc"
 
@@ -100,6 +109,7 @@ def test_scala_livy_sql_options():
                   Command('sqlContext.sql("""{}""").toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(query)))
 
 
+@with_setup(_setup, _teardown)
 def test_execute_sql():
     spark_events = MagicMock()
     sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2, spark_events=spark_events)
@@ -121,6 +131,7 @@ def test_execute_sql():
                                                                        True, "", "")
 
 
+@with_setup(_setup, _teardown)
 def test_execute_sql_no_results():
     global executed_once
     executed_once = False
@@ -146,6 +157,7 @@ def test_execute_sql_no_results():
                                                                        True, "", "")
 
 
+@with_setup(_setup, _teardown)
 def test_execute_sql_failure_emits_event():
     spark_events = MagicMock()
     sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2, spark_events)
@@ -166,6 +178,7 @@ def test_execute_sql_failure_emits_event():
                                                                            True, "ValueError", "yo")
 
 
+@with_setup(_setup, _teardown)
 def test_unicode_sql():
     query = u"SELECT 'è'"
 

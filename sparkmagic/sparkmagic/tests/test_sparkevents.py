@@ -1,8 +1,10 @@
-from hdijupyterutils.sparkevents import SparkEvents
-import hdijupyterutils.constants as constants
-import hdijupyterutils.utils as utils
+from hdijupyterutils.constants import INSTANCE_ID, EVENT_NAME, TIMESTAMP
+from hdijupyterutils.utils import get_instance_id, generate_uuid
 from nose.tools import with_setup, raises
 from mock import MagicMock
+
+import sparkmagic.utils.constants as constants
+from sparkmagic.utils.sparkevents import SparkEvents
 
 
 def _setup():
@@ -10,12 +12,12 @@ def _setup():
 
     spark_events = SparkEvents()
     spark_events.handler = MagicMock()
-    spark_events._get_utc_date_time = MagicMock()
+    spark_events.get_utc_date_time = MagicMock()
     spark_events._verify_language_ok = MagicMock()
-    time_stamp = spark_events._get_utc_date_time()
-    guid1 = utils.generate_uuid()
-    guid2 = utils.generate_uuid()
-    guid3 = utils.generate_uuid()
+    time_stamp = spark_events.get_utc_date_time()
+    guid1 = generate_uuid()
+    guid2 = generate_uuid()
+    guid3 = generate_uuid()
 
 
 def _teardown():
@@ -25,13 +27,13 @@ def _teardown():
 @with_setup(_setup, _teardown)
 def test_emit_library_loaded_event():
     event_name = constants.LIBRARY_LOADED_EVENT
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp)]
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp)]
 
     spark_events.emit_library_loaded_event()
 
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
@@ -39,16 +41,16 @@ def test_emit_library_loaded_event():
 def test_emit_session_creation_start_event():
     language = constants.SESSION_KIND_SPARK
     event_name = constants.SESSION_CREATION_START_EVENT
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
                    (constants.SESSION_GUID, guid1),
                    (constants.LIVY_KIND, language)]
 
     spark_events.emit_session_creation_start_event(guid1, language)
 
     spark_events._verify_language_ok.assert_called_once_with(language)
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
@@ -58,9 +60,9 @@ def test_emit_session_creation_end_event():
     event_name = constants.SESSION_CREATION_END_EVENT
     status = constants.BUSY_SESSION_STATUS
     session_id = 0
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
                    (constants.SESSION_GUID, guid1),
                    (constants.LIVY_KIND, language),
                    (constants.SESSION_ID, session_id),
@@ -72,7 +74,7 @@ def test_emit_session_creation_end_event():
     spark_events.emit_session_creation_end_event(guid1, language, session_id, status, True, "", "")
 
     spark_events._verify_language_ok.assert_called_once_with(language)
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
@@ -82,9 +84,9 @@ def test_emit_session_deletion_start_event():
     event_name = constants.SESSION_DELETION_START_EVENT
     status = constants.BUSY_SESSION_STATUS
     session_id = 0
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
                    (constants.SESSION_GUID, guid1),
                    (constants.LIVY_KIND, language),
                    (constants.SESSION_ID, session_id),
@@ -93,7 +95,7 @@ def test_emit_session_deletion_start_event():
     spark_events.emit_session_deletion_start_event(guid1, language, session_id, status)
 
     spark_events._verify_language_ok.assert_called_once_with(language)
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
@@ -103,9 +105,9 @@ def test_emit_session_deletion_end_event():
     event_name = constants.SESSION_DELETION_END_EVENT
     status = constants.BUSY_SESSION_STATUS
     session_id = 0
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
                    (constants.SESSION_GUID, guid1),
                    (constants.LIVY_KIND, language),
                    (constants.SESSION_ID, session_id),
@@ -117,7 +119,7 @@ def test_emit_session_deletion_end_event():
     spark_events.emit_session_deletion_end_event(guid1, language, session_id, status, True, "", "")
 
     spark_events._verify_language_ok.assert_called_once_with(language)
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
@@ -127,9 +129,9 @@ def test_emit_statement_execution_start_event():
     session_id = 7
     event_name = constants.STATEMENT_EXECUTION_START_EVENT
 
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
                    (constants.SESSION_GUID, guid1),
                    (constants.LIVY_KIND, language),
                    (constants.SESSION_ID, session_id),
@@ -138,7 +140,7 @@ def test_emit_statement_execution_start_event():
     spark_events.emit_statement_execution_start_event(guid1, language, session_id, guid2)
 
     spark_events._verify_language_ok.assert_called_once_with(language)
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
@@ -152,9 +154,9 @@ def test_emit_statement_execution_end_event():
     exception_type = ''
     exception_message = 'foo'
 
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
                    (constants.SESSION_GUID, guid1),
                    (constants.LIVY_KIND, language),
                    (constants.SESSION_ID, session_id),
@@ -168,7 +170,7 @@ def test_emit_statement_execution_end_event():
                                                     exception_type, exception_message)
 
     spark_events._verify_language_ok.assert_called_once_with(language)
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
@@ -181,9 +183,9 @@ def test_emit_sql_execution_start_event():
     maxrows = 12
     samplefraction = 0.5
 
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
                    (constants.SESSION_GUID, guid1),
                    (constants.LIVY_KIND, language),
                    (constants.SESSION_ID, session_id),
@@ -196,7 +198,7 @@ def test_emit_sql_execution_start_event():
                                                 maxrows, samplefraction)
 
     spark_events._verify_language_ok.assert_called_once_with(language)
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
@@ -209,9 +211,9 @@ def test_emit_sql_execution_end_event():
     exception_type = 'ValueError'
     exception_message = 'You screwed up'
 
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
                    (constants.SESSION_GUID, guid1),
                    (constants.LIVY_KIND, language),
                    (constants.SESSION_ID, session_id),
@@ -225,23 +227,7 @@ def test_emit_sql_execution_end_event():
                                               success, exception_type, exception_message)
 
     spark_events._verify_language_ok.assert_called_once_with(language)
-    spark_events._get_utc_date_time.assert_called_with()
-    spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
-
-
-@with_setup(_setup, _teardown)
-def test_emit_graph_render_event():
-    event_name = constants.GRAPH_RENDER_EVENT
-    graph_type = 'Bar'
-
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
-                   (constants.GRAPH_TYPE, graph_type)]
-
-    spark_events.emit_graph_render_event(graph_type)
-
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
@@ -251,9 +237,9 @@ def test_emit_magic_execution_start_event():
     magic_name = 'sql'
     language = constants.SESSION_KIND_SPARKR
 
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
                    (constants.MAGIC_NAME, magic_name),
                    (constants.LIVY_KIND, language),
                    (constants.MAGIC_GUID, guid1)]
@@ -261,7 +247,7 @@ def test_emit_magic_execution_start_event():
     spark_events.emit_magic_execution_start_event(magic_name, language, guid1)
 
     spark_events._verify_language_ok.assert_called_once_with(language)
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
@@ -274,9 +260,9 @@ def test_emit_magic_execution_end_event():
     exception_type = ''
     exception_message = ''
 
-    kwargs_list = [(constants.INSTANCE_ID, utils.get_instance_id()),
-                   (constants.EVENT_NAME, event_name),
-                   (constants.TIMESTAMP, time_stamp),
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
                    (constants.MAGIC_NAME, magic_name),
                    (constants.LIVY_KIND, language),
                    (constants.MAGIC_GUID, guid1),
@@ -288,7 +274,7 @@ def test_emit_magic_execution_end_event():
                                                 exception_type, exception_message)
 
     spark_events._verify_language_ok.assert_called_once_with(language)
-    spark_events._get_utc_date_time.assert_called_with()
+    spark_events.get_utc_date_time.assert_called_with()
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 

@@ -9,11 +9,11 @@ import json
 from IPython.core.magic import line_cell_magic, needs_local_scope
 from IPython.core.magic import magics_class
 from IPython.core.magic_arguments import argument, magic_arguments
-import hdijupyterutils.configuration as conf
-from hdijupyterutils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
-from hdijupyterutils.utils import parse_argstring_or_throw
 
+from sparkmagic.utils.configuration import SparkMagicConfiguration
+from sparkmagic.utils.utils import parse_argstring_or_throw
+from sparkmagic.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
 from sparkmagic.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
@@ -26,6 +26,8 @@ class RemoteSparkMagics(SparkMagicBase):
     def __init__(self, shell, data=None, widget=None):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell, data)
+
+        self.conf = SparkMagicConfiguration()
 
         self.endpoints = {}
         if widget is None:
@@ -117,7 +119,7 @@ class RemoteSparkMagics(SparkMagicBase):
                 self._print_local_info()
         # config
         elif subcommand == "config":
-            conf.override(conf.session_configs.__name__, json.loads(cell))
+            self.conf.override(self.conf.session_configs.__name__, json.loads(cell))
         # add
         elif subcommand == "add":
             if args.url is None:
@@ -129,7 +131,7 @@ class RemoteSparkMagics(SparkMagicBase):
             endpoint = Endpoint(args.url, args.user, args.password)
             skip = args.skip
 
-            properties = conf.get_session_properties(language)
+            properties = self.conf.get_session_properties(language)
 
             self.spark_controller.add_session(name, endpoint, skip, properties)
         # delete
@@ -185,7 +187,7 @@ class RemoteSparkMagics(SparkMagicBase):
 {}
     Session configs:
         {}
-""".format("\n".join(sessions_info), conf.session_configs()))
+""".format("\n".join(sessions_info), self.conf.session_configs()))
 
         
 def load_ipython_extension(ip):

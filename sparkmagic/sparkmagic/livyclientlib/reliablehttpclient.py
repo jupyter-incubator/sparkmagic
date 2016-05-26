@@ -3,9 +3,11 @@
 import json
 from time import sleep
 import requests
-import hdijupyterutils.configuration as conf
 from hdijupyterutils.log import Log
 
+from sparkmagic.utils.configuration import SparkMagicConfiguration
+from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
+from sparkmagic.utils.configuration import SparkMagicConfiguration
 from sparkmagic.livyclientlib.exceptions import HttpClientException
 
 
@@ -16,9 +18,10 @@ class ReliableHttpClient(object):
         self._endpoint = endpoint
         self._headers = headers
         self._retry_policy = retry_policy
-        self.logger = Log(u"ReliableHttpClient")
+        self.logger = Log(MAGICS_LOGGER_NAME, SparkMagicConfiguration().logging_config(), u"ReliableHttpClient")
+        self.conf = SparkMagicConfiguration()
 
-        self.verify_ssl = not conf.ignore_ssl_errors()
+        self.verify_ssl = not self.conf.ignore_ssl_errors()
         if not self.verify_ssl:
             self.logger.debug(u"ATTENTION: Will ignore SSL errors. This might render you vulnerable to attacks.")
             requests.packages.urllib3.disable_warnings()

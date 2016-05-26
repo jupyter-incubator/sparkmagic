@@ -2,7 +2,8 @@
 # Distributed under the terms of the Modified BSD License.
 
 
-CONFIG_JSON = "config.json"
+HOME_PATH = "~/.sparkmagic"
+CONFIG_FILE = "config.json"
 
 SESSION_KIND_SPARK = "spark"
 SESSION_KIND_PYSPARK = "pyspark"

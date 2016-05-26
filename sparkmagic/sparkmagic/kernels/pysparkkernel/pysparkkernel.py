@@ -1,7 +1,6 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
-from hdijupyterutils.constants import LANG_PYTHON
-
+from sparkmagic.utils.constants import LANG_PYTHON
 from sparkmagic.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 
 

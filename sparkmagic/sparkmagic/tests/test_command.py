@@ -1,11 +1,18 @@
 from mock import MagicMock
-from nose.tools import assert_equals
-from hdijupyterutils.constants import SESSION_KIND_SPARK
-import hdijupyterutils.configuration as conf
+from nose.tools import assert_equals, with_setup
 
+from sparkmagic.utils.configuration import SparkMagicConfiguration
+from sparkmagic.utils.constants import SESSION_KIND_SPARK
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.livysession import LivySession
 from . import test_livysession as tls
+
+
+def _setup():
+    global conf
+    
+    conf = SparkMagicConfiguration()
+    
 
 def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
                     sql_created=False, http_client=None, spark_events=None):
@@ -17,6 +24,8 @@ def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
     session = LivySession(http_client, {"kind": kind}, ipython_display, session_id, sql_created, spark_events)
     return session
 
+
+@with_setup(_setup)
 def test_execute():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
@@ -47,6 +56,7 @@ def test_execute():
                                                                                       0, True, "", "")
 
 
+@with_setup(_setup)
 def test_execute_failure_wait_for_session_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
@@ -77,6 +87,7 @@ def test_execute_failure_wait_for_session_emits_event():
         assert_equals(e, session.wait_for_idle.side_effect)
 
 
+@with_setup(_setup)
 def test_execute_failure_post_statement_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
@@ -106,6 +117,7 @@ def test_execute_failure_post_statement_emits_event():
         assert_equals(e, http_client.post_statement.side_effect)
 
 
+@with_setup(_setup)
 def test_execute_failure_get_statement_output_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK

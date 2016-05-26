@@ -3,9 +3,10 @@
 import requests
 from ipykernel.ipkernel import IPythonKernel
 from hdijupyterutils.ipythondisplay import IpythonDisplay
-import hdijupyterutils.configuration as conf
 from hdijupyterutils.log import Log
 
+from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
+from sparkmagic.utils.configuration import SparkMagicConfiguration
 from sparkmagic.livyclientlib.exceptions import wrap_unexpected_exceptions
 from sparkmagic.kernels.wrapperkernel.usercodeparser import UserCodeParser
 
@@ -25,7 +26,9 @@ class SparkKernelBase(IPythonKernel):
 
         super(SparkKernelBase, self).__init__(**kwargs)
 
-        self.logger = Log("_jupyter_kernel".format(self.session_language))
+        self.conf = SparkMagicConfiguration()
+
+        self.logger = Log(MAGICS_LOGGER_NAME, self.conf.logging_config(), u"_jupyter_kernel".format(self.session_language))
         self._fatal_error = None
         self.ipython_display = IpythonDisplay()
 
@@ -40,7 +43,7 @@ class SparkKernelBase(IPythonKernel):
         if not kwargs.get("testing", False):
             self._load_magics_extension()
             self._change_language()
-            if conf.use_auto_viz():
+            if self.conf.use_auto_viz():
                 self._register_auto_viz()
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
@@ -129,7 +132,7 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
 
     def _repeat_fatal_error(self):
         """Throws an error that has already been queued."""
-        error = conf.fatal_error_suggestion().format(self._fatal_error)
+        error = self.conf.fatal_error_suggestion().format(self._fatal_error)
         self.logger.error(error)
         self.ipython_display.send_error(error)
         return self._complete_cell()

@@ -2,8 +2,8 @@ from IPython.core.error import UsageError
 from mock import MagicMock
 from nose.tools import assert_equals, assert_is
 
-from hdijupyterutils.exceptions import BadUserDataException
-from hdijupyterutils.utils import parse_argstring_or_throw
+from sparkmagic.livyclientlib.exceptions import BadUserDataException
+from sparkmagic.utils.utils import parse_argstring_or_throw
 
 
 

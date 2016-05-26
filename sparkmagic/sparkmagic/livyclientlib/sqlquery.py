@@ -1,11 +1,11 @@
 import json
 import pandas as pd
-import hdijupyterutils.configuration as conf
-import hdijupyterutils.constants as constants
 from hdijupyterutils.guid import ObjectWithGuid
-from hdijupyterutils.sparkevents import SparkEvents
 from hdijupyterutils.utils import coerce_pandas_df_to_numeric_datetime
 
+import sparkmagic.utils.constants as constants
+from sparkmagic.utils.configuration import SparkMagicConfiguration
+from sparkmagic.utils.sparkevents import SparkEvents
 from .command import Command
 from .exceptions import DataFrameParseException, BadUserDataException
 
@@ -13,12 +13,15 @@ from .exceptions import DataFrameParseException, BadUserDataException
 class SQLQuery(ObjectWithGuid):
     def __init__(self, query, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None):
         super(SQLQuery, self).__init__()
+        
+        self.conf = SparkMagicConfiguration()
+        
         if samplemethod is None:
-            samplemethod = conf.default_samplemethod()
+            samplemethod = self.conf.default_samplemethod()
         if maxrows is None:
-            maxrows = conf.default_maxrows()
+            maxrows = self.conf.default_maxrows()
         if samplefraction is None:
-            samplefraction = conf.default_samplefraction()
+            samplefraction = self.conf.default_samplefraction()
 
         if samplemethod not in {u'take', u'sample'}:
             raise BadUserDataException(u'samplemethod (-m) must be one of (take, sample)')
@@ -89,7 +92,7 @@ class SQLQuery(ObjectWithGuid):
         command = u'for {} in {}: print({}.encode("{}"))'.format(constants.LONG_RANDOM_VARIABLE_NAME,
                                                     command,
                                                     constants.LONG_RANDOM_VARIABLE_NAME,
-                                                    conf.pyspark_sql_encoding())
+                                                    self.conf.pyspark_sql_encoding())
         return Command(command)
 
     def _scala_command(self):
