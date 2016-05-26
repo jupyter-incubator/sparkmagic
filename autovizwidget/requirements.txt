@@ -1,2 +1,2 @@
-plotly==1.9.7
+plotly==1.10.0
 hdijupyterutils

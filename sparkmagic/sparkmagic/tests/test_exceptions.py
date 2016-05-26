@@ -1,8 +1,7 @@
 from mock import MagicMock
 from nose.tools import with_setup, assert_equals, assert_is, raises
 
-from hdijupyterutils.exceptions import *
-from hdijupyterutils.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions
+from sparkmagic.livyclientlib.exceptions import *
 
 
 self = None

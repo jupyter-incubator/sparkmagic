@@ -1,6 +1,6 @@
 import logging
 
-from .utils import join_paths, get_magics_home_path, get_instance_id
+from .utils import join_paths, get_instance_id
 from .filesystemreaderwriter import FileSystemReaderWriter
 
 
@@ -11,7 +11,7 @@ class MagicsFileHandler(logging.FileHandler):
         if 'filename' in kwargs:
             super(MagicsFileHandler, self).__init__(**kwargs)
         else:
-            magics_home_path = get_magics_home_path()
+            magics_home_path = kwargs.pop(u"home_path")
             logs_folder_name = "logs"
             log_file_name = "log_{}.log".format(get_instance_id())
             directory = FileSystemReaderWriter(join_paths(magics_home_path, logs_folder_name))

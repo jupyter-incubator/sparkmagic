@@ -1,12 +1,20 @@
 # coding=utf-8
 import logging
+from nose.tools import assert_equals
 
+from hdijupyterutils.configuration import logging_config
 from hdijupyterutils.log import Log
 
 
+def get_logging_config():
+    return logging_config()
+
+
 def test_log_init():
-    logger = Log('something')
+    logging_config = get_logging_config()
+    logger = Log('name', logging_config, 'something')
     assert isinstance(logger.logger, logging.Logger)
+
 
 # A MockLogger class with debug and error methods that store the most recent level + message in an
 # instance variable.
@@ -23,9 +31,15 @@ class MockLogger(object):
     def info(self, message):
         self.level, self.message = 'INFO', message
 
+
 class MockLog(Log):
+    def __init__(self, name):
+        logging_config = get_logging_config()
+        super(MockLog, self).__init__(name, logging_config, name)
+    
     def _getLogger(self):
        self.logger = MockLogger() 
+
 
 def test_log_returnvalue():
     logger = MockLog('test2')
@@ -33,7 +47,7 @@ def test_log_returnvalue():
     mock = logger.logger
     logger.debug('word1')
     assert mock.level == 'DEBUG'
-    assert mock.message == 'test2\tword1'
+    assert_equals(mock.message, 'test2\tword1')
     logger.error('word2')
     assert mock.level == 'ERROR'
     assert mock.message == 'test2\tword2'

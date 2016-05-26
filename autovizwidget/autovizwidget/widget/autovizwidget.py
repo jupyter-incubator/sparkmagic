@@ -5,11 +5,11 @@ import pandas as pd
 from ipywidgets import FlexBox
 from hdijupyterutils.ipythondisplay import IpythonDisplay
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
-from hdijupyterutils.sparkevents import SparkEvents
 
 from .encoding import Encoding
 from .encodingwidget import EncodingWidget
 from ..plotlygraphs.graphrenderer import GraphRenderer
+from ..utils.events import AutoVizEvents
 
 
 class AutoVizWidget(FlexBox):
@@ -56,7 +56,7 @@ class AutoVizWidget(FlexBox):
         self.controls = self._create_controls_widget()
 
         if spark_events is None:
-            spark_events = SparkEvents()
+            spark_events = AutoVizEvents()
         self._spark_events = spark_events
 
         if nested_widget_mode:

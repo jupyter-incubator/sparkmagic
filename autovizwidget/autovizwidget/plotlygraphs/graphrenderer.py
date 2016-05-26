@@ -23,7 +23,7 @@ class GraphRenderer(object):
             # will never be run upon refreshing the page.
             #
             # https://github.com/plotly/plotly.py/pull/379/files
-            setattr(p.offline.offline, "__PLOTLY_OFFLINE_INITIALIZED", False)
+            # setattr(p.offline.offline, "__PLOTLY_OFFLINE_INITIALIZED", False)
             init_notebook_mode()
 
         GraphRenderer._get_graph(encoding.chart_type).render(df, encoding, output)

@@ -6,17 +6,15 @@ from __future__ import print_function
 import logging
 import logging.config
 
-from .configuration import logging_config
-from .constants import MAGICS_LOGGER_NAME
-
 
 class Log(object):
     """Logger for magics. A small wrapper class around the configured logger described in the configuration file"""
-    logging.config.dictConfig(logging_config())
-
-    def __init__(self, caller_name):
+    def __init__(self, logger_name, logging_config, caller_name):
+        logging.config.dictConfig(logging_config)
+        
         assert caller_name is not None
         self._caller_name = caller_name
+        self.logger_name = logger_name
         self._getLogger()
 
     def debug(self, message):
@@ -29,7 +27,7 @@ class Log(object):
         self.logger.info(self._transform_log_message(message))
 
     def _getLogger(self):
-        self.logger = logging.getLogger(MAGICS_LOGGER_NAME)
+        self.logger = logging.getLogger(self.logger_name)
 
     def _transform_log_message(self, message):
         return u'{}\t{}'.format(self._caller_name, message)
