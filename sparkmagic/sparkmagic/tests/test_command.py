@@ -1,7 +1,7 @@
 from mock import MagicMock
 from nose.tools import assert_equals, with_setup
 
-from sparkmagic.utils.configuration import SparkMagicConfiguration
+import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.constants import SESSION_KIND_SPARK
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.livysession import LivySession
@@ -9,9 +9,7 @@ from . import test_livysession as tls
 
 
 def _setup():
-    global conf
-    
-    conf = SparkMagicConfiguration()
+    conf.override_all({})
     
 
 def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
@@ -39,7 +37,7 @@ def test_execute():
         "statement_sleep_seconds": 0.01
     })
     session = _create_session(kind=kind, http_client=http_client)
-    conf.load()
+    conf.override_all({})
     session.start(create_sql_context=False)
     command = Command("command", spark_events=spark_events)
 
@@ -70,7 +68,7 @@ def test_execute_failure_wait_for_session_emits_event():
         "statement_sleep_seconds": 0.01
     })
     session = _create_session(kind=kind, http_client=http_client)
-    conf.load()
+    conf.override_all({})
     session.start(create_sql_context=False)
     session.wait_for_idle = MagicMock(side_effect=ValueError("yo"))
     command = Command("command", spark_events=spark_events)
@@ -99,7 +97,7 @@ def test_execute_failure_post_statement_emits_event():
     })
     session = _create_session(kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
-    conf.load()
+    conf.override_all({})
     session.start(create_sql_context=False)
     session.wait_for_idle = MagicMock()
     command = Command("command", spark_events=spark_events)
@@ -128,7 +126,7 @@ def test_execute_failure_get_statement_output_emits_event():
     })
     session = _create_session(kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
-    conf.load()
+    conf.override_all({})
     session.start(create_sql_context=False)
     session.wait_for_idle = MagicMock()
     command = Command("command", spark_events=spark_events)

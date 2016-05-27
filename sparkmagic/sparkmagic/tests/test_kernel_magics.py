@@ -3,7 +3,7 @@ from nose.tools import with_setup, raises, assert_equals, assert_is
 from IPython.core.magic import magics_class
 
 import sparkmagic.utils.constants as constants
-from sparkmagic.utils.configuration import SparkMagicConfiguration
+import sparkmagic.utils.configuration as conf
 from sparkmagic.kernels.kernelmagics import KernelMagics
 from sparkmagic.livyclientlib.exceptions import LivyClientTimeoutException, BadUserDataException,\
     FailedToCreateSqlContextException, LivyUnexpectedStatusException, SessionManagementException,\
@@ -17,7 +17,6 @@ spark_controller = None
 shell = None
 ipython_display = MagicMock()
 spark_events = None
-conf = None
 
 
 @magics_class
@@ -34,8 +33,6 @@ class TestKernelMagics(KernelMagics):
 
 def _setup():
     global magic, spark_controller, shell, ipython_display, spark_events, conf
-    
-    conf = SparkMagicConfiguration()
 
     conf.override_all({})
     spark_events = MagicMock()

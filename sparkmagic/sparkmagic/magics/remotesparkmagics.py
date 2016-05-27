@@ -11,7 +11,7 @@ from IPython.core.magic import magics_class
 from IPython.core.magic_arguments import argument, magic_arguments
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 
-from sparkmagic.utils.configuration import SparkMagicConfiguration
+import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.utils import parse_argstring_or_throw
 from sparkmagic.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
 from sparkmagic.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
@@ -26,8 +26,6 @@ class RemoteSparkMagics(SparkMagicBase):
     def __init__(self, shell, data=None, widget=None):
         # You must call the parent constructor
         super(RemoteSparkMagics, self).__init__(shell, data)
-
-        self.conf = SparkMagicConfiguration()
 
         self.endpoints = {}
         if widget is None:
@@ -119,7 +117,7 @@ class RemoteSparkMagics(SparkMagicBase):
                 self._print_local_info()
         # config
         elif subcommand == "config":
-            self.conf.override(self.conf.session_configs.__name__, json.loads(cell))
+            conf.override(conf.session_configs.__name__, json.loads(cell))
         # add
         elif subcommand == "add":
             if args.url is None:
@@ -131,7 +129,7 @@ class RemoteSparkMagics(SparkMagicBase):
             endpoint = Endpoint(args.url, args.user, args.password)
             skip = args.skip
 
-            properties = self.conf.get_session_properties(language)
+            properties = conf.get_session_properties(language)
 
             self.spark_controller.add_session(name, endpoint, skip, properties)
         # delete
@@ -187,7 +185,7 @@ class RemoteSparkMagics(SparkMagicBase):
 {}
     Session configs:
         {}
-""".format("\n".join(sessions_info), self.conf.session_configs()))
+""".format("\n".join(sessions_info), conf.session_configs()))
 
         
 def load_ipython_extension(ip):

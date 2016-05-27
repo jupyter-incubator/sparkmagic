@@ -3,7 +3,7 @@ from mock import MagicMock, call
 from nose.tools import raises, assert_equals
 
 import sparkmagic.utils.constants as constants
-from sparkmagic.utils.configuration import SparkMagicConfiguration
+import sparkmagic.utils.configuration as conf
 from sparkmagic.livyclientlib.exceptions import LivyClientTimeoutException, LivyUnexpectedStatusException,\
     BadUserDataException, FailedToCreateSqlContextException
 from sparkmagic.livyclientlib.livysession import LivySession
@@ -20,9 +20,6 @@ class DummyResponse:
     @property
     def status_code(self):
         return self._status_code
-
-
-CONN_STR = 'url=https://www.DFAS90D82309F0W9ASD0F9ZX.com;username=abcd;password=1234'
 
 
 class TestLivySession(object):
@@ -47,9 +44,7 @@ class TestLivySession(object):
         self.get_statement_responses = []
         self.post_statement_responses = []
         self.get_session_responses = []
-        self.post_session_responses = []
-        
-        self.conf = SparkMagicConfiguration()
+        self.post_session_responses = []    
 
     def setup(self):
         self.http_client = MagicMock()
@@ -88,33 +83,33 @@ class TestLivySession(object):
 
     @raises(AssertionError)
     def test_constructor_throws_status_sleep_seconds(self):
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0,
             "statement_sleep_seconds": 2,
             "create_sql_context_timeout_seconds": 60
         })
         self._create_session()
-        self.conf.load()
+        conf.override_all({})
 
     @raises(AssertionError)
     def test_constructor_throws_statement_sleep_seconds(self):
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 3,
             "statement_sleep_seconds": 0,
             "create_sql_context_timeout_seconds": 60
         })
         self._create_session()
-        self.conf.load()
+        conf.override_all({})
 
     @raises(BadUserDataException)
     def test_constructor_throws_invalid_session_sql_combo(self):
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 2,
             "statement_sleep_seconds": 2,
             "create_sql_context_timeout_seconds": 60
         })
         self._create_session(sql_created=True)
-        self.conf.load()
+        conf.override_all({})
 
     def test_doesnt_do_anything_or_create_sql_context_automatically(self):
         # If the session object does anything (attempts to create a session or run
@@ -123,37 +118,37 @@ class TestLivySession(object):
         self._create_session()
 
     def test_constructor_starts_with_existing_session(self):
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 4,
             "statement_sleep_seconds": 2,
             "create_sql_context_timeout_seconds": 60
         })
         session_id = 1
         session = self._create_session(session_id=session_id, sql_created=True)
-        self.conf.load()
+        conf.override_all({})
 
         assert session.id == session_id
         assert session.created_sql_context
 
     def test_constructor_starts_with_no_session(self):
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 4,
             "statement_sleep_seconds": 2,
             "create_sql_context_timeout_seconds": 60
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
 
         assert session.id == -1
         assert not session.created_sql_context
 
     def test_is_final_status(self):
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
 
         assert not session.is_final_status("idle")
         assert not session.is_final_status("starting")
@@ -166,7 +161,7 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
@@ -174,7 +169,7 @@ class TestLivySession(object):
         session = self._create_session(kind=kind)
         session.create_sql_context = MagicMock()
         session.start()
-        self.conf.load()
+        conf.override_all({})
 
         assert_equals(kind, session.kind)
         assert_equals("idle", session.status)
@@ -186,7 +181,7 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
@@ -194,7 +189,7 @@ class TestLivySession(object):
         session = self._create_session(kind=kind)
         session.create_sql_context = MagicMock()
         session.start()
-        self.conf.load()
+        conf.override_all({})
 
         assert_equals(kind, session.kind)
         assert_equals("idle", session.status)
@@ -206,7 +201,7 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
@@ -214,7 +209,7 @@ class TestLivySession(object):
         session = self._create_session(kind=kind)
         session.create_sql_context = MagicMock()
         session.start()
-        self.conf.load()
+        conf.override_all({})
 
         assert_equals(kind, session.kind)
         assert_equals("idle", session.status)
@@ -226,7 +221,7 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
@@ -234,7 +229,7 @@ class TestLivySession(object):
         session = self._create_session(kind=kind)
         session.create_sql_context = MagicMock(side_effect=ValueError)
         session.start(create_sql_context=False)
-        self.conf.load()
+        conf.override_all({})
 
         assert_equals(kind, session.kind)
         assert_equals("idle", session.status)
@@ -246,7 +241,7 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
@@ -256,19 +251,19 @@ class TestLivySession(object):
         ipython_display = MagicMock()
         session = LivySession(self.http_client, properties, ipython_display)
         session.start(create_sql_context=False)
-        self.conf.load()
+        conf.override_all({})
 
         self.http_client.post_session.assert_called_with(properties)
 
     def test_status_gets_latest_status(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
         session.start(create_sql_context=False)
 
         session.refresh_status()
@@ -281,12 +276,12 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
         self.http_client.get_all_session_logs.return_value = self.log_json
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
         session.start(create_sql_context=False)
 
         logs = session.get_logs()
@@ -301,12 +296,12 @@ class TestLivySession(object):
                                       self.ready_sessions_json]
         self.http_client.get_session.side_effect = self._next_session_response_get
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session()
-        self.conf.override_all({})
+        conf.override_all({})
 
         session.start(create_sql_context=False)
 
@@ -325,12 +320,12 @@ class TestLivySession(object):
         self.http_client.get_session.side_effect = self._next_session_response_get
         self.http_client.get_all_session_logs.return_value = self.log_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.011,
             "statement_sleep_seconds": 6000
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
 
         session.start(create_sql_context=False)
 
@@ -345,12 +340,12 @@ class TestLivySession(object):
                                       self.ready_sessions_json]
         self.http_client.get_session.side_effect = self._next_session_response_get
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.011,
             "statement_sleep_seconds": 6000
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
 
         session.start(create_sql_context=False)
 
@@ -359,12 +354,12 @@ class TestLivySession(object):
     def test_delete_session_when_active(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
         session.start(create_sql_context=False)
 
         session.delete()
@@ -373,12 +368,12 @@ class TestLivySession(object):
 
     def test_delete_session_when_not_started(self):
         self.http_client.post_session.return_value = self.session_create_json
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
 
         session.delete()
 
@@ -386,12 +381,12 @@ class TestLivySession(object):
 
     def test_delete_session_when_dead_throws(self):
         self.http_client.post.return_value = self.session_create_json
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
         session.status = "dead"
 
         session.delete()
@@ -411,13 +406,13 @@ class TestLivySession(object):
                                         self.ready_statement_json,
                                         self.ready_statement_json]
         self.http_client.get_statement.side_effect = self._next_statement_response_get
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session(kind=kind)
         session.ipython_display = ipython_display
-        self.conf.load()
+        conf.override_all({})
         session.start(create_sql_context=False)
 
         # Reset the mock so that post called count is accurate
@@ -469,12 +464,12 @@ class TestLivySession(object):
         self.get_statement_responses = [self.running_statement_json, self.ready_statement_json,
                                         self.ready_statement_json]
         self.http_client.get_statement.side_effect = self._next_statement_response_get
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session(kind=kind)
-        self.conf.load()
+        conf.override_all({})
         session.start()
 
         assert call(0, {"code": "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"}) \
@@ -488,12 +483,12 @@ class TestLivySession(object):
         self.get_statement_responses = [self.running_statement_json, self.ready_statement_json,
                                         self.ready_statement_json]
         self.http_client.get_statement.side_effect = self._next_statement_response_get
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session(kind=kind)
-        self.conf.load()
+        conf.override_all({})
         session.start()
 
         assert call(0, {"code": "from pyspark.sql import HiveContext\n"
@@ -508,12 +503,12 @@ class TestLivySession(object):
         self.http_client.get_session.return_value = self.ready_sessions_json
         self.get_statement_responses = [self.running_statement_json, self.ready_statement_json]
         self.http_client.get_statement.side_effect = self._next_statement_response_get
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session(kind=kind)
-        self.conf.load()
+        conf.override_all({})
         session.start()
 
     def test_get_sql_context_creation_command_all_langs(self):
@@ -525,7 +520,7 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
@@ -533,7 +528,7 @@ class TestLivySession(object):
         session = self._create_session(kind=kind)
         session.create_sql_context = MagicMock()
         session.start()
-        self.conf.load()
+        conf.override_all({})
 
         self.spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
         self.spark_events.emit_session_creation_end_event.assert_called_once_with(
@@ -543,7 +538,7 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
@@ -557,7 +552,7 @@ class TestLivySession(object):
         except ValueError:
             pass
 
-        self.conf.load()
+        conf.override_all({})
 
         self.spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
         self.spark_events.emit_session_creation_end_event.assert_called_once_with(
@@ -567,7 +562,7 @@ class TestLivySession(object):
         self.http_client.post_session.side_effect = ValueError
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
@@ -581,7 +576,7 @@ class TestLivySession(object):
         except ValueError:
             pass
 
-        self.conf.load()
+        conf.override_all({})
 
         self.spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
         self.spark_events.emit_session_creation_end_event.assert_called_once_with(
@@ -591,7 +586,7 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
@@ -606,7 +601,7 @@ class TestLivySession(object):
         except ValueError:
             pass
 
-        self.conf.load()
+        conf.override_all({})
 
         self.spark_events.emit_session_creation_start_event.assert_called_once_with(session.guid, kind)
         self.spark_events.emit_session_creation_end_event.assert_called_once_with(
@@ -616,12 +611,12 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
         session.start(create_sql_context=False)
         end_id = session.id
         end_status = constants.BUSY_SESSION_STATUS
@@ -639,12 +634,12 @@ class TestLivySession(object):
         self.http_client.delete_session.side_effect = ValueError
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
         session.start(create_sql_context=False)
         session.id = 0
         end_id = session.id
@@ -665,12 +660,12 @@ class TestLivySession(object):
     def test_delete_session_emits_start_failed_end_when_in_bad_state(self):
         self.http_client.get_session.return_value = self.ready_sessions_json
 
-        self.conf.override_all({
+        conf.override_all({
             "status_sleep_seconds": 0.01,
             "statement_sleep_seconds": 0.01
         })
         session = self._create_session()
-        self.conf.load()
+        conf.override_all({})
         session.start(create_sql_context=False)
         session.id = 0
         end_id = session.id

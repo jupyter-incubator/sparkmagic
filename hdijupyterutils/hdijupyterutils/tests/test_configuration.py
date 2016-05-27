@@ -2,88 +2,77 @@ from mock import MagicMock
 from nose.tools import assert_equals, assert_not_equals, raises, with_setup
 import json
 
-from hdijupyterutils.configuration import Configuration
+from hdijupyterutils.configuration import override, override_all, with_override
 
 
-conf = None
-fsrw_class = None
+# This is a sample implementation of how a module would use the config methods.
+# We'll use these three functions to test it works.
+d = {}
+path = "config.json"
+original_value = 0
+
+    
+def module_override(config, value):
+    global d, path
+    override(d, path, config, value)
 
 
-class MyConfiguration(Configuration):
-    def __init__(self):
-        super(MyConfiguration, self).__init__("", "")
-        
-    @Configuration._override
-    def my_conf(self):
-        return "hi"
+def module_override_all(obj):
+    global d
+    override_all(d, obj)
 
 
-def get_fsrw(config):
-    fsrw = MagicMock()
-    fsrw.path = ""
-    read_lines = MagicMock(return_value=[json.dumps(config)])
-    fsrw.read_lines = read_lines
-    fsrw_class = MagicMock(return_value=fsrw)
-    return fsrw_class
-
-
+# Configs
+@with_override(d, path)
+def my_config():
+    global original_value
+    return original_value
+    
+    
+@with_override(d, path)
+def my_config_2():
+    global original_value
+    return original_value    
+    
+    
+# Test helper functions
 def _setup():
-    global conf, fsrw_class
+    module_override_all({})
     
-    fsrw_class = get_fsrw({})
     
-    conf = MyConfiguration()
-    conf._overrides = None
-
-
-@with_setup(_setup)
-def test_configuration_initialize():
-    s = "hello"
-    config = { conf.my_conf.__name__: s }
-    conf.fsrw_class = get_fsrw(config)
-    conf.initialize()
-    assert conf._overrides is not None
-    assert_equals(conf._overrides, config)
-    assert_equals(conf.my_conf(), s)
-
-
-
-@with_setup(_setup)
-def test_configuration_initialize_lazy():
-    """Tests that the initialize function has no behavior if the override dict is already initialized"""
-    config = {}
-    conf.override_all(config)
-    conf.fsrw_class = get_fsrw(config)
-    conf.initialize()
-
-
-@with_setup(_setup)
-def test_configuration_load():
-    i = 1000
-    config = { conf.my_conf.__name__: i }
-    conf.fsrw_class = get_fsrw(config)
-    conf.load()
-    assert conf._overrides is not None
-    assert_equals(conf._overrides, config)
-    assert_equals(conf.my_conf(), i)
-
-
-@with_setup(_setup)
-def test_configuration_load_not_lazy():
-    a = "whoops"
-    config = { conf.my_conf.__name__: a }
-    conf.fsrw_class = get_fsrw(config)
-    conf.override_all({conf.my_conf.__name__: "bar"})
-    conf.load()
-    assert conf._overrides is not None
-    assert_equals(conf._overrides, config)
-    assert_equals(conf.my_conf(), a)
+def _teardown():
+    module_override_all({})
     
 
-@with_setup(_setup)
-def test_configuration_override_all():
-    z = 1500
-    config = { conf.my_conf.__name__: z }
-    conf.override_all(config)
-    assert_equals(conf._overrides, config)
-    assert_equals(conf.my_conf(), z)
+# Unit tests begin
+@with_setup(_setup, _teardown)
+def test_original_value_without_overrides():
+    assert_equals(original_value, my_config())
+    
+
+@with_setup(_setup, _teardown)
+def test_original_value_with_overrides():
+    new_value = 2
+    module_override(my_config.__name__, new_value)
+    assert_equals(new_value, my_config())
+    
+
+@with_setup(_setup, _teardown)
+def test_original_values_when_others_override():
+    new_value = 2
+    module_override(my_config.__name__, new_value)
+    assert_equals(new_value, my_config())
+    assert_equals(original_value, my_config_2())
+    
+    
+@with_setup(_setup, _teardown)
+def test_resetting_values_when_others_override():
+    new_value = 2
+    module_override(my_config.__name__, new_value)
+    assert_equals(new_value, my_config())
+    assert_equals(original_value, my_config_2())
+    
+    # Reset
+    module_override_all({})
+    assert_equals(original_value, my_config())
+    assert_equals(original_value, my_config_2())

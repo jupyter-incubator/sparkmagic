@@ -2,16 +2,16 @@
 # Distributed under the terms of the Modified BSD License.
 from hdijupyterutils.log import Log
 
+import sparkmagic.utils.configuration as conf
 from .sessionmanager import SessionManager
 from .livyreliablehttpclient import LivyReliableHttpClient
 from .livysession import LivySession
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
-from sparkmagic.utils.configuration import SparkMagicConfiguration
 
 
 class SparkController(object):
     def __init__(self, ipython_display):
-        self.logger = Log(MAGICS_LOGGER_NAME, SparkMagicConfiguration().logging_config(), u"SparkController")
+        self.logger = Log(MAGICS_LOGGER_NAME, conf.logging_config(), u"SparkController")
         self.ipython_display = ipython_display
         self.session_manager = SessionManager()
 

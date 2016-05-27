@@ -4,7 +4,7 @@ from nose.tools import with_setup, assert_equals, assert_false, raises
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
-from sparkmagic.utils.configuration import SparkMagicConfiguration
+import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.constants import LONG_RANDOM_VARIABLE_NAME
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
@@ -12,8 +12,7 @@ from sparkmagic.livyclientlib.exceptions import BadUserDataException
 
 
 def _setup():
-    global conf
-    conf = SparkMagicConfiguration()
+    pass
     
 
 def _teardown():

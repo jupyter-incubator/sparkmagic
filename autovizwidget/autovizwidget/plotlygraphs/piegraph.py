@@ -5,7 +5,7 @@ from plotly.graph_objs import Pie, Figure, Data
 from plotly.offline import iplot
 from pandas.core.groupby import DataError
 
-from autovizwidget.utils.configuration import AutoVizConfiguration
+import autovizwidget.utils.configuration as conf
 
 
 class PieGraph(object):
@@ -31,7 +31,7 @@ class PieGraph(object):
                     print("\n\n\nCannot display a pie graph for an empty data set.")
                 return
 
-        max_slices_pie_graph = AutoVizConfiguration().max_slices_pie_graph()
+        max_slices_pie_graph = conf.max_slices_pie_graph()
         with output:
             # There's performance issues with a large amount of slices.
             # 1500 rows crash the browser.

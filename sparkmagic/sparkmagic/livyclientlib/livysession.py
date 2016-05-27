@@ -6,9 +6,9 @@ from time import sleep, time
 from hdijupyterutils.guid import ObjectWithGuid
 from hdijupyterutils.log import Log
 
+import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparkevents import SparkEvents
-from sparkmagic.utils.configuration import SparkMagicConfiguration
 from .command import Command
 from .exceptions import FailedToCreateSqlContextException, LivyClientTimeoutException, \
     LivyUnexpectedStatusException, BadUserDataException
@@ -26,12 +26,10 @@ class LivySession(ObjectWithGuid):
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
-        
-        self.conf = SparkMagicConfiguration()
 
-        status_sleep_seconds = self.conf.status_sleep_seconds()
-        statement_sleep_seconds = self.conf.statement_sleep_seconds()
-        wait_for_idle_timeout_seconds = self.conf.wait_for_idle_timeout_seconds()
+        status_sleep_seconds = conf.status_sleep_seconds()
+        statement_sleep_seconds = conf.statement_sleep_seconds()
+        wait_for_idle_timeout_seconds = conf.wait_for_idle_timeout_seconds()
 
         assert status_sleep_seconds > 0
         assert statement_sleep_seconds > 0
@@ -39,7 +37,7 @@ class LivySession(ObjectWithGuid):
         if session_id == -1 and sql_created is True:
             raise BadUserDataException(u"Cannot indicate sql state without session id.")
 
-        self.logger = Log(constants.MAGICS_LOGGER_NAME, self.conf.logging_config(), u"LivySession")
+        self.logger = Log(constants.MAGICS_LOGGER_NAME, conf.logging_config(), u"LivySession")
 
         kind = kind.lower()
         if kind not in constants.SESSION_KINDS_SUPPORTED:
@@ -79,10 +77,10 @@ class LivySession(ObjectWithGuid):
             self.ipython_display.writeln(u"Creating SparkContext as 'sc'")
             # We wait for livy_session_startup_timeout_seconds() for the session to start up.
             try:
-                self.wait_for_idle(self.conf.livy_session_startup_timeout_seconds())
+                self.wait_for_idle(conf.livy_session_startup_timeout_seconds())
             except LivyClientTimeoutException:
                 raise LivyClientTimeoutException(u"Session {} did not start up in {} seconds."
-                                                 .format(self.id, self.conf.livy_session_startup_timeout_seconds()))
+                                                 .format(self.id, conf.livy_session_startup_timeout_seconds()))
 
             if create_sql_context:
                 self.create_sql_context()

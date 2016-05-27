@@ -3,9 +3,9 @@ import textwrap
 from hdijupyterutils.guid import ObjectWithGuid
 from hdijupyterutils.log import Log
 
+import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
-from sparkmagic.utils.configuration import SparkMagicConfiguration
 from .exceptions import LivyUnexpectedStatusException
 
 
@@ -13,7 +13,7 @@ class Command(ObjectWithGuid):
     def __init__(self, code, spark_events=None):
         super(Command, self).__init__()
         self.code = textwrap.dedent(code)
-        self.logger = Log(MAGICS_LOGGER_NAME, SparkMagicConfiguration().logging_config(), u"Command")
+        self.logger = Log(MAGICS_LOGGER_NAME, conf.logging_config(), u"Command")
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events

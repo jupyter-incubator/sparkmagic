@@ -2,7 +2,7 @@ import importlib
 from hdijupyterutils.constants import EVENT_NAME, TIMESTAMP
 from hdijupyterutils.events import Events
 
-from .configuration import SparkMagicConfiguration
+from . import configuration as conf
 import sparkmagic.utils.constants as constants
 
 
@@ -11,8 +11,6 @@ class SparkEvents(Events):
         """
         Create an instance from the handler mentioned in the config file.
         """
-        conf = SparkMagicConfiguration()
-        
         module, class_name = conf.events_handler_class().rsplit('.', 1)
         events_handler_module = importlib.import_module(module)
         events_handler = getattr(events_handler_module, class_name)

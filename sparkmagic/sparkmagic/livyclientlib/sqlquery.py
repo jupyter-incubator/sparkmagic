@@ -3,8 +3,8 @@ import pandas as pd
 from hdijupyterutils.guid import ObjectWithGuid
 from hdijupyterutils.utils import coerce_pandas_df_to_numeric_datetime
 
+import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
-from sparkmagic.utils.configuration import SparkMagicConfiguration
 from sparkmagic.utils.sparkevents import SparkEvents
 from .command import Command
 from .exceptions import DataFrameParseException, BadUserDataException
@@ -14,14 +14,12 @@ class SQLQuery(ObjectWithGuid):
     def __init__(self, query, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None):
         super(SQLQuery, self).__init__()
         
-        self.conf = SparkMagicConfiguration()
-        
         if samplemethod is None:
-            samplemethod = self.conf.default_samplemethod()
+            samplemethod = conf.default_samplemethod()
         if maxrows is None:
-            maxrows = self.conf.default_maxrows()
+            maxrows = conf.default_maxrows()
         if samplefraction is None:
-            samplefraction = self.conf.default_samplefraction()
+            samplefraction = conf.default_samplefraction()
 
         if samplemethod not in {u'take', u'sample'}:
             raise BadUserDataException(u'samplemethod (-m) must be one of (take, sample)')
@@ -92,7 +90,7 @@ class SQLQuery(ObjectWithGuid):
         command = u'for {} in {}: print({}.encode("{}"))'.format(constants.LONG_RANDOM_VARIABLE_NAME,
                                                     command,
                                                     constants.LONG_RANDOM_VARIABLE_NAME,
-                                                    self.conf.pyspark_sql_encoding())
+                                                    conf.pyspark_sql_encoding())
         return Command(command)
 
     def _scala_command(self):

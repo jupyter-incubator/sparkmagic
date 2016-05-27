@@ -1,7 +1,7 @@
 from mock import MagicMock
 from nose.tools import with_setup
 
-from sparkmagic.utils.configuration import SparkMagicConfiguration
+import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.constants import EXPECTED_ERROR_MSG
 from sparkmagic.magics.remotesparkmagics import RemoteSparkMagics
 from sparkmagic.livyclientlib.command import Command
@@ -14,13 +14,10 @@ magic = None
 spark_controller = None
 shell = None
 ipython_display = None
-conf = None
 
 
 def _setup():
-    global magic, spark_controller, shell, ipython_display, conf
-
-    conf = SparkMagicConfiguration()    
+    global magic, spark_controller, shell, ipython_display
     conf.override_all({})
 
     magic = RemoteSparkMagics(shell=None, widget=MagicMock())
@@ -137,7 +134,7 @@ def test_add_sessions_command_extra_properties():
 
     add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com"),
                                               False, {"kind": "spark", "extra": "yes"})
-    conf.load()
+    conf.override_all({})
 
 
 @with_setup(_setup, _teardown)

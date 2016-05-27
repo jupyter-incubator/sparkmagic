@@ -4,7 +4,7 @@ from hdijupyterutils.constants import EVENT_NAME, TIMESTAMP
 from hdijupyterutils.events import Events
 
 from .constants import GRAPH_TYPE, GRAPH_RENDER_EVENT, AUTOVIZ_LOGGER_NAME
-from .configuration import AutoVizConfiguration
+from . import configuration  as conf
 
 
 class AutoVizEvents(Events):
@@ -12,8 +12,6 @@ class AutoVizEvents(Events):
         """
         Create an instance from the handler mentioned in the config file.
         """
-        conf = AutoVizConfiguration()
-        
         module, class_name = conf.events_handler_class().rsplit('.', 1)
         events_handler_module = importlib.import_module(module)
         events_handler = getattr(events_handler_module, class_name)

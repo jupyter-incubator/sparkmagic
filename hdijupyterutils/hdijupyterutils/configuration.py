@@ -7,78 +7,70 @@ from .utils import join_paths
 from .filesystemreaderwriter import FileSystemReaderWriter
 from .constants import LOGGING_CONFIG_CLASS_NAME
 
-_overrides = None
 
-class Configuration(object):
-    
-    def __init__(self, home_path, config_file_name, fsrw_class=None):
-        self.home_path = home_path
-        self.config_file_name = config_file_name
-        self.fsrw_class = fsrw_class
-        
-    @property
-    def overrides(self):
-        global _overrides
-        return _overrides
-
-    def initialize(self):
-        """Checks if the configuration is initialized. If so, initializes the
-        global configuration object by reading from the configuration
-        file, overwriting the current set of overrides if there is one"""
-        global _overrides
-        if _overrides is None:
-            self.load()
-
-    def load(self):
-        """Initializes the global configuration by reading from the configuration
-        file, overwriting the current set of overrides if there is one"""
-        if self.fsrw_class is None:
-            self.fsrw_class = FileSystemReaderWriter
-        home_path = self.fsrw_class(self.home_path)
-        home_path.ensure_path_exists()
-        config_file = self.fsrw_class(join_paths(home_path.path, self.config_file_name))
-        config_file.ensure_file_exists()
-        config_text = config_file.read_lines()
-        line = u"".join(config_text).strip()
-        if line == u"":
-            overrides = {}
-        else:
-            overrides = json.loads(line)
-        self.override_all(overrides)
-
-    def override_all(self, obj):
-        """Given a dictionary representing the overrided defaults for this
-        configuration, initialize the global configuration."""
-        global _overrides
-        _overrides = obj
-
-    def override(self, config, value):
-        """Given a string representing a configuration and a value for that configuration,
-        override the configuration. Initialize the overrided configuration beforehand."""
-        global _overrides
-        self.initialize()
-        _overrides[config] = value
-
-    @staticmethod
-    def _override(f):
-        """A decorator which first initializes the overrided configurations,
-        then checks the global overrided defaults for the given configuration,
-        calling the function to get the default result otherwise."""
-        global _overrides
-        
-        def ret(self):
-            self.initialize()
+def with_override(overrides, path, fsrw_class=None):
+    """A decorator which first initializes the overrided configurations,
+    then checks the global overrided defaults for the given configuration,
+    calling the function to get the default result otherwise."""
+    def ret(f):
+        def wrapped_f(*args):
+            # Can access overrides and path here
+            _initialize(overrides, path, fsrw_class)
             name = f.__name__
-            if name in _overrides:
-                return _overrides[name]
+            if name in overrides:
+                return overrides[name]
             else:
-                return f()
+                return f(*args)
+        
         # Hack! We do this so that we can query the .__name__ of the function
         # later to get the name of the configuration dynamically, e.g. for unit tests
-        ret.__name__ = f.__name__
-        return ret
+        wrapped_f.__name__ = f.__name__
+        return wrapped_f
+    
+    return ret
+
+    
+def override(overrides, path, config, value, fsrw_class=None):
+    """Given a string representing a configuration and a value for that configuration,
+    override the configuration. Initialize the overrided configuration beforehand."""
+    _initialize(overrides, path, fsrw_class)
+    overrides[config] = value
+
+    
+def override_all(overrides, new_overrides):
+    """Given a dictionary representing the overrided defaults for this
+    configuration, initialize the global configuration."""
+    overrides.clear()
+    overrides.update(new_overrides)
+
+
+def _initialize(overrides, path, fsrw_class):
+    """Checks if the configuration is initialized. If it isn't, initializes the
+    overrides object by reading from the configuration
+    file, overwriting the current set of overrides if there is one."""
+    if not overrides:
+        new_overrides = _load(path, fsrw_class)
+        override_all(overrides, new_overrides)
         
         
+def _load(path, fsrw_class=None):
+    """Returns a dictionary of configuration by reading from the configuration
+    file."""
+    if fsrw_class is None:
+        fsrw_class = FileSystemReaderWriter
+    
+    config_file = fsrw_class(path)
+    config_file.ensure_file_exists()
+    config_text = config_file.read_lines()
+    line = u"".join(config_text).strip()
+    
+    if line == u"":
+        overrides = {}
+    else:
+        overrides = json.loads(line)
+    return overrides
+
+
 def logging_config():
     return {
         u"version": 1,
