@@ -11,14 +11,10 @@ class FileSystemReaderWriter(object):
         self.path = expand_path(path)
 
     def ensure_path_exists(self):
-        try:
-            os.makedirs(self.path)
-        except OSError:
-            if not os.path.isdir(self.path):
-                raise
+        self._ensure_path_exists(self.path)
 
     def ensure_file_exists(self):
-        self.ensure_path_exists(os.path.dirname(self.path))
+        self._ensure_path_exists(os.path.dirname(self.path))
         if not os.path.exists(self.path):
             open(self.path, 'w').close()
 
@@ -32,3 +28,10 @@ class FileSystemReaderWriter(object):
     def overwrite_with_line(self, line):
         with open(self.path, "w+") as f:
             f.writelines(line)
+
+    def _ensure_path_exists(self, path):
+        try:
+            os.makedirs(path)
+        except OSError:
+            if not os.path.isdir(path):
+                raise

@@ -8,7 +8,7 @@ from hdijupyterutils.configuration import override, override_all, with_override
 # This is a sample implementation of how a module would use the config methods.
 # We'll use these three functions to test it works.
 d = {}
-path = "config.json"
+path = "~/.testing/config.json"
 original_value = 0
 
     
