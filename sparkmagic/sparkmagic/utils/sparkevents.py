@@ -6,17 +6,22 @@ from . import configuration as conf
 import sparkmagic.utils.constants as constants
 
 
+def get_spark_events_handler():
+    """
+    Create an instance from the handler mentioned in the config file.
+    """
+    module, class_name = conf.events_handler_class().rsplit('.', 1)
+    events_handler_module = importlib.import_module(module)
+    events_handler = getattr(events_handler_module, class_name)
+    handler = events_handler(constants.MAGICS_LOGGER_NAME, conf.logging_config())
+    return handler
+
+
 class SparkEvents(Events):
     def __init__(self):
-        """
-        Create an instance from the handler mentioned in the config file.
-        """
-        module, class_name = conf.events_handler_class().rsplit('.', 1)
-        events_handler_module = importlib.import_module(module)
-        events_handler = getattr(events_handler_module, class_name)
-        handler = events_handler(constants.MAGICS_LOGGER_NAME, conf.logging_config())
-        
+        handler = get_spark_events_handler()
         super(SparkEvents, self).__init__(handler)
+    
 
     def emit_library_loaded_event(self):
         event_name = constants.LIBRARY_LOADED_EVENT
