@@ -5,7 +5,7 @@ from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
 from hdijupyterutils.configuration import with_override
 
-from .constants import HOME_PATH, CONFIG_FILE
+from .constants import HOME_PATH, CONFIG_FILE, AUTOVIZ_LOGGER_NAME
     
 
 d = {}
@@ -50,7 +50,7 @@ def logging_config():
             }
         },
         u"loggers": {
-            u"magicsLogger": {
+            AUTOVIZ_LOGGER_NAME: {
                 u"handlers": [u"magicsHandler"],
                 u"level": u"DEBUG",
                 u"propagate": 0

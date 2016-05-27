@@ -26,7 +26,7 @@ class SparkKernelBase(IPythonKernel):
 
         super(SparkKernelBase, self).__init__(**kwargs)
 
-        self.logger = SparkLog(u"_jupyter_kernel".format(self.session_language))
+        self.logger = SparkLog(u"{}_jupyter_kernel".format(self.session_language))
         self._fatal_error = None
         self.ipython_display = IpythonDisplay()
 

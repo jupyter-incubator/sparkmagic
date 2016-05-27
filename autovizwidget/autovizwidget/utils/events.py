@@ -26,5 +26,5 @@ class AutoVizEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (GRAPH_TYPE, graph_type)]
-
+                       
         self.send_to_handler(kwargs_list)
