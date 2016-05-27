@@ -18,6 +18,7 @@ class FileSystemReaderWriter(object):
                 raise
 
     def ensure_file_exists(self):
+        self.ensure_path_exists(os.path.dirname(self.path))
         if not os.path.exists(self.path):
             open(self.path, 'w').close()
 
