@@ -1,7 +1,6 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
-from hdijupyterutils.log import Log
-
+from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.livyclientlib.exceptions import SessionManagementException
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 import sparkmagic.utils.configuration as conf
@@ -9,7 +8,7 @@ import sparkmagic.utils.configuration as conf
 
 class SessionManager(object):
     def __init__(self):
-        self.logger = Log(MAGICS_LOGGER_NAME, conf.logging_config(), u"SessionManager")
+        self.logger = SparkLog(u"SessionManager")
 
         self._sessions = dict()
 

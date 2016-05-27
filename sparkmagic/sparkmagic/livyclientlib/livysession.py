@@ -4,10 +4,10 @@
 from time import sleep, time
 
 from hdijupyterutils.guid import ObjectWithGuid
-from hdijupyterutils.log import Log
 
 import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
+from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from .command import Command
 from .exceptions import FailedToCreateSqlContextException, LivyClientTimeoutException, \
@@ -37,7 +37,7 @@ class LivySession(ObjectWithGuid):
         if session_id == -1 and sql_created is True:
             raise BadUserDataException(u"Cannot indicate sql state without session id.")
 
-        self.logger = Log(constants.MAGICS_LOGGER_NAME, conf.logging_config(), u"LivySession")
+        self.logger = SparkLog(u"LivySession")
 
         kind = kind.lower()
         if kind not in constants.SESSION_KINDS_SUPPORTED:

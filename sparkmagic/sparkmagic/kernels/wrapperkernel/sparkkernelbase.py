@@ -3,9 +3,9 @@
 import requests
 from ipykernel.ipkernel import IPythonKernel
 from hdijupyterutils.ipythondisplay import IpythonDisplay
-from hdijupyterutils.log import Log
 
 import sparkmagic.utils.configuration as conf
+from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 from sparkmagic.livyclientlib.exceptions import wrap_unexpected_exceptions
 from sparkmagic.kernels.wrapperkernel.usercodeparser import UserCodeParser
@@ -26,7 +26,7 @@ class SparkKernelBase(IPythonKernel):
 
         super(SparkKernelBase, self).__init__(**kwargs)
 
-        self.logger = Log(MAGICS_LOGGER_NAME, conf.logging_config(), u"_jupyter_kernel".format(self.session_language))
+        self.logger = SparkLog(u"_jupyter_kernel".format(self.session_language))
         self._fatal_error = None
         self.ipython_display = IpythonDisplay()
 
