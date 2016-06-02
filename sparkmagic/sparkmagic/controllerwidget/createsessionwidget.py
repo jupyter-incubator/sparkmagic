@@ -1,8 +1,8 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 import json
-from hdijupyterutils import configuration as conf
 
+import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.constants import LANG_SCALA, LANG_PYTHON
 from sparkmagic.controllerwidget.abstractmenuwidget import AbstractMenuWidget
 

@@ -119,7 +119,7 @@ class AutoVizWidget(FlexBox):
             return self.on_render_viz()
 
         button = self.ipywidget_factory.get_button(description=name)
-        button.padding = "10px"
+        button.layout.width = "70px"
         button.on_click(on_render)
 
         children.append(button)

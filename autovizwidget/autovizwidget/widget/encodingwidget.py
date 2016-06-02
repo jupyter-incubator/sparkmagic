@@ -36,6 +36,7 @@ class EncodingWidget(FlexBox):
         self.x_view = self.ipywidget_factory.get_dropdown(options=options_x_view,
                                                           description="X", value=self.encoding.x)
         self.x_view.on_trait_change(self._x_changed_callback, 'value')
+        self.x_view.layout.width = "200px"
 
         # Y
         options_y_view = {str(i): str(i) for i in self.df.columns}
@@ -43,6 +44,7 @@ class EncodingWidget(FlexBox):
         y_column_view = self.ipywidget_factory.get_dropdown(options=options_y_view,
                                                             description="Y", value=self.encoding.y)
         y_column_view.on_trait_change(self._y_changed_callback, 'value')
+        y_column_view.layout.width = "200px"
 
         # Y aggregator
         value_for_view = self._get_value_for_aggregation(self.encoding.y_aggregation)
@@ -56,6 +58,7 @@ class EncodingWidget(FlexBox):
             description="Func.",
             value=value_for_view)
         self.y_agg_view.on_trait_change(self._y_agg_changed_callback, 'value')
+        self.y_agg_view.layout.width = "200px"
 
         # Y view
         self.y_view = self.ipywidget_factory.get_hbox()
@@ -77,19 +80,19 @@ class EncodingWidget(FlexBox):
         self.children = [self.widget]
 
     def show_x(self, boolean):
-        self.x_view.visible = boolean
+        self._widget_visible(self.x_view, boolean)
 
     def show_logarithmic_x_axis(self, boolean):
-        self.logarithmic_x_axis.visible = boolean
+        self._widget_visible(self.logarithmic_x_axis, boolean)
 
     def show_logarithmic_y_axis(self, boolean):
-        self.logarithmic_y_axis.visible = boolean
+        self._widget_visible(self.logarithmic_y_axis, boolean)
 
     def show_y(self, boolean):
-        self.y_view.visible = boolean
+        self._widget_visible(self.y_view, boolean)
 
     def show_controls(self, boolean):
-        self.widget.visible = boolean
+        self._widget_visible(self.widget, boolean)
 
     def _get_value_for_aggregation(self, y_aggregation):
         if y_aggregation is not None:
@@ -119,3 +122,9 @@ class EncodingWidget(FlexBox):
     def _logarithmic_y_callback(self, name, old_value, new_value):
             self.encoding.logarithmic_y_axis = new_value
             return self.change_hook()
+            
+    def _widget_visible(self, widget, visible):
+        if visible:
+            widget.layout.display = "flex"
+        else:
+            widget.layout.display = "none"

@@ -1,6 +1,6 @@
 DESCRIPTION         = "AutoVizWidget: An Auto-Visualization library for pandas dataframes"
 NAME                = "autovizwidget"
-PACKAGES            = ['autovizwidget', 'autovizwidget/plotlygraphs', 'autovizwidget/widget']
+PACKAGES            = ['autovizwidget', 'autovizwidget/plotlygraphs', 'autovizwidget/widget', 'autovizwidget/utils']
 AUTHOR              = "Jupyter Development Team"
 AUTHOR_EMAIL        = "jupyter@googlegroups.org"
 URL                 = 'https://github.com/jupyter-incubator/sparkmagic/autovizwidget'
@@ -58,6 +58,8 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.4'],
       install_requires=[
           'plotly>=1.10.0,<1.11.0',
-          'hdijupyterutils'
+          'ipywidgets>5.0.0',
+          'hdijupyterutils',
+          'notebook>=4.2'
       ])
 

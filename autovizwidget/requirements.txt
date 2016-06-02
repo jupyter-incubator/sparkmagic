@@ -1,2 +1,4 @@
 plotly>=1.10.0,<1.11.0
+ipywidgets>5.0.0
 hdijupyterutils
+notebook>=4.2

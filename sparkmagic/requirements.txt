@@ -6,5 +6,6 @@ mock
 pandas==0.17.1
 numpy
 requests
-ipykernel==4.2.2
-ipywidgets
+ipykernel>=4.2.2,<5
+ipywidgets>5.0.0
+notebook>=4.2

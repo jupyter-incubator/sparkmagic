@@ -2,7 +2,6 @@ from nose.tools import with_setup, raises
 from mock import MagicMock
 
 from hdijupyterutils.events import Events
-import hdijupyterutils.constants as constants
 from hdijupyterutils.utils import generate_uuid
 from hdijupyterutils.constants import INSTANCE_ID, TIMESTAMP
 from hdijupyterutils.utils import get_instance_id
