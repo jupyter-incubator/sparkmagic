@@ -25,18 +25,18 @@ Check out the [examples](examples) directory.
 
 1. Install the library
 
-        git clone https://github.com/jupyter-incubator/sparkmagic
-        cd sparkmagic
-        pip install -e .
+        pip install sparkmagic
 
-2. (Optional) Install the wrapper kernels
+2. Make sure that ipywidgets is properly installed by running
 
-        jupyter-kernelspec install remotespark/kernels/sparkkernel
-        jupyter-kernelspec install remotespark/kernels/pysparkkernel
+        jupyter nbextension enable --py --sys-prefix widgetsnbextension 
         
-3. (Optional) Copy the example configuration file to your home directory 
+3. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
 
-        cp remotespark/example_config.json ~/.sparkmagic/config.json
+        jupyter-kernelspec install sparkmagic/kernels/sparkkernel
+        jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
+        
+4. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
         
 ## Architecture
 
@@ -66,5 +66,18 @@ In practice this means that you must use Python for client-side data manipulatio
 
 We welcome contributions from everyone. 
 If you've made an improvement to our code, please send us a [pull request](https://github.com/jupyter-incubator/sparkmagic/pulls).
+
+To dev install, execute the following:
+
+        git clone https://github.com/jupyter-incubator/sparkmagic
+        pip install -e hdijupyterutils 
+        pip install -e autovizwidget
+        pip install -e sparkmagic
+        
+and optionally follow steps 3 and 4 above.
+
+To run unit tests, run:
+
+        nosetests hdijupyterutils autovizwidget sparkmagic
 
 If you want to see an enhancement made but don't have time to work on it yourself, feel free to submit an [issue](https://github.com/jupyter-incubator/sparkmagic/issues) for us to deal with.

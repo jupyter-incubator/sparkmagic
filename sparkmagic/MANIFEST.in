@@ -1,0 +1,1 @@
+recursive-include sparkmagic/kernels *.js *.json

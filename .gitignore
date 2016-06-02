@@ -60,3 +60,5 @@ target/
 .ipynb_checkpoints
 
 .idea/*
+MANIFEST
+.vscode/tasks.json

@@ -1,9 +1,0 @@
-ipython==4.0.2
-nose
-mock
-requests
-pandas==0.17.1
-numpy
-ipykernel==4.2.2
-ipywidgets
-plotly==1.9.7
