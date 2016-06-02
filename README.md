@@ -36,7 +36,7 @@ Check out the [examples](examples) directory.
         jupyter-kernelspec install sparkmagic/kernels/sparkkernel
         jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
         
-4. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the `example_config.json`
+4. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
         
 ## Architecture
 
@@ -67,10 +67,11 @@ In practice this means that you must use Python for client-side data manipulatio
 We welcome contributions from everyone. 
 If you've made an improvement to our code, please send us a [pull request](https://github.com/jupyter-incubator/sparkmagic/pulls).
 
-To install, execute the following:
+To dev install, execute the following:
 
         git clone https://github.com/jupyter-incubator/sparkmagic
-        cd sparkmagic
-        pip install -e .
+        pip install -e hdijupyterutils 
+        pip install -e autovizwidget
+        pip install -e sparkmagic
 
 If you want to see an enhancement made but don't have time to work on it yourself, feel free to submit an [issue](https://github.com/jupyter-incubator/sparkmagic/issues) for us to deal with.
