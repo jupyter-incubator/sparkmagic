@@ -27,12 +27,16 @@ Check out the [examples](examples) directory.
 
         pip install sparkmagic
 
-2. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
+2. Make sure that ipywidgets is properly installed by running
+
+        jupyter nbextension enable --py --sys-prefix widgetsnbextension 
+        
+3. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
 
         jupyter-kernelspec install sparkmagic/kernels/sparkkernel
         jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
         
-3. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the `example_config.json`
+4. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the `example_config.json`
         
 ## Architecture
 
