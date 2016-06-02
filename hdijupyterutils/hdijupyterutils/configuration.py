@@ -5,7 +5,6 @@ import sys
 
 from .utils import join_paths
 from .filesystemreaderwriter import FileSystemReaderWriter
-from .constants import LOGGING_CONFIG_CLASS_NAME
 
 
 def with_override(overrides, path, fsrw_class=None):
@@ -69,29 +68,3 @@ def _load(path, fsrw_class=None):
     else:
         overrides = json.loads(line)
     return overrides
-
-
-def logging_config():
-    return {
-        u"version": 1,
-        u"formatters": {
-            u"magicsFormatter": {
-                u"format": u"%(asctime)s\t%(levelname)s\t%(message)s",
-                u"datefmt": u""
-            }
-        },
-        u"handlers": {
-            u"magicsHandler": {
-                u"class": LOGGING_CONFIG_CLASS_NAME,
-                u"formatter": u"magicsFormatter",
-                u"home_path": "~/.hdijupyterutils"
-            }
-        },
-        u"loggers": {
-            u"magicsLogger": {
-                u"handlers": [u"magicsHandler"],
-                u"level": u"DEBUG",
-                u"propagate": 0
-            }
-        }
-    }

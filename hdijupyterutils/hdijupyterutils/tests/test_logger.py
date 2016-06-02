@@ -2,8 +2,7 @@
 import logging
 from nose.tools import assert_equals
 
-from hdijupyterutils.configuration import logging_config
-from hdijupyterutils.log import Log
+from hdijupyterutils.log import Log, logging_config
 
 
 def get_logging_config():

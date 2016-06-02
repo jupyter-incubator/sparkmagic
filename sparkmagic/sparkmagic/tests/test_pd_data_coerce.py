@@ -1,7 +1,7 @@
 from pandas.util.testing import assert_frame_equal
 import pandas as pd
 
-from hdijupyterutils.utils import coerce_pandas_df_to_numeric_datetime
+from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime
 
 
 def test_no_coercing():

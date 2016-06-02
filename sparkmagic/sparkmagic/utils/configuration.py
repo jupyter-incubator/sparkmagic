@@ -18,14 +18,13 @@ path = join_paths(HOME_PATH, CONFIG_FILE)
 
     
 def override(config, value):
-    global d, path
     _override(d, path, config, value)
 
 
 def override_all(obj):
-    global d
     _override_all(d, obj)
 
+_with_override = with_override(d, path)
 
 # Configs
        
@@ -34,25 +33,25 @@ def get_session_properties(language):
     properties[u"kind"] = get_livy_kind(language)
     return properties
 
-@with_override(d, path)
+@_with_override
 def session_configs():
     return {}
 
-@with_override(d, path)
+@_with_override
 def kernel_python_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
     
 def base64_kernel_python_credentials():
     return _credentials_override(kernel_python_credentials)       
 
-@with_override(d, path)
+@_with_override
 def kernel_scala_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
 
 def base64_kernel_scala_credentials():        
     return _credentials_override(kernel_scala_credentials)
 
-@with_override(d, path)
+@_with_override
 def logging_config():
     return {
         u"version": 1,
@@ -78,27 +77,27 @@ def logging_config():
         }
     }
 
-@with_override(d, path)
+@_with_override
 def events_handler_class():
     return EVENTS_HANDLER_CLASS_NAME
 
-@with_override(d, path)
+@_with_override
 def status_sleep_seconds():
     return 2
 
-@with_override(d, path)
+@_with_override
 def statement_sleep_seconds():
     return 2
 
-@with_override(d, path)
+@_with_override
 def wait_for_idle_timeout_seconds():
     return 15
 
-@with_override(d, path)
+@_with_override
 def livy_session_startup_timeout_seconds():
     return 60
 
-@with_override(d, path)
+@_with_override
 def fatal_error_suggestion():
     return u"""The code failed because of a fatal error:
 \t{}.
@@ -108,27 +107,27 @@ a) Make sure Spark has enough available resources for Jupyter to create a Spark 
 b) Contact your Jupyter administrator to make sure the Spark magics library is configured correctly.
 c) Restart the kernel."""
 
-@with_override(d, path)
+@_with_override
 def ignore_ssl_errors():
     return False
 
-@with_override(d, path)
+@_with_override
 def use_auto_viz():
     return True
 
-@with_override(d, path)
+@_with_override
 def default_maxrows():
     return 2500
 
-@with_override(d, path)
+@_with_override
 def default_samplemethod():
     return "take"
 
-@with_override(d, path)
+@_with_override
 def default_samplefraction():
     return 0.1
 
-@with_override(d, path)
+@_with_override
 def pyspark_sql_encoding():
     return u'utf-8'
     

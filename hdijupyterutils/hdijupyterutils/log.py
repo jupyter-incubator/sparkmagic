@@ -1,10 +1,10 @@
-﻿# Copyright (c) 2015  aggftw@gmail.com
-# Distributed under the terms of the Modified BSD License.
+﻿# Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
-
 import logging
 import logging.config
+
+from .constants import LOGGING_CONFIG_CLASS_NAME
 
 
 class Log(object):
@@ -31,4 +31,29 @@ class Log(object):
 
     def _transform_log_message(self, message):
         return u'{}\t{}'.format(self._caller_name, message)
-    
+
+
+def logging_config():
+    return {
+        u"version": 1,
+        u"formatters": {
+            u"magicsFormatter": {
+                u"format": u"%(asctime)s\t%(levelname)s\t%(message)s",
+                u"datefmt": u""
+            }
+        },
+        u"handlers": {
+            u"magicsHandler": {
+                u"class": LOGGING_CONFIG_CLASS_NAME,
+                u"formatter": u"magicsFormatter",
+                u"home_path": "~/.hdijupyterutils"
+            }
+        },
+        u"loggers": {
+            u"magicsLogger": {
+                u"handlers": [u"magicsHandler"],
+                u"level": u"DEBUG",
+                u"propagate": 0
+            }
+        }
+    }    

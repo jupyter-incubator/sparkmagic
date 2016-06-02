@@ -1,6 +1,8 @@
 # Distributed under the terms of the Modified BSD License.
 from IPython.core.error import UsageError
 from IPython.core.magic_arguments import parse_argstring
+import numpy as np
+import pandas as pd
 
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 from .constants import LANG_SCALA, LANG_PYTHON, LANG_R, \
@@ -26,3 +28,22 @@ def parse_argstring_or_throw(magic_func, argstring, parse_argstring=parse_argstr
         return parse_argstring(magic_func, argstring)
     except UsageError as e:
         raise BadUserDataException(str(e))
+        
+        
+def coerce_pandas_df_to_numeric_datetime(df):
+    for column_name in df.columns:
+        coerced = False
+
+        if not coerced and df[column_name].dtype == np.dtype("object"):
+            try:
+                df[column_name] = pd.to_datetime(df[column_name], errors="raise")
+                coerced = True
+            except (ValueError, TypeError, OverflowError):
+                pass
+
+        if not coerced and df[column_name].dtype == np.dtype("object"):
+            try:
+                df[column_name] = pd.to_numeric(df[column_name], errors="raise")
+                coerced = True
+            except (ValueError, TypeError):
+                pass

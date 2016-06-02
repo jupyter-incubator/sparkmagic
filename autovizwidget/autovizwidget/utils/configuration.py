@@ -13,21 +13,20 @@ path = join_paths(HOME_PATH, CONFIG_FILE)
 
 
 def override(config, value):
-    global d, path
     _override(d, path, config, value)
 
 
 def override_all(obj):
-    global d
     _override_all(d, obj)
     
+_with_override = with_override(d, path)
     
 # Configs
 
-@with_override(d, path)
+@_with_override
 def events_handler():
     return None
 
-@with_override(d, path)
+@_with_override
 def max_slices_pie_graph():
     return 100

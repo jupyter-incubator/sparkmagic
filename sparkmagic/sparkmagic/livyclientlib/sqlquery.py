@@ -1,8 +1,8 @@
 import json
 import pandas as pd
 from hdijupyterutils.guid import ObjectWithGuid
-from hdijupyterutils.utils import coerce_pandas_df_to_numeric_datetime
 
+from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime
 import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparkevents import SparkEvents
