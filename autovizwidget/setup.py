@@ -57,7 +57,7 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4'],
       install_requires=[
-          'plotly==1.10.0',
+          'plotly>=1.10.0,<1.11.0',
           'hdijupyterutils'
       ])
 
