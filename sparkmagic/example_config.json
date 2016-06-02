@@ -50,6 +50,5 @@
 
   "use_auto_viz": true,
   "max_results_sql": 2500,
-  "max_slices_pie_graph": 100,
   "pyspark_sql_encoding": "utf-8"
 }
