@@ -6,7 +6,7 @@ Provides the %spark magic."""
 
 from __future__ import print_function
 import json
-from IPython.core.magic import line_cell_magic, needs_local_scope
+from IPython.core.magic import line_cell_magic, needs_local_scope, line_magic
 from IPython.core.magic import magics_class
 from IPython.core.magic_arguments import argument, magic_arguments
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
@@ -32,13 +32,15 @@ class RemoteSparkMagics(SparkMagicBase):
             widget = MagicsControllerWidget(self.spark_controller, IpyWidgetFactory(), self.ipython_display)
         self.manage_widget = widget
 
-    @line_cell_magic
-    def manage_spark(self, line, cell="", local_ns=None):
+    @line_magic
+    def manage_spark(self, line, local_ns=None):
+        """Magic to manage Spark ednpoints and sessions. First, add an endpoint via the 'Add Endpoint' tab.
+        Then, create a session. You'll be able to select the session created from the %%spark magic."""
         return self.manage_widget
 
     @magic_arguments()
     @argument("-c", "--context", type=str, default=CONTEXT_NAME_SPARK,
-              help="Context to use: '{}' for spark and '{}' for sql queries"
+              help="Context to use: '{}' for spark and '{}' for sql queries. "
                    "Default is '{}'.".format(CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, CONTEXT_NAME_SPARK))
     @argument("-s", "--session", type=str, default=None, help="The name of the Livy session to use.")
     @argument("-o", "--output", type=str, default=None, help="If present, output when using SQL "
@@ -154,15 +156,9 @@ class RemoteSparkMagics(SparkMagicBase):
                 self.spark_controller.cleanup()
         # logs
         elif subcommand == "logs":
-            if args.session is None:
-                self.ipython_display.send_error("Need to provide session argument (-s SESSION_NAME)")
-                return
             self.ipython_display.write(self.spark_controller.get_logs(args.session))
         # run
         elif len(subcommand) == 0:
-            if args.session is None:
-                self.ipython_display.send_error("Need to provide session argument (-s SESSION_NAME)")
-                return
             if args.context == CONTEXT_NAME_SPARK:
                 (success, out) = self.spark_controller.run_command(Command(cell), args.session)
                 if success:
