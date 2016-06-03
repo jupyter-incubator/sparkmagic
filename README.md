@@ -12,14 +12,32 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 ## Features
 
 * Run Spark code in multiple languages against any remote Spark cluster through Livy
-
+* Automatic SparkContext (`sc`) and HiveContext (`sqlContext`) creation
+* Ability to execute SparkSQL queries
 * Automatic visualization of SQL queries with the `%%sql` magic in the PySpark and Spark kernels; use an easy visual interface to interactively construct visualizations, no code required
-
-* Capture the output of SQL queries as Pandas dataframes to work with them on your local machine
+* Easy access to Spark application information and logs (`%%info` magic)
+* Ability to capture the output of SQL queries as Pandas dataframes to interact with other Python libraries (e.g. matplotlib)
 
 ## Examples
 
-Check out the [examples](examples) directory.
+There are two ways to use sparkmagic. Head over to the [examples](examples) section for a demonstration on how to use both models of execution.
+
+### 1. Via the IPython kernel
+
+This model of execution works great for when you are working with data both small and large. The scenario is as follows:
+
+        You are a Data Scientist in the IPython kernel doing data analysis, and you have some Big Data need from time to time. For this, you would like to run some Spark code in your Spark cluster from the convenience of the IPython notebook you always use.
+
+sparkmagic allows you to do so by creating some IPython kernel magics that allow you to execute code in your remote Spark cluster and retrieve the results back to the IPython kernel.
+
+### 2. Via the PySpark and Spark kernels
+
+This model of execution allows you to execute all your code in the Spark cluster. These are, in essence, Python and Scala kernels completely dedicated to Spark code execution.
+The scenario is as follows:
+
+        You are a Data Scientist that would like to explore Big-Data-size datasets via a Spark cluster. In order to do so, a dedicated Python or Scala kernel is better suited.
+
+If you want to see how to use all the features in these kernels, simply execute the `%%help` magic in them.
 
 ## Installation
 
