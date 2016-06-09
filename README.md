@@ -13,8 +13,8 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 
 * Run Spark code in multiple languages against any remote Spark cluster through Livy
 * Automatic SparkContext (`sc`) and HiveContext (`sqlContext`) creation
-* Ability to execute SparkSQL queries
-* Automatic visualization of SQL queries with the `%%sql` magic in the PySpark and Spark kernels; use an easy visual interface to interactively construct visualizations, no code required
+* Easily execute SparkSQL queries with the `%%sql` magic
+* Automatic visualization of SQL queries in the PySpark and Spark kernels; use an easy visual interface to interactively construct visualizations, no code required
 * Easy access to Spark application information and logs (`%%info` magic)
 * Ability to capture the output of SQL queries as Pandas dataframes to interact with other Python libraries (e.g. matplotlib)
 
@@ -24,20 +24,12 @@ There are two ways to use sparkmagic. Head over to the [examples](examples) sect
 
 ### 1. Via the IPython kernel
 
-This model of execution works great for when you are working with data both small and large. The scenario is as follows:
-
-        You are a Data Scientist in the IPython kernel doing data analysis, and you have some Big Data need from time to time. For this, you would like to run some Spark code in your Spark cluster from the convenience of the IPython notebook you always use.
-
-sparkmagic allows you to do so by creating some IPython kernel magics that allow you to execute code in your remote Spark cluster and retrieve the results back to the IPython kernel.
+The sparkmagic library provides a %%spark magic that you can use to easily run code against a remote Spark cluster from a normal IPython notebook. See the [Spark Magics on IPython sample notebook](examples/Magics in IPython Kernel.ipynb)
 
 ### 2. Via the PySpark and Spark kernels
 
-This model of execution allows you to execute all your code in the Spark cluster. These are, in essence, Python and Scala kernels completely dedicated to Spark code execution.
-The scenario is as follows:
-
-        You are a Data Scientist that would like to explore Big-Data-size datasets via a Spark cluster. In order to do so, a dedicated Python or Scala kernel is better suited.
-
-If you want to see how to use all the features in these kernels, simply execute the `%%help` magic in them.
+The sparkmagic library also provides a set of Scala and Python kernels that allow you to automatically connect to a remote Spark cluster, run code and SQL queries, manage your Livy server and Spark job configuration, and generate automatic visualizations.
+See [sample notebook]().
 
 ## Installation
 

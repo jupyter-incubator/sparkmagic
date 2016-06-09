@@ -34,7 +34,7 @@ class RemoteSparkMagics(SparkMagicBase):
 
     @line_magic
     def manage_spark(self, line, local_ns=None):
-        """Magic to manage Spark ednpoints and sessions. First, add an endpoint via the 'Add Endpoint' tab.
+        """Magic to manage Spark endpoints and sessions. First, add an endpoint via the 'Add Endpoint' tab.
         Then, create a session. You'll be able to select the session created from the %%spark magic."""
         return self.manage_widget
 
