@@ -12,14 +12,24 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 ## Features
 
 * Run Spark code in multiple languages against any remote Spark cluster through Livy
-
-* Automatic visualization of SQL queries with the `%%sql` magic in the PySpark and Spark kernels; use an easy visual interface to interactively construct visualizations, no code required
-
-* Capture the output of SQL queries as Pandas dataframes to work with them on your local machine
+* Automatic SparkContext (`sc`) and HiveContext (`sqlContext`) creation
+* Easily execute SparkSQL queries with the `%%sql` magic
+* Automatic visualization of SQL queries in the PySpark and Spark kernels; use an easy visual interface to interactively construct visualizations, no code required
+* Easy access to Spark application information and logs (`%%info` magic)
+* Ability to capture the output of SQL queries as Pandas dataframes to interact with other Python libraries (e.g. matplotlib)
 
 ## Examples
 
-Check out the [examples](examples) directory.
+There are two ways to use sparkmagic. Head over to the [examples](examples) section for a demonstration on how to use both models of execution.
+
+### 1. Via the IPython kernel
+
+The sparkmagic library provides a %%spark magic that you can use to easily run code against a remote Spark cluster from a normal IPython notebook. See the [Spark Magics on IPython sample notebook](examples/Magics in IPython Kernel.ipynb)
+
+### 2. Via the PySpark and Spark kernels
+
+The sparkmagic library also provides a set of Scala and Python kernels that allow you to automatically connect to a remote Spark cluster, run code and SQL queries, manage your Livy server and Spark job configuration, and generate automatic visualizations.
+See [sample notebook]().
 
 ## Installation
 
