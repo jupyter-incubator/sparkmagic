@@ -55,7 +55,7 @@ class SQLQuery(ObjectWithGuid):
             command_guid = command.guid
             (success, records_text) = command.execute(session)
             if not success:
-                raise DataFrameParseException(records_text)
+                raise BadUserDataException(records_text)
             result = self._records_to_dataframe(records_text)
         except Exception as e:
             self._spark_events.emit_sql_execution_end_event(session.guid, session.kind, session.id, self.guid,
