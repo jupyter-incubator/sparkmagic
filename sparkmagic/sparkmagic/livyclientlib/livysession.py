@@ -1,6 +1,5 @@
-﻿# Copyright (c) 2015  aggftw@gmail.com
-# Distributed under the terms of the Modified BSD License.
-
+﻿# Distributed under the terms of the Modified BSD License.
+import threading
 from time import sleep, time
 
 from hdijupyterutils.guid import ObjectWithGuid
@@ -14,14 +13,37 @@ from .exceptions import FailedToCreateSqlContextException, LivyClientTimeoutExce
     LivyUnexpectedStatusException, BadUserDataException
 
 
+class _HeartbeatThread(threading.Thread):
+    def __init__(self, livy_session, refresh_seconds, retry_seconds):
+        super(_HeartbeatThread, self).__init__()
+        
+        self.livy_session = livy_session
+        self.refresh_seconds = refresh_seconds
+        self.retry_seconds = retry_seconds
+
+    def run(self):
+        while self.livy_session is not None:
+            try:
+                self.livy_session.refresh_status()
+                sleep(self.refresh_seconds)
+            except Exception as e:
+                self.livy_session.logger.error(u'{}'.format(e))
+                sleep(self.retry_seconds)
+
+    def stop(self):
+        self.livy_session = None
+        self.join()
+
+
 class LivySession(ObjectWithGuid):
     def __init__(self, http_client, properties, ipython_display,
-                 session_id=-1, sql_created=None, spark_events=None):
+                 session_id=-1, sql_created=None, spark_events=None, should_heartbeat=False):
         super(LivySession, self).__init__()
         assert u"kind" in list(properties.keys())
         kind = properties[u"kind"]
         self.properties = properties
         self.ipython_display = ipython_display
+        self._should_heartbeat = should_heartbeat
 
         if spark_events is None:
             spark_events = SparkEvents()
@@ -44,18 +66,20 @@ class LivySession(ObjectWithGuid):
             raise BadUserDataException(u"Session of kind '{}' not supported. Session must be of kinds {}."
                                        .format(kind, ", ".join(constants.SESSION_KINDS_SUPPORTED)))
 
-        if session_id == -1:
-            self.status = constants.NOT_STARTED_SESSION_STATUS
-            sql_created = False
-        else:
-            self.status = constants.BUSY_SESSION_STATUS
-
         self._app_id = None
         self._logs = u""
         self._http_client = http_client
         self._status_sleep_seconds = status_sleep_seconds
         self._statement_sleep_seconds = statement_sleep_seconds
         self._wait_for_idle_timeout_seconds = wait_for_idle_timeout_seconds
+        
+        self._heartbeat_thread = None
+        if session_id == -1:
+            self.status = constants.NOT_STARTED_SESSION_STATUS
+            sql_created = False
+        else:
+            self.status = constants.BUSY_SESSION_STATUS
+            self._start_heartbeat_thread()
 
         self.kind = kind
         self.id = session_id
@@ -75,6 +99,10 @@ class LivySession(ObjectWithGuid):
             self.status = str(r[u"state"])
 
             self.ipython_display.writeln(u"Creating SparkContext as 'sc'")
+            
+            # Start heartbeat thread to keep Livy interactive session alive.
+            self._start_heartbeat_thread()
+            
             # We wait for livy_session_startup_timeout_seconds() for the session to start up.
             try:
                 self.wait_for_idle(conf.livy_session_startup_timeout_seconds())
@@ -145,6 +173,8 @@ class LivySession(ObjectWithGuid):
 
         try:
             self.logger.debug(u"Deleting session '{}'".format(session_id))
+            
+            self._stop_heartbeat_thread()
 
             if self.status != constants.NOT_STARTED_SESSION_STATUS:
                 self._http_client.delete_session(session_id)
@@ -217,3 +247,20 @@ class LivySession(ObjectWithGuid):
             raise BadUserDataException(u"Do not know how to create HiveContext in session of kind {}.".format(self.kind))
 
         return Command(sql_context_command)
+
+    def _start_heartbeat_thread(self):
+        if self._should_heartbeat:
+            if self._heartbeat_thread is None:
+                refresh_seconds = conf.heartbeat_refresh_seconds()
+                retry_seconds = conf.heartbeat_retry_seconds()
+                self._heartbeat_thread = self._get_hearbeat_thread(refresh_seconds, retry_seconds)
+            
+            self._heartbeat_thread.daemon = True
+            self._heartbeat_thread.start()
+
+    def _stop_heartbeat_thread(self):
+        if self._heartbeat_thread is not None:
+            self._heartbeat_thread.stop()
+            
+    def _get_heartbeat_thread(self, refresh_seconds, retry_seconds):
+        return _HeartbeatThread(self, refresh_seconds, retry_seconds)

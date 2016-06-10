@@ -50,5 +50,9 @@
 
   "use_auto_viz": true,
   "max_results_sql": 2500,
-  "pyspark_sql_encoding": "utf-8"
+  "pyspark_sql_encoding": "utf-8",
+  
+  "should_heartbeat": false,
+  "heartbeat_refresh_seconds": 30,
+  "heartbeat_retry_seconds": 10
 }

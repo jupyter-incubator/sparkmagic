@@ -102,7 +102,7 @@ class SparkController(object):
     def _livy_session(http_client, properties, ipython_display,
                       session_id=-1, sql_created=None):
         return LivySession(http_client, properties, ipython_display,
-                           session_id, sql_created)
+                           session_id, sql_created, conf.should_heartbeat())
 
     @staticmethod
     def _http_client(endpoint):
