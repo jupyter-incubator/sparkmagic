@@ -14,14 +14,16 @@ from .exceptions import FailedToCreateSqlContextException, LivyClientTimeoutExce
 
 
 class _HeartbeatThread(threading.Thread):
-    def __init__(self, livy_session, refresh_seconds, retry_seconds):
+    def __init__(self, livy_session, refresh_seconds, retry_seconds, run_at_most=None):
         super(_HeartbeatThread, self).__init__()
         
         self.livy_session = livy_session
         self.refresh_seconds = refresh_seconds
         self.retry_seconds = retry_seconds
+        self.run_at_most = run_at_most
 
     def run(self):
+        i = 0
         while self.livy_session is not None:
             try:
                 self.livy_session.refresh_status()
@@ -29,6 +31,12 @@ class _HeartbeatThread(threading.Thread):
             except Exception as e:
                 self.livy_session.logger.error(u'{}'.format(e))
                 sleep(self.retry_seconds)
+            
+            if self.run_at_most is not None:
+                i += 1
+                
+                if i >= self.run_at_most:
+                    return
 
     def stop(self):
         self.livy_session = None
@@ -37,13 +45,15 @@ class _HeartbeatThread(threading.Thread):
 
 class LivySession(ObjectWithGuid):
     def __init__(self, http_client, properties, ipython_display,
-                 session_id=-1, sql_created=None, spark_events=None, should_heartbeat=False):
+                 session_id=-1, sql_created=None, spark_events=None,
+                 should_heartbeat=False, heartbeat_thread=None):
         super(LivySession, self).__init__()
         assert u"kind" in list(properties.keys())
         kind = properties[u"kind"]
         self.properties = properties
         self.ipython_display = ipython_display
         self._should_heartbeat = should_heartbeat
+        self._user_passed_heartbeat_thread = heartbeat_thread
 
         if spark_events is None:
             spark_events = SparkEvents()
@@ -249,11 +259,14 @@ class LivySession(ObjectWithGuid):
         return Command(sql_context_command)
 
     def _start_heartbeat_thread(self):
-        if self._should_heartbeat:
-            if self._heartbeat_thread is None:
-                refresh_seconds = conf.heartbeat_refresh_seconds()
-                retry_seconds = conf.heartbeat_retry_seconds()
-                self._heartbeat_thread = self._get_hearbeat_thread(refresh_seconds, retry_seconds)
+        if self._should_heartbeat and self._heartbeat_thread is None:
+            refresh_seconds = conf.heartbeat_refresh_seconds()
+            retry_seconds = conf.heartbeat_retry_seconds()
+            
+            if self._user_passed_heartbeat_thread is None:
+                self._heartbeat_thread = _HeartbeatThread(self, refresh_seconds, retry_seconds)
+            else:
+                self._heartbeat_thread = self._user_passed_heartbeat_thread
             
             self._heartbeat_thread.daemon = True
             self._heartbeat_thread.start()
@@ -261,6 +274,4 @@ class LivySession(ObjectWithGuid):
     def _stop_heartbeat_thread(self):
         if self._heartbeat_thread is not None:
             self._heartbeat_thread.stop()
-            
-    def _get_heartbeat_thread(self, refresh_seconds, retry_seconds):
-        return _HeartbeatThread(self, refresh_seconds, retry_seconds)
+            self._heartbeat_thread = None

@@ -44,11 +44,12 @@ class TestLivySession(object):
         self.get_statement_responses = []
         self.post_statement_responses = []
         self.get_session_responses = []
-        self.post_session_responses = []    
+        self.post_session_responses = []
 
     def setup(self):
         self.http_client = MagicMock()
         self.spark_events = MagicMock()
+        self.heartbeat_thread = MagicMock()
 
     def _next_statement_response_get(self, *args):
         val = self.get_statement_responses[0]
@@ -70,9 +71,17 @@ class TestLivySession(object):
         self.post_session_responses = self.post_session_responses[1:]
         return val
 
-    def _create_session(self, kind=constants.SESSION_KIND_SPARK, session_id=-1, sql_created=False):
+    def _create_session(self, kind=constants.SESSION_KIND_SPARK, session_id=-1, sql_created=False,
+                        should_heartbeat=False):
         ipython_display = MagicMock()
-        session = LivySession(self.http_client, {"kind": kind}, ipython_display, session_id, sql_created, self.spark_events)
+        session = LivySession(self.http_client,
+                              {"kind": kind},
+                              ipython_display,
+                              session_id,
+                              sql_created,
+                              self.spark_events,
+                              should_heartbeat,
+                              self.heartbeat_thread)
         return session
 
     def _create_session_with_fixed_get_response(self, get_session_json):
@@ -124,11 +133,86 @@ class TestLivySession(object):
             "create_sql_context_timeout_seconds": 60
         })
         session_id = 1
-        session = self._create_session(session_id=session_id, sql_created=True)
+        session = self._create_session(session_id=session_id, sql_created=True,
+                                       should_heartbeat=False)
         conf.override_all({})
 
         assert session.id == session_id
         assert session.created_sql_context
+        assert session._heartbeat_thread is None
+        
+    def test_constructor_starts_heartbeat_with_existing_session(self):
+        conf.override_all({
+            "status_sleep_seconds": 4,
+            "statement_sleep_seconds": 2,
+            "create_sql_context_timeout_seconds": 60,
+            "heartbeat_refresh_seconds": 0.1
+        })
+        session_id = 1
+        session = self._create_session(session_id=session_id, sql_created=True,
+                                       should_heartbeat=True)
+        conf.override_all({})
+        
+        assert session.id == session_id
+        assert session.created_sql_context
+        assert self.heartbeat_thread.daemon
+        self.heartbeat_thread.start.assert_called_once_with()
+        assert not session._heartbeat_thread is None
+        
+    def test_start_with_heartbeat(self):
+        self.http_client.post_session.return_value = self.session_create_json
+        self.http_client.get_session.return_value = self.ready_sessions_json
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = self._create_session(should_heartbeat=True)
+        session.create_sql_context = MagicMock()
+        session.start()
+        conf.override_all({})
+
+        assert self.heartbeat_thread.daemon
+        self.heartbeat_thread.start.assert_called_once_with()
+        assert not session._heartbeat_thread is None
+        
+    def test_start_with_heartbeat_calls_only_once(self):
+        self.http_client.post_session.return_value = self.session_create_json
+        self.http_client.get_session.return_value = self.ready_sessions_json
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = self._create_session(should_heartbeat=True)
+        session.create_sql_context = MagicMock()
+        session.start()
+        session.start()
+        session.start()
+        conf.override_all({})
+
+        assert self.heartbeat_thread.daemon
+        self.heartbeat_thread.start.assert_called_once_with()
+        assert not session._heartbeat_thread is None
+        
+    def test_delete_with_heartbeat(self):
+        self.http_client.post_session.return_value = self.session_create_json
+        self.http_client.get_session.return_value = self.ready_sessions_json
+
+        conf.override_all({
+            "status_sleep_seconds": 0.01,
+            "statement_sleep_seconds": 0.01
+        })
+        session = self._create_session(should_heartbeat=True)
+        session.create_sql_context = MagicMock()
+        session.start()
+        conf.override_all({})
+        heartbeat_thread = session._heartbeat_thread
+        
+        session.delete()
+        
+        self.heartbeat_thread.stop.assert_called_once_with()
+        assert session._heartbeat_thread is None
 
     def test_constructor_starts_with_no_session(self):
         conf.override_all({
@@ -689,6 +773,15 @@ class TestLivySession(object):
     def test_get_normal_app_id(self):
         self._verify_get_app_id("\"app_id_123\"", "app_id_123")
 
+    def test_get_empty_driver_log_url(self):
+        self._verify_get_driver_log_url("null", None)
+
+    def test_get_normal_driver_log_url(self):
+        self._verify_get_driver_log_url("\"http://example.com\"", "http://example.com")
+
+    def test_missing_app_info_get_driver_log_url(self):
+        self._verify_get_driver_log_url_json(self.ready_sessions_json, None)
+        
     def _verify_get_app_id(self, mock_app_id, expected_app_id):
         mock_field = ",\"appId\":" + mock_app_id if mock_app_id is not None else ""
         get_session_json = json.loads('{"id":0,"state":"idle","output":null%s}' % mock_field)
@@ -698,15 +791,6 @@ class TestLivySession(object):
 
         assert_equals(expected_app_id, app_id)
         assert_equals(2, self.http_client.get_session.call_count)
-
-    def test_get_empty_driver_log_url(self):
-        self._verify_get_driver_log_url("null", None)
-
-    def test_get_normal_driver_log_url(self):
-        self._verify_get_driver_log_url("\"http://example.com\"", "http://example.com")
-
-    def test_missing_app_info_get_driver_log_url(self):
-        self._verify_get_driver_log_url_json(self.ready_sessions_json, None)
 
     def _verify_get_driver_log_url(self, mock_driver_log_url, expected_url):
         mock_field = "\"driverLogUrl\":" + mock_driver_log_url if mock_driver_log_url is not None else ""
