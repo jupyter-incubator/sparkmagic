@@ -24,6 +24,11 @@ class _HeartbeatThread(threading.Thread):
 
     def run(self):
         i = 0
+        if self.livy_session is not None:
+            self.livy_session.logger.info(u'Starting heartbeat for session {}'.format(self.livy_session.id))
+        else:
+            self.livy_session.logger.info(u'Will not start heartbeat because session is none')
+        
         while self.livy_session is not None:
             try:
                 self.livy_session.refresh_status()
@@ -39,6 +44,9 @@ class _HeartbeatThread(threading.Thread):
                     return
 
     def stop(self):
+        if self.livy_session is not None:
+            self.livy_session.logger.info(u'Stopping heartbeat for session {}'.format(self.livy_session.id))
+        
         self.livy_session = None
         self.join()
 
