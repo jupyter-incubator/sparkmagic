@@ -91,6 +91,10 @@ class LivySession(ObjectWithGuid):
         self._statement_sleep_seconds = statement_sleep_seconds
         self._wait_for_idle_timeout_seconds = wait_for_idle_timeout_seconds
         
+        self.kind = kind
+        self.id = session_id
+        self.created_sql_context = sql_created
+        
         self._heartbeat_thread = None
         if session_id == -1:
             self.status = constants.NOT_STARTED_SESSION_STATUS
@@ -98,10 +102,6 @@ class LivySession(ObjectWithGuid):
         else:
             self.status = constants.BUSY_SESSION_STATUS
             self._start_heartbeat_thread()
-
-        self.kind = kind
-        self.id = session_id
-        self.created_sql_context = sql_created
 
     def __str__(self):
         return u"Session id: {}\tYARN id: {}\tKind: {}\tState: {}\n\tSpark UI: {}\n\tDriver Log: {}"\
