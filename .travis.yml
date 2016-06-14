@@ -23,6 +23,10 @@ deploy:
       branch: travispypi
       tags: false
       condition: $TRAVIS_PYTHON_VERSION = "2.7"
+    before_deploy:
+      cd ./hdijupyterutils
+    after_deploy:
+      cd ..
 
     # production pypi
   - provider: pypi
@@ -34,3 +38,7 @@ deploy:
       branch: travispypi
       tags: true
       condition: $TRAVIS_PYTHON_VERSION = "2.7"
+    before_deploy:
+      cd ./hdijupyterutils
+    after_deploy:
+      cd ..
