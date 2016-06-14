@@ -192,15 +192,15 @@ class LivySession(ObjectWithGuid):
         try:
             self.logger.debug(u"Deleting session '{}'".format(session_id))
             
-            self._stop_heartbeat_thread()
-
             if self.status != constants.NOT_STARTED_SESSION_STATUS:
                 self._http_client.delete_session(session_id)
+                self._stop_heartbeat_thread()
                 self.status = constants.DEAD_SESSION_STATUS
                 self.id = -1
             else:
                 self.ipython_display.send_error(u"Cannot delete session {} that is in state '{}'."
                                                 .format(session_id, self.status))
+            
         except Exception as e:
             self._spark_events.emit_session_deletion_end_event(self.guid, self.kind, session_id, self.status, False,
                                                                e.__class__.__name__, str(e))
