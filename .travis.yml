@@ -20,7 +20,7 @@ deploy:
     password:
       secure: "dBkgLbftvFz0qClNf2A4vO9VO5S71EHnpkyEur3UHnRywG2ZgpQcy4iRK46D7pd4hkY6OXoYn4V27YR+Q9Wr6sC9iHNpNBho8bbKK78ccfeysrtzcL4PKjLbqEnf84S7RCXhFPrBmbpyLY1y3XpaowskNx1WDfxbyMAYkajirI4SzNIkLvOL6sj8qU8RPFe37vMFwZXRb/uv+bajU5pMNMRA7YnxtncPyo6oNTGydXxhHV/r5UPJgyJkVsP31eB4C4tpX3GKc/AH7JWRMaVJ6JzhWMB6hTMApdecaXXQ/FiqNrI2rfP2ZZYQomaEOjvxWSUj3cw/Rf+oHtQrFA2oNWO6kLPgKmIW2wib/y93d4Ew1g4g26q347CfisZ38S1QD7SKZrHbAvQKy0ALqeGRzfIMoc+Ys3eA/3IrshWcXWiotqn3aVUwHf2GvjdX5KY85l6B8zT5m16G97YnuXYhkhNdz37m37DBMv/7xt03PUzzcY196yJ0xIP6o/O6j3bHxv0qmzq+KDbY2TDDrKA3LBNaVzK2bS8J8NsOsh52Fo4Fzk8Y+mRTMgHNsDZ2MNWQfNr/EupJzIQwaM3l5AK9ikTCDimsOV0x48aXQoMeoEN/xJ6jgPx/ilVUs4fXeFUlPTYYt/xTBkS2FML36VfzJ5H4XtY+LzxOr2RYiZbBap8="
     on:
-      branch: master
+      branch: travispypi
       tags: false
       condition: $TRAVIS_PYTHON_VERSION = "2.7"
 
@@ -31,6 +31,6 @@ deploy:
     password:
       secure: "dBkgLbftvFz0qClNf2A4vO9VO5S71EHnpkyEur3UHnRywG2ZgpQcy4iRK46D7pd4hkY6OXoYn4V27YR+Q9Wr6sC9iHNpNBho8bbKK78ccfeysrtzcL4PKjLbqEnf84S7RCXhFPrBmbpyLY1y3XpaowskNx1WDfxbyMAYkajirI4SzNIkLvOL6sj8qU8RPFe37vMFwZXRb/uv+bajU5pMNMRA7YnxtncPyo6oNTGydXxhHV/r5UPJgyJkVsP31eB4C4tpX3GKc/AH7JWRMaVJ6JzhWMB6hTMApdecaXXQ/FiqNrI2rfP2ZZYQomaEOjvxWSUj3cw/Rf+oHtQrFA2oNWO6kLPgKmIW2wib/y93d4Ew1g4g26q347CfisZ38S1QD7SKZrHbAvQKy0ALqeGRzfIMoc+Ys3eA/3IrshWcXWiotqn3aVUwHf2GvjdX5KY85l6B8zT5m16G97YnuXYhkhNdz37m37DBMv/7xt03PUzzcY196yJ0xIP6o/O6j3bHxv0qmzq+KDbY2TDDrKA3LBNaVzK2bS8J8NsOsh52Fo4Fzk8Y+mRTMgHNsDZ2MNWQfNr/EupJzIQwaM3l5AK9ikTCDimsOV0x48aXQoMeoEN/xJ6jgPx/ilVUs4fXeFUlPTYYt/xTBkS2FML36VfzJ5H4XtY+LzxOr2RYiZbBap8="
     on:
-      branch: master
+      branch: travispypi
       tags: true
       condition: $TRAVIS_PYTHON_VERSION = "2.7"
