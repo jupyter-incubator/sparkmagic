@@ -24,32 +24,41 @@ def override(config, value):
 def override_all(obj):
     _override_all(d, obj)
 
+
 _with_override = with_override(d, path)
 
+
 # Configs
-       
+
+ 
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
     properties[u"kind"] = get_livy_kind(language)
     return properties
 
+
 @_with_override
 def session_configs():
     return {}
+
 
 @_with_override
 def kernel_python_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
     
+    
 def base64_kernel_python_credentials():
     return _credentials_override(kernel_python_credentials)       
+
 
 @_with_override
 def kernel_scala_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
 
+
 def base64_kernel_scala_credentials():        
     return _credentials_override(kernel_scala_credentials)
+
 
 @_with_override
 def logging_config():
@@ -77,25 +86,31 @@ def logging_config():
         }
     }
 
+
 @_with_override
 def events_handler_class():
     return EVENTS_HANDLER_CLASS_NAME
+
 
 @_with_override
 def status_sleep_seconds():
     return 2
 
+
 @_with_override
 def statement_sleep_seconds():
     return 2
+
 
 @_with_override
 def wait_for_idle_timeout_seconds():
     return 15
 
+
 @_with_override
 def livy_session_startup_timeout_seconds():
     return 60
+
 
 @_with_override
 def fatal_error_suggestion():
@@ -107,29 +122,51 @@ a) Make sure Spark has enough available resources for Jupyter to create a Spark 
 b) Contact your Jupyter administrator to make sure the Spark magics library is configured correctly.
 c) Restart the kernel."""
 
+
 @_with_override
 def ignore_ssl_errors():
     return False
+
 
 @_with_override
 def use_auto_viz():
     return True
 
+
 @_with_override
 def default_maxrows():
     return 2500
+
 
 @_with_override
 def default_samplemethod():
     return "take"
 
+
 @_with_override
 def default_samplefraction():
     return 0.1
 
+
 @_with_override
 def pyspark_sql_encoding():
     return u'utf-8'
+    
+    
+@_with_override
+def should_heartbeat():
+    return False
+    
+    
+@_with_override
+def heartbeat_refresh_seconds():
+    return 30
+    
+
+@_with_override
+def heartbeat_retry_seconds():
+    return 10
+    
     
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
