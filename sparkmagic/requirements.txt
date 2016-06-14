@@ -1,5 +1,5 @@
-hdijupyterutils==0.1.0
-autovizwidget==0.1.0
+hdijupyterutils==0.2.0
+autovizwidget==0.2.0
 ipython==4.0.2		
 nose		
 mock
