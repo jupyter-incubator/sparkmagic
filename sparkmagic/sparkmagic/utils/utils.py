@@ -33,6 +33,9 @@ def parse_argstring_or_throw(magic_func, argstring, parse_argstring=parse_argstr
 def coerce_pandas_df_to_numeric_datetime(df):
     for column_name in df.columns:
         coerced = False
+        
+        if df[column_name].isnull().all():
+            continue
 
         if not coerced and df[column_name].dtype == np.dtype("object"):
             try:

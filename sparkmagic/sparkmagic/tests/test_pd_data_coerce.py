@@ -131,3 +131,12 @@ def test_overflow_coercing():
     df = pd.DataFrame(records)
     coerce_pandas_df_to_numeric_datetime(df)
     assert_frame_equal(desired_df, df)
+    
+
+def test_all_null_columns():
+    records = [{'_c0':'12345', 'nulla': None}, {'_c0':'12345', 'nulla': None}]
+    desired_df = pd.DataFrame(records)
+    desired_df['_c0'] = pd.to_numeric(desired_df['_c0'])
+    df = pd.DataFrame(records)
+    coerce_pandas_df_to_numeric_datetime(df)
+    assert_frame_equal(desired_df, df)

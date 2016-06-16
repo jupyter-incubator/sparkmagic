@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+from collections import OrderedDict
 from hdijupyterutils.guid import ObjectWithGuid
 
 from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime
@@ -73,7 +74,13 @@ class SQLQuery(ObjectWithGuid):
         else:
             strings = records_text.split('\n')
         try:
-            df = pd.DataFrame([json.loads(s) for s in strings])
+            data_array = [json.JSONDecoder(object_pairs_hook=OrderedDict).decode(s) for s in strings]
+            
+            if len(data_array) > 0:
+                df = pd.DataFrame(data_array, columns=data_array[0].keys())
+            else:
+                df = pd.DataFrame(data_array)
+            
             coerce_pandas_df_to_numeric_datetime(df)
             return df
         except ValueError:
