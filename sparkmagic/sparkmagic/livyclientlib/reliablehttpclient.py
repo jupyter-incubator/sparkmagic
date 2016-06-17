@@ -1,14 +1,15 @@
 ﻿# Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
+
 import json
 from time import sleep
+
 import requests
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 from sparkmagic.livyclientlib.exceptions import HttpClientException
-
 
 class ReliableHttpClient(object):
     """Http client that is reliable in its requests. Uses requests library."""
@@ -62,11 +63,13 @@ class ReliableHttpClient(object):
                 error = True
                 r = None
                 status = None
+                text = None
 
                 self.logger.error(u"Request to '{}' failed with '{}'".format(url, e))
             else:
                 error = False
                 status = r.status_code
+                text = r.text
 
             if error or status not in accepted_status_codes:
                 if self._retry_policy.should_retry(status, error, retry_count):
@@ -74,6 +77,6 @@ class ReliableHttpClient(object):
                     retry_count += 1
                     continue
                 else:
-                    raise HttpClientException(u"Invalid status code '{}' or error '{}' from {}"
-                                              .format(status, error, url))
+                    raise HttpClientException(u"Invalid status code '{}' or error '{}' from {} with text {}"
+                                              .format(status, error, url, text))
             return r
