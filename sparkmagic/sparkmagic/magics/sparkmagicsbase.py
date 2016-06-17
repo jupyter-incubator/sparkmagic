@@ -13,10 +13,10 @@ from hdijupyterutils.ipythondisplay import IpythonDisplay
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
+from sparkmagic.utils.utils import get_session_info_html
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
-
 
 @magics_class
 class SparkMagicBase(Magics):
@@ -52,25 +52,7 @@ class SparkMagicBase(Magics):
     def _print_endpoint_info(self, info_sessions, current_session_id):
         if info_sessions:
             info_sessions = sorted(info_sessions, key=lambda s: s.id)
-            html = u"""<table>
-<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>Current session?</th></tr>""" + \
-                u"".join([SparkMagicBase._session_row_html(session, current_session_id) for session in info_sessions]) + \
-                u"</table>"
+            html = get_session_info_html(info_sessions, current_session_id)
             self.ipython_display.html(html)
         else:
             self.ipython_display.html(u'No active sessions.')
-
-    @staticmethod
-    def _session_row_html(session, current_session_id):
-        return u"""<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td><td>{6}</td></tr>""".format(
-            session.id, session.get_app_id(), session.kind, session.status,
-            SparkMagicBase._link(u'Link', session.get_spark_ui_url()), SparkMagicBase._link(u'Link', session.get_driver_log_url()),
-            u"" if current_session_id is None or current_session_id != session.id else u"✔"
-        )
-
-    @staticmethod
-    def _link(text, url):
-        if url is not None:
-            return u"""<a target="_blank" href="{1}">{0}</a>""".format(text, url)
-        else:
-            return u""

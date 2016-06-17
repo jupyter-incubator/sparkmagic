@@ -50,3 +50,24 @@ def coerce_pandas_df_to_numeric_datetime(df):
                 coerced = True
             except (ValueError, TypeError):
                 pass
+
+def get_session_info_html(info_sessions, current_session_id):
+    html = u"""<table>
+<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>Current session?</th></tr>""" + \
+    u"".join([get_session_row_html(session, current_session_id) for session in info_sessions]) + \
+    u"</table>"
+
+    return html
+
+def get_session_row_html(session, current_session_id):
+    return u"""<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td><td>{6}</td></tr>""".format(
+        session.id, session.get_app_id(), session.kind, session.status,
+        get_html_link(u'Link', session.get_spark_ui_url()), get_html_link(u'Link', session.get_driver_log_url()),
+        u"" if current_session_id is None or current_session_id != session.id else u"\u2714"
+    )
+
+def get_html_link(text, url):
+    if url is not None:
+        return u"""<a target="_blank" href="{1}">{0}</a>""".format(text, url)
+    else:
+        return u""
