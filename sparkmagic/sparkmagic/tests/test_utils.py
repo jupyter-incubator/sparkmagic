@@ -4,7 +4,7 @@ from nose.tools import assert_equals, assert_is
 
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 from sparkmagic.utils.utils import parse_argstring_or_throw
-
+from sparkmagic.utils.utils import get_html_link
 
 
 def test_parse_argstring_or_throw():
@@ -21,3 +21,10 @@ def test_parse_argstring_or_throw():
         assert False
     except ValueError as e:
         assert_is(e, parse_argstring.side_effect)
+
+def test_link():
+    url = u"https://microsoft.com"
+    assert_equals(get_html_link(u'Link', url), u"""<a target="_blank" href="https://microsoft.com">Link</a>""")
+
+    url = None
+    assert_equals(get_html_link(u'Link', url), u"")

@@ -107,15 +107,6 @@ def test_df_execution_quiet_with_output_var():
     assert shell.user_ns[output_var] == df
 
 
-def test_link():
-    url = u"https://microsoft.com"
-    magic = SparkMagicBase(None)
-    assert_equals(magic._link(u'Link', url), u"""<a target="_blank" href="https://microsoft.com">Link</a>""")
-
-    url = None
-    assert_equals(magic._link(u'Link', url), u"")
-
-
 def test_print_endpoint_info():
     magic = SparkMagicBase(None)
     magic.ipython_display = MagicMock()

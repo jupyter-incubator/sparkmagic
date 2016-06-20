@@ -376,6 +376,9 @@ class TestLivySession(object):
     def test_wait_for_idle_returns_when_in_state(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.get_session_responses = [self.ready_sessions_json,
+                                      self.ready_sessions_json,
+                                      self.ready_sessions_json,
+                                      self.ready_sessions_json,
                                       self.busy_sessions_json,
                                       self.ready_sessions_json]
         self.http_client.get_session.side_effect = self._next_session_response_get
@@ -392,12 +395,15 @@ class TestLivySession(object):
         session.wait_for_idle(30)
 
         self.http_client.get_session.assert_called_with(0)
-        assert_equals(3, self.http_client.get_session.call_count)
+        assert_equals(6, self.http_client.get_session.call_count)
 
     @raises(LivyUnexpectedStatusException)
     def test_wait_for_idle_throws_when_in_final_status(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.get_session_responses = [self.ready_sessions_json,
+                                      self.ready_sessions_json,
+                                      self.ready_sessions_json,
+                                      self.ready_sessions_json,
                                       self.busy_sessions_json,
                                       self.busy_sessions_json,
                                       self.error_sessions_json]
@@ -418,10 +424,13 @@ class TestLivySession(object):
     @raises(LivyClientTimeoutException)
     def test_wait_for_idle_times_out(self):
         self.http_client.post_session.return_value = self.session_create_json
-        self.get_session_responses = [self.ready_sessions_json,
-                                      self.busy_sessions_json,
-                                      self.busy_sessions_json,
-                                      self.ready_sessions_json]
+        self.get_session_responses = [ self.ready_sessions_json,
+                                       self.ready_sessions_json,
+                                       self.ready_sessions_json,
+                                       self.ready_sessions_json,
+                                       self.busy_sessions_json,
+                                       self.busy_sessions_json,
+                                       self.ready_sessions_json ]
         self.http_client.get_session.side_effect = self._next_session_response_get
 
         conf.override_all({
@@ -503,7 +512,7 @@ class TestLivySession(object):
         self.http_client.reset_mock()
 
         session.create_sql_context()
-        assert ipython_display.writeln.call_count == 2
+        assert_equals(3, ipython_display.writeln.call_count)
         assert session.created_sql_context
 
         # Second call should not issue a post request
@@ -543,7 +552,11 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.post_statement_responses = [self.post_statement_json, self.post_statement_json]
         self.http_client.post_statement.side_effect = self._next_statement_response_post
-        self.get_session_responses = [self.ready_sessions_json, self.ready_sessions_json]
+        self.get_session_responses = [self.ready_sessions_json,
+                                      self.ready_sessions_json,
+                                      self.ready_sessions_json,
+                                      self.ready_sessions_json,
+                                      self.ready_sessions_json]
         self.http_client.get_session.side_effect = self._next_session_response_get
         self.get_statement_responses = [self.running_statement_json, self.ready_statement_json,
                                         self.ready_statement_json]
@@ -765,13 +778,13 @@ class TestLivySession(object):
             session.guid, session.kind, end_id, constants.DEAD_SESSION_STATUS, True, "", "")
 
     def test_get_empty_app_id(self):
-        self._verify_get_app_id("null", None)
+        self._verify_get_app_id("null", None, 5)
 
     def test_get_missing_app_id(self):
-        self._verify_get_app_id(None, None)
+        self._verify_get_app_id(None, None, 5)
 
     def test_get_normal_app_id(self):
-        self._verify_get_app_id("\"app_id_123\"", "app_id_123")
+        self._verify_get_app_id("\"app_id_123\"", "app_id_123", 4)
 
     def test_get_empty_driver_log_url(self):
         self._verify_get_driver_log_url("null", None)
@@ -782,7 +795,7 @@ class TestLivySession(object):
     def test_missing_app_info_get_driver_log_url(self):
         self._verify_get_driver_log_url_json(self.ready_sessions_json, None)
         
-    def _verify_get_app_id(self, mock_app_id, expected_app_id):
+    def _verify_get_app_id(self, mock_app_id, expected_app_id, expected_call_count):
         mock_field = ",\"appId\":" + mock_app_id if mock_app_id is not None else ""
         get_session_json = json.loads('{"id":0,"state":"idle","output":null%s}' % mock_field)
         session = self._create_session_with_fixed_get_response(get_session_json)
@@ -790,7 +803,7 @@ class TestLivySession(object):
         app_id = session.get_app_id()
 
         assert_equals(expected_app_id, app_id)
-        assert_equals(2, self.http_client.get_session.call_count)
+        assert_equals(expected_call_count, self.http_client.get_session.call_count)
 
     def _verify_get_driver_log_url(self, mock_driver_log_url, expected_url):
         mock_field = "\"driverLogUrl\":" + mock_driver_log_url if mock_driver_log_url is not None else ""
@@ -803,7 +816,7 @@ class TestLivySession(object):
         driver_log_url = session.get_driver_log_url()
 
         assert_equals(expected_url, driver_log_url)
-        assert_equals(2, self.http_client.get_session.call_count)
+        assert_equals(5, self.http_client.get_session.call_count)
 
     def test_get_empty_spark_ui_url(self):
         self._verify_get_spark_ui_url("null", None)
@@ -825,4 +838,4 @@ class TestLivySession(object):
         spark_ui_url = session.get_spark_ui_url()
 
         assert_equals(expected_url, spark_ui_url)
-        assert_equals(2, self.http_client.get_session.call_count)
+        assert_equals(5, self.http_client.get_session.call_count)
