@@ -13,7 +13,7 @@ from hdijupyterutils.ipythondisplay import IpythonDisplay
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
-from sparkmagic.utils.utils import get_session_info_html
+from sparkmagic.utils.utils import get_sessions_info_html
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
@@ -52,7 +52,7 @@ class SparkMagicBase(Magics):
     def _print_endpoint_info(self, info_sessions, current_session_id):
         if info_sessions:
             info_sessions = sorted(info_sessions, key=lambda s: s.id)
-            html = get_session_info_html(info_sessions, current_session_id)
+            html = get_sessions_info_html(info_sessions, current_session_id)
             self.ipython_display.html(html)
         else:
             self.ipython_display.html(u'No active sessions.')

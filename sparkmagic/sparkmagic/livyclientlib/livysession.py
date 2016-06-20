@@ -8,7 +8,7 @@ import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
-from sparkmagic.utils.utils import get_session_info_html
+from sparkmagic.utils.utils import get_sessions_info_html
 from .command import Command
 from .exceptions import FailedToCreateSqlContextException, LivyClientTimeoutException, \
     LivyUnexpectedStatusException, BadUserDataException
@@ -129,7 +129,7 @@ class LivySession(ObjectWithGuid):
                 raise LivyClientTimeoutException(u"Session {} did not start up in {} seconds."
                                                  .format(self.id, conf.livy_session_startup_timeout_seconds()))
 
-            html = get_session_info_html([self], self.id)
+            html = get_sessions_info_html([self], self.id)
             self.ipython_display.html(html)
 
             if create_sql_context:
