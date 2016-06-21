@@ -1,9 +1,7 @@
 ﻿# Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
-
 import json
 from time import sleep
-
 import requests
 
 import sparkmagic.utils.configuration as conf
