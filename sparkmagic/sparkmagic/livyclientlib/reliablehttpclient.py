@@ -11,6 +11,7 @@ from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 from sparkmagic.livyclientlib.exceptions import HttpClientException
 
+
 class ReliableHttpClient(object):
     """Http client that is reliable in its requests. Uses requests library."""
 
