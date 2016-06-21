@@ -6,9 +6,10 @@ from plotly.offline import iplot
 from pandas.core.groupby import DataError
 
 import autovizwidget.utils.configuration as conf
+from .graphbase import GraphBase
 
 
-class PieGraph(object):
+class PieGraph(GraphBase):
     @staticmethod
     def render(df, encoding, output):
         if encoding.x is None:
@@ -56,14 +57,11 @@ class PieGraph(object):
         return False
 
     @staticmethod
-    def display_x():
-        return True
-
-    @staticmethod
-    def display_y():
-        return False
-
-    @staticmethod
     def _get_x_values_labels(df, encoding):
-        series = df.groupby([encoding.x]).size()
-        return series.values.tolist(), series.index.tolist()
+        if encoding.y is None:
+            series = df.groupby([encoding.x]).size()
+            values = series.values.tolist()
+            labels = series.index.tolist()
+        else:
+            labels, values = GraphBase._get_x_y_values(df, encoding)
+        return values, labels
