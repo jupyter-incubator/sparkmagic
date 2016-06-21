@@ -376,9 +376,6 @@ class TestLivySession(object):
     def test_wait_for_idle_returns_when_in_state(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.get_session_responses = [self.ready_sessions_json,
-                                      self.ready_sessions_json,
-                                      self.ready_sessions_json,
-                                      self.ready_sessions_json,
                                       self.busy_sessions_json,
                                       self.ready_sessions_json]
         self.http_client.get_session.side_effect = self._next_session_response_get
@@ -389,21 +386,20 @@ class TestLivySession(object):
         })
         session = self._create_session()
         conf.override_all({})
+        session.get_row_html = MagicMock()
+        session.get_row_html.return_value = u"""<tr><td>row1</td></tr>"""
 
         session.start(create_sql_context=False)
 
         session.wait_for_idle(30)
 
         self.http_client.get_session.assert_called_with(0)
-        assert_equals(6, self.http_client.get_session.call_count)
+        assert_equals(3, self.http_client.get_session.call_count)
 
     @raises(LivyUnexpectedStatusException)
     def test_wait_for_idle_throws_when_in_final_status(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.get_session_responses = [self.ready_sessions_json,
-                                      self.ready_sessions_json,
-                                      self.ready_sessions_json,
-                                      self.ready_sessions_json,
                                       self.busy_sessions_json,
                                       self.busy_sessions_json,
                                       self.error_sessions_json]
@@ -416,6 +412,8 @@ class TestLivySession(object):
         })
         session = self._create_session()
         conf.override_all({})
+        session.get_row_html = MagicMock()
+        session.get_row_html.return_value = u"""<tr><td>row1</td></tr>"""
 
         session.start(create_sql_context=False)
 
@@ -425,9 +423,6 @@ class TestLivySession(object):
     def test_wait_for_idle_times_out(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.get_session_responses = [ self.ready_sessions_json,
-                                       self.ready_sessions_json,
-                                       self.ready_sessions_json,
-                                       self.ready_sessions_json,
                                        self.busy_sessions_json,
                                        self.busy_sessions_json,
                                        self.ready_sessions_json ]
@@ -439,6 +434,8 @@ class TestLivySession(object):
         })
         session = self._create_session()
         conf.override_all({})
+        session.get_row_html = MagicMock()
+        session.get_row_html.return_value = u"""<tr><td>row1</td></tr>"""
 
         session.start(create_sql_context=False)
 
@@ -552,11 +549,7 @@ class TestLivySession(object):
         self.http_client.post_session.return_value = self.session_create_json
         self.post_statement_responses = [self.post_statement_json, self.post_statement_json]
         self.http_client.post_statement.side_effect = self._next_statement_response_post
-        self.get_session_responses = [self.ready_sessions_json,
-                                      self.ready_sessions_json,
-                                      self.ready_sessions_json,
-                                      self.ready_sessions_json,
-                                      self.ready_sessions_json]
+        self.get_session_responses = [self.ready_sessions_json, self.ready_sessions_json]
         self.http_client.get_session.side_effect = self._next_session_response_get
         self.get_statement_responses = [self.running_statement_json, self.ready_statement_json,
                                         self.ready_statement_json]
@@ -567,6 +560,8 @@ class TestLivySession(object):
         })
         session = self._create_session(kind=kind)
         conf.override_all({})
+        session.get_row_html = MagicMock()
+        session.get_row_html.return_value = u"""<tr><td>row1</td></tr>"""
         session.start()
 
         assert call(0, {"code": "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"}) \
@@ -839,3 +834,42 @@ class TestLivySession(object):
 
         assert_equals(expected_url, spark_ui_url)
         assert_equals(5, self.http_client.get_session.call_count)
+
+    def test_get_row_html(self):
+        session_id1 = 1
+        session1 = self._create_session(session_id=session_id1, sql_created=True,
+                                       should_heartbeat=True)
+        session1.get_app_id = MagicMock()
+        session1.get_spark_ui_url = MagicMock()
+        session1.get_driver_log_url = MagicMock()
+        session1.get_app_id.return_value = 'app1234'
+        session1.status = constants.IDLE_SESSION_STATUS
+        session1.get_spark_ui_url.return_value = 'https://microsoft.com/sparkui'
+        session1.get_driver_log_url.return_value = 'https://microsoft.com/driverlog'
+
+        html1 = session1.get_row_html(1)
+
+        assert_equals(html1, u"""<tr><td>1</td><td>app1234</td><td>spark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>\u2714</td></tr>""")
+
+        session_id2 = 3
+        session2 = self._create_session(kind=constants.SESSION_KIND_PYSPARK,
+                                        session_id=session_id2, sql_created=True,
+                                        should_heartbeat=True)
+        session2.get_app_id = MagicMock()
+        session2.get_spark_ui_url = MagicMock()
+        session2.get_driver_log_url = MagicMock()
+        session2.get_app_id.return_value = 'app5069'
+        session2.status = constants.BUSY_SESSION_STATUS
+        session2.get_spark_ui_url.return_value = None
+        session2.get_driver_log_url.return_value = None
+
+        html2 = session2.get_row_html(1)
+
+        assert_equals(html2, u"""<tr><td>3</td><td>app5069</td><td>pyspark</td><td>busy</td><td></td><td></td><td></td></tr>""")
+
+    def test_link(self):
+        url = u"https://microsoft.com"
+        assert_equals(LivySession.get_html_link(u'Link', url), u"""<a target="_blank" href="https://microsoft.com">Link</a>""")
+
+        url = None
+        assert_equals(LivySession.get_html_link(u'Link', url), u"")
