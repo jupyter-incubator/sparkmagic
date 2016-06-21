@@ -107,38 +107,20 @@ def test_df_execution_quiet_with_output_var():
     assert shell.user_ns[output_var] == df
 
 
-def test_link():
-    url = u"https://microsoft.com"
-    magic = SparkMagicBase(None)
-    assert_equals(magic._link(u'Link', url), u"""<a target="_blank" href="https://microsoft.com">Link</a>""")
-
-    url = None
-    assert_equals(magic._link(u'Link', url), u"")
-
-
 def test_print_endpoint_info():
     magic = SparkMagicBase(None)
     magic.ipython_display = MagicMock()
     current_session_id = 1
     session1 = MagicMock()
     session1.id = 1
-    session1.get_app_id.return_value = 'app1234'
-    session1.kind = SESSION_KIND_PYSPARK
-    session1.status = IDLE_SESSION_STATUS
-    session1.get_spark_ui_url.return_value = 'https://microsoft.com/sparkui'
-    session1.get_driver_log_url.return_value = 'https://microsoft.com/driverlog'
+    session1.get_row_html.return_value = u"""<tr><td>row1</td></tr>"""
     session2 = MagicMock()
     session2.id = 3
-    session2.get_app_id.return_value = 'app5069'
-    session2.kind = SESSION_KIND_SPARK
-    session2.status = BUSY_SESSION_STATUS
-    session2.get_spark_ui_url.return_value = None
-    session2.get_driver_log_url.return_value = None
+    session2.get_row_html.return_value = u"""<tr><td>row2</td></tr>"""
     magic._print_endpoint_info([session2, session1], current_session_id)
     magic.ipython_display.html.assert_called_once_with(u"""<table>
 <tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>Current session?</th></tr>\
-<tr><td>1</td><td>app1234</td><td>pyspark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>\u2714</td></tr>\
-<tr><td>3</td><td>app5069</td><td>spark</td><td>busy</td><td></td><td></td><td></td></tr>\
+<tr><td>row1</td></tr><tr><td>row2</td></tr>\
 </table>""")
 
 

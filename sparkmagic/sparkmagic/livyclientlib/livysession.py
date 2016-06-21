@@ -8,6 +8,7 @@ import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
+from sparkmagic.utils.utils import get_sessions_info_html
 from .command import Command
 from .exceptions import FailedToCreateSqlContextException, LivyClientTimeoutException, \
     LivyUnexpectedStatusException, BadUserDataException
@@ -128,6 +129,9 @@ class LivySession(ObjectWithGuid):
                 raise LivyClientTimeoutException(u"Session {} did not start up in {} seconds."
                                                  .format(self.id, conf.livy_session_startup_timeout_seconds()))
 
+            html = get_sessions_info_html([self], self.id)
+            self.ipython_display.html(html)
+
             if create_sql_context:
                 self.create_sql_context()
         except Exception as e:
@@ -150,6 +154,7 @@ class LivySession(ObjectWithGuid):
             raise LivyClientTimeoutException(u"Failed to create the SqlContext in time. Timed out after {} seconds."
                                              .format(self._wait_for_idle_timeout_seconds))
         if success:
+            self.ipython_display.writeln(u"SparkContext and HiveContext created. Executing user code ...")
             self.created_sql_context = True
         else:
             raise FailedToCreateSqlContextException(u"Failed to create the SqlContext.\nError: '{}'".format(out))
@@ -283,3 +288,17 @@ class LivySession(ObjectWithGuid):
         if self._heartbeat_thread is not None:
             self._heartbeat_thread.stop()
             self._heartbeat_thread = None
+
+    def get_row_html(self, current_session_id):
+        return u"""<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td><td>{6}</td></tr>""".format(
+            self.id, self.get_app_id(), self.kind, self.status,
+            self.get_html_link(u'Link', self.get_spark_ui_url()), self.get_html_link(u'Link', self.get_driver_log_url()),
+            u"" if current_session_id is None or current_session_id != self.id else u"\u2714"
+        )
+
+    @staticmethod
+    def get_html_link(text, url):
+        if url is not None:
+            return u"""<a target="_blank" href="{1}">{0}</a>""".format(text, url)
+        else:
+            return u""

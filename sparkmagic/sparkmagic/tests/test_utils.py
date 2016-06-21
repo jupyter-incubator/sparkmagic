@@ -6,7 +6,6 @@ from sparkmagic.livyclientlib.exceptions import BadUserDataException
 from sparkmagic.utils.utils import parse_argstring_or_throw
 
 
-
 def test_parse_argstring_or_throw():
     parse_argstring = MagicMock(side_effect=UsageError('OOGABOOGABOOGA'))
     try:
