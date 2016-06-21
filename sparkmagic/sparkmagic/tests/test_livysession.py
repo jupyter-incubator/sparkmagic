@@ -422,10 +422,10 @@ class TestLivySession(object):
     @raises(LivyClientTimeoutException)
     def test_wait_for_idle_times_out(self):
         self.http_client.post_session.return_value = self.session_create_json
-        self.get_session_responses = [ self.ready_sessions_json,
-                                       self.busy_sessions_json,
-                                       self.busy_sessions_json,
-                                       self.ready_sessions_json ]
+        self.get_session_responses = [self.ready_sessions_json,
+                                      self.busy_sessions_json,
+                                      self.busy_sessions_json,
+                                      self.ready_sessions_json]
         self.http_client.get_session.side_effect = self._next_session_response_get
 
         conf.override_all({
