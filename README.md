@@ -29,7 +29,7 @@ The sparkmagic library provides a %%spark magic that you can use to easily run c
 ### 2. Via the PySpark and Spark kernels
 
 The sparkmagic library also provides a set of Scala and Python kernels that allow you to automatically connect to a remote Spark cluster, run code and SQL queries, manage your Livy server and Spark job configuration, and generate automatic visualizations.
-See [sample notebook]().
+See [Pyspark](examples/Pyspark Kernel.ipynb) and [Spark](examples/Spark Kernel.ipynb) sample notebooks.
 
 ## Installation
 
