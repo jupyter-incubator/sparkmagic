@@ -76,7 +76,10 @@ class ReliableHttpClient(object):
                     sleep(self._retry_policy.seconds_to_sleep(retry_count))
                     retry_count += 1
                     continue
+
+                if error:
+                    raise HttpClientException(u"Error sending http request and maximum retry encountered.")
                 else:
-                    raise HttpClientException(u"Invalid status code '{}' or error '{}' from {} with text {}"
-                                              .format(status, error, url, text))
+                    raise HttpClientException(u"Invalid status code '{}' from {} with error payload: {}"
+                                              .format(status, url, text))
             return r
