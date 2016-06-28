@@ -386,6 +386,8 @@ class TestLivySession(object):
         })
         session = self._create_session()
         conf.override_all({})
+        session.get_row_html = MagicMock()
+        session.get_row_html.return_value = u"""<tr><td>row1</td></tr>"""
 
         session.start(create_sql_context=False)
 
@@ -410,6 +412,8 @@ class TestLivySession(object):
         })
         session = self._create_session()
         conf.override_all({})
+        session.get_row_html = MagicMock()
+        session.get_row_html.return_value = u"""<tr><td>row1</td></tr>"""
 
         session.start(create_sql_context=False)
 
@@ -430,6 +434,8 @@ class TestLivySession(object):
         })
         session = self._create_session()
         conf.override_all({})
+        session.get_row_html = MagicMock()
+        session.get_row_html.return_value = u"""<tr><td>row1</td></tr>"""
 
         session.start(create_sql_context=False)
 
@@ -503,7 +509,7 @@ class TestLivySession(object):
         self.http_client.reset_mock()
 
         session.create_sql_context()
-        assert ipython_display.writeln.call_count == 2
+        assert_equals(3, ipython_display.writeln.call_count)
         assert session.created_sql_context
 
         # Second call should not issue a post request
@@ -554,6 +560,8 @@ class TestLivySession(object):
         })
         session = self._create_session(kind=kind)
         conf.override_all({})
+        session.get_row_html = MagicMock()
+        session.get_row_html.return_value = u"""<tr><td>row1</td></tr>"""
         session.start()
 
         assert call(0, {"code": "val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"}) \
@@ -765,13 +773,13 @@ class TestLivySession(object):
             session.guid, session.kind, end_id, constants.DEAD_SESSION_STATUS, True, "", "")
 
     def test_get_empty_app_id(self):
-        self._verify_get_app_id("null", None)
+        self._verify_get_app_id("null", None, 5)
 
     def test_get_missing_app_id(self):
-        self._verify_get_app_id(None, None)
+        self._verify_get_app_id(None, None, 5)
 
     def test_get_normal_app_id(self):
-        self._verify_get_app_id("\"app_id_123\"", "app_id_123")
+        self._verify_get_app_id("\"app_id_123\"", "app_id_123", 4)
 
     def test_get_empty_driver_log_url(self):
         self._verify_get_driver_log_url("null", None)
@@ -782,7 +790,7 @@ class TestLivySession(object):
     def test_missing_app_info_get_driver_log_url(self):
         self._verify_get_driver_log_url_json(self.ready_sessions_json, None)
         
-    def _verify_get_app_id(self, mock_app_id, expected_app_id):
+    def _verify_get_app_id(self, mock_app_id, expected_app_id, expected_call_count):
         mock_field = ",\"appId\":" + mock_app_id if mock_app_id is not None else ""
         get_session_json = json.loads('{"id":0,"state":"idle","output":null%s}' % mock_field)
         session = self._create_session_with_fixed_get_response(get_session_json)
@@ -790,7 +798,7 @@ class TestLivySession(object):
         app_id = session.get_app_id()
 
         assert_equals(expected_app_id, app_id)
-        assert_equals(2, self.http_client.get_session.call_count)
+        assert_equals(expected_call_count, self.http_client.get_session.call_count)
 
     def _verify_get_driver_log_url(self, mock_driver_log_url, expected_url):
         mock_field = "\"driverLogUrl\":" + mock_driver_log_url if mock_driver_log_url is not None else ""
@@ -803,7 +811,7 @@ class TestLivySession(object):
         driver_log_url = session.get_driver_log_url()
 
         assert_equals(expected_url, driver_log_url)
-        assert_equals(2, self.http_client.get_session.call_count)
+        assert_equals(5, self.http_client.get_session.call_count)
 
     def test_get_empty_spark_ui_url(self):
         self._verify_get_spark_ui_url("null", None)
@@ -825,4 +833,43 @@ class TestLivySession(object):
         spark_ui_url = session.get_spark_ui_url()
 
         assert_equals(expected_url, spark_ui_url)
-        assert_equals(2, self.http_client.get_session.call_count)
+        assert_equals(5, self.http_client.get_session.call_count)
+
+    def test_get_row_html(self):
+        session_id1 = 1
+        session1 = self._create_session(session_id=session_id1, sql_created=True,
+                                       should_heartbeat=True)
+        session1.get_app_id = MagicMock()
+        session1.get_spark_ui_url = MagicMock()
+        session1.get_driver_log_url = MagicMock()
+        session1.get_app_id.return_value = 'app1234'
+        session1.status = constants.IDLE_SESSION_STATUS
+        session1.get_spark_ui_url.return_value = 'https://microsoft.com/sparkui'
+        session1.get_driver_log_url.return_value = 'https://microsoft.com/driverlog'
+
+        html1 = session1.get_row_html(1)
+
+        assert_equals(html1, u"""<tr><td>1</td><td>app1234</td><td>spark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>\u2714</td></tr>""")
+
+        session_id2 = 3
+        session2 = self._create_session(kind=constants.SESSION_KIND_PYSPARK,
+                                        session_id=session_id2, sql_created=True,
+                                        should_heartbeat=True)
+        session2.get_app_id = MagicMock()
+        session2.get_spark_ui_url = MagicMock()
+        session2.get_driver_log_url = MagicMock()
+        session2.get_app_id.return_value = 'app5069'
+        session2.status = constants.BUSY_SESSION_STATUS
+        session2.get_spark_ui_url.return_value = None
+        session2.get_driver_log_url.return_value = None
+
+        html2 = session2.get_row_html(1)
+
+        assert_equals(html2, u"""<tr><td>3</td><td>app5069</td><td>pyspark</td><td>busy</td><td></td><td></td><td></td></tr>""")
+
+    def test_link(self):
+        url = u"https://microsoft.com"
+        assert_equals(LivySession.get_html_link(u'Link', url), u"""<a target="_blank" href="https://microsoft.com">Link</a>""")
+
+        url = None
+        assert_equals(LivySession.get_html_link(u'Link', url), u"")

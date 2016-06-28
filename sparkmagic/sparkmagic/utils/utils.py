@@ -50,3 +50,11 @@ def coerce_pandas_df_to_numeric_datetime(df):
                 coerced = True
             except (ValueError, TypeError):
                 pass
+
+def get_sessions_info_html(info_sessions, current_session_id):
+    html = u"""<table>
+<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>Current session?</th></tr>""" + \
+    u"".join([session.get_row_html(current_session_id) for session in info_sessions]) + \
+    u"</table>"
+
+    return html

@@ -62,18 +62,23 @@ class ReliableHttpClient(object):
                 error = True
                 r = None
                 status = None
+                text = None
 
                 self.logger.error(u"Request to '{}' failed with '{}'".format(url, e))
             else:
                 error = False
                 status = r.status_code
+                text = r.text
 
             if error or status not in accepted_status_codes:
                 if self._retry_policy.should_retry(status, error, retry_count):
                     sleep(self._retry_policy.seconds_to_sleep(retry_count))
                     retry_count += 1
                     continue
+
+                if error:
+                    raise HttpClientException(u"Error sending http request and maximum retry encountered.")
                 else:
-                    raise HttpClientException(u"Invalid status code '{}' or error '{}' from {}"
-                                              .format(status, error, url))
+                    raise HttpClientException(u"Invalid status code '{}' from {} with error payload: {}"
+                                              .format(status, url, text))
             return r
