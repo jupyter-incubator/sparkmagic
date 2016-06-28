@@ -22,7 +22,8 @@
     "handlers": {
       "magicsHandler": { 
         "class": "hdijupyterutils.filehandler.MagicsFileHandler",
-        "formatter": "magicsFormatter"
+        "formatter": "magicsFormatter",
+        "home_path": "~/.sparkmagic"
       }
     },
     "loggers": {
