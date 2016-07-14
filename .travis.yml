@@ -30,13 +30,13 @@ deploy:
 - provider: script
   script: /bin/sh deploy.sh
   on:
-    branch: travispypi
+    branch: release
     tags: true
     condition: $TRAVIS_PYTHON_VERSION = "2.7"
 - provider: script
   script: /bin/sh deploy_test.sh
   on:
-    branch: travispypi
+    branch: release
     tags: false
     condition: $TRAVIS_PYTHON_VERSION = "2.7"
 env:
