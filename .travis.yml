@@ -26,13 +26,13 @@ after_success:
     - echo password=$PYPI_PASSWORD                     >> ~/.pypirc
 deploy:
 - provider: script
-  script: deploy.sh
+  script: /bin/sh deploy.sh
   on:
     branch: travispypi
     tags: true
     condition: $TRAVIS_PYTHON_VERSION = "2.7"
 - provider: script
-  script: deploy_test.sh
+  script: /bin/sh deploy_test.sh
   on:
     branch: travispypi
     tags: false
