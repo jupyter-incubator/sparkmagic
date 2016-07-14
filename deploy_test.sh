@@ -1,5 +1,14 @@
 #!/bin/sh
 set -e
-python hdijupyterutils/setup.py sdist upload -r pypitest
-python autovizwidget/setup.py sdist upload -r pypitest
+
+cd hdijupyterutils
+python setup.py sdist upload -r pypitest
+cd ..
+
+cd autovizwidget
+python setup.py sdist upload -r pypitest
+cd ..
+
+cd sparkmagic
 python sparkmagic/setup.py sdist upload -r pypitest
+cd ..
