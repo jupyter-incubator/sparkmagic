@@ -16,10 +16,12 @@ after_success:
     - echo index-servers =                             >> ~/.pypirc
     - echo   pypi                                      >> ~/.pypirc
     - echo   pypitest                                  >> ~/.pypirc
+    - echo                                             >> ~/.pypirc
     - echo [pypi]                                      >> ~/.pypirc
     - echo repository=https://pypi.python.org/pypi     >> ~/.pypirc
     - echo username=hdinsightmsftagu                   >> ~/.pypirc
     - echo password=$PYPI_PASSWORD                     >> ~/.pypirc
+    - echo                                             >> ~/.pypirc
     - echo [pypitest]                                  >> ~/.pypirc
     - echo repository=https://testpypi.python.org/pypi >> ~/.pypirc
     - echo username=hdinsightmsftagu                   >> ~/.pypirc

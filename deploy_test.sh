@@ -1,4 +1,3 @@
 #!/bin/sh
-# set -e
+set -e
 python hdijupyterutils/setup.py sdist upload -r pypitest
-echo $?
