@@ -11,58 +11,32 @@ script:
 - nosetests hdijupyterutils
 - nosetests autovizwidget
 - nosetests sparkmagic
-before_deploy:
-  - ls
-  - cd ./hdijupyterutils
+after_success:
+    - echo [distutils]                                  > ~/.pypirc
+    - echo index-servers =                             >> ~/.pypirc
+    - echo   pypi                                      >> ~/.pypirc
+    - echo   pypitest                                  >> ~/.pypirc
+    - echo [pypi]                                      >> ~/.pypirc
+    - echo repository=https://pypi.python.org/pypi     >> ~/.pypirc
+    - echo username=hdinsightmsftagu                   >> ~/.pypirc
+    - echo password=$PYPI_PASSWORD                     >> ~/.pypirc
+    - echo [pypitest]                                  >> ~/.pypirc
+    - echo repository=https://testpypi.python.org/pypi >> ~/.pypirc
+    - echo username=hdinsightmsftagu                   >> ~/.pypirc
+    - echo password=$PYPI_PASSWORD                     >> ~/.pypirc
 deploy:
-    # test pypi
-  - provider: pypi
-    distributions: sdist
-    server: https://testpypi.python.org/pypi
-    user: "hdinsightmsftagu"
-    password:
-      secure: "dBkgLbftvFz0qClNf2A4vO9VO5S71EHnpkyEur3UHnRywG2ZgpQcy4iRK46D7pd4hkY6OXoYn4V27YR+Q9Wr6sC9iHNpNBho8bbKK78ccfeysrtzcL4PKjLbqEnf84S7RCXhFPrBmbpyLY1y3XpaowskNx1WDfxbyMAYkajirI4SzNIkLvOL6sj8qU8RPFe37vMFwZXRb/uv+bajU5pMNMRA7YnxtncPyo6oNTGydXxhHV/r5UPJgyJkVsP31eB4C4tpX3GKc/AH7JWRMaVJ6JzhWMB6hTMApdecaXXQ/FiqNrI2rfP2ZZYQomaEOjvxWSUj3cw/Rf+oHtQrFA2oNWO6kLPgKmIW2wib/y93d4Ew1g4g26q347CfisZ38S1QD7SKZrHbAvQKy0ALqeGRzfIMoc+Ys3eA/3IrshWcXWiotqn3aVUwHf2GvjdX5KY85l6B8zT5m16G97YnuXYhkhNdz37m37DBMv/7xt03PUzzcY196yJ0xIP6o/O6j3bHxv0qmzq+KDbY2TDDrKA3LBNaVzK2bS8J8NsOsh52Fo4Fzk8Y+mRTMgHNsDZ2MNWQfNr/EupJzIQwaM3l5AK9ikTCDimsOV0x48aXQoMeoEN/xJ6jgPx/ilVUs4fXeFUlPTYYt/xTBkS2FML36VfzJ5H4XtY+LzxOr2RYiZbBap8="
-    on:
-      branch: travispypi
-      tags: false
-      condition: $TRAVIS_PYTHON_VERSION = "2.7"
-
-    # production pypi
-  - provider: pypi
-    distributions: sdist
-    user: "hdinsightmsftagu"
-    password:
-      secure: "dBkgLbftvFz0qClNf2A4vO9VO5S71EHnpkyEur3UHnRywG2ZgpQcy4iRK46D7pd4hkY6OXoYn4V27YR+Q9Wr6sC9iHNpNBho8bbKK78ccfeysrtzcL4PKjLbqEnf84S7RCXhFPrBmbpyLY1y3XpaowskNx1WDfxbyMAYkajirI4SzNIkLvOL6sj8qU8RPFe37vMFwZXRb/uv+bajU5pMNMRA7YnxtncPyo6oNTGydXxhHV/r5UPJgyJkVsP31eB4C4tpX3GKc/AH7JWRMaVJ6JzhWMB6hTMApdecaXXQ/FiqNrI2rfP2ZZYQomaEOjvxWSUj3cw/Rf+oHtQrFA2oNWO6kLPgKmIW2wib/y93d4Ew1g4g26q347CfisZ38S1QD7SKZrHbAvQKy0ALqeGRzfIMoc+Ys3eA/3IrshWcXWiotqn3aVUwHf2GvjdX5KY85l6B8zT5m16G97YnuXYhkhNdz37m37DBMv/7xt03PUzzcY196yJ0xIP6o/O6j3bHxv0qmzq+KDbY2TDDrKA3LBNaVzK2bS8J8NsOsh52Fo4Fzk8Y+mRTMgHNsDZ2MNWQfNr/EupJzIQwaM3l5AK9ikTCDimsOV0x48aXQoMeoEN/xJ6jgPx/ilVUs4fXeFUlPTYYt/xTBkS2FML36VfzJ5H4XtY+LzxOr2RYiZbBap8="
-    on:
-      branch: travispypi
-      tags: true
-      condition: $TRAVIS_PYTHON_VERSION = "2.7"
-after_deploy:
-  - cd ..
-before_deploy:
-  - cd ./autovizwidget
-deploy:
-    # test pypi
-  - provider: pypi
-    distributions: sdist
-    server: https://testpypi.python.org/pypi
-    user: "hdinsightmsftagu"
-    password:
-      secure: "dBkgLbftvFz0qClNf2A4vO9VO5S71EHnpkyEur3UHnRywG2ZgpQcy4iRK46D7pd4hkY6OXoYn4V27YR+Q9Wr6sC9iHNpNBho8bbKK78ccfeysrtzcL4PKjLbqEnf84S7RCXhFPrBmbpyLY1y3XpaowskNx1WDfxbyMAYkajirI4SzNIkLvOL6sj8qU8RPFe37vMFwZXRb/uv+bajU5pMNMRA7YnxtncPyo6oNTGydXxhHV/r5UPJgyJkVsP31eB4C4tpX3GKc/AH7JWRMaVJ6JzhWMB6hTMApdecaXXQ/FiqNrI2rfP2ZZYQomaEOjvxWSUj3cw/Rf+oHtQrFA2oNWO6kLPgKmIW2wib/y93d4Ew1g4g26q347CfisZ38S1QD7SKZrHbAvQKy0ALqeGRzfIMoc+Ys3eA/3IrshWcXWiotqn3aVUwHf2GvjdX5KY85l6B8zT5m16G97YnuXYhkhNdz37m37DBMv/7xt03PUzzcY196yJ0xIP6o/O6j3bHxv0qmzq+KDbY2TDDrKA3LBNaVzK2bS8J8NsOsh52Fo4Fzk8Y+mRTMgHNsDZ2MNWQfNr/EupJzIQwaM3l5AK9ikTCDimsOV0x48aXQoMeoEN/xJ6jgPx/ilVUs4fXeFUlPTYYt/xTBkS2FML36VfzJ5H4XtY+LzxOr2RYiZbBap8="
-    on:
-      branch: travispypi
-      tags: false
-      condition: $TRAVIS_PYTHON_VERSION = "2.7"
-
-    # production pypi
-  - provider: pypi
-    distributions: sdist
-    user: "hdinsightmsftagu"
-    password:
-      secure: "dBkgLbftvFz0qClNf2A4vO9VO5S71EHnpkyEur3UHnRywG2ZgpQcy4iRK46D7pd4hkY6OXoYn4V27YR+Q9Wr6sC9iHNpNBho8bbKK78ccfeysrtzcL4PKjLbqEnf84S7RCXhFPrBmbpyLY1y3XpaowskNx1WDfxbyMAYkajirI4SzNIkLvOL6sj8qU8RPFe37vMFwZXRb/uv+bajU5pMNMRA7YnxtncPyo6oNTGydXxhHV/r5UPJgyJkVsP31eB4C4tpX3GKc/AH7JWRMaVJ6JzhWMB6hTMApdecaXXQ/FiqNrI2rfP2ZZYQomaEOjvxWSUj3cw/Rf+oHtQrFA2oNWO6kLPgKmIW2wib/y93d4Ew1g4g26q347CfisZ38S1QD7SKZrHbAvQKy0ALqeGRzfIMoc+Ys3eA/3IrshWcXWiotqn3aVUwHf2GvjdX5KY85l6B8zT5m16G97YnuXYhkhNdz37m37DBMv/7xt03PUzzcY196yJ0xIP6o/O6j3bHxv0qmzq+KDbY2TDDrKA3LBNaVzK2bS8J8NsOsh52Fo4Fzk8Y+mRTMgHNsDZ2MNWQfNr/EupJzIQwaM3l5AK9ikTCDimsOV0x48aXQoMeoEN/xJ6jgPx/ilVUs4fXeFUlPTYYt/xTBkS2FML36VfzJ5H4XtY+LzxOr2RYiZbBap8="
-    on:
-      branch: travispypi
-      tags: true
-      condition: $TRAVIS_PYTHON_VERSION = "2.7"
-after_deploy:
-  - cd ..
+- provider: script
+  script: deploy.sh
+  on:
+    branch: travispypi
+    tags: true
+    condition: $TRAVIS_PYTHON_VERSION = "2.7"
+- provider: script
+  script: deploy_test.sh
+  on:
+    branch: travispypi
+    tags: false
+    condition: $TRAVIS_PYTHON_VERSION = "2.7"
+env:
+  global:
+    secure: Xk+uGuB1bZGhSKVB+pfTrZaJ8JU0mlceIRbA2yLuHYsOpI3vpAY1YtNVaeZ9e3cUCc0uofvJHOnbdZiZFwEod9An2T6Iq939xFIAkHz9GyWJL54esldXFJaQscwtC9XO8o9V4eS7RbptTPRQpo3isPSk7+4bXLevCQ1lcE3xBoVjAQuGtoPRGODo0jfPiURN1QnKdfjKk0KIEb01YS5azdMq4WD8EV8IlF5eYb+3JUvzc2Le7hpPNzzmxco+VTLFUXIckJrKr4uJxDwj6v5bVaDq/JpzDsX4TKezSWVzZuLMDG/N21fwmA4U7iZVjHgHD279fU69lxINPvKKkfFEs4KXOPJ31W2S0eR2xbEq48kU9v00ixaQpqbPjBnhddOJBBOVpw0VF0BiW6n8drKMRqrz2UuWQVekPKJ609APhUXNZiF9gV5WWNElKuq0xIXpnQ3c2yww836w9Cj522hKQd6IGcqR/SWYvFgEHkLw17dJl6eSCT7N4slAoqLetr3JX/YTVwLMGvvYls0YANJPkaLr2Mv3NCiz5SIUz1zfK6nQEwx6X3Zr+HPw9enj90q0QV56o0MdgUN573HGivRO8b0Hb5hiq6gq1HkRZ+I/SUlMUZ64OaKMMIoYxlDvFicrFSnSbsK2PBWiFKF2A/ZX2QDyk9Y+SWIqa2K3ZWuGb0Q=
