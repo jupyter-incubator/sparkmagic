@@ -10,5 +10,5 @@ python setup.py sdist upload -r pypi
 cd ..
 
 cd sparkmagic
-python sparkmagic/setup.py sdist upload -r pypi
+python setup.py sdist upload -r pypi
 cd ..
