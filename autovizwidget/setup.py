@@ -59,7 +59,7 @@ setup(name=NAME,
       install_requires=[
           'plotly>=1.10.0,<1.11.0',
           'ipywidgets>5.0.0',
-          'hdijupyterutils==0.2.3',
+          'hdijupyterutils>=0.3',
           'notebook>=4.2'
       ])
 
