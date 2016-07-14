@@ -13,8 +13,9 @@ script:
 - nosetests sparkmagic
 after_success:
     - echo [distutils]                                  > ~/.pypirc
-    - echo index-servers = pypi                        >> ~/.pypirc
-    - echo   pypitest                                  >> ~/.pypirc
+    - echo index-servers =                             >> ~/.pypirc
+    - echo "  pypi"                                    >> ~/.pypirc
+    - echo "  pypitest"                                >> ~/.pypirc
     - echo                                             >> ~/.pypirc
     - echo [pypi]                                      >> ~/.pypirc
     - echo repository=https://pypi.python.org/pypi     >> ~/.pypirc
