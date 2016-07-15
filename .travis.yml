@@ -1,13 +1,44 @@
 language: python
 python:
-    - "2.7"
-    - "3.3"
+- '2.7'
+- '3.3'
 install:
-    - pip install -r hdijupyterutils/requirements.txt -e hdijupyterutils
-    - pip install -r autovizwidget/requirements.txt -e autovizwidget
-    - pip install -r sparkmagic/requirements.txt -e sparkmagic
-    - mkdir ~/.sparkmagic
+- pip install -r hdijupyterutils/requirements.txt -e hdijupyterutils
+- pip install -r autovizwidget/requirements.txt -e autovizwidget
+- pip install -r sparkmagic/requirements.txt -e sparkmagic
+- mkdir ~/.sparkmagic
 script:
-    - nosetests hdijupyterutils
-    - nosetests autovizwidget
-    - nosetests sparkmagic
+- nosetests hdijupyterutils
+- nosetests autovizwidget
+- nosetests sparkmagic
+after_success:
+    - echo [distutils]                                  > ~/.pypirc
+    - echo index-servers =                             >> ~/.pypirc
+    - echo "  pypi"                                    >> ~/.pypirc
+    - echo "  pypitest"                                >> ~/.pypirc
+    - echo                                             >> ~/.pypirc
+    - echo [pypi]                                      >> ~/.pypirc
+    - echo repository=https://pypi.python.org/pypi     >> ~/.pypirc
+    - echo username=hdinsightmsftagu                   >> ~/.pypirc
+    - echo password=$PYPI_PASSWORD                     >> ~/.pypirc
+    - echo                                             >> ~/.pypirc
+    - echo [pypitest]                                  >> ~/.pypirc
+    - echo repository=https://testpypi.python.org/pypi >> ~/.pypirc
+    - echo username=hdinsightmsftagu                   >> ~/.pypirc
+    - echo password=$PYPI_PASSWORD                     >> ~/.pypirc
+deploy:
+- provider: script
+  script: /bin/sh deploy.sh
+  on:
+    branch: release
+    tags: true
+    condition: $TRAVIS_PYTHON_VERSION = "2.7"
+- provider: script
+  script: /bin/sh deploy_test.sh
+  on:
+    branch: release
+    tags: false
+    condition: $TRAVIS_PYTHON_VERSION = "2.7"
+env:
+  global:
+    secure: Xk+uGuB1bZGhSKVB+pfTrZaJ8JU0mlceIRbA2yLuHYsOpI3vpAY1YtNVaeZ9e3cUCc0uofvJHOnbdZiZFwEod9An2T6Iq939xFIAkHz9GyWJL54esldXFJaQscwtC9XO8o9V4eS7RbptTPRQpo3isPSk7+4bXLevCQ1lcE3xBoVjAQuGtoPRGODo0jfPiURN1QnKdfjKk0KIEb01YS5azdMq4WD8EV8IlF5eYb+3JUvzc2Le7hpPNzzmxco+VTLFUXIckJrKr4uJxDwj6v5bVaDq/JpzDsX4TKezSWVzZuLMDG/N21fwmA4U7iZVjHgHD279fU69lxINPvKKkfFEs4KXOPJ31W2S0eR2xbEq48kU9v00ixaQpqbPjBnhddOJBBOVpw0VF0BiW6n8drKMRqrz2UuWQVekPKJ609APhUXNZiF9gV5WWNElKuq0xIXpnQ3c2yww836w9Cj522hKQd6IGcqR/SWYvFgEHkLw17dJl6eSCT7N4slAoqLetr3JX/YTVwLMGvvYls0YANJPkaLr2Mv3NCiz5SIUz1zfK6nQEwx6X3Zr+HPw9enj90q0QV56o0MdgUN573HGivRO8b0Hb5hiq6gq1HkRZ+I/SUlMUZ64OaKMMIoYxlDvFicrFSnSbsK2PBWiFKF2A/ZX2QDyk9Y+SWIqa2K3ZWuGb0Q=
