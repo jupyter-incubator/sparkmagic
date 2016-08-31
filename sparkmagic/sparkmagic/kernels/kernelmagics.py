@@ -341,8 +341,8 @@ class KernelMagics(SparkMagicBase):
         server = args.server
 
         if self.session_started:
-            self.ipython_display.send_error(u"Cannot change the endpoint if a session has been started.")
-            return
+            error = u"Cannot change the endpoint if a session has been started."
+            raise BadUserDataException(error)
 
         self.endpoint = Endpoint(server, username, password)
 

@@ -173,6 +173,7 @@ def test_change_endpoint():
 
 
 @with_setup(_setup, _teardown)
+@raises(BadUserDataException)
 def test_change_endpoint_session_started():
     u = 'user'
     p = 'password'
@@ -181,9 +182,6 @@ def test_change_endpoint_session_started():
     magic.session_started = True
 
     magic._do_not_call_change_endpoint(line)
-
-    assert_equals(ipython_display.send_error.call_count, 1)
-    assert_equals(Endpoint("url"), magic.endpoint)
     
 
 @with_setup(_setup, _teardown)
