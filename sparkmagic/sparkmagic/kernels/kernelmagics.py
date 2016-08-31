@@ -7,7 +7,7 @@ Provides the %spark magic."""
 from __future__ import print_function
 import json
 from IPython.core.magic import magics_class
-from IPython.core.magic import needs_local_scope, cell_magic
+from IPython.core.magic import needs_local_scope, cell_magic, line_magic
 from IPython.core.magic_arguments import argument, magic_arguments
 from hdijupyterutils.utils import generate_uuid
 
@@ -328,6 +328,23 @@ class KernelMagics(SparkMagicBase):
 
         self.language = language
         self.refresh_configuration()
+
+    @magic_arguments()
+    @line_magic
+    @argument("-u", "--username", type=str, help="Username to use.")
+    @argument("-p", "--password", type=str, help="Password to use.")
+    @argument("-s", "--server", type=str, help="Url of server to use.")
+    def _do_not_call_change_endpoint(self, line, cell="", local_ns=None):
+        args = parse_argstring_or_throw(self._do_not_call_change_endpoint, line)
+        username = args.username
+        password = args.password
+        server = args.server
+
+        if self.session_started:
+            error = u"Cannot change the endpoint if a session has been started."
+            raise BadUserDataException(error)
+
+        self.endpoint = Endpoint(server, username, password)
 
     def refresh_configuration(self):
         credentials = getattr(conf, 'base64_kernel_' + self.language + '_credentials')()
