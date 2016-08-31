@@ -9,6 +9,12 @@ class ReconnectHandler(IPythonHandler):
         
         # Get kernel manager
         kernel_manager = self.get_kernel_manager(path)
+        if kernel_manager is None:
+            self.set_status(404)
+            self.finish(json.dumps(dict(success=False, error="No kernel for given path")))
+            return
+
+        # Restart
         kernel_manager.restart_kernel()
 
         # Execute code
@@ -21,7 +27,7 @@ class ReconnectHandler(IPythonHandler):
         error = self.msg_error(msg)
         
         # Post execution info
-        self.finish(json.dumps({"success": successful_message, "error": error}))
+        self.finish(json.dumps(dict(success=successful_message, error=error)))
             
     def get_kernel_manager(self, path):
         sessions = self.session_manager.list_sessions()
@@ -30,6 +36,9 @@ class ReconnectHandler(IPythonHandler):
         for session in sessions:
             if session['notebook']['path'] == path:
                 kernel_id = session['kernel']['id']
+
+        if kernel_id is None:
+            return None
         
         return self.kernel_manager.get_kernel(kernel_id)
     
