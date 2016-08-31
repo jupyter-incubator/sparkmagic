@@ -38,6 +38,25 @@ def test_emit_library_loaded_event():
 
 
 @with_setup(_setup, _teardown)
+def test_emit_cluster_change_event():
+    status_code = 200
+
+    event_name = constants.CLUSTER_CHANGE_EVENT
+    kwargs_list = [(INSTANCE_ID, get_instance_id()),
+                   (EVENT_NAME, event_name),
+                   (TIMESTAMP, time_stamp),
+                   (constants.CLUSTER_DNS_NAME, guid1),
+                   (constants.STATUS_CODE, status_code),
+                   (constants.SUCCESS, True),
+                   (constants.ERROR_MESSAGE, None)]
+
+    spark_events.emit_cluster_change_event(guid1, status_code, True, None)
+
+    spark_events.get_utc_date_time.assert_called_with()
+    spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
+
+
+@with_setup(_setup, _teardown)
 def test_emit_session_creation_start_event():
     language = constants.SESSION_KIND_SPARK
     event_name = constants.SESSION_CREATION_START_EVENT

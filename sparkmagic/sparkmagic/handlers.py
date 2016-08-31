@@ -3,17 +3,22 @@ from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 
 from sparkmagic.kernels.kernelmagics import KernelMagics
+from sparkmagic.utils.sparkevents import SparkEvents
 
 
 class ReconnectHandler(IPythonHandler):
     def post(self):
         path, username, password, endpoint = self.get_arguments()
+        spark_events = self.get_spark_events()
         
         # Get kernel manager
         kernel_manager = self.get_kernel_manager(path)
         if kernel_manager is None:
-            self.set_status(404)
-            self.finish(json.dumps(dict(success=False, error="No kernel for given path")))
+            status_code = 404
+            self.set_status(status_code)
+            error = "No kernel for given path"
+            self.finish(json.dumps(dict(success=False, error=error)))
+            spark_events.emit_cluster_change_event(endpoint, status_code, False, error)
             return
 
         # Restart
@@ -28,9 +33,15 @@ class ReconnectHandler(IPythonHandler):
         # Get execution info
         successful_message = self.msg_successful(msg)
         error = self.msg_error(msg)
+        if successful_message:
+            status_code = 200
+        else:
+            status_code = 500
         
         # Post execution info
+        self.set_status(status_code)
         self.finish(json.dumps(dict(success=successful_message, error=error)))
+        spark_events.emit_cluster_change_event(endpoint, status_code, successful_message, error)
 
     def get_arguments(self):
         path = self.get_body_argument('path')
@@ -63,6 +74,12 @@ class ReconnectHandler(IPythonHandler):
         if self.msg_status(msg) != 'error':
             return None
         return u'{}:\n{}'.format(msg['content']['ename'], msg['content']['evalue'])
+
+    def get_spark_events(self):
+        spark_events = getattr(self, 'spark_events', None)
+        if spark_events is None:
+            return SparkEvents()
+        return spark_events
 
 
 def load_jupyter_server_extension(nb_app):

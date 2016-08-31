@@ -69,7 +69,7 @@ Request Body example:
         }
         ```
 
-Returns `200` if successful; `404` if kernel for path is not found.
+Returns `200` if successful; `404` if kernel for path is not found; `500` if error is encountered changing clusters.
 
 Reply Body example:
         ```

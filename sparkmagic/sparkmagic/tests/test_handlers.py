@@ -11,6 +11,7 @@ kernel_manager = None
 individual_kernel_manager = None
 client = None
 session_list = None
+spark_events = None
 path = 'some_path.ipynb'
 kernel_id = '1'
 username = 'username'
@@ -35,7 +36,7 @@ class SimpleObject(object):
 
 def _setup():
     global reconnect_handler, session_manager, session_list, path, kernel_id, kernel_manager,\
-     individual_kernel_manager, response_id, good_msg, client
+     individual_kernel_manager, response_id, good_msg, client, spark_events
 
     # Mock kernel manager
     client = MagicMock()
@@ -51,9 +52,13 @@ def _setup():
     session_manager = MagicMock()
     session_manager.list_sessions = MagicMock(return_value=session_list)
 
+    #Mock spark events
+    spark_events = MagicMock()
+
     # Create mocked reconnect_handler        
     ReconnectHandler.__bases__ = (SimpleObject,)
     reconnect_handler = ReconnectHandler()
+    reconnect_handler.spark_events = spark_events
     reconnect_handler.session_manager = session_manager
     reconnect_handler.kernel_manager = kernel_manager
     reconnect_handler.set_status = MagicMock()
@@ -99,6 +104,7 @@ def test_post_non_existing_kernel():
 
     reconnect_handler.set_status.assert_called_once_with(404)
     reconnect_handler.finish.assert_called_once_with('{"success": false, "error": "No kernel for given path"}')
+    spark_events.emit_cluster_change_event.assert_called_once_with(endpoint, 404, False, "No kernel for given path")
 
 
 @with_setup(_setup, _teardown)
@@ -108,6 +114,20 @@ def test_post_existing_kernel():
     individual_kernel_manager.restart_kernel.assert_called_once_with()
     code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)
     client.execute.assert_called_once_with(code, silent=False, store_history=False)
-    assert reconnect_handler.set_status.call_count == 0
+    reconnect_handler.set_status.assert_called_once_with(200)
     reconnect_handler.finish.assert_called_once_with('{"success": true, "error": null}')
+    spark_events.emit_cluster_change_event.assert_called_once_with(endpoint, 200, True, None)
 
+
+@with_setup(_setup, _teardown)
+def test_post_existing_kernel_failed():
+    client.get_shell_msg = MagicMock(return_value=bad_msg)
+
+    assert reconnect_handler.post() is None
+
+    individual_kernel_manager.restart_kernel.assert_called_once_with()
+    code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)
+    client.execute.assert_called_once_with(code, silent=False, store_history=False)
+    reconnect_handler.set_status.assert_called_once_with(500)
+    reconnect_handler.finish.assert_called_once_with('{"success": false, "error": "SyntaxError:\\noh no!"}')
+    spark_events.emit_cluster_change_event.assert_called_once_with(endpoint, 500, False, "SyntaxError:\noh no!")
