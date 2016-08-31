@@ -35,19 +35,40 @@ See [Pyspark](examples/Pyspark Kernel.ipynb) and [Spark](examples/Spark Kernel.i
 
 1. Install the library
 
-        pip install sparkmagic
+        `pip install sparkmagic`
 
 2. Make sure that ipywidgets is properly installed by running
 
-        jupyter nbextension enable --py --sys-prefix widgetsnbextension 
+        `jupyter nbextension enable --py --sys-prefix widgetsnbextension` 
         
 3. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
 
-        jupyter-kernelspec install sparkmagic/kernels/sparkkernel
-        jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
+        `jupyter-kernelspec install sparkmagic/kernels/sparkkernel`
+        `jupyter-kernelspec install sparkmagic/kernels/pysparkkernel`
         
 4. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
+
+5. (Optional) Enable the server extension so that clusters can be programatically changed:
+
+        `jupyter serverextension enable --py sparkmagic`
         
+### Server extension API
+
+#### `/reconnectsparkmagic`:
+        * `POST`:
+        Allows to specify Spark cluster connection information to a notebook passing in the notebook path and cluster information.
+        Kernel will be started/restarted and connected to cluster specified.
+
+        Request Body:
+                ```
+                {
+                'path': 'path.ipynb',
+                'username': 'username',
+                'password': 'password',
+                'endpoint': 'url'
+                }
+                ```
+
 ## Architecture
 
 Sparkmagic uses Livy, a REST server for Spark, to remotely execute all user code. 
