@@ -2,10 +2,12 @@ import json
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 
+from sparkmagic.kernels.kernelmagics import KernelMagics
+
 
 class ReconnectHandler(IPythonHandler):
-    def get(self):
-        path = 'Temp/Untitled3.ipynb'
+    def post(self):
+        path, username, password, endpoint = self.get_arguments()
         
         # Get kernel manager
         kernel_manager = self.get_kernel_manager(path)
@@ -18,8 +20,10 @@ class ReconnectHandler(IPythonHandler):
         kernel_manager.restart_kernel()
 
         # Execute code
-        client = kernel_manager.client()        
-        response_id = client.execute('"hello world"', silent=False, store_history=False)
+        client = kernel_manager.client()
+        #code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)
+        code = '%{} -s {} -u {} -p {}'.format("_do_not_call_change_endpoint", endpoint, username, password)    
+        response_id = client.execute(code, silent=False, store_history=False)
         msg = client.get_shell_msg(response_id)
 
         # Get execution info
@@ -28,6 +32,14 @@ class ReconnectHandler(IPythonHandler):
         
         # Post execution info
         self.finish(json.dumps(dict(success=successful_message, error=error)))
+
+    def get_arguments(self):
+        path = self.get_body_argument('path')
+        username = self.get_body_argument('username')
+        password = self.get_body_argument('password')
+        endpoint = self.get_body_argument('endpoint')
+
+        return path, username, password, endpoint
             
     def get_kernel_manager(self, path):
         sessions = self.session_manager.list_sessions()
