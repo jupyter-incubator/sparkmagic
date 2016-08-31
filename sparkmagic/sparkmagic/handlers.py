@@ -21,8 +21,7 @@ class ReconnectHandler(IPythonHandler):
 
         # Execute code
         client = kernel_manager.client()
-        #code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)
-        code = '%{} -s {} -u {} -p {}'.format("_do_not_call_change_endpoint", endpoint, username, password)    
+        code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)    
         response_id = client.execute(code, silent=False, store_history=False)
         msg = client.get_shell_msg(response_id)
 
