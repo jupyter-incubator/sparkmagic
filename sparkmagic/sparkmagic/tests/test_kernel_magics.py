@@ -161,6 +161,30 @@ def test_change_language_not_valid():
 
 
 @with_setup(_setup, _teardown)
+def test_change_endpoint():
+    u = 'user'
+    p = 'password'
+    s = 'server'
+    line = "-s {} -u {} -p {}".format(s, u, p)
+
+    magic._do_not_call_change_endpoint(line)
+
+    assert_equals(Endpoint(s, u, p), magic.endpoint)
+
+
+@with_setup(_setup, _teardown)
+@raises(BadUserDataException)
+def test_change_endpoint_session_started():
+    u = 'user'
+    p = 'password'
+    s = 'server'
+    line = "-s {} -u {} -p {}".format(s, u, p)
+    magic.session_started = True
+
+    magic._do_not_call_change_endpoint(line)
+    
+
+@with_setup(_setup, _teardown)
 def test_info():
     magic._print_endpoint_info = print_info_mock = MagicMock()
     line = ""
