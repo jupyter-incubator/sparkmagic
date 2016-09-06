@@ -1,18 +1,20 @@
 import json
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
+from tornado import web
 
 from sparkmagic.kernels.kernelmagics import KernelMagics
 from sparkmagic.utils.sparkevents import SparkEvents
 
 
 class ReconnectHandler(IPythonHandler):
+    @web.authenticated
     def post(self):
-        path, username, password, endpoint = self.get_arguments()
-        spark_events = self.get_spark_events()
+        path, username, password, endpoint = self._get_parsed_arguments()
+        spark_events = self._get_spark_events()
         
         # Get kernel manager
-        kernel_manager = self.get_kernel_manager(path)
+        kernel_manager = self._get_kernel_manager(path)
         if kernel_manager is None:
             status_code = 404
             self.set_status(status_code)
@@ -31,8 +33,8 @@ class ReconnectHandler(IPythonHandler):
         msg = client.get_shell_msg(response_id)
 
         # Get execution info
-        successful_message = self.msg_successful(msg)
-        error = self.msg_error(msg)
+        successful_message = self._msg_successful(msg)
+        error = self._msg_error(msg)
         if successful_message:
             status_code = 200
         else:
@@ -43,7 +45,7 @@ class ReconnectHandler(IPythonHandler):
         self.finish(json.dumps(dict(success=successful_message, error=error)))
         spark_events.emit_cluster_change_event(endpoint, status_code, successful_message, error)
 
-    def get_arguments(self):
+    def _get_parsed_arguments(self):
         path = self.get_body_argument('path')
         username = self.get_body_argument('username')
         password = self.get_body_argument('password')
@@ -51,31 +53,32 @@ class ReconnectHandler(IPythonHandler):
 
         return path, username, password, endpoint
             
-    def get_kernel_manager(self, path):
+    def _get_kernel_manager(self, path):
         sessions = self.session_manager.list_sessions()
         
         kernel_id = None
         for session in sessions:
             if session['notebook']['path'] == path:
                 kernel_id = session['kernel']['id']
+                break
 
         if kernel_id is None:
             return None
         
         return self.kernel_manager.get_kernel(kernel_id)
     
-    def msg_status(selg, msg):
+    def _msg_status(selg, msg):
         return msg['content']['status']
 
-    def msg_successful(self, msg):
-        return self.msg_status(msg) == 'ok'
+    def _msg_successful(self, msg):
+        return self._msg_status(msg) == 'ok'
 
-    def msg_error(self, msg):
-        if self.msg_status(msg) != 'error':
+    def _msg_error(self, msg):
+        if self._msg_status(msg) != 'error':
             return None
         return u'{}:\n{}'.format(msg['content']['ename'], msg['content']['evalue'])
 
-    def get_spark_events(self):
+    def _get_spark_events(self):
         spark_events = getattr(self, 'spark_events', None)
         if spark_events is None:
             return SparkEvents()

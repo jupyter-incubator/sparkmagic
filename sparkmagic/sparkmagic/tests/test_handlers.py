@@ -1,7 +1,7 @@
 from mock import MagicMock
 from nose.tools import with_setup, raises, assert_equals, assert_is
 
-from sparkmagic.handlers import ReconnectHandler
+from sparkmagic.serverextension.handlers import ReconnectHandler
 from sparkmagic.kernels.kernelmagics import KernelMagics
 
 
@@ -64,6 +64,7 @@ def _setup():
     reconnect_handler.set_status = MagicMock()
     reconnect_handler.finish = MagicMock()
     reconnect_handler.get_body_argument = get_argument
+    reconnect_handler.current_user = 'alex'
 
 
 def _teardown():
@@ -72,33 +73,33 @@ def _teardown():
 
 @with_setup(_setup, _teardown)
 def test_msg_status():
-    assert_equals(reconnect_handler.msg_status(good_msg), 'ok')
-    assert_equals(reconnect_handler.msg_status(bad_msg), 'error')
+    assert_equals(reconnect_handler._msg_status(good_msg), 'ok')
+    assert_equals(reconnect_handler._msg_status(bad_msg), 'error')
 
 
 @with_setup(_setup, _teardown)
 def test_msg_successful():
-    assert_equals(reconnect_handler.msg_successful(good_msg), True)
-    assert_equals(reconnect_handler.msg_successful(bad_msg), False)
+    assert_equals(reconnect_handler._msg_successful(good_msg), True)
+    assert_equals(reconnect_handler._msg_successful(bad_msg), False)
 
 
 @with_setup(_setup, _teardown)
 def test_msg_error():
-    assert_equals(reconnect_handler.msg_error(good_msg), None)
-    assert_equals(reconnect_handler.msg_error(bad_msg), u'{}:\n{}'.format('SyntaxError', 'oh no!'))
+    assert_equals(reconnect_handler._msg_error(good_msg), None)
+    assert_equals(reconnect_handler._msg_error(bad_msg), u'{}:\n{}'.format('SyntaxError', 'oh no!'))
 
 
 @with_setup(_setup, _teardown)
 def test_get_kernel_manager():
-    assert_equals(reconnect_handler.get_kernel_manager('not_existing_path.ipynb'), None)
-    assert_equals(reconnect_handler.get_kernel_manager(path), individual_kernel_manager)
+    assert_equals(reconnect_handler._get_kernel_manager('not_existing_path.ipynb'), None)
+    assert_equals(reconnect_handler._get_kernel_manager(path), individual_kernel_manager)
 
     kernel_manager.get_kernel.assert_called_once_with(kernel_id)
 
 
 @with_setup(_setup, _teardown)
 def test_post_non_existing_kernel():
-    reconnect_handler.get_kernel_manager = MagicMock(return_value=None)
+    reconnect_handler._get_kernel_manager = MagicMock(return_value=None)
 
     assert reconnect_handler.post() is None
 

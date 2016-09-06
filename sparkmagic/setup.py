@@ -8,7 +8,8 @@ PACKAGES            = ['sparkmagic',
                        'sparkmagic/kernels/pysparkkernel',
                        'sparkmagic/kernels/sparkkernel',
                        'sparkmagic/kernels/wrapperkernel',
-                       'sparkmagic/utils']
+                       'sparkmagic/utils',
+                       'sparkmagic/serverextension']
 AUTHOR              = "Jupyter Development Team"
 AUTHOR_EMAIL        = "jupyter@googlegroups.org"
 URL                 = 'https://github.com/jupyter-incubator/sparkmagic/sparkmagic'
@@ -78,6 +79,7 @@ setup(name=NAME,
           'requests',
           'ipykernel>=4.2.2,<5',		
           'ipywidgets>5.0.0',
-          'notebook>=4.2'
+          'notebook>=4.2',
+          'tornado>=4'
       ])
 
