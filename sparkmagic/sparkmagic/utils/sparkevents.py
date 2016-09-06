@@ -32,6 +32,19 @@ class SparkEvents(Events):
 
         self.send_to_handler(kwargs_list)
 
+    def emit_cluster_change_event(self, cluster_dns_name, status_code, success, error_message):
+        event_name = constants.CLUSTER_CHANGE_EVENT
+        time_stamp = self.get_utc_date_time()
+
+        kwargs_list = [(EVENT_NAME, event_name),
+                       (TIMESTAMP, time_stamp),
+                       (constants.CLUSTER_DNS_NAME, cluster_dns_name),
+                       (constants.STATUS_CODE, status_code),
+                       (constants.SUCCESS, success),
+                       (constants.ERROR_MESSAGE, error_message)]
+
+        self.send_to_handler(kwargs_list)
+
     def emit_session_creation_start_event(self, session_guid, language):
         self._verify_language_ok(language)
 

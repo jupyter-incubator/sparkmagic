@@ -334,6 +334,7 @@ class KernelMagics(SparkMagicBase):
     @argument("-u", "--username", type=str, help="Username to use.")
     @argument("-p", "--password", type=str, help="Password to use.")
     @argument("-s", "--server", type=str, help="Url of server to use.")
+    @_event
     def _do_not_call_change_endpoint(self, line, cell="", local_ns=None):
         args = parse_argstring_or_throw(self._do_not_call_change_endpoint, line)
         username = args.username
