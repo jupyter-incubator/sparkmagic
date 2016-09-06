@@ -104,7 +104,7 @@ def test_post_non_existing_kernel():
     assert reconnect_handler.post() is None
 
     reconnect_handler.set_status.assert_called_once_with(404)
-    reconnect_handler.finish.assert_called_once_with('{"success": false, "error": "No kernel for given path"}')
+    reconnect_handler.finish.assert_called_once_with('{"error": "No kernel for given path", "success": false}')
     spark_events.emit_cluster_change_event.assert_called_once_with(endpoint, 404, False, "No kernel for given path")
 
 
@@ -116,7 +116,7 @@ def test_post_existing_kernel():
     code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)
     client.execute.assert_called_once_with(code, silent=False, store_history=False)
     reconnect_handler.set_status.assert_called_once_with(200)
-    reconnect_handler.finish.assert_called_once_with('{"success": true, "error": null}')
+    reconnect_handler.finish.assert_called_once_with('{"error": null, "success": true}')
     spark_events.emit_cluster_change_event.assert_called_once_with(endpoint, 200, True, None)
 
 
@@ -130,5 +130,5 @@ def test_post_existing_kernel_failed():
     code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)
     client.execute.assert_called_once_with(code, silent=False, store_history=False)
     reconnect_handler.set_status.assert_called_once_with(500)
-    reconnect_handler.finish.assert_called_once_with('{"success": false, "error": "SyntaxError:\\noh no!"}')
+    reconnect_handler.finish.assert_called_once_with('{"error": "SyntaxError:\\noh no!", "success": false}')
     spark_events.emit_cluster_change_event.assert_called_once_with(endpoint, 500, False, "SyntaxError:\noh no!")

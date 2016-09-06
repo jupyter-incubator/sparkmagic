@@ -19,7 +19,7 @@ class ReconnectHandler(IPythonHandler):
             status_code = 404
             self.set_status(status_code)
             error = "No kernel for given path"
-            self.finish(json.dumps(dict(success=False, error=error)))
+            self.finish(json.dumps(dict(success=False, error=error), sort_keys=True))
             spark_events.emit_cluster_change_event(endpoint, status_code, False, error)
             return
 
@@ -42,7 +42,7 @@ class ReconnectHandler(IPythonHandler):
         
         # Post execution info
         self.set_status(status_code)
-        self.finish(json.dumps(dict(success=successful_message, error=error)))
+        self.finish(json.dumps(dict(success=successful_message, error=error), sort_keys=True))
         spark_events.emit_cluster_change_event(endpoint, status_code, successful_message, error)
 
     def _get_parsed_arguments(self):
