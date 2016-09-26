@@ -47,7 +47,38 @@ See [Pyspark](examples/Pyspark Kernel.ipynb) and [Spark](examples/Spark Kernel.i
         jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
         
 4. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
+
+5. (Optional) Enable the server extension so that clusters can be programatically changed:
+
+        jupyter serverextension enable --py sparkmagic
         
+### Server extension API
+
+#### `/reconnectsparkmagic`:
+* `POST`:
+Allows to specify Spark cluster connection information to a notebook passing in the notebook path and cluster information.
+Kernel will be started/restarted and connected to cluster specified.
+
+Request Body example:
+        ```
+        {
+                'path': 'path.ipynb',
+                'username': 'username',
+                'password': 'password',
+                'endpoint': 'url'
+        }
+        ```
+
+Returns `200` if successful; `404` if kernel for path is not found; `500` if error is encountered changing clusters.
+
+Reply Body example:
+        ```
+        {
+                'success': true,
+                'error': null
+        }
+        ```
+
 ## Architecture
 
 Sparkmagic uses Livy, a REST server for Spark, to remotely execute all user code. 
