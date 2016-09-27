@@ -2,6 +2,8 @@ import json
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 from tornado import web
+from tornado.web import MissingArgumentError
+from tornado.escape import json_decode
 
 from sparkmagic.kernels.kernelmagics import KernelMagics
 from sparkmagic.utils.sparkevents import SparkEvents
@@ -10,8 +12,16 @@ from sparkmagic.utils.sparkevents import SparkEvents
 class ReconnectHandler(IPythonHandler):
     @web.authenticated
     def post(self):
-        path, username, password, endpoint = self._get_parsed_arguments()
         spark_events = self._get_spark_events()
+
+        endpoint = None
+        try:
+            path, username, password, endpoint = self._get_parsed_arguments()
+        except (ValueError, MissingArgumentError) as e:
+            self.set_status(400)
+            self.finish(str(e))
+            spark_events.emit_cluster_change_event(endpoint, 400, False, str(e))
+            return
         
         # Get kernel manager
         kernel_manager = self._get_kernel_manager(path)
@@ -46,12 +56,19 @@ class ReconnectHandler(IPythonHandler):
         spark_events.emit_cluster_change_event(endpoint, status_code, successful_message, error)
 
     def _get_parsed_arguments(self):
-        path = self.get_body_argument('path')
-        username = self.get_body_argument('username')
-        password = self.get_body_argument('password')
-        endpoint = self.get_body_argument('endpoint')
+        data = json_decode(self.request.body)
 
+        path = self._get_argument_or_raise(data, 'path')
+        username = self._get_argument_or_raise(data, 'username')
+        password = self._get_argument_or_raise(data, 'password')
+        endpoint = self._get_argument_or_raise(data, 'endpoint')
         return path, username, password, endpoint
+
+    def _get_argument_or_raise(self, data, key):
+        try:
+            return data[key]
+        except KeyError:
+            raise MissingArgumentError(key)
             
     def _get_kernel_manager(self, path):
         sessions = self.session_manager.list_sessions()
