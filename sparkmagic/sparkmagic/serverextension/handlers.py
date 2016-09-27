@@ -14,10 +14,22 @@ class ReconnectHandler(IPythonHandler):
     def post(self):
         spark_events = self._get_spark_events()
 
+        try:
+            data = json_decode(self.request.body)
+        except ValueError as e:
+            self.set_status(400)
+            msg = "Invalid JSON in request body."
+            self.finish(msg)
+            spark_events.emit_cluster_change_event(None, 400, False, msg)
+            return
+
         endpoint = None
         try:
-            path, username, password, endpoint = self._get_parsed_arguments()
-        except (ValueError, MissingArgumentError) as e:
+            path = self._get_argument_or_raise(data, 'path')
+            username = self._get_argument_or_raise(data, 'username')
+            password = self._get_argument_or_raise(data, 'password')
+            endpoint = self._get_argument_or_raise(data, 'endpoint')
+        except MissingArgumentError as e:
             self.set_status(400)
             self.finish(str(e))
             spark_events.emit_cluster_change_event(endpoint, 400, False, str(e))
@@ -54,15 +66,6 @@ class ReconnectHandler(IPythonHandler):
         self.set_status(status_code)
         self.finish(json.dumps(dict(success=successful_message, error=error), sort_keys=True))
         spark_events.emit_cluster_change_event(endpoint, status_code, successful_message, error)
-
-    def _get_parsed_arguments(self):
-        data = json_decode(self.request.body)
-
-        path = self._get_argument_or_raise(data, 'path')
-        username = self._get_argument_or_raise(data, 'username')
-        password = self._get_argument_or_raise(data, 'password')
-        endpoint = self._get_argument_or_raise(data, 'endpoint')
-        return path, username, password, endpoint
 
     def _get_argument_or_raise(self, data, key):
         try:

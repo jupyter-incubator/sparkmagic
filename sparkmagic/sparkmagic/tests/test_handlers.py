@@ -110,7 +110,7 @@ def test_post_no_json():
 
     assert reconnect_handler.post() is None
 
-    msg = 'Expecting property name enclosed in double quotes: line 1 column 2 (char 1)'
+    msg = "Invalid JSON in request body."
     reconnect_handler.set_status.assert_called_once_with(400)
     reconnect_handler.finish.assert_called_once_with(msg)
     spark_events.emit_cluster_change_event.assert_called_once_with(None, 400, False, msg)
