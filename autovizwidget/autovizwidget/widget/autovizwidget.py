@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import pandas as pd
-from ipywidgets import FlexBox
+from ipywidgets import Box
 from hdijupyterutils.ipythondisplay import IpythonDisplay
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 
@@ -12,7 +12,7 @@ from ..plotlygraphs.graphrenderer import GraphRenderer
 from ..utils.events import AutoVizEvents
 
 
-class AutoVizWidget(FlexBox):
+class AutoVizWidget(Box):
     def __init__(self, df, encoding, renderer=None, ipywidget_factory=None, encoding_widget=None, ipython_display=None,
                  nested_widget_mode=False, spark_events=None, testing=False, **kwargs):
         assert encoding is not None
