@@ -2,13 +2,13 @@
 # Distributed under the terms of the Modified BSD License.
 
 import pandas as pd
-from ipywidgets import FlexBox
+from ipywidgets import Box
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 
 from .encoding import Encoding
 
 
-class EncodingWidget(FlexBox):
+class EncodingWidget(Box):
     def __init__(self, df, encoding, change_hook, ipywidget_factory=None, testing=False, **kwargs):
         assert encoding is not None
         assert df is not None
