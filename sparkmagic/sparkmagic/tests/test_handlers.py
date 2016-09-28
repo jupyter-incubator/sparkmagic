@@ -1,5 +1,7 @@
 from mock import MagicMock
 from nose.tools import with_setup, raises, assert_equals, assert_is
+from tornado.web import MissingArgumentError
+import json
 
 from sparkmagic.serverextension.handlers import ReconnectHandler
 from sparkmagic.kernels.kernelmagics import KernelMagics
@@ -20,6 +22,7 @@ endpoint = 'http://endpoint.com'
 response_id = '0'
 good_msg = dict(content=dict(status='ok'))
 bad_msg = dict(content=dict(status='error', ename='SyntaxError', evalue='oh no!'))
+request = None
 
 
 def create_session_dict(path, kernel_id):
@@ -36,7 +39,7 @@ class SimpleObject(object):
 
 def _setup():
     global reconnect_handler, session_manager, session_list, path, kernel_id, kernel_manager,\
-     individual_kernel_manager, response_id, good_msg, client, spark_events
+     individual_kernel_manager, response_id, good_msg, client, spark_events, request
 
     # Mock kernel manager
     client = MagicMock()
@@ -52,8 +55,12 @@ def _setup():
     session_manager = MagicMock()
     session_manager.list_sessions = MagicMock(return_value=session_list)
 
-    #Mock spark events
+    # Mock spark events
     spark_events = MagicMock()
+
+    # Mock request 
+    request = MagicMock()
+    request.body = json.dumps({"path": path, "username": username, "password": password, "endpoint": endpoint})
 
     # Create mocked reconnect_handler        
     ReconnectHandler.__bases__ = (SimpleObject,)
@@ -63,8 +70,8 @@ def _setup():
     reconnect_handler.kernel_manager = kernel_manager
     reconnect_handler.set_status = MagicMock()
     reconnect_handler.finish = MagicMock()
-    reconnect_handler.get_body_argument = get_argument
     reconnect_handler.current_user = 'alex'
+    reconnect_handler.request = request
 
 
 def _teardown():
@@ -95,6 +102,30 @@ def test_get_kernel_manager():
     assert_equals(reconnect_handler._get_kernel_manager(path), individual_kernel_manager)
 
     kernel_manager.get_kernel.assert_called_once_with(kernel_id)
+
+
+@with_setup(_setup, _teardown)
+def test_post_no_json():
+    reconnect_handler.request.body = "{{}"
+
+    assert reconnect_handler.post() is None
+
+    msg = "Invalid JSON in request body."
+    reconnect_handler.set_status.assert_called_once_with(400)
+    reconnect_handler.finish.assert_called_once_with(msg)
+    spark_events.emit_cluster_change_event.assert_called_once_with(None, 400, False, msg)
+
+
+@with_setup(_setup, _teardown)
+def test_post_no_key():
+    reconnect_handler.request.body = json.dumps({})
+
+    assert reconnect_handler.post() is None
+
+    msg = 'HTTP 400: Bad Request (Missing argument path)'
+    reconnect_handler.set_status.assert_called_once_with(400)
+    reconnect_handler.finish.assert_called_once_with(msg)
+    spark_events.emit_cluster_change_event.assert_called_once_with(None, 400, False, msg)
 
 
 @with_setup(_setup, _teardown)
