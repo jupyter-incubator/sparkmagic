@@ -8,7 +8,7 @@ from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
 from hdijupyterutils.configuration import with_override
 
-from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME
+from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM
 from .utils import get_livy_kind
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 
@@ -33,8 +33,7 @@ _with_override = with_override(d, path)
  
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
-    properties[u"kind"] = get_livy_kind(language)
-    properties[u"heartbeatTimeoutInSecond"] = heartbeat_timeout_seconds()
+    properties[LIVY_KIND_PARAM] = get_livy_kind(language)
     return properties
 
 
@@ -155,11 +154,6 @@ def pyspark_sql_encoding():
     
     
 @_with_override
-def should_heartbeat():
-    return False
-    
-    
-@_with_override
 def heartbeat_refresh_seconds():
     return 30
     
@@ -170,13 +164,13 @@ def heartbeat_retry_seconds():
 
 
 @_with_override
-def heartbeat_timeout_seconds():
+def livy_server_heartbeat_timeout_seconds():
     return 60
 
 
 @_with_override
 def should_create_sql_context():
-    return False
+    return True
 
 
 def _credentials_override(f):

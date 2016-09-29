@@ -55,15 +55,17 @@ class _HeartbeatThread(threading.Thread):
 class LivySession(ObjectWithGuid):
     def __init__(self, http_client, properties, ipython_display,
                  session_id=-1, sql_created=None, spark_events=None,
-                 should_heartbeat=False, heartbeat_thread=None):
+                 heartbeat_timeout=0, heartbeat_thread=None):
         super(LivySession, self).__init__()
-        assert u"kind" in list(properties.keys())
-        kind = properties[u"kind"]
+        assert constants.LIVY_KIND_PARAM in list(properties.keys())
+        kind = properties[constants.LIVY_KIND_PARAM]
 
-        if not should_heartbeat:
-            properties.pop(u"heartbeatTimeoutInSecond")
-        elif properties[u"heartbeatTimeoutInSecond"] == 0:
-            properties.pop(u"heartbeatTimeoutInSecond")
+        should_heartbeat = False
+        if heartbeat_timeout > 0:
+            should_heartbeat = True
+            properties[constants.LIVY_HEARTBEAT_TIMEOUT_PARAM] = heartbeat_timeout
+        elif properties.get(constants.LIVY_HEARTBEAT_TIMEOUT_PARAM, -1) != -1:
+            properties.pop(constants.LIVY_HEARTBEAT_TIMEOUT_PARAM)
 
         self.properties = properties
         self.ipython_display = ipython_display

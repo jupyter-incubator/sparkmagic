@@ -52,10 +52,9 @@
   "max_results_sql": 2500,
   "pyspark_sql_encoding": "utf-8",
   
-  "should_heartbeat": false,
   "heartbeat_refresh_seconds": 30,
-  "heartbeat_timeout_seconds": 60,
+  "livy_server_heartbeat_timeout_seconds": 60,
   "heartbeat_retry_seconds": 10,
 
-  "should_create_sql_context": false
+  "should_create_sql_context": true
 }
