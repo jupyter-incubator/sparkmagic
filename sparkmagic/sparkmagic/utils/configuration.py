@@ -34,6 +34,7 @@ _with_override = with_override(d, path)
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
     properties[u"kind"] = get_livy_kind(language)
+    properties[u"heartbeatTimeoutInSecond"] = heartbeat_timeout_seconds()
     return properties
 
 
@@ -166,8 +167,18 @@ def heartbeat_refresh_seconds():
 @_with_override
 def heartbeat_retry_seconds():
     return 10
-    
-    
+
+
+@_with_override
+def heartbeat_timeout_seconds():
+    return 60
+
+
+@_with_override
+def should_create_sql_context():
+    return False
+
+
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.

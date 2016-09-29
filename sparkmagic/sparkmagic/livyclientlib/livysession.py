@@ -59,6 +59,12 @@ class LivySession(ObjectWithGuid):
         super(LivySession, self).__init__()
         assert u"kind" in list(properties.keys())
         kind = properties[u"kind"]
+
+        if not should_heartbeat:
+            properties.pop(u"heartbeatTimeoutInSecond")
+        elif properties[u"heartbeatTimeoutInSecond"] == 0:
+            properties.pop(u"heartbeatTimeoutInSecond")
+
         self.properties = properties
         self.ipython_display = ipython_display
         self._should_heartbeat = should_heartbeat

@@ -52,7 +52,7 @@ def test_add_session():
 
     controller._livy_session.assert_called_once_with(controller._http_client.return_value, properties, ipython_display)
     controller.session_manager.add_session.assert_called_once_with(name, session)
-    session.start.assert_called_once_with()
+    session.start.assert_called_once_with(False)
 
 
 @with_setup(_setup, _teardown)
@@ -244,4 +244,4 @@ def test_add_session_throws_when_session_start_fails():
         assert False
     except ValueError as ex:
         assert str(ex) == str(e)
-        session.start.assert_called_once_with()
+        session.start.assert_called_once_with(False)

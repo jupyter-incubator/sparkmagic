@@ -72,10 +72,10 @@ class TestLivySession(object):
         return val
 
     def _create_session(self, kind=constants.SESSION_KIND_SPARK, session_id=-1, sql_created=False,
-                        should_heartbeat=False):
+                        should_heartbeat=False, heartbeat_timeout=60):
         ipython_display = MagicMock()
         session = LivySession(self.http_client,
-                              {"kind": kind},
+                              {"kind": kind, "heartbeatTimeoutInSecond": heartbeat_timeout},
                               ipython_display,
                               session_id,
                               sql_created,
@@ -140,6 +140,7 @@ class TestLivySession(object):
         assert session.id == session_id
         assert session.created_sql_context
         assert session._heartbeat_thread is None
+        assert u"heartbeatTimeoutInSecond" not in list(session.properties.keys())
         
     def test_constructor_starts_heartbeat_with_existing_session(self):
         conf.override_all({
@@ -150,7 +151,7 @@ class TestLivySession(object):
         })
         session_id = 1
         session = self._create_session(session_id=session_id, sql_created=True,
-                                       should_heartbeat=True)
+                                       should_heartbeat=True, heartbeat_timeout=0)
         conf.override_all({})
         
         assert session.id == session_id
@@ -158,6 +159,7 @@ class TestLivySession(object):
         assert self.heartbeat_thread.daemon
         self.heartbeat_thread.start.assert_called_once_with()
         assert not session._heartbeat_thread is None
+        assert u"heartbeatTimeoutInSecond" not in list(session.properties.keys())
         
     def test_start_with_heartbeat(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -165,7 +167,7 @@ class TestLivySession(object):
 
         conf.override_all({
             "status_sleep_seconds": 0.01,
-            "statement_sleep_seconds": 0.01
+            "statement_sleep_seconds": 0.01,
         })
         session = self._create_session(should_heartbeat=True)
         session.create_sql_context = MagicMock()
@@ -175,6 +177,7 @@ class TestLivySession(object):
         assert self.heartbeat_thread.daemon
         self.heartbeat_thread.start.assert_called_once_with()
         assert not session._heartbeat_thread is None
+        assert session.properties[u"heartbeatTimeoutInSecond"] > 0
         
     def test_start_with_heartbeat_calls_only_once(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -330,7 +333,7 @@ class TestLivySession(object):
             "statement_sleep_seconds": 0.01
         })
         kind = constants.SESSION_KIND_SPARK
-        properties = {"kind": kind, "extra": 1}
+        properties = {"kind": kind, "heartbeatTimeoutInSecond": 60, "extra": 1}
 
         ipython_display = MagicMock()
         session = LivySession(self.http_client, properties, ipython_display)

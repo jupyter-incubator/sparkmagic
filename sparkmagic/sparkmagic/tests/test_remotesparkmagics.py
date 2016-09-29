@@ -80,7 +80,7 @@ def test_add_sessions_command_parses():
     magic.spark(line)
 
     add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", "sdf", "w"),
-                                              False, {"kind": "pyspark"})
+                                              False, {"kind": "pyspark", "heartbeatTimeoutInSecond": 60})
 
     # Skip and scala - upper case
     add_sessions_mock = MagicMock()
@@ -94,7 +94,7 @@ def test_add_sessions_command_parses():
     magic.spark(line)
 
     add_sessions_mock.assert_called_once_with("name", Endpoint("http://location:port"),
-                                              True, {"kind": "spark"})
+                                              True, {"kind": "spark", "heartbeatTimeoutInSecond": 60})
 
 
 @with_setup(_setup, _teardown)
@@ -111,7 +111,7 @@ def test_add_sessions_command_exception():
     magic.spark(line)
 
     add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", "sdf", "w"),
-                                              False, {"kind": "pyspark"})
+                                              False, {"kind": "pyspark", "heartbeatTimeoutInSecond": 60})
     ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(add_sessions_mock.side_effect))
 
@@ -133,7 +133,7 @@ def test_add_sessions_command_extra_properties():
     magic.spark(line)
 
     add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com"),
-                                              False, {"kind": "spark", "extra": "yes"})
+                                              False, {"kind": "spark", "heartbeatTimeoutInSecond": 60, "extra": "yes"})
     conf.override_all({})
 
 

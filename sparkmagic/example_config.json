@@ -54,5 +54,8 @@
   
   "should_heartbeat": false,
   "heartbeat_refresh_seconds": 30,
-  "heartbeat_retry_seconds": 10
+  "heartbeat_timeout_seconds": 60,
+  "heartbeat_retry_seconds": 10,
+
+  "should_create_sql_context": false
 }
