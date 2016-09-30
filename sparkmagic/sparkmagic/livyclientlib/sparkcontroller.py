@@ -1,6 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 import sparkmagic.utils.configuration as conf
+import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparklogger import SparkLog
 from .sessionmanager import SessionManager
 from .livyreliablehttpclient import LivyReliableHttpClient
@@ -41,7 +42,7 @@ class SparkController(object):
     def get_all_sessions_endpoint(self, endpoint):
         http_client = self._http_client(endpoint)
         sessions = http_client.get_sessions()[u"sessions"]
-        session_list = [self._livy_session(http_client, {u"kind": s[u"kind"]},
+        session_list = [self._livy_session(http_client, {constants.LIVY_KIND_PARAM: s[constants.LIVY_KIND_PARAM]},
                                            self.ipython_display, s[u"id"])
                         for s in sessions]
         for s in session_list:
@@ -66,7 +67,7 @@ class SparkController(object):
         http_client = self._http_client(endpoint)
         response = http_client.get_session(session_id)
         http_client = self._http_client(endpoint)
-        session = self._livy_session(http_client, {u"kind": response[u"kind"]},
+        session = self._livy_session(http_client, {constants.LIVY_KIND_PARAM: response[constants.LIVY_KIND_PARAM]},
                                      self.ipython_display, session_id, False)
         session.delete()
 
@@ -77,7 +78,7 @@ class SparkController(object):
         http_client = self._http_client(endpoint)
         session = self._livy_session(http_client, properties, self.ipython_display)
         self.session_manager.add_session(name, session)
-        session.start()
+        session.start(conf.should_create_sql_context())
 
     def get_session_id_for_client(self, name):
         return self.session_manager.get_session_id_for_client(name)
@@ -102,7 +103,7 @@ class SparkController(object):
     def _livy_session(http_client, properties, ipython_display,
                       session_id=-1, sql_created=None):
         return LivySession(http_client, properties, ipython_display,
-                           session_id, sql_created, should_heartbeat=conf.should_heartbeat())
+                           session_id, sql_created, heartbeat_timeout=conf.livy_server_heartbeat_timeout_seconds())
 
     @staticmethod
     def _http_client(endpoint):

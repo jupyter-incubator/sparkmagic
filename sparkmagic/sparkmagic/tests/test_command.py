@@ -19,7 +19,8 @@ def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
     if spark_events is None:
         spark_events = MagicMock()
     ipython_display = MagicMock()
-    session = LivySession(http_client, {"kind": kind}, ipython_display, session_id, sql_created, spark_events)
+    session = LivySession(http_client, {"kind": kind, "heartbeatTimeoutInSecond": 60},
+                          ipython_display, session_id, sql_created, spark_events)
     return session
 
 
