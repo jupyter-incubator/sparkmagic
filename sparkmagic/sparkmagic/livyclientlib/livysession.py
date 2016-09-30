@@ -64,7 +64,7 @@ class LivySession(ObjectWithGuid):
         if heartbeat_timeout > 0:
             should_heartbeat = True
             properties[constants.LIVY_HEARTBEAT_TIMEOUT_PARAM] = heartbeat_timeout
-        elif properties.get(constants.LIVY_HEARTBEAT_TIMEOUT_PARAM, -1) != -1:
+        elif constants.LIVY_HEARTBEAT_TIMEOUT_PARAM in list(properties.keys()):
             properties.pop(constants.LIVY_HEARTBEAT_TIMEOUT_PARAM)
 
         self.properties = properties
