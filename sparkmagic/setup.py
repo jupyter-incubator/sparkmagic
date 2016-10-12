@@ -77,6 +77,7 @@ setup(name=NAME,
           'pandas>=0.17.1',
           'numpy',		
           'requests',
+          'requests_kerberos'
           'ipykernel>=4.2.2,<5',		
           'ipywidgets>5.0.0',
           'notebook>=4.2',
