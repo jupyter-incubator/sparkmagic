@@ -1,6 +1,11 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
+from threading import Event
+import time
+
 from sparkmagic.controllerwidget.abstractmenuwidget import AbstractMenuWidget
+import sparkmagic.utils.constants as constants
+from sparkmagic.utils.kerberosthread import KerberosThread
 
 
 class ManageEndpointWidget(AbstractMenuWidget):
@@ -10,7 +15,7 @@ class ManageEndpointWidget(AbstractMenuWidget):
 
         self.endpoints = endpoints
         self.refresh_method = refresh_method
-
+        self.kerberos_info = {}
         self.children = self.get_existing_endpoint_widgets()
 
         for child in self.children:
@@ -113,7 +118,7 @@ class ManageEndpointWidget(AbstractMenuWidget):
     def get_info_endpoint_widget(self, endpoint, url):
         # 400 px
         width = "400px"
-
+        self.initialize_kerberos(endpoint)
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(endpoint)
 
         if len(info_sessions) > 0:
@@ -122,3 +127,12 @@ class ManageEndpointWidget(AbstractMenuWidget):
             text = "No sessions on this endpoint."
 
         return self.ipywidget_factory.get_html(text, width=width)
+
+    def initialize_kerberos(self, endpoint):
+        if endpoint.auth_type == constants.AUTH_KERBEROS and self.kerberos_info.get(endpoint.username) is None:
+            # Stop flag can be used to stop renewing kerberos ticket for the user
+            stop_flag = Event()
+            KerberosThread(stop_flag, endpoint).start()
+            self.kerberos_info[endpoint.username] = stop_flag
+            # Wait for kerberos ticket to be obtained
+            time.sleep(3)

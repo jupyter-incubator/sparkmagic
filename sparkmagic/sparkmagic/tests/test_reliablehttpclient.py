@@ -9,11 +9,13 @@ from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.exceptions import HttpClientException
 from sparkmagic.livyclientlib.linearretrypolicy import LinearRetryPolicy
 from sparkmagic.livyclientlib.reliablehttpclient import ReliableHttpClient
+import sparkmagic.utils.constants as constants
+
 
 retry_policy = None
 sequential_values = []
 
-endpoint = Endpoint("http://url.com", "username", "password")
+endpoint = Endpoint("http://url.com", constants.AUTH_SSL, "username", "password")
 
 
 def _setup():
