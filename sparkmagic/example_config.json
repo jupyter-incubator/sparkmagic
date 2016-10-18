@@ -57,5 +57,6 @@
   "livy_server_heartbeat_timeout_seconds": 60,
   "heartbeat_retry_seconds": 10,
 
-  "should_create_sql_context": true
+  "should_create_sql_context": true,
+  "use_spark_session": false
 }

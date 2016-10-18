@@ -1,4 +1,4 @@
-# coding=utf-8
+﻿# coding=utf-8
 from mock import MagicMock, call
 from nose.tools import with_setup, assert_equals, assert_false, raises
 import pandas as pd
@@ -194,3 +194,75 @@ def test_unicode_sql():
         assert False
     except NotImplementedError:
         pass
+
+@with_setup(_setup, _teardown)
+def test_pyspark_livy_sql_options_spark2():
+    try:
+        defaults = {
+            conf.use_spark_session.__name__: True,
+        }
+        conf.override_all(defaults)
+
+        query = "abc"
+
+        sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
+        assert_equals(sqlquery._pyspark_command(),
+                      Command(u'for {} in spark.sql(u"""{} """).toJSON().take(120): print({}.encode("{}"))'\
+                              .format(LONG_RANDOM_VARIABLE_NAME, query,
+                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
+
+        sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
+        assert_equals(sqlquery._pyspark_command(),
+                      Command(u'for {} in spark.sql(u"""{} """).toJSON().collect(): print({}.encode("{}"))'\
+                              .format(LONG_RANDOM_VARIABLE_NAME, query,
+                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
+
+        sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
+        assert_equals(sqlquery._pyspark_command(),
+                      Command(u'for {} in spark.sql(u"""{} """).toJSON().sample(False, 0.25).collect(): '
+                              u'print({}.encode("{}"))'\
+                              .format(LONG_RANDOM_VARIABLE_NAME, query,
+                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
+
+        sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
+        assert_equals(sqlquery._pyspark_command(),
+                      Command(u'for {} in spark.sql(u"""{} """).toJSON().sample(False, 0.33).take(3234): '
+                              u'print({}.encode("{}"))'\
+                              .format(LONG_RANDOM_VARIABLE_NAME, query,
+                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
+    finally:
+        defaults = {
+            conf.use_spark_session.__name__: False,
+        }
+        conf.override_all(defaults)
+
+@with_setup(_setup, _teardown)
+def test_scala_livy_sql_options_spark2():
+    try:
+        defaults = {
+            conf.use_spark_session.__name__: True,
+        }
+        conf.override_all(defaults)
+
+        query = "abc"
+
+        sqlquery = SQLQuery(query, samplemethod='take', maxrows=100)
+        assert_equals(sqlquery._scala_command(),
+                      Command('spark.sql("""{}""").toJSON.take(100).foreach(println)'.format(query)))
+
+        sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
+        assert_equals(sqlquery._scala_command(),
+                      Command('spark.sql("""{}""").toJSON.collect.foreach(println)'.format(query)))
+
+        sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
+        assert_equals(sqlquery._scala_command(),
+                      Command('spark.sql("""{}""").toJSON.sample(false, 0.25).collect.foreach(println)'.format(query)))
+
+        sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
+        assert_equals(sqlquery._scala_command(),
+                      Command('spark.sql("""{}""").toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(query)))
+    finally:
+        defaults = {
+            conf.use_spark_session.__name__: False,
+        }
+        conf.override_all(defaults)

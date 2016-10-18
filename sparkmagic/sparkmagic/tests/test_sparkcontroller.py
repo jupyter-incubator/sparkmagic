@@ -5,6 +5,7 @@ import json
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.exceptions import SessionManagementException, HttpClientException
+import sparkmagic.utils.configuration as conf
 
 
 client_manager = None
@@ -27,6 +28,11 @@ class DummyResponse:
 
 def _setup():
     global client_manager, controller, ipython_display
+
+    defaults = {
+        conf.should_create_sql_context.__name__: True
+    }
+    conf.override_all(defaults)
 
     client_manager = MagicMock()
     ipython_display = MagicMock()

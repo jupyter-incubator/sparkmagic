@@ -87,7 +87,11 @@ class SQLQuery(ObjectWithGuid):
             raise DataFrameParseException(u"Cannot parse object as JSON: '{}'".format(strings))
 
     def _pyspark_command(self):
-        command = u'sqlContext.sql(u"""{} """).toJSON()'.format(self.query)
+        if conf.use_spark_session():
+            sqlContext = "spark"
+        else:
+            sqlContext = "sqlContext"
+        command = u'{}.sql(u"""{} """).toJSON()'.format(sqlContext, self.query)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
@@ -101,7 +105,11 @@ class SQLQuery(ObjectWithGuid):
         return Command(command)
 
     def _scala_command(self):
-        command = u'sqlContext.sql("""{}""").toJSON'.format(self.query)
+        if conf.use_spark_session():
+            sqlContext = "spark"
+        else:
+            sqlContext = "sqlContext"
+        command = u'{}.sql("""{}""").toJSON'.format(sqlContext, self.query)
         if self.samplemethod == u'sample':
             command = u'{}.sample(false, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
