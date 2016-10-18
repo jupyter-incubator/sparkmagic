@@ -198,7 +198,6 @@ def test_unicode_sql():
 @with_setup(_setup, _teardown)
 def test_pyspark_livy_sql_options_spark2():
     try:
-
         defaults = {
             conf.use_spark_session.__name__: True,
         }
@@ -231,7 +230,6 @@ def test_pyspark_livy_sql_options_spark2():
                               u'print({}.encode("{}"))'\
                               .format(LONG_RANDOM_VARIABLE_NAME, query,
                                       LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
-
     finally:
         defaults = {
             conf.use_spark_session.__name__: False,
@@ -241,7 +239,6 @@ def test_pyspark_livy_sql_options_spark2():
 @with_setup(_setup, _teardown)
 def test_scala_livy_sql_options_spark2():
     try:
-
         defaults = {
             conf.use_spark_session.__name__: True,
         }
@@ -264,7 +261,6 @@ def test_scala_livy_sql_options_spark2():
         sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
         assert_equals(sqlquery._scala_command(),
                       Command('spark.sql("""{}""").toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(query)))
-
     finally:
         defaults = {
             conf.use_spark_session.__name__: False,
