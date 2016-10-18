@@ -70,7 +70,7 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.4'],
       install_requires=[
           'hdijupyterutils>=0.6',
-          'autovizwidget>=0.6',
+          'autovizwidget>=0.6.1',
           'ipython>=4.0.2,<5',		
           'nose',		
           'mock',		

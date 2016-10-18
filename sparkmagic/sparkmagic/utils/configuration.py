@@ -172,6 +172,10 @@ def livy_server_heartbeat_timeout_seconds():
 def should_create_sql_context():
     return True
 
+@_with_override
+def use_spark_session():
+    return False
+
 
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
