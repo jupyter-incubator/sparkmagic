@@ -73,14 +73,13 @@ class TestLivySession(object):
         self.post_session_responses = self.post_session_responses[1:]
         return val
 
-    def _create_session(self, kind=constants.SESSION_KIND_SPARK, session_id=-1, sql_created=False,
+    def _create_session(self, kind=constants.SESSION_KIND_SPARK, session_id=-1,
                         heartbeat_timeout=60):
         ipython_display = MagicMock()
         session = LivySession(self.http_client,
                               {"kind": kind},
                               ipython_display,
                               session_id,
-                              sql_created,
                               self.spark_events,
                               heartbeat_timeout,
                               self.heartbeat_thread)
@@ -97,8 +96,7 @@ class TestLivySession(object):
     def test_constructor_throws_status_sleep_seconds(self):
         conf.override_all({
             "status_sleep_seconds": 0,
-            "statement_sleep_seconds": 2,
-            "create_sql_context_timeout_seconds": 60
+            "statement_sleep_seconds": 2
         })
         self._create_session()
         conf.override_all({})
@@ -107,20 +105,9 @@ class TestLivySession(object):
     def test_constructor_throws_statement_sleep_seconds(self):
         conf.override_all({
             "status_sleep_seconds": 3,
-            "statement_sleep_seconds": 0,
-            "create_sql_context_timeout_seconds": 60
+            "statement_sleep_seconds": 0
         })
         self._create_session()
-        conf.override_all({})
-
-    @raises(BadUserDataException)
-    def test_constructor_throws_invalid_session_sql_combo(self):
-        conf.override_all({
-            "status_sleep_seconds": 2,
-            "statement_sleep_seconds": 2,
-            "create_sql_context_timeout_seconds": 60
-        })
-        self._create_session(sql_created=True)
         conf.override_all({})
 
     def test_doesnt_do_anything_or_create_sql_context_automatically(self):
@@ -132,15 +119,13 @@ class TestLivySession(object):
     def test_constructor_starts_with_existing_session(self):
         conf.override_all({
             "status_sleep_seconds": 4,
-            "statement_sleep_seconds": 2,
-            "create_sql_context_timeout_seconds": 60
+            "statement_sleep_seconds": 2
         })
         session_id = 1
-        session = self._create_session(session_id=session_id, sql_created=True, heartbeat_timeout=0)
+        session = self._create_session(session_id=session_id, heartbeat_timeout=0)
         conf.override_all({})
 
         assert session.id == session_id
-        assert session.created_sql_context
         assert session._heartbeat_thread is None
         assert constants.LIVY_HEARTBEAT_TIMEOUT_PARAM not in list(session.properties.keys())
         
@@ -148,15 +133,13 @@ class TestLivySession(object):
         conf.override_all({
             "status_sleep_seconds": 4,
             "statement_sleep_seconds": 2,
-            "create_sql_context_timeout_seconds": 60,
             "heartbeat_refresh_seconds": 0.1
         })
         session_id = 1
-        session = self._create_session(session_id=session_id, sql_created=True)
+        session = self._create_session(session_id=session_id)
         conf.override_all({})
         
         assert session.id == session_id
-        assert session.created_sql_context
         assert self.heartbeat_thread.daemon
         self.heartbeat_thread.start.assert_called_once_with()
         assert not session._heartbeat_thread is None
@@ -221,14 +204,12 @@ class TestLivySession(object):
     def test_constructor_starts_with_no_session(self):
         conf.override_all({
             "status_sleep_seconds": 4,
-            "statement_sleep_seconds": 2,
-            "create_sql_context_timeout_seconds": 60
+            "statement_sleep_seconds": 2
         })
         session = self._create_session()
         conf.override_all({})
 
         assert session.id == -1
-        assert not session.created_sql_context
 
     def test_is_final_status(self):
         conf.override_all({
@@ -284,25 +265,6 @@ class TestLivySession(object):
         self.http_client.post_session.assert_called_with({"kind": "sparkr", "heartbeatTimeoutInSecond": 60})
 
     def test_start_python_starts_session(self):
-        self.http_client.post_session.return_value = self.session_create_json
-        self.http_client.get_session.return_value = self.ready_sessions_json
-        self.http_client.get_statement.return_value = self.ready_statement_json
-
-        conf.override_all({
-            "status_sleep_seconds": 0.01,
-            "statement_sleep_seconds": 0.01
-        })
-        kind = constants.SESSION_KIND_PYSPARK
-        session = self._create_session(kind=kind)
-        session.start()
-        conf.override_all({})
-
-        assert_equals(kind, session.kind)
-        assert_equals("idle", session.status)
-        assert_equals(0, session.id)
-        self.http_client.post_session.assert_called_with({"kind": "pyspark", "heartbeatTimeoutInSecond": 60})
-
-    def test_start_turn_off_sql_context_creation(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
         self.http_client.get_statement.return_value = self.ready_statement_json
@@ -697,7 +659,7 @@ class TestLivySession(object):
 
     def test_get_row_html(self):
         session_id1 = 1
-        session1 = self._create_session(session_id=session_id1, sql_created=True)
+        session1 = self._create_session(session_id=session_id1)
         session1.get_app_id = MagicMock()
         session1.get_spark_ui_url = MagicMock()
         session1.get_driver_log_url = MagicMock()
@@ -712,7 +674,7 @@ class TestLivySession(object):
 
         session_id2 = 3
         session2 = self._create_session(kind=constants.SESSION_KIND_PYSPARK,
-                                        session_id=session_id2, sql_created=True)
+                                        session_id=session_id2)
         session2.get_app_id = MagicMock()
         session2.get_spark_ui_url = MagicMock()
         session2.get_driver_log_url = MagicMock()
@@ -738,7 +700,7 @@ class TestLivySession(object):
         self.http_client.get_statement.return_value = self.ready_statement_json
         session = self._create_session()
         session.start()
-        assert_equals(session.context_variable_name,"spark")
+        assert_equals(session.sql_context_variable_name,"spark")
 
     def test_sql_context_available(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -748,7 +710,7 @@ class TestLivySession(object):
         self.http_client.get_statement.side_effect = self._next_statement_response_get
         session = self._create_session()
         session.start()
-        assert_equals(session.context_variable_name, "sqlContext")
+        assert_equals(session.sql_context_variable_name, "sqlContext")
 
     @raises(SqlContextNotFoundException)
     def test_spark_session_and_sql_context_unavailable(self):

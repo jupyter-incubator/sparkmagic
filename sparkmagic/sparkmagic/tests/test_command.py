@@ -13,14 +13,14 @@ def _setup():
     
 
 def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
-                    sql_created=False, http_client=None, spark_events=None):
+                    http_client=None, spark_events=None):
     if http_client is None:
         http_client = MagicMock()
     if spark_events is None:
         spark_events = MagicMock()
     ipython_display = MagicMock()
     session = LivySession(http_client, {"kind": kind, "heartbeatTimeoutInSecond": 60},
-                          ipython_display, session_id, sql_created, spark_events)
+                          ipython_display, session_id, spark_events)
     return session
 
 
@@ -48,9 +48,9 @@ def test_execute():
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
     assert_equals(tls.TestLivySession.pi_result, result[1])
-    spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+    spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                         session.id, command.guid)
-    spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
+    spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
                                                                                       session.id, command.guid,
                                                                                       0, True, "", "")
 
@@ -78,11 +78,8 @@ def test_execute_failure_wait_for_session_emits_event():
         result = command.execute(session)
         assert False
     except ValueError as e:
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, command.guid)
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, command.guid,
-                                                                                   -1, False, "ValueError", "yo")
+        spark_events.emit_statement_execution_start_event.assert_called_with(session.guid, session.kind,
+                                                                                  session.id, command.guid)
         assert_equals(e, session.wait_for_idle.side_effect)
 
 
@@ -108,12 +105,8 @@ def test_execute_failure_post_statement_emits_event():
         result = command.execute(session)
         assert False
     except KeyError as e:
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+        spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                    session.id, command.guid)
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, command.guid,
-                                                                                   -1, False, "KeyError",
-                                                                                   "Something bad happened here")
         assert_equals(e, http_client.post_statement.side_effect)
 
 
@@ -140,10 +133,7 @@ def test_execute_failure_get_statement_output_emits_event():
         result = command.execute(session)
         assert False
     except AttributeError as e:
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+        print ("Message {}. Exception {}. Args {}".format(e.message, e, e.args))
+        spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                    session.id, command.guid)
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, command.guid,
-                                                                                   -1, False, "AttributeError",
-                                                                                   "OHHHH")
         assert_equals(e, command._get_statement_output.side_effect)

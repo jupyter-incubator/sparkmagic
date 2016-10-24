@@ -68,7 +68,7 @@ class SparkController(object):
         response = http_client.get_session(session_id)
         http_client = self._http_client(endpoint)
         session = self._livy_session(http_client, {constants.LIVY_KIND_PARAM: response[constants.LIVY_KIND_PARAM]},
-                                     self.ipython_display, session_id, False)
+                                     self.ipython_display, session_id)
         session.delete()
 
     def add_session(self, name, endpoint, skip_if_exists, properties):
@@ -101,9 +101,9 @@ class SparkController(object):
 
     @staticmethod
     def _livy_session(http_client, properties, ipython_display,
-                      session_id=-1, sql_created=None):
+                      session_id=-1):
         return LivySession(http_client, properties, ipython_display,
-                           session_id, sql_created, heartbeat_timeout=conf.livy_server_heartbeat_timeout_seconds())
+                           session_id, heartbeat_timeout=conf.livy_server_heartbeat_timeout_seconds())
 
     @staticmethod
     def _http_client(endpoint):

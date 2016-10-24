@@ -54,7 +54,7 @@ class _HeartbeatThread(threading.Thread):
 
 class LivySession(ObjectWithGuid):
     def __init__(self, http_client, properties, ipython_display,
-                 session_id=-1, sql_created=None, spark_events=None,
+                 session_id=-1, spark_events=None,
                  heartbeat_timeout=0, heartbeat_thread=None):
         super(LivySession, self).__init__()
         assert constants.LIVY_KIND_PARAM in list(properties.keys())
@@ -83,8 +83,6 @@ class LivySession(ObjectWithGuid):
         assert status_sleep_seconds > 0
         assert statement_sleep_seconds > 0
         assert wait_for_idle_timeout_seconds > 0
-        if session_id == -1 and sql_created is True:
-            raise BadUserDataException(u"Cannot indicate sql state without session id.")
 
         self.logger = SparkLog(u"LivySession")
 
@@ -102,12 +100,10 @@ class LivySession(ObjectWithGuid):
         
         self.kind = kind
         self.id = session_id
-        self.created_sql_context = sql_created
         
         self._heartbeat_thread = None
         if session_id == -1:
             self.status = constants.NOT_STARTED_SESSION_STATUS
-            sql_created = False
         else:
             self.status = constants.BUSY_SESSION_STATUS
             self._start_heartbeat_thread()
@@ -144,18 +140,18 @@ class LivySession(ObjectWithGuid):
             (success, out) = command.execute(self)
 
             if success:
-                self.logger.debug(u"SparkSession exists for session as variable spark.".format(self.kind))
-                self.ipython_display.writeln(u"SparkSession exists for session as variable spark...")
-                self.context_variable_name = "spark"
+                self.logger.debug(u"SparkSession exists for session as variable 'spark'.")
+                self.ipython_display.writeln(u"SparkSession exists for session as variable 'spark'...")
+                self.sql_context_variable_name = "spark"
             else:
                 command = Command("sqlContext")
                 (success, out) = command.execute(self)
                 if success:
-                    self.logger.debug(u"HiveContext exists for session as variable sqlContext.".format(self.kind))
-                    self.ipython_display.writeln(u"HiveContext exists for session as variable sqlContext...")
-                    self.context_variable_name = "sqlContext"
+                    self.logger.debug(u"Variable 'sqlContext' exists for session.")
+                    self.ipython_display.writeln(u"Variable 'sqlContext' exists for session...")
+                    self.sql_context_variable_name = "sqlContext"
                 else:
-                    raise SqlContextNotFoundException(u"Neither SparkSession nor HiveContext is found")
+                    raise SqlContextNotFoundException(u"Neither the variable 'spark' nor 'sqlContext' is found")
         except Exception as e:
             self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status,
                                                                False, e.__class__.__name__, str(e))

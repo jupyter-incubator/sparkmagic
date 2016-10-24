@@ -164,7 +164,7 @@ def test_delete_session_by_id_existent():
 
     controller.delete_session_by_id("conn_str", 0)
 
-    controller._livy_session.assert_called_once_with(http_client, {"kind": "spark"}, ipython_display, 0, False)
+    controller._livy_session.assert_called_once_with(http_client, {"kind": "spark"}, ipython_display, 0)
     session.delete.assert_called_once_with()
 
 
