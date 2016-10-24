@@ -80,6 +80,9 @@ def test_execute_failure_wait_for_session_emits_event():
     except ValueError as e:
         spark_events.emit_statement_execution_start_event.assert_called_with(session.guid, session.kind,
                                                                                   session.id, command.guid)
+        spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
+                                                                                   session.id, command.guid,
+                                                                                   -1, False, "ValueError", "yo")
         assert_equals(e, session.wait_for_idle.side_effect)
 
 
@@ -107,6 +110,10 @@ def test_execute_failure_post_statement_emits_event():
     except KeyError as e:
         spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                    session.id, command.guid)
+        spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
+                                                                                   session.id, command.guid,
+                                                                                   -1, False, "KeyError",
+                                                                                   "Something bad happened here")
         assert_equals(e, http_client.post_statement.side_effect)
 
 
@@ -133,7 +140,10 @@ def test_execute_failure_get_statement_output_emits_event():
         result = command.execute(session)
         assert False
     except AttributeError as e:
-        print ("Message {}. Exception {}. Args {}".format(e.message, e, e.args))
         spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                    session.id, command.guid)
+        spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
+                                                                                   session.id, command.guid,
+                                                                                   -1, False, "AttributeError",
+                                                                                   "OHHHH")
         assert_equals(e, command._get_statement_output.side_effect)

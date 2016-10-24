@@ -122,8 +122,9 @@ def test_execute_sql():
     result = sqlquery.execute(session)
     assert_frame_equal(result, result_data)
     sqlquery.to_command.return_value.execute.assert_called_once_with(session)
-    #spark_events.emit_sql_execution_start_event.assert_called_once_with(session.guid, session.kind,
-    #                                                                     session.id, sqlquery.guid)
+    spark_events.emit_sql_execution_start_event.assert_called_once_with(session.guid, session.kind,
+                                                                         session.id, sqlquery.guid,
+                                                                        'take', 100, 0.2)
     spark_events.emit_sql_execution_end_event.assert_called_once_with(session.guid, session.kind,
                                                                        session.id, sqlquery.guid,
                                                                        sqlquery.to_command.return_value.guid,
