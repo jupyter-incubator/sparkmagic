@@ -10,8 +10,8 @@ from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.utils import get_sessions_info_html
 from .command import Command
-from .exceptions import FailedToCreateSqlContextException, LivyClientTimeoutException, \
-    LivyUnexpectedStatusException, BadUserDataException
+from .exceptions import LivyClientTimeoutException, \
+    LivyUnexpectedStatusException, BadUserDataException, SqlContextNotFoundException
 
 
 class _HeartbeatThread(threading.Thread):
@@ -116,7 +116,7 @@ class LivySession(ObjectWithGuid):
         return u"Session id: {}\tYARN id: {}\tKind: {}\tState: {}\n\tSpark UI: {}\n\tDriver Log: {}"\
             .format(self.id, self.get_app_id(), self.kind, self.status, self.get_spark_ui_url(), self.get_driver_log_url())
 
-    def start(self, create_sql_context=True):
+    def start(self):
         """Start the session against actual livy server."""
         self._spark_events.emit_session_creation_start_event(self.guid, self.kind)
 
@@ -140,32 +140,28 @@ class LivySession(ObjectWithGuid):
             html = get_sessions_info_html([self], self.id)
             self.ipython_display.html(html)
 
-            if create_sql_context:
-                self.create_sql_context()
+            command = Command("spark")
+            (success, out) = command.execute(self)
+
+            if success:
+                self.logger.debug(u"SparkSession exists for session as variable spark.".format(self.kind))
+                self.ipython_display.writeln(u"SparkSession exists for session as varialbe spark...")
+                self.context_variable_name = "spark"
+            else:
+                command = Command("sqlContext")
+                (success, out) = command.execute(self)
+                if success:
+                    self.logger.debug(u"HiveContext exists for session as variable sqlContext.".format(self.kind))
+                    self.ipython_display.writeln(u"HiveContext exists for session as variable sqlContext...")
+                    self.context_variable_name = "sqlContext"
+                else:
+                    raise SqlContextNotFoundException(u"Neither SparkSession nor HiveContext is found")
         except Exception as e:
             self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status,
                                                                False, e.__class__.__name__, str(e))
             raise
         else:
             self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status, True, "", "")
-
-    def create_sql_context(self):
-        """Create a sqlContext object on the session. Object will be accessible via variable 'sqlContext'."""
-        if self.created_sql_context:
-            return
-        self.logger.debug(u"Starting '{}' hive session.".format(self.kind))
-        self.ipython_display.writeln(u"Creating HiveContext as 'sqlContext'")
-        command = self._get_sql_context_creation_command()
-        try:
-            (success, out) = command.execute(self)
-        except LivyClientTimeoutException:
-            raise LivyClientTimeoutException(u"Failed to create the SqlContext in time. Timed out after {} seconds."
-                                             .format(self._wait_for_idle_timeout_seconds))
-        if success:
-            self.ipython_display.writeln(u"SparkContext and HiveContext created. Executing user code ...")
-            self.created_sql_context = True
-        else:
-            raise FailedToCreateSqlContextException(u"Failed to create the SqlContext.\nError: '{}'".format(out))
 
     def get_app_id(self):
         if self._app_id is None:
@@ -266,18 +262,6 @@ class LivySession(ObjectWithGuid):
             raise LivyUnexpectedStatusException(u"Status '{}' not supported by session.".format(status))
 
         return self.status
-
-    def _get_sql_context_creation_command(self):
-        if self.kind == constants.SESSION_KIND_SPARK:
-            sql_context_command = u"val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)"
-        elif self.kind == constants.SESSION_KIND_PYSPARK:
-            sql_context_command = u"from pyspark.sql import HiveContext\nsqlContext = HiveContext(sc)"
-        elif self.kind == constants.SESSION_KIND_SPARKR:
-            sql_context_command = u"sqlContext <- sparkRHive.init(sc)"
-        else:
-            raise BadUserDataException(u"Do not know how to create HiveContext in session of kind {}.".format(self.kind))
-
-        return Command(sql_context_command)
 
     def _start_heartbeat_thread(self):
         if self._should_heartbeat and self._heartbeat_thread is None:

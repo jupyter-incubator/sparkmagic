@@ -168,15 +168,6 @@ def livy_server_heartbeat_timeout_seconds():
     return 60
 
 
-@_with_override
-def should_create_sql_context():
-    return True
-
-@_with_override
-def use_spark_session():
-    return False
-
-
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.

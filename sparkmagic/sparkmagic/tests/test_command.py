@@ -39,7 +39,7 @@ def test_execute():
     })
     session = _create_session(kind=kind, http_client=http_client)
     conf.override_all({})
-    session.start(create_sql_context=False)
+    session.start()
     command = Command("command", spark_events=spark_events)
 
     result = command.execute(session)
@@ -70,7 +70,7 @@ def test_execute_failure_wait_for_session_emits_event():
     })
     session = _create_session(kind=kind, http_client=http_client)
     conf.override_all({})
-    session.start(create_sql_context=False)
+    session.start()
     session.wait_for_idle = MagicMock(side_effect=ValueError("yo"))
     command = Command("command", spark_events=spark_events)
 
@@ -91,7 +91,7 @@ def test_execute_failure_post_statement_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
     http_client = MagicMock()
-    http_client.post_statement.side_effect = KeyError('Something bad happened here')
+    http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
     conf.override_all({
         "status_sleep_seconds": 0.01,
         "statement_sleep_seconds": 0.01
@@ -99,10 +99,11 @@ def test_execute_failure_post_statement_emits_event():
     session = _create_session(kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
     conf.override_all({})
-    session.start(create_sql_context=False)
+    session.start()
     session.wait_for_idle = MagicMock()
     command = Command("command", spark_events=spark_events)
 
+    http_client.post_statement.side_effect = KeyError('Something bad happened here')
     try:
         result = command.execute(session)
         assert False
@@ -125,10 +126,12 @@ def test_execute_failure_get_statement_output_emits_event():
         "status_sleep_seconds": 0.01,
         "statement_sleep_seconds": 0.01
     })
+    http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
+
     session = _create_session(kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
     conf.override_all({})
-    session.start(create_sql_context=False)
+    session.start()
     session.wait_for_idle = MagicMock()
     command = Command("command", spark_events=spark_events)
     command._get_statement_output = MagicMock(side_effect=AttributeError('OHHHH'))

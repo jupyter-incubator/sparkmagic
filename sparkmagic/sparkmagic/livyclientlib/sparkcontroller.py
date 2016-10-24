@@ -78,7 +78,7 @@ class SparkController(object):
         http_client = self._http_client(endpoint)
         session = self._livy_session(http_client, properties, self.ipython_display)
         self.session_manager.add_session(name, session)
-        session.start(conf.should_create_sql_context())
+        session.start()
 
     def get_session_id_for_client(self, name):
         return self.session_manager.get_session_id_for_client(name)
