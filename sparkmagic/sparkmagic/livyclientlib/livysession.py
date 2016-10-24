@@ -145,7 +145,7 @@ class LivySession(ObjectWithGuid):
 
             if success:
                 self.logger.debug(u"SparkSession exists for session as variable spark.".format(self.kind))
-                self.ipython_display.writeln(u"SparkSession exists for session as varialbe spark...")
+                self.ipython_display.writeln(u"SparkSession exists for session as variable spark...")
                 self.context_variable_name = "spark"
             else:
                 command = Command("sqlContext")
