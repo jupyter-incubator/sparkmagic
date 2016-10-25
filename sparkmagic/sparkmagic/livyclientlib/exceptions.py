@@ -15,10 +15,6 @@ class LivyClientLibException(Exception):
     are considered "expected"."""
 
 
-class FailedToCreateSqlContextException(LivyClientLibException):
-    """Exception that is thrown when the SQL context fails to be created on session start."""
-
-
 class HttpClientException(LivyClientLibException):
     """An exception thrown by the HTTP client when it fails to make a request."""
 
@@ -51,9 +47,11 @@ class BadUserDataException(LivyClientLibException):
     """An exception that is thrown when data provided by the user is invalid
     in some way."""
 
+class SqlContextNotFoundException(LivyClientLibException):
+    """Exception that is thrown when the SQL context is not found."""
 
 # == DECORATORS FOR EXCEPTION HANDLING ==
-EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, FailedToCreateSqlContextException,
+EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, SqlContextNotFoundException,
                        HttpClientException, LivyClientTimeoutException, SessionManagementException]
 
 

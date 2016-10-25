@@ -5,6 +5,7 @@ import json
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.exceptions import SessionManagementException, HttpClientException
+import sparkmagic.utils.configuration as conf
 
 
 client_manager = None
@@ -52,7 +53,7 @@ def test_add_session():
 
     controller._livy_session.assert_called_once_with(controller._http_client.return_value, properties, ipython_display)
     controller.session_manager.add_session.assert_called_once_with(name, session)
-    session.start.assert_called_once_with(True)
+    session.start.assert_called_once()
 
 
 @with_setup(_setup, _teardown)
@@ -163,7 +164,7 @@ def test_delete_session_by_id_existent():
 
     controller.delete_session_by_id("conn_str", 0)
 
-    controller._livy_session.assert_called_once_with(http_client, {"kind": "spark"}, ipython_display, 0, False)
+    controller._livy_session.assert_called_once_with(http_client, {"kind": "spark"}, ipython_display, 0)
     session.delete.assert_called_once_with()
 
 
@@ -244,4 +245,4 @@ def test_add_session_throws_when_session_start_fails():
         assert False
     except ValueError as ex:
         assert str(ex) == str(e)
-        session.start.assert_called_once_with(True)
+        session.start.assert_called_once()
