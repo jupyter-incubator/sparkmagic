@@ -104,7 +104,7 @@ class KernelMagics(SparkMagicBase):
   <tr>
     <td>sql</td>
     <td>%%sql -o tables -q<br/>SHOW TABLES</td>
-    <td>Executes a SQL query against the sqlContext.
+    <td>Executes a SQL query against the variable sqlContext (Spark v1.x) or spark (Spark v2.x).
     Parameters:
       <ul>
         <li>-o VAR_NAME: The result of the query will be available in the %%local Python context as a
