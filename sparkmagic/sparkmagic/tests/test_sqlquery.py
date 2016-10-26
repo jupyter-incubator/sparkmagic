@@ -1,4 +1,4 @@
-# coding=utf-8
+﻿# coding=utf-8
 from mock import MagicMock, call
 from nose.tools import with_setup, assert_equals, assert_false, raises
 import pandas as pd
@@ -61,26 +61,26 @@ def test_pyspark_livy_sql_options():
     query = "abc"
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
-    assert_equals(sqlquery._pyspark_command(),
+    assert_equals(sqlquery._pyspark_command("sqlContext"),
                   Command(u'for {} in sqlContext.sql(u"""{} """).toJSON().take(120): print({}.encode("{}"))'\
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
                                   LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
-    assert_equals(sqlquery._pyspark_command(),
+    assert_equals(sqlquery._pyspark_command("sqlContext"),
                   Command(u'for {} in sqlContext.sql(u"""{} """).toJSON().collect(): print({}.encode("{}"))'\
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
                                   LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
-    assert_equals(sqlquery._pyspark_command(),
+    assert_equals(sqlquery._pyspark_command("sqlContext"),
                   Command(u'for {} in sqlContext.sql(u"""{} """).toJSON().sample(False, 0.25).collect(): '
                           u'print({}.encode("{}"))'\
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
                                   LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
-    assert_equals(sqlquery._pyspark_command(),
+    assert_equals(sqlquery._pyspark_command("sqlContext"),
                   Command(u'for {} in sqlContext.sql(u"""{} """).toJSON().sample(False, 0.33).take(3234): '
                           u'print({}.encode("{}"))'\
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
@@ -92,19 +92,19 @@ def test_scala_livy_sql_options():
     query = "abc"
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=100)
-    assert_equals(sqlquery._scala_command(),
+    assert_equals(sqlquery._scala_command("sqlContext"),
                   Command('sqlContext.sql("""{}""").toJSON.take(100).foreach(println)'.format(query)))
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
-    assert_equals(sqlquery._scala_command(),
+    assert_equals(sqlquery._scala_command("sqlContext"),
                   Command('sqlContext.sql("""{}""").toJSON.collect.foreach(println)'.format(query)))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
-    assert_equals(sqlquery._scala_command(),
+    assert_equals(sqlquery._scala_command("sqlContext"),
                   Command('sqlContext.sql("""{}""").toJSON.sample(false, 0.25).collect.foreach(println)'.format(query)))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
-    assert_equals(sqlquery._scala_command(),
+    assert_equals(sqlquery._scala_command("sqlContext"),
                   Command('sqlContext.sql("""{}""").toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(query)))
 
 
@@ -122,12 +122,13 @@ def test_execute_sql():
     result = sqlquery.execute(session)
     assert_frame_equal(result, result_data)
     sqlquery.to_command.return_value.execute.assert_called_once_with(session)
-    spark_events.emit_sql_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                         session.id, sqlquery.guid)
-    spark_events.emit_sql_execution_end_event._assert_called_once_with(session.guid, session.kind,
+    spark_events.emit_sql_execution_start_event.assert_called_once_with(session.guid, session.kind,
+                                                                         session.id, sqlquery.guid,
+                                                                        'take', 100, 0.2)
+    spark_events.emit_sql_execution_end_event.assert_called_once_with(session.guid, session.kind,
                                                                        session.id, sqlquery.guid,
                                                                        sqlquery.to_command.return_value.guid,
-                                                                       True, "", "")
+                                                                       True, '','')
 
 
 @with_setup(_setup, _teardown)
@@ -146,11 +147,11 @@ def test_execute_sql_no_results():
     result = sqlquery.execute(session)
     assert_frame_equal(result, result_data)
     sqlquery.to_command.return_value.execute.assert_called_once_with(session)
-    spark_events.emit_sql_execution_start_event._assert_called_once_with(session.guid, session.kind,
+    spark_events.emit_sql_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                          session.id, sqlquery.guid,
                                                                          sqlquery.samplemethod, sqlquery.maxrows,
                                                                          sqlquery.samplefraction)
-    spark_events.emit_sql_execution_end_event._assert_called_once_with(session.guid, session.kind,
+    spark_events.emit_sql_execution_end_event.assert_called_once_with(session.guid, session.kind,
                                                                        session.id, sqlquery.guid,
                                                                        sqlquery.to_command.return_value.guid,
                                                                        True, "", "")
@@ -169,12 +170,10 @@ def test_execute_sql_failure_emits_event():
         assert False
     except ValueError:
         sqlquery.to_command.return_value.execute.assert_called_once_with(session)
-        spark_events.emit_sql_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                             session.id, sqlquery.guid)
-        spark_events.emit_sql_execution_end_event._assert_called_once_with(session.guid, session.kind,
+        spark_events.emit_sql_execution_end_event.assert_called_once_with(session.guid, session.kind,
                                                                            session.id, sqlquery.guid,
                                                                            sqlquery.to_command.return_value.guid,
-                                                                           True, "ValueError", "yo")
+                                                                           False, 'ValueError', 'yo')
 
 
 @with_setup(_setup, _teardown)
@@ -182,15 +181,65 @@ def test_unicode_sql():
     query = u"SELECT 'è'"
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
-    assert_equals(sqlquery._pyspark_command(),
-                  Command(u'for {} in sqlContext.sql(u"""{} """).toJSON().take(120): print({}.encode("{}"))'\
+    assert_equals(sqlquery._pyspark_command("spark"),
+                  Command(u'for {} in spark.sql(u"""{} """).toJSON().take(120): print({}.encode("{}"))'\
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
                                   LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
-    assert_equals(sqlquery._scala_command(),
-                  Command(u'sqlContext.sql("""{}""").toJSON.take(120).foreach(println)'.format(query)))
+    assert_equals(sqlquery._scala_command("spark"),
+                  Command(u'spark.sql("""{}""").toJSON.take(120).foreach(println)'.format(query)))
 
     try:
         sqlquery._r_command()
         assert False
     except NotImplementedError:
         pass
+
+@with_setup(_setup, _teardown)
+def test_pyspark_livy_sql_options_spark2():
+        query = "abc"
+        sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
+
+        assert_equals(sqlquery._pyspark_command("spark"),
+                      Command(u'for {} in spark.sql(u"""{} """).toJSON().take(120): print({}.encode("{}"))'\
+                              .format(LONG_RANDOM_VARIABLE_NAME, query,
+                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
+
+        sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
+        assert_equals(sqlquery._pyspark_command("spark"),
+                      Command(u'for {} in spark.sql(u"""{} """).toJSON().collect(): print({}.encode("{}"))'\
+                              .format(LONG_RANDOM_VARIABLE_NAME, query,
+                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
+
+        sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
+        assert_equals(sqlquery._pyspark_command("spark"),
+                      Command(u'for {} in spark.sql(u"""{} """).toJSON().sample(False, 0.25).collect(): '
+                              u'print({}.encode("{}"))'\
+                              .format(LONG_RANDOM_VARIABLE_NAME, query,
+                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
+
+        sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
+        assert_equals(sqlquery._pyspark_command("spark"),
+                      Command(u'for {} in spark.sql(u"""{} """).toJSON().sample(False, 0.33).take(3234): '
+                              u'print({}.encode("{}"))'\
+                              .format(LONG_RANDOM_VARIABLE_NAME, query,
+                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
+
+@with_setup(_setup, _teardown)
+def test_scala_livy_sql_options_spark2():
+        query = "abc"
+        sqlquery = SQLQuery(query, samplemethod='take', maxrows=100)
+
+        assert_equals(sqlquery._scala_command("spark"),
+                      Command('spark.sql("""{}""").toJSON.take(100).foreach(println)'.format(query)))
+
+        sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
+        assert_equals(sqlquery._scala_command("spark"),
+                      Command('spark.sql("""{}""").toJSON.collect.foreach(println)'.format(query)))
+
+        sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
+        assert_equals(sqlquery._scala_command("spark"),
+                      Command('spark.sql("""{}""").toJSON.sample(false, 0.25).collect.foreach(println)'.format(query)))
+
+        sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
+        assert_equals(sqlquery._scala_command("spark"),
+                      Command('spark.sql("""{}""").toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(query)))

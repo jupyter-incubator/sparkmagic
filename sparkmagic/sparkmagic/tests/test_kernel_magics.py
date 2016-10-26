@@ -6,8 +6,8 @@ import sparkmagic.utils.constants as constants
 import sparkmagic.utils.configuration as conf
 from sparkmagic.kernels.kernelmagics import KernelMagics
 from sparkmagic.livyclientlib.exceptions import LivyClientTimeoutException, BadUserDataException,\
-    FailedToCreateSqlContextException, LivyUnexpectedStatusException, SessionManagementException,\
-    HttpClientException, DataFrameParseException
+    LivyUnexpectedStatusException, SessionManagementException,\
+    HttpClientException, DataFrameParseException, SqlContextNotFoundException
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.command import Command
 
@@ -258,7 +258,7 @@ def test_info_unexpected_exception():
 def test_info_expected_exception():
     magic._print_endpoint_info = MagicMock()
     line = ""
-    spark_controller.get_all_sessions_endpoint = MagicMock(side_effect=FailedToCreateSqlContextException('utter failure'))
+    spark_controller.get_all_sessions_endpoint = MagicMock(side_effect=SqlContextNotFoundException('utter failure'))
 
     magic.info(line)
     _assert_magic_failure_event_emitted_once('info', spark_controller.get_all_sessions_endpoint.side_effect)

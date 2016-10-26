@@ -13,14 +13,14 @@ def _setup():
     
 
 def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
-                    sql_created=False, http_client=None, spark_events=None):
+                    http_client=None, spark_events=None):
     if http_client is None:
         http_client = MagicMock()
     if spark_events is None:
         spark_events = MagicMock()
     ipython_display = MagicMock()
     session = LivySession(http_client, {"kind": kind, "heartbeatTimeoutInSecond": 60},
-                          ipython_display, session_id, sql_created, spark_events)
+                          ipython_display, session_id, spark_events)
     return session
 
 
@@ -39,7 +39,7 @@ def test_execute():
     })
     session = _create_session(kind=kind, http_client=http_client)
     conf.override_all({})
-    session.start(create_sql_context=False)
+    session.start()
     command = Command("command", spark_events=spark_events)
 
     result = command.execute(session)
@@ -48,9 +48,9 @@ def test_execute():
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
     assert_equals(tls.TestLivySession.pi_result, result[1])
-    spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+    spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                         session.id, command.guid)
-    spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
+    spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
                                                                                       session.id, command.guid,
                                                                                       0, True, "", "")
 
@@ -70,7 +70,7 @@ def test_execute_failure_wait_for_session_emits_event():
     })
     session = _create_session(kind=kind, http_client=http_client)
     conf.override_all({})
-    session.start(create_sql_context=False)
+    session.start()
     session.wait_for_idle = MagicMock(side_effect=ValueError("yo"))
     command = Command("command", spark_events=spark_events)
 
@@ -78,9 +78,9 @@ def test_execute_failure_wait_for_session_emits_event():
         result = command.execute(session)
         assert False
     except ValueError as e:
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, command.guid)
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+        spark_events.emit_statement_execution_start_event.assert_called_with(session.guid, session.kind,
+                                                                                  session.id, command.guid)
+        spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
                                                                                    session.id, command.guid,
                                                                                    -1, False, "ValueError", "yo")
         assert_equals(e, session.wait_for_idle.side_effect)
@@ -91,7 +91,7 @@ def test_execute_failure_post_statement_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
     http_client = MagicMock()
-    http_client.post_statement.side_effect = KeyError('Something bad happened here')
+    http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
     conf.override_all({
         "status_sleep_seconds": 0.01,
         "statement_sleep_seconds": 0.01
@@ -99,17 +99,18 @@ def test_execute_failure_post_statement_emits_event():
     session = _create_session(kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
     conf.override_all({})
-    session.start(create_sql_context=False)
+    session.start()
     session.wait_for_idle = MagicMock()
     command = Command("command", spark_events=spark_events)
 
+    http_client.post_statement.side_effect = KeyError('Something bad happened here')
     try:
         result = command.execute(session)
         assert False
     except KeyError as e:
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+        spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                    session.id, command.guid)
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+        spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
                                                                                    session.id, command.guid,
                                                                                    -1, False, "KeyError",
                                                                                    "Something bad happened here")
@@ -125,10 +126,12 @@ def test_execute_failure_get_statement_output_emits_event():
         "status_sleep_seconds": 0.01,
         "statement_sleep_seconds": 0.01
     })
+    http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
+
     session = _create_session(kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
     conf.override_all({})
-    session.start(create_sql_context=False)
+    session.start()
     session.wait_for_idle = MagicMock()
     command = Command("command", spark_events=spark_events)
     command._get_statement_output = MagicMock(side_effect=AttributeError('OHHHH'))
@@ -137,9 +140,9 @@ def test_execute_failure_get_statement_output_emits_event():
         result = command.execute(session)
         assert False
     except AttributeError as e:
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+        spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                    session.id, command.guid)
-        spark_events.emit_statement_execution_start_event._assert_called_once_with(session.guid, session.kind,
+        spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
                                                                                    session.id, command.guid,
                                                                                    -1, False, "AttributeError",
                                                                                    "OHHHH")
