@@ -121,7 +121,7 @@ class LivySession(ObjectWithGuid):
             self.id = r[u"id"]
             self.status = str(r[u"state"])
 
-            self.ipython_display.writeln(u"Creating SparkContext as 'sc'")
+            self.ipython_display.writeln(u"Starting Spark application")
             
             # Start heartbeat thread to keep Livy interactive session alive.
             self._start_heartbeat_thread()
@@ -140,18 +140,20 @@ class LivySession(ObjectWithGuid):
             (success, out) = command.execute(self)
 
             if success:
-                self.logger.debug(u"SparkSession exists for session as variable 'spark'.")
-                self.ipython_display.writeln(u"SparkSession exists for session as variable 'spark'...")
+                self.ipython_display.writeln(u"SparkSession available as 'spark'.")
                 self.sql_context_variable_name = "spark"
             else:
                 command = Command("sqlContext")
                 (success, out) = command.execute(self)
                 if success:
-                    self.logger.debug(u"Variable 'sqlContext' exists for session.")
-                    self.ipython_display.writeln(u"Variable 'sqlContext' exists for session...")
+                    self.ipython_display.writeln(u"SparkContext available as 'sc'.")
+                    if ("hive" in out.lower()):
+                        self.ipython_display.writeln(u"HiveContext available as 'sqlContext'.")
+                    else:
+                        self.ipython_display.writeln(u"SqlContext available as 'sqlContext'.")
                     self.sql_context_variable_name = "sqlContext"
                 else:
-                    raise SqlContextNotFoundException(u"Neither the variable 'spark' nor 'sqlContext' is found")
+                    raise SqlContextNotFoundException(u"Neither SparkSession nor HiveContext/SqlContext is available.")
         except Exception as e:
             self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status,
                                                                False, e.__class__.__name__, str(e))
