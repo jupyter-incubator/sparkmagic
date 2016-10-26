@@ -121,7 +121,7 @@ class LivySession(ObjectWithGuid):
             self.id = r[u"id"]
             self.status = str(r[u"state"])
 
-            self.ipython_display.writeln(u"Creating Livy session")
+            self.ipython_display.writeln(u"Starting Spark application")
             
             # Start heartbeat thread to keep Livy interactive session alive.
             self._start_heartbeat_thread()
@@ -136,7 +136,6 @@ class LivySession(ObjectWithGuid):
             html = get_sessions_info_html([self], self.id)
             self.ipython_display.html(html)
 
-            self.ipython_display.writeln(u"SparkContext available as 'sc'.")
             command = Command("spark")
             (success, out) = command.execute(self)
 
@@ -147,7 +146,11 @@ class LivySession(ObjectWithGuid):
                 command = Command("sqlContext")
                 (success, out) = command.execute(self)
                 if success:
-                    self.ipython_display.writeln(u"HiveContext/SqlContext available as 'sqlContext'.")
+                    self.ipython_display.writeln(u"SparkContext available as 'sc'.")
+                    if ("hive" in out.lower()):
+                        self.ipython_display.writeln(u"HiveContext available as 'sqlContext'.")
+                    else:
+                        self.ipython_display.writeln(u"SqlContext available as 'sqlContext'.")
                     self.sql_context_variable_name = "sqlContext"
                 else:
                     raise SqlContextNotFoundException(u"Neither SparkSession nor HiveContext/SqlContext is available.")
