@@ -86,6 +86,11 @@ def test_pyspark_livy_sql_options():
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
                                   LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
 
+    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
+    assert_equals(sqlquery._pyspark_command("spark", False),
+                  Command(u'for {} in spark.sql(u"""{} """).toJSON().sample(False, 0.33).take(3234): '
+                          u'print({})'\
+                          .format(LONG_RANDOM_VARIABLE_NAME, query, LONG_RANDOM_VARIABLE_NAME)))
 
 @with_setup(_setup, _teardown)
 def test_scala_livy_sql_options():
