@@ -54,3 +54,10 @@ def test_configuration_raise_error_for_bad_base64_password():
     conf.override_all(overrides)
     conf.override(conf.status_sleep_seconds.__name__, 1)
     conf.base64_kernel_python_credentials()
+
+
+@with_setup(_setup)
+def test_share_config_between_pyspark_and_pyspark3():
+    kpc = { 'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L' }
+    overrides = { conf.kernel_python_credentials.__name__: kpc }
+    assert_equals(conf.base64_kernel_python3_credentials(), conf.base64_kernel_python_credentials())

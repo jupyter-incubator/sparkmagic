@@ -13,7 +13,7 @@ class PySparkKernel(SparkKernelBase):
         language_info = {
             'name': 'pyspark',
             'mimetype': 'text/x-python',
-            'codemirror_mode': {'name': 'python'},
+            'codemirror_mode': {'name': 'python', 'version': 2},
             'pygments_lexer': 'python2'
         }
 
