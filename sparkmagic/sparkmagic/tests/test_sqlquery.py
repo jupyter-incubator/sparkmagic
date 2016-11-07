@@ -20,6 +20,24 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
+def test_to_command_pyspark():
+    variable_name = "var_name"
+    sqlquery = SQLQuery("Query")
+    sqlquery._pyspark_command = MagicMock(return_value=MagicMock())
+    sqlquery.to_command("pyspark", variable_name)
+    sqlquery._pyspark_command.assert_called_with(variable_name)
+
+
+@with_setup(_setup, _teardown)
+def test_to_command_pyspark3():
+    variable_name = "var_name"
+    sqlquery = SQLQuery("Query")
+    sqlquery._pyspark_command = MagicMock(return_value=MagicMock())
+    sqlquery.to_command("pyspark3", variable_name)
+    sqlquery._pyspark_command.assert_called_with(variable_name, False)
+
+
+@with_setup(_setup, _teardown)
 def test_sqlquery_initializes():
     query = "HERE IS MY SQL QUERY SELECT * FROM CREATE DROP TABLE"
     samplemethod = "take"
@@ -86,6 +104,11 @@ def test_pyspark_livy_sql_options():
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
                                   LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
 
+    sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
+    assert_equals(sqlquery._pyspark_command("spark", False),
+                  Command(u'for {} in spark.sql(u"""{} """).toJSON().sample(False, 0.33).take(3234): '
+                          u'print({})'\
+                          .format(LONG_RANDOM_VARIABLE_NAME, query, LONG_RANDOM_VARIABLE_NAME)))
 
 @with_setup(_setup, _teardown)
 def test_scala_livy_sql_options():
