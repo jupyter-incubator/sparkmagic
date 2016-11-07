@@ -40,6 +40,8 @@ class SQLQuery(ObjectWithGuid):
     def to_command(self, kind, sql_context_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
             return self._pyspark_command(sql_context_variable_name)
+        elif kind == constants.SESSION_KIND_PYSPARK3:
+            return self._pyspark_command(sql_context_variable_name, False)
         elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command(sql_context_variable_name)
         elif kind == constants.SESSION_KIND_SPARKR:
@@ -86,7 +88,7 @@ class SQLQuery(ObjectWithGuid):
         except ValueError:
             raise DataFrameParseException(u"Cannot parse object as JSON: '{}'".format(strings))
 
-    def _pyspark_command(self, sql_context_variable_name):
+    def _pyspark_command(self, sql_context_variable_name, encode_result=True):
         command = u'{}.sql(u"""{} """).toJSON()'.format(sql_context_variable_name, self.query)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
@@ -94,10 +96,15 @@ class SQLQuery(ObjectWithGuid):
             command = u'{}.take({})'.format(command, self.maxrows)
         else:
             command = u'{}.collect()'.format(command)
-        command = u'for {} in {}: print({}.encode("{}"))'.format(constants.LONG_RANDOM_VARIABLE_NAME,
+        # Unicode support has improved in Python 3 so we don't need to encode.
+        if encode_result:
+            print_command = '{}.encode("{}")'.format(constants.LONG_RANDOM_VARIABLE_NAME,
+                                                     conf.pyspark_sql_encoding())
+        else:
+            print_command = constants.LONG_RANDOM_VARIABLE_NAME
+        command = u'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
                                                     command,
-                                                    constants.LONG_RANDOM_VARIABLE_NAME,
-                                                    conf.pyspark_sql_encoding())
+                                                    print_command)
         return Command(command)
 
     def _scala_command(self, sql_context_variable_name):

@@ -1,11 +1,19 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
+import sys
 
 import pandas as pd
 from ipywidgets import Box
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 
 from .encoding import Encoding
+
+
+# Bind a helper function to convert an object to a unicode string depending on Python version.
+if sys.version_info[0] < 3:
+    text = unicode
+else:
+    text = str
 
 
 class EncodingWidget(Box):
@@ -31,7 +39,7 @@ class EncodingWidget(Box):
         self.title = self.ipywidget_factory.get_html('Encoding:', width='148px', height='32px')
 
         # X view
-        options_x_view = {str(i): str(i) for i in self.df.columns}
+        options_x_view = {text(i): text(i) for i in self.df.columns}
         options_x_view["-"] = None
         self.x_view = self.ipywidget_factory.get_dropdown(options=options_x_view,
                                                           description="X", value=self.encoding.x)
@@ -39,7 +47,7 @@ class EncodingWidget(Box):
         self.x_view.layout.width = "200px"
 
         # Y
-        options_y_view = {str(i): str(i) for i in self.df.columns}
+        options_y_view = {text(i): text(i) for i in self.df.columns}
         options_y_view["-"] = None
         y_column_view = self.ipywidget_factory.get_dropdown(options=options_y_view,
                                                             description="Y", value=self.encoding.y)
