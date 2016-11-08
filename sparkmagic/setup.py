@@ -58,7 +58,7 @@ setup(name=NAME,
       packages=PACKAGES,
       include_package_data=True,
       package_data={'sparkmagic': ['kernels/pysparkkernel/kernel.js', 'kernels/pyspark3kernel/kernel.js', 'kernels/sparkkernel/kernel.js',
-                                   'kernels/pysparkkernel/kernel.js', 'kernels/pyspark3kernel/kernel.json', 'kernels/sparkkernel/kernel.json']},
+                                   'kernels/pysparkkernel/kernel.json', 'kernels/pyspark3kernel/kernel.json', 'kernels/sparkkernel/kernel.json']},
       classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
