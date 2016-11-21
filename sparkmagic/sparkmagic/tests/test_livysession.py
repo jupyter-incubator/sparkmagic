@@ -28,6 +28,8 @@ class TestLivySession(object):
     pi_result = "Pi is roughly 3.14336"
 
     session_create_json = json.loads('{"id":0,"state":"starting","kind":"spark","log":[]}')
+    resource_limit_json = json.loads('{"id":0,"state":"starting","kind":"spark","log":['
+                                     '"Queue\'s AM resource limit exceeded."]}')
     ready_sessions_json = json.loads('{"id":0,"state":"idle","kind":"spark","log":[""]}')
     error_sessions_json = json.loads('{"id":0,"state":"error","kind":"spark","log":[""]}')
     busy_sessions_json = json.loads('{"id":0,"state":"busy","kind":"spark","log":[""]}')
@@ -363,6 +365,30 @@ class TestLivySession(object):
         self.http_client.get_session.assert_called_with(0)
         assert_equals(4, self.http_client.get_session.call_count)
 
+    def test_wait_for_idle_prints_resource_limit_message(self):
+        self.http_client.post_session.return_value = self.session_create_json
+        self.get_session_responses = [self.resource_limit_json,
+                                      self.ready_sessions_json,
+                                      self.ready_sessions_json,
+                                      self.ready_sessions_json]
+        self.http_client.get_session.side_effect = self._next_session_response_get
+        self.http_client.get_statement.return_value = self.ready_statement_json
+        self.http_client.get_all_session_logs.return_value = self.log_json
+
+        conf.override_all({
+            "status_sleep_seconds": 0.011,
+            "statement_sleep_seconds": 6000
+        })
+        session = self._create_session()
+        conf.override_all({})
+        session.get_row_html = MagicMock()
+        session.get_row_html.return_value = u"""<tr><td>row1</td></tr>"""
+
+        session.start()
+
+        session.wait_for_idle(30)
+        assert_equals(session.ipython_display.writeln.call_count, 3)
+
     @raises(LivyUnexpectedStatusException)
     def test_wait_for_idle_throws_when_in_final_status(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -614,7 +640,7 @@ class TestLivySession(object):
         
     def _verify_get_app_id(self, mock_app_id, expected_app_id, expected_call_count):
         mock_field = ",\"appId\":" + mock_app_id if mock_app_id is not None else ""
-        get_session_json = json.loads('{"id":0,"state":"idle","output":null%s}' % mock_field)
+        get_session_json = json.loads('{"id":0,"state":"idle","output":null%s,"log":""}' % mock_field)
         session = self._create_session_with_fixed_get_response(get_session_json)
 
         app_id = session.get_app_id()
@@ -624,7 +650,7 @@ class TestLivySession(object):
 
     def _verify_get_driver_log_url(self, mock_driver_log_url, expected_url):
         mock_field = "\"driverLogUrl\":" + mock_driver_log_url if mock_driver_log_url is not None else ""
-        session_json = json.loads('{"id":0,"state":"idle","output":null,"appInfo":{%s}}' % mock_field)
+        session_json = json.loads('{"id":0,"state":"idle","output":null,"appInfo":{%s},"log":""}' % mock_field)
         self._verify_get_driver_log_url_json(session_json, expected_url)
 
     def _verify_get_driver_log_url_json(self, get_session_json, expected_url):
@@ -646,7 +672,7 @@ class TestLivySession(object):
 
     def _verify_get_spark_ui_url(self, mock_spark_ui_url, expected_url):
         mock_field = "\"sparkUiUrl\":" + mock_spark_ui_url if mock_spark_ui_url is not None else ""
-        session_json = json.loads('{"id":0,"state":"idle","output":null,"appInfo":{%s}}' % mock_field)
+        session_json = json.loads('{"id":0,"state":"idle","output":null,"appInfo":{%s},"log":""}' % mock_field)
         self._verify_get_spark_ui_url_json(session_json, expected_url)
 
     def _verify_get_spark_ui_url_json(self, get_session_json, expected_url):

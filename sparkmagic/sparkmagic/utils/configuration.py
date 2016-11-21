@@ -134,6 +134,11 @@ c) Restart the kernel."""
 
 
 @_with_override
+def resource_limit_mitigation_suggestion():
+    return ""
+
+
+@_with_override
 def ignore_ssl_errors():
     return False
 

@@ -60,12 +60,9 @@ IDLE_SESSION_STATUS = "idle"
 ERROR_SESSION_STATUS = "error"
 DEAD_SESSION_STATUS = "dead"
 NOT_STARTED_SESSION_STATUS = "not_started"
-STARTING_SESSION_STATUS = "starting"
 BUSY_SESSION_STATUS = "busy"
 SUCCESS_SESSION_STATUS = "success"
 
-POSSIBLE_SESSION_STATUS = [NOT_STARTED_SESSION_STATUS, IDLE_SESSION_STATUS, STARTING_SESSION_STATUS,
-                           BUSY_SESSION_STATUS, ERROR_SESSION_STATUS, DEAD_SESSION_STATUS, SUCCESS_SESSION_STATUS]
 FINAL_STATUS = [DEAD_SESSION_STATUS, ERROR_SESSION_STATUS, SUCCESS_SESSION_STATUS]
 
 DELETE_SESSION_ACTION = "delete"
@@ -75,6 +72,8 @@ DO_NOTHING_ACTION = "nothing"
 INTERNAL_ERROR_MSG = "An internal error was encountered.\n" \
                      "Please file an issue at https://github.com/jupyter-incubator/sparkmagic\nError:\n{}"
 EXPECTED_ERROR_MSG = "An error was encountered:\n{}"
+
+YARN_RESOURCE_LIMIT_MSG = "Queue's AM resource limit exceeded."
 
 LIVY_HEARTBEAT_TIMEOUT_PARAM = u"heartbeatTimeoutInSecond"
 LIVY_KIND_PARAM = u"kind"

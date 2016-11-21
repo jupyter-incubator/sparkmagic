@@ -97,7 +97,8 @@ class LivySession(ObjectWithGuid):
         self._status_sleep_seconds = status_sleep_seconds
         self._statement_sleep_seconds = statement_sleep_seconds
         self._wait_for_idle_timeout_seconds = wait_for_idle_timeout_seconds
-        
+        self._printed_resource_warning = False
+
         self.kind = kind
         self.id = session_id
         
@@ -115,6 +116,7 @@ class LivySession(ObjectWithGuid):
     def start(self):
         """Start the session against actual livy server."""
         self._spark_events.emit_session_creation_start_event(self.guid, self.kind)
+        self._printed_resource_warning = False
 
         try:
             r = self._http_client.post_session(self.properties)
@@ -242,6 +244,12 @@ class LivySession(ObjectWithGuid):
                 self.logger.error(error)
                 raise LivyClientTimeoutException(error)
 
+            if constants.YARN_RESOURCE_LIMIT_MSG in self._logs and \
+                not self._printed_resource_warning:
+                self.ipython_display.writeln(u"Warning: Session not starting due to resource limitation. {}"\
+                                             .format(conf.resource_limit_mitigation_suggestion()))
+                self._printed_resource_warning = True
+
             start_time = time()
             self.logger.debug(u"Session {} in state {}. Sleeping {} seconds."
                               .format(self.id, self.status, self._status_sleep_seconds))
@@ -252,12 +260,12 @@ class LivySession(ObjectWithGuid):
         sleep(self._statement_sleep_seconds)
 
     def refresh_status(self):
-        status = self._http_client.get_session(self.id)[u'state']
+        response = self._http_client.get_session(self.id)
+        status = response[u'state']
+        log_array = response[u'log']
 
-        if status in constants.POSSIBLE_SESSION_STATUS:
-            self.status = status
-        else:
-            raise LivyUnexpectedStatusException(u"Status '{}' not supported by session.".format(status))
+        self.status = status
+        self._logs = "\n".join(log_array)
 
         return self.status
 
