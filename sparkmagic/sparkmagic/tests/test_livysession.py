@@ -316,7 +316,7 @@ class TestLivySession(object):
         conf.override_all({})
         session.start()
 
-        session.refresh_status()
+        session.refresh_status_and_log()
         state = session.status
 
         assert_equals("idle", state)
@@ -387,7 +387,7 @@ class TestLivySession(object):
         session.start()
 
         session.wait_for_idle(30)
-        assert_equals(session.ipython_display.writeln.call_count, 3)
+        assert_equals(session.ipython_display.send_error.call_count, 1)
 
     @raises(LivyUnexpectedStatusException)
     def test_wait_for_idle_throws_when_in_final_status(self):

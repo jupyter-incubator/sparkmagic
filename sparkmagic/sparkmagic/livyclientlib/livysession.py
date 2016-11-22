@@ -32,7 +32,7 @@ class _HeartbeatThread(threading.Thread):
         
         while self.livy_session is not None:
             try:
-                self.livy_session.refresh_status()
+                self.livy_session.refresh_status_and_log()
                 sleep(self.refresh_seconds)
             except Exception as e:
                 self.livy_session.logger.error(u'{}'.format(e))
@@ -228,7 +228,7 @@ class LivySession(ObjectWithGuid):
             seconds_to_wait = self._wait_for_idle_timeout_seconds
 
         while True:
-            self.refresh_status()
+            self.refresh_status_and_log()
             if self.status == constants.IDLE_SESSION_STATUS:
                 return
 
@@ -246,8 +246,8 @@ class LivySession(ObjectWithGuid):
 
             if constants.YARN_RESOURCE_LIMIT_MSG in self._logs and \
                 not self._printed_resource_warning:
-                self.ipython_display.writeln(u"Warning: Session not starting due to resource limitation. {}"\
-                                             .format(conf.resource_limit_mitigation_suggestion()))
+                self.ipython_display.send_error(constants.RESOURCE_LIMIT_WARNING\
+                                                .format(conf.resource_limit_mitigation_suggestion()))
                 self._printed_resource_warning = True
 
             start_time = time()
@@ -259,13 +259,18 @@ class LivySession(ObjectWithGuid):
     def sleep(self):
         sleep(self._statement_sleep_seconds)
 
-    def refresh_status(self):
+    # This function will refresh the status and get the logs in a single call.
+    # Only the status will be returned as the return value.
+    def refresh_status_and_log(self):
         response = self._http_client.get_session(self.id)
         status = response[u'state']
         log_array = response[u'log']
 
-        self.status = status
-        self._logs = "\n".join(log_array)
+        if status in constants.POSSIBLE_SESSION_STATUS:
+            self.status = status
+            self._logs = "\n".join(log_array)
+        else:
+           raise LivyUnexpectedStatusException(u"Status '{}' not supported by session.".format(status))
 
         return self.status
 
