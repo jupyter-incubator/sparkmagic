@@ -316,7 +316,7 @@ class TestLivySession(object):
         conf.override_all({})
         session.start()
 
-        session.refresh_status_and_log()
+        session.refresh_status_and_info()
         state = session.status
 
         assert_equals("idle", state)

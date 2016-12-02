@@ -32,7 +32,7 @@ class _HeartbeatThread(threading.Thread):
         
         while self.livy_session is not None:
             try:
-                self.livy_session.refresh_status_and_log()
+                self.livy_session.refresh_status_and_info()
                 sleep(self.refresh_seconds)
             except Exception as e:
                 self.livy_session.logger.error(u'{}'.format(e))
@@ -101,6 +101,7 @@ class LivySession(ObjectWithGuid):
 
         self.kind = kind
         self.id = session_id
+        self.session_info = u""
         
         self._heartbeat_thread = None
         if session_id == -1:
@@ -228,7 +229,7 @@ class LivySession(ObjectWithGuid):
             seconds_to_wait = self._wait_for_idle_timeout_seconds
 
         while True:
-            self.refresh_status_and_log()
+            self.refresh_status_and_info()
             if self.status == constants.IDLE_SESSION_STATUS:
                 return
 
@@ -244,7 +245,7 @@ class LivySession(ObjectWithGuid):
                 self.logger.error(error)
                 raise LivyClientTimeoutException(error)
 
-            if constants.YARN_RESOURCE_LIMIT_MSG in self._logs and \
+            if constants.YARN_RESOURCE_LIMIT_MSG in self.session_info and \
                 not self._printed_resource_warning:
                 self.ipython_display.send_error(constants.RESOURCE_LIMIT_WARNING\
                                                 .format(conf.resource_limit_mitigation_suggestion()))
@@ -261,18 +262,16 @@ class LivySession(ObjectWithGuid):
 
     # This function will refresh the status and get the logs in a single call.
     # Only the status will be returned as the return value.
-    def refresh_status_and_log(self):
+    def refresh_status_and_info(self):
         response = self._http_client.get_session(self.id)
         status = response[u'state']
         log_array = response[u'log']
 
         if status in constants.POSSIBLE_SESSION_STATUS:
             self.status = status
-            self._logs = "\n".join(log_array)
+            self.session_info = "\n".join(log_array)
         else:
            raise LivyUnexpectedStatusException(u"Status '{}' not supported by session.".format(status))
-
-        return self.status
 
     def _start_heartbeat_thread(self):
         if self._should_heartbeat and self._heartbeat_thread is None:
