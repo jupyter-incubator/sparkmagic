@@ -180,7 +180,7 @@ def heartbeat_retry_seconds():
 
 @_with_override
 def livy_server_heartbeat_timeout_seconds():
-    return 60
+    return 0
 
 
 def _credentials_override(f):
