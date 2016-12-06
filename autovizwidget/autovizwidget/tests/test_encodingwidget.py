@@ -15,12 +15,12 @@ change_hook = None
 def _setup():
     global df, encoding, ipywidget_factory, change_hook
 
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12},
-               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0},
-               {u'buildingID': 2, u'date': u'6/1/14', u'temp_diff': 11},
-               {u'buildingID': 0, u'date': u'6/1/15', u'temp_diff': 5},
-               {u'buildingID': 1, u'date': u'6/1/16', u'temp_diff': 19},
-               {u'buildingID': 2, u'date': u'6/1/17', u'temp_diff': 32}]
+    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12, u'\u263A': True},
+               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0, u'\u263A': True},
+               {u'buildingID': 2, u'date': u'6/1/14', u'temp_diff': 11, u'\u263A': True},
+               {u'buildingID': 0, u'date': u'6/1/15', u'temp_diff': 5, u'\u263A': True},
+               {u'buildingID': 1, u'date': u'6/1/16', u'temp_diff': 19, u'\u263A': True},
+               {u'buildingID': 2, u'date': u'6/1/17', u'temp_diff': 32, u'\u263A': True}]
     df = pd.DataFrame(records)
 
     encoding = Encoding(chart_type="table", x="date", y="temp_diff")

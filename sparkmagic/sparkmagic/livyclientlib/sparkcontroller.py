@@ -46,7 +46,7 @@ class SparkController(object):
                                            self.ipython_display, s[u"id"])
                         for s in sessions]
         for s in session_list:
-            s.refresh_status()
+            s.refresh_status_and_info()
         return session_list
 
     def get_all_sessions_endpoint_info(self, endpoint):

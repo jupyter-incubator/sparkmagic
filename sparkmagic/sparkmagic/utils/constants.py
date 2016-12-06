@@ -7,8 +7,9 @@ CONFIG_FILE = "config.json"
 
 SESSION_KIND_SPARK = "spark"
 SESSION_KIND_PYSPARK = "pyspark"
+SESSION_KIND_PYSPARK3 = "pyspark3"
 SESSION_KIND_SPARKR = "sparkr"
-SESSION_KINDS_SUPPORTED = [SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_SPARKR]
+SESSION_KINDS_SUPPORTED = [SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3, SESSION_KIND_SPARKR]
 
 LIBRARY_LOADED_EVENT = "notebookLoaded"
 CLUSTER_CHANGE_EVENT = "notebookClusterChange"
@@ -47,8 +48,9 @@ CONTEXT_NAME_SQL = "sql"
 
 LANG_SCALA = "scala"
 LANG_PYTHON = "python"
+LANG_PYTHON3 = "python3"
 LANG_R = "r"
-LANGS_SUPPORTED = [LANG_SCALA, LANG_PYTHON, LANG_R]
+LANGS_SUPPORTED = [LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R]
 
 LONG_RANDOM_VARIABLE_NAME = "_yQeKOYBsFgLWWGWZJu3y"
 
@@ -73,6 +75,9 @@ DO_NOTHING_ACTION = "nothing"
 INTERNAL_ERROR_MSG = "An internal error was encountered.\n" \
                      "Please file an issue at https://github.com/jupyter-incubator/sparkmagic\nError:\n{}"
 EXPECTED_ERROR_MSG = "An error was encountered:\n{}"
+
+YARN_RESOURCE_LIMIT_MSG = "Queue's AM resource limit exceeded."
+RESOURCE_LIMIT_WARNING = "Warning: The Spark session does not have enough YARN resources to start. {}"
 
 LIVY_HEARTBEAT_TIMEOUT_PARAM = u"heartbeatTimeoutInSecond"
 LIVY_KIND_PARAM = u"kind"
