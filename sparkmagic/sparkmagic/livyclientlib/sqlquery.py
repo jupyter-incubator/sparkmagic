@@ -81,6 +81,7 @@ class SQLQuery(ObjectWithGuid):
 
             if kind == constants.SESSION_KIND_SPARKR and len(data_array) > 0:
                 data_array = data_array[0]
+
             if len(data_array) > 0:
                 df = pd.DataFrame(data_array, columns=data_array[0].keys())
             else:
