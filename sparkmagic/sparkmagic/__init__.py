@@ -1,4 +1,4 @@
-__version__ = '0.9.0'
+__version__ = '0.8.4'
 from sparkmagic.serverextension.handlers import load_jupyter_server_extension
 
 

@@ -69,14 +69,6 @@ def kernel_scala_credentials():
 def base64_kernel_scala_credentials():        
     return _credentials_override(kernel_scala_credentials)
 
-@_with_override
-def kernel_r_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
-
-
-def base64_kernel_r_credentials():
-    return _credentials_override(kernel_r_credentials)
-
 
 @_with_override
 def logging_config():
@@ -142,11 +134,6 @@ c) Restart the kernel."""
 
 
 @_with_override
-def resource_limit_mitigation_suggestion():
-    return ""
-
-
-@_with_override
 def ignore_ssl_errors():
     return False
 
@@ -188,7 +175,7 @@ def heartbeat_retry_seconds():
 
 @_with_override
 def livy_server_heartbeat_timeout_seconds():
-    return 0
+    return 60
 
 
 def _credentials_override(f):

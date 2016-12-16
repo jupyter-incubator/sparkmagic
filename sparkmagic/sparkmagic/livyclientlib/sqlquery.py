@@ -45,7 +45,7 @@ class SQLQuery(ObjectWithGuid):
         elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command(sql_context_variable_name)
         elif kind == constants.SESSION_KIND_SPARKR:
-            return self._r_command()
+            return self._r_command(sql_context_variable_name)
         else:
             raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
@@ -59,29 +59,25 @@ class SQLQuery(ObjectWithGuid):
             (success, records_text) = command.execute(session)
             if not success:
                 raise BadUserDataException(records_text)
-            result = self._records_to_dataframe(records_text, session.kind)
+            result = self._records_to_dataframe(records_text)
         except Exception as e:
             self._spark_events.emit_sql_execution_end_event(session.guid, session.kind, session.id, self.guid,
                                                             command_guid, False, e.__class__.__name__, str(e))
             raise
-
         else:
             self._spark_events.emit_sql_execution_end_event(session.guid, session.kind, session.id, self.guid,
                                                             command_guid, True, "", "")
             return result
 
     @staticmethod
-    def _records_to_dataframe(records_text, kind):
+    def _records_to_dataframe(records_text):
         if records_text == '':
             strings = []
         else:
             strings = records_text.split('\n')
         try:
             data_array = [json.JSONDecoder(object_pairs_hook=OrderedDict).decode(s) for s in strings]
-
-            if kind == constants.SESSION_KIND_SPARKR and len(data_array) > 0:
-                data_array = data_array[0]
-
+            
             if len(data_array) > 0:
                 df = pd.DataFrame(data_array, columns=data_array[0].keys())
             else:
@@ -122,16 +118,7 @@ class SQLQuery(ObjectWithGuid):
         return Command(u'{}.foreach(println)'.format(command))
 
     def _r_command(self):
-        command = u'sql("{}")'.format(self.query)
-        if self.samplemethod == u'sample':
-            command = u'sample({}, FALSE, {})'.format(command, self.samplefraction)
-        if self.maxrows >= 0:
-            command = u'take({},{})'.format(command, self.maxrows)
-        else:
-            command = u'collect({})'.format(command)
-        command = u'jsonlite:::toJSON({})'.format(command)
-        command = u'for ({} in ({})) {{cat({})}}'.format(constants.LONG_RANDOM_VARIABLE_NAME, command, constants.LONG_RANDOM_VARIABLE_NAME)
-        return Command(command)
+        raise NotImplementedError()
 
     # Used only for unit testing
     def __eq__(self, other):
