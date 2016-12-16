@@ -52,7 +52,7 @@ LANG_PYTHON3 = "python3"
 LANG_R = "r"
 LANGS_SUPPORTED = [LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R]
 
-LONG_RANDOM_VARIABLE_NAME = "_yQeKOYBsFgLWWGWZJu3y"
+LONG_RANDOM_VARIABLE_NAME = "yQeKOYBsFgLWWGWZJu3y"
 
 MAGICS_LOGGER_NAME = "magicsLogger"
 
@@ -75,6 +75,9 @@ DO_NOTHING_ACTION = "nothing"
 INTERNAL_ERROR_MSG = "An internal error was encountered.\n" \
                      "Please file an issue at https://github.com/jupyter-incubator/sparkmagic\nError:\n{}"
 EXPECTED_ERROR_MSG = "An error was encountered:\n{}"
+
+YARN_RESOURCE_LIMIT_MSG = "Queue's AM resource limit exceeded."
+RESOURCE_LIMIT_WARNING = "Warning: The Spark session does not have enough YARN resources to start. {}"
 
 LIVY_HEARTBEAT_TIMEOUT_PARAM = u"heartbeatTimeoutInSecond"
 LIVY_KIND_PARAM = u"kind"
