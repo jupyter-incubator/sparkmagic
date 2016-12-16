@@ -8,7 +8,6 @@ PACKAGES            = ['sparkmagic',
                        'sparkmagic/kernels/pysparkkernel',
                        'sparkmagic/kernels/pyspark3kernel',
                        'sparkmagic/kernels/sparkkernel',
-                       'sparkmagic/kernels/sparkrkernel',
                        'sparkmagic/kernels/wrapperkernel',
                        'sparkmagic/utils',
                        'sparkmagic/serverextension']
@@ -58,8 +57,8 @@ setup(name=NAME,
       license=LICENSE,
       packages=PACKAGES,
       include_package_data=True,
-      package_data={'sparkmagic': ['kernels/pysparkkernel/kernel.js', 'kernels/pyspark3kernel/kernel.js', 'kernels/sparkkernel/kernel.js', 'kernels/sparkrkernel/kernel.js'
-                                   'kernels/pysparkkernel/kernel.json', 'kernels/pyspark3kernel/kernel.json', 'kernels/sparkkernel/kernel.json', 'kernels/sparkrkernel/kernel.json']},
+      package_data={'sparkmagic': ['kernels/pysparkkernel/kernel.js', 'kernels/pyspark3kernel/kernel.js', 'kernels/sparkkernel/kernel.js',
+                                   'kernels/pysparkkernel/kernel.json', 'kernels/pyspark3kernel/kernel.json', 'kernels/sparkkernel/kernel.json']},
       classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
