@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
-from .constants import LANG_SCALA, LANG_PYTHON, LANG_R, \
-    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK
+from .constants import LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3
 
 
 def get_livy_kind(language):
@@ -14,6 +14,8 @@ def get_livy_kind(language):
         return SESSION_KIND_SPARK
     elif language == LANG_PYTHON:
         return SESSION_KIND_PYSPARK
+    elif language == LANG_PYTHON3:
+        return SESSION_KIND_PYSPARK3
     elif language == LANG_R:
         return SESSION_KIND_SPARKR
     else:

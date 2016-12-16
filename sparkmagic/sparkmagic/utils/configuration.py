@@ -48,7 +48,17 @@ def kernel_python_credentials():
     
     
 def base64_kernel_python_credentials():
-    return _credentials_override(kernel_python_credentials)       
+    return _credentials_override(kernel_python_credentials)
+
+
+# No one's gonna use pyspark and pyspark3 notebook on different endpoints. Reuse the old config.
+@_with_override
+def kernel_python3_credentials():
+    return kernel_python_credentials()
+
+
+def base64_kernel_python3_credentials():
+    return base64_kernel_python_credentials()
 
 
 @_with_override
