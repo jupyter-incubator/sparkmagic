@@ -1,0 +1,3 @@
+{"argv":["python","-m","sparkmagic.kernels.sparkrkernel.sparkrkernel", "-f", "{connection_file}"],
+ "display_name":"SparkR"
+}
