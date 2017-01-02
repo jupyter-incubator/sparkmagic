@@ -191,6 +191,11 @@ def livy_server_heartbeat_timeout_seconds():
     return 0
 
 
+@_with_override
+def server_extension_default_kernel_name():
+    return "pysparkkernel"
+
+
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.

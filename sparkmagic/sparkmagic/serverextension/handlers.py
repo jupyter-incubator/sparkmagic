@@ -7,6 +7,7 @@ from tornado.web import MissingArgumentError
 from tornado.escape import json_decode
 
 from sparkmagic.kernels.kernelmagics import KernelMagics
+import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.sparklogger import SparkLog
 
@@ -60,13 +61,9 @@ class ReconnectHandler(IPythonHandler):
             spark_events.emit_cluster_change_event(endpoint, 400, False, str(e))
             return
 
-        kernel_name = self._get_argument_if_exists(data, 'kernelname')
-        self.logger.debug("Kernel name is {}".format(kernel_name))
-        if kernel_name is None:
-            kernel_name = "pysparkkernel"
-            self.logger.debug("Defaulting to kernel name {}".format(kernel_name))
+        kernel_name = self._get_kernel_name(data)
 
-        # Get kernel manager
+        # Get kernel manager, create a new kernel if none exists or restart the existing one when applicable
         kernel_manager = yield self._get_kernel_manager(path, kernel_name)
 
         # Execute code
@@ -88,6 +85,14 @@ class ReconnectHandler(IPythonHandler):
         self.set_status(status_code)
         self.finish(json.dumps(dict(success=successful_message, error=error), sort_keys=True))
         spark_events.emit_cluster_change_event(endpoint, status_code, successful_message, error)
+
+    def _get_kernel_name(self, data):
+        kernel_name = self._get_argument_if_exists(data, 'kernelname')
+        self.logger.debug("Kernel name is {}".format(kernel_name))
+        if kernel_name is None:
+            kernel_name = conf.server_extension_default_kernel_name()
+            self.logger.debug("Defaulting to kernel name {}".format(kernel_name))
+        return kernel_name
 
     def _get_argument_if_exists(self, data, key):
         return data.get(key)
@@ -112,30 +117,26 @@ class ReconnectHandler(IPythonHandler):
 
         if kernel_id is None:
             self.logger.debug(u"Kernel not found. Starting a new kernel.")
-            kernel_id = yield self._get_kernel_id_new_session(path, kernel_name)
-            self.logger.debug(u"Kernel id received {}.".format(kernel_id))
-            k_m = self.kernel_manager.get_kernel(kernel_id)
+            k_m = yield self._get_kernel_manager_new_session(path, kernel_name)
         elif existing_kernel_name != kernel_name:
             self.logger.debug(u"Existing kernel name '{}' does not match requested '{}'. Starting a new kernel.".format(existing_kernel_name, kernel_name))
             self._delete_session(session_id)
-            kernel_id = yield self._get_kernel_id_new_session(path, kernel_name)
-            k_m = self.kernel_manager.get_kernel(kernel_id)
+            k_m = yield self._get_kernel_manager_new_session(path, kernel_name)
         else:
             self.logger.debug(u"Kernel found. Restarting kernel.")
             k_m = self.kernel_manager.get_kernel(kernel_id)
             k_m.restart_kernel()
 
-        #self.logger.debug("Kernel manager final is {}".format(k_m))
-        #raise gen.Return(kernel_id)
         return k_m
 
     @gen.coroutine
-    def _get_kernel_id_new_session(self, path, kernel_name):
+    def _get_kernel_manager_new_session(self, path, kernel_name):
         model_future = self.session_manager.create_session(kernel_name=kernel_name, path=path)
         model = yield model_future
         kernel_id = model["kernel"]["id"]
         self.logger.debug("Kernel created with id {}".format(str(kernel_id)))
-        return kernel_id
+        k_m = self.kernel_manager.get_kernel(kernel_id)
+        return k_m
 
     def _delete_session(self, session_id):
         self.session_manager.delete_session(session_id)
