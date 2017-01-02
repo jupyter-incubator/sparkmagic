@@ -17,6 +17,22 @@ class ReconnectHandler(IPythonHandler):
     @web.authenticated
     @gen.coroutine
     def post(self):
+        """
+        2017-01-02 15:12:51,935	DEBUG	ReconnectHandler	Kernel name is None
+        2017-01-02 15:12:51,935	DEBUG	ReconnectHandler	Defaulting to kernel name pysparkkernel
+        2017-01-02 15:12:51,936	DEBUG	ReconnectHandler	Kernel not found. Starting a new kernel.
+        2017-01-02 15:12:52,021	DEBUG	ReconnectHandler	Kernel created with id e9bc2611-91fe-4f7a-9c75-023d40eb7a34
+        2017-01-02 15:12:52,022	DEBUG	ReconnectHandler	Kernel id received e9bc2611-91fe-4f7a-9c75-023d40eb7a34.
+        2017-01-02 15:12:56,755	INFO	EventsHandler	InstanceId: 369daf6e-34b8-432d-9c4a-3dfc902fe368,EventName: notebookClusterChange,Timestamp: 2017-01-02 23:12:56.755397,ClusterDnsName: https://agulatejuly.azurehdinsight.net/livy,StatusCode: 200,Success: True,ErrorMessage: None
+        2017-01-02 15:13:03,590	DEBUG	ReconnectHandler	Kernel name is None
+        2017-01-02 15:13:03,590	DEBUG	ReconnectHandler	Defaulting to kernel name pysparkkernel
+        2017-01-02 15:13:03,590	DEBUG	ReconnectHandler	Kernel found. Restarting kernel.
+        2017-01-02 15:13:08,817	INFO	EventsHandler	InstanceId: 369daf6e-34b8-432d-9c4a-3dfc902fe368,EventName: notebookClusterChange,Timestamp: 2017-01-02 23:13:08.817677,ClusterDnsName: https://agulatejuly.azurehdinsight.net/livy,StatusCode: 200,Success: True,ErrorMessage: None
+        2017-01-02 15:14:06,044	DEBUG	ReconnectHandler	Kernel name is sparkkernel
+        2017-01-02 15:14:06,044	DEBUG	ReconnectHandler	Existing kernel name 'pysparkkernel' does not match requested 'sparkkernel'. Starting a new kernel.
+        2017-01-02 15:14:08,077	DEBUG	ReconnectHandler	Kernel created with id 41dffad2-867b-4d7f-8b19-12dfad3ded7d
+        2017-01-02 15:14:12,892	INFO	EventsHandler	InstanceId: 369daf6e-34b8-432d-9c4a-3dfc902fe368,EventName: notebookClusterChange,Timestamp: 2017-01-02 23:14:12.892880,ClusterDnsName: https://agulatejuly.azurehdinsight.net/livy,StatusCode: 200,Success: True,ErrorMessage: None
+        """
         self.logger = SparkLog(u"ReconnectHandler")
 
         spark_events = self._get_spark_events()
@@ -51,16 +67,7 @@ class ReconnectHandler(IPythonHandler):
             self.logger.debug("Defaulting to kernel name {}".format(kernel_name))
 
         # Get kernel manager
-        kernel_manager = yield gen.maybe_future(self._get_kernel_manager(path, kernel_name))
-        self.logger.debug("sofia manager {}".format(kernel_manager))
-        if kernel_manager is None:
-            status_code = 404
-            self.set_status(status_code)
-            error = "No kernel for given path"
-            self.logger.error(error)
-            self.finish(json.dumps(dict(success=False, error=error), sort_keys=True))
-            spark_events.emit_cluster_change_event(endpoint, status_code, False, error)
-            return
+        kernel_manager = yield self._get_kernel_manager(path, kernel_name)
 
         # Execute code
         client = kernel_manager.client()
@@ -106,26 +113,27 @@ class ReconnectHandler(IPythonHandler):
         if kernel_id is None:
             self.logger.debug(u"Kernel not found. Starting a new kernel.")
             kernel_id = yield self._get_kernel_id_new_session(path, kernel_name)
-            #self.logger.debug(u"Kernel id received {}.".format(kernel_id))
-            #k_m = self.kernel_manager.get_kernel(kernel_id)
+            self.logger.debug(u"Kernel id received {}.".format(kernel_id))
+            k_m = self.kernel_manager.get_kernel(kernel_id)
         elif existing_kernel_name != kernel_name:
             self.logger.debug(u"Existing kernel name '{}' does not match requested '{}'. Starting a new kernel.".format(existing_kernel_name, kernel_name))
             self._delete_session(session_id)
             kernel_id = yield self._get_kernel_id_new_session(path, kernel_name)
-            #k_m = self.kernel_manager.get_kernel(kernel_id)
+            k_m = self.kernel_manager.get_kernel(kernel_id)
         else:
             self.logger.debug(u"Kernel found. Restarting kernel.")
-            #k_m = self.kernel_manager.get_kernel(kernel_id)
-            #k_m.restart_kernel()
+            k_m = self.kernel_manager.get_kernel(kernel_id)
+            k_m.restart_kernel()
 
         #self.logger.debug("Kernel manager final is {}".format(k_m))
-        return kernel_id
+        #raise gen.Return(kernel_id)
+        return k_m
 
     @gen.coroutine
     def _get_kernel_id_new_session(self, path, kernel_name):
         model_future = self.session_manager.create_session(kernel_name=kernel_name, path=path)
         model = yield model_future
-        kernel_id = model["id"]
+        kernel_id = model["kernel"]["id"]
         self.logger.debug("Kernel created with id {}".format(str(kernel_id)))
         return kernel_id
 
