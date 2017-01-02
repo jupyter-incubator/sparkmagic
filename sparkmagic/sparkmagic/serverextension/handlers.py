@@ -2,16 +2,23 @@ import json
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 from tornado import web
+from tornado import gen
 from tornado.web import MissingArgumentError
 from tornado.escape import json_decode
 
 from sparkmagic.kernels.kernelmagics import KernelMagics
 from sparkmagic.utils.sparkevents import SparkEvents
+from sparkmagic.utils.sparklogger import SparkLog
 
 
 class ReconnectHandler(IPythonHandler):
+    logger = None
+
     @web.authenticated
+    @gen.coroutine
     def post(self):
+        self.logger = SparkLog(u"ReconnectHandler")
+
         spark_events = self._get_spark_events()
 
         try:
@@ -19,6 +26,7 @@ class ReconnectHandler(IPythonHandler):
         except ValueError as e:
             self.set_status(400)
             msg = "Invalid JSON in request body."
+            self.logger.error(msg)
             self.finish(msg)
             spark_events.emit_cluster_change_event(None, 400, False, msg)
             return
@@ -32,25 +40,31 @@ class ReconnectHandler(IPythonHandler):
         except MissingArgumentError as e:
             self.set_status(400)
             self.finish(str(e))
+            self.logger.error(str(e))
             spark_events.emit_cluster_change_event(endpoint, 400, False, str(e))
             return
-        
+
+        kernel_name = self._get_argument_if_exists(data, 'kernelname')
+        self.logger.debug("Kernel name is {}".format(kernel_name))
+        if kernel_name is None:
+            kernel_name = "pysparkkernel"
+            self.logger.debug("Defaulting to kernel name {}".format(kernel_name))
+
         # Get kernel manager
-        kernel_manager = self._get_kernel_manager(path)
+        kernel_manager = yield gen.maybe_future(self._get_kernel_manager(path, kernel_name))
+        self.logger.debug("sofia manager {}".format(kernel_manager))
         if kernel_manager is None:
             status_code = 404
             self.set_status(status_code)
             error = "No kernel for given path"
+            self.logger.error(error)
             self.finish(json.dumps(dict(success=False, error=error), sort_keys=True))
             spark_events.emit_cluster_change_event(endpoint, status_code, False, error)
             return
 
-        # Restart
-        kernel_manager.restart_kernel()
-
         # Execute code
         client = kernel_manager.client()
-        code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)    
+        code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)
         response_id = client.execute(code, silent=False, store_history=False)
         msg = client.get_shell_msg(response_id)
 
@@ -60,34 +74,65 @@ class ReconnectHandler(IPythonHandler):
         if successful_message:
             status_code = 200
         else:
+            self.logger.error(u"Code to reconnect errored out: {}".format(error))
             status_code = 500
-        
+
         # Post execution info
         self.set_status(status_code)
         self.finish(json.dumps(dict(success=successful_message, error=error), sort_keys=True))
         spark_events.emit_cluster_change_event(endpoint, status_code, successful_message, error)
+
+    def _get_argument_if_exists(self, data, key):
+        return data.get(key)
 
     def _get_argument_or_raise(self, data, key):
         try:
             return data[key]
         except KeyError:
             raise MissingArgumentError(key)
-            
-    def _get_kernel_manager(self, path):
+
+    @gen.coroutine
+    def _get_kernel_manager(self, path, kernel_name):
         sessions = self.session_manager.list_sessions()
-        
+
         kernel_id = None
         for session in sessions:
             if session['notebook']['path'] == path:
+                session_id = session['id']
                 kernel_id = session['kernel']['id']
+                existing_kernel_name = session['kernel']['name']
                 break
 
         if kernel_id is None:
-            return None
-        
-        return self.kernel_manager.get_kernel(kernel_id)
-    
-    def _msg_status(selg, msg):
+            self.logger.debug(u"Kernel not found. Starting a new kernel.")
+            kernel_id = yield self._get_kernel_id_new_session(path, kernel_name)
+            #self.logger.debug(u"Kernel id received {}.".format(kernel_id))
+            #k_m = self.kernel_manager.get_kernel(kernel_id)
+        elif existing_kernel_name != kernel_name:
+            self.logger.debug(u"Existing kernel name '{}' does not match requested '{}'. Starting a new kernel.".format(existing_kernel_name, kernel_name))
+            self._delete_session(session_id)
+            kernel_id = yield self._get_kernel_id_new_session(path, kernel_name)
+            #k_m = self.kernel_manager.get_kernel(kernel_id)
+        else:
+            self.logger.debug(u"Kernel found. Restarting kernel.")
+            #k_m = self.kernel_manager.get_kernel(kernel_id)
+            #k_m.restart_kernel()
+
+        #self.logger.debug("Kernel manager final is {}".format(k_m))
+        return kernel_id
+
+    @gen.coroutine
+    def _get_kernel_id_new_session(self, path, kernel_name):
+        model_future = self.session_manager.create_session(kernel_name=kernel_name, path=path)
+        model = yield model_future
+        kernel_id = model["id"]
+        self.logger.debug("Kernel created with id {}".format(str(kernel_id)))
+        return kernel_id
+
+    def _delete_session(self, session_id):
+        self.session_manager.delete_session(session_id)
+
+    def _msg_status(self, msg):
         return msg['content']['status']
 
     def _msg_successful(self, msg):
@@ -108,11 +153,11 @@ class ReconnectHandler(IPythonHandler):
 def load_jupyter_server_extension(nb_app):
     nb_app.log.info("sparkmagic extension enabled!")
     web_app = nb_app.web_app
-    
+
     base_url = web_app.settings['base_url']
     host_pattern = '.*$'
-    
+
     route_pattern_reconnect = url_path_join(base_url, '/reconnectsparkmagic')
     handlers = [(route_pattern_reconnect, ReconnectHandler)]
-    
+
     web_app.add_handlers(host_pattern, handlers)
