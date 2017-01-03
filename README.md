@@ -67,11 +67,13 @@ Request Body example:
                 'path': 'path.ipynb',
                 'username': 'username',
                 'password': 'password',
-                'endpoint': 'url'
+                'endpoint': 'url',
+                'kernelname': 'pysparkkernel'
         }
         ```
 
-Returns `200` if successful; `400` if body is not JSON string or key is not found; `404` if kernel for path is not found; `500` if error is encountered changing clusters.
+*Note that the kernelname parameter is optional and defaults to the one specified on the config file or pysparkkernel if not on the config file.*.
+Returns `200` if successful; `400` if body is not JSON string or key is not found; `500` if error is encountered changing clusters.
 
 Reply Body example:
         ```
