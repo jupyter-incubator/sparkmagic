@@ -72,7 +72,7 @@ Request Body example:
         }
         ```
 
-*Note that the kernelname parameter is optional and defaults to the one specified on the config file or pysparkkernel if not on the config file.*.
+*Note that the kernelname parameter is optional and defaults to the one specified on the config file or pysparkkernel if not on the config file.*
 Returns `200` if successful; `400` if body is not JSON string or key is not found; `500` if error is encountered changing clusters.
 
 Reply Body example:
