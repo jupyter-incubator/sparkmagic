@@ -74,6 +74,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         self.reconnect_handler.finish = MagicMock()
         self.reconnect_handler.current_user = 'alex'
         self.reconnect_handler.request = self.request
+        self.reconnect_handler.logger = MagicMock()
 
         super(TestSparkMagicHandler, self).setUp()
 
@@ -146,20 +147,42 @@ class TestSparkMagicHandler(AsyncTestCase):
         self.reconnect_handler.finish.assert_called_once_with('{"error": "SyntaxError:\\noh no!", "success": false}')
         self.spark_events.emit_cluster_change_event.assert_called_once_with(self.endpoint, 500, False, "SyntaxError:\noh no!")
 
-    # @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager_new_session')
-    # @gen_test
-    # def test_test_get_kernel_manager_no_existing_kernel1(self, _get_kernel_manager_new_session):
-    #     future_1 = Future()
-    #     kernel_manager = MagicMock()
-    #     future_1.set_result(kernel_manager)
-    #     _get_kernel_manager_new_session.return_value = future_1
-    #     result = yield self.reconnect_handler._get_kernel_manager_new_session("a", "b")
-    #     assert_equals(result, kernel_manager)
+    @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager_new_session')
+    @gen_test
+    def test_get_kernel_manager_no_existing_kernel(self, _get_kernel_manager_new_session):
+        different_path = "different_path.ipynb"
+        km_future = Future()
+        km_future.set_result(self.individual_kernel_manager)
+        _get_kernel_manager_new_session.return_value = km_future
+        
+        km = yield self.reconnect_handler._get_kernel_manager(different_path, self.kernel_name)
 
-# @with_setup(_setup, _teardown)
-# def test_get_kernel_manager_no_existing_kernel():
-#     kernel_name = "kernel"
-#     reconnect_handler._get_kernel_manager('not_existing_path.ipynb', kernel_name)
-    
-#     session_manager.create_session.assert_called_once_with(kernel_name=kernel_name, path=path)
-#     kernel_manager.get_kernel.assert_called_once_with(kernel_id)
+        assert_equals(self.individual_kernel_manager, km)
+        self.individual_kernel_manager.restart_kernel.assert_not_called()
+        self.kernel_manager.get_kernel.assert_not_called()
+        _get_kernel_manager_new_session.assert_called_once_with(different_path, self.kernel_name)
+
+    @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager_new_session')
+    @gen_test
+    def test_get_kernel_manager_existing_kernel(self, _get_kernel_manager_new_session):
+        km = yield self.reconnect_handler._get_kernel_manager(self.path, self.kernel_name)
+
+        assert_equals(self.individual_kernel_manager, km)
+        self.individual_kernel_manager.restart_kernel.assert_called_once_with()
+        _get_kernel_manager_new_session.assert_not_called()
+
+    @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager_new_session')
+    @gen_test
+    def test_get_kernel_manager_different_kernel_type(self, _get_kernel_manager_new_session):
+        different_kernel = "sparkkernel"
+        km_future = Future()
+        km_future.set_result(self.individual_kernel_manager)
+        _get_kernel_manager_new_session.return_value = km_future
+        
+        km = yield self.reconnect_handler._get_kernel_manager(self.path, different_kernel)
+
+        assert_equals(self.individual_kernel_manager, km)
+        self.individual_kernel_manager.restart_kernel.assert_not_called()
+        self.kernel_manager.get_kernel.assert_not_called()
+        _get_kernel_manager_new_session.assert_called_once_with(self.path, different_kernel)
+        self.session_manager.delete_session.assert_called_once_with(self.session_id)
