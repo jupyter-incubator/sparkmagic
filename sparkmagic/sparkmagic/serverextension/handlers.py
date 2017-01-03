@@ -18,22 +18,6 @@ class ReconnectHandler(IPythonHandler):
     @web.authenticated
     @gen.coroutine
     def post(self):
-        """
-        2017-01-02 15:12:51,935	DEBUG	ReconnectHandler	Kernel name is None
-        2017-01-02 15:12:51,935	DEBUG	ReconnectHandler	Defaulting to kernel name pysparkkernel
-        2017-01-02 15:12:51,936	DEBUG	ReconnectHandler	Kernel not found. Starting a new kernel.
-        2017-01-02 15:12:52,021	DEBUG	ReconnectHandler	Kernel created with id e9bc2611-91fe-4f7a-9c75-023d40eb7a34
-        2017-01-02 15:12:52,022	DEBUG	ReconnectHandler	Kernel id received e9bc2611-91fe-4f7a-9c75-023d40eb7a34.
-        2017-01-02 15:12:56,755	INFO	EventsHandler	InstanceId: 369daf6e-34b8-432d-9c4a-3dfc902fe368,EventName: notebookClusterChange,Timestamp: 2017-01-02 23:12:56.755397,ClusterDnsName: https://agulatejuly.azurehdinsight.net/livy,StatusCode: 200,Success: True,ErrorMessage: None
-        2017-01-02 15:13:03,590	DEBUG	ReconnectHandler	Kernel name is None
-        2017-01-02 15:13:03,590	DEBUG	ReconnectHandler	Defaulting to kernel name pysparkkernel
-        2017-01-02 15:13:03,590	DEBUG	ReconnectHandler	Kernel found. Restarting kernel.
-        2017-01-02 15:13:08,817	INFO	EventsHandler	InstanceId: 369daf6e-34b8-432d-9c4a-3dfc902fe368,EventName: notebookClusterChange,Timestamp: 2017-01-02 23:13:08.817677,ClusterDnsName: https://agulatejuly.azurehdinsight.net/livy,StatusCode: 200,Success: True,ErrorMessage: None
-        2017-01-02 15:14:06,044	DEBUG	ReconnectHandler	Kernel name is sparkkernel
-        2017-01-02 15:14:06,044	DEBUG	ReconnectHandler	Existing kernel name 'pysparkkernel' does not match requested 'sparkkernel'. Starting a new kernel.
-        2017-01-02 15:14:08,077	DEBUG	ReconnectHandler	Kernel created with id 41dffad2-867b-4d7f-8b19-12dfad3ded7d
-        2017-01-02 15:14:12,892	INFO	EventsHandler	InstanceId: 369daf6e-34b8-432d-9c4a-3dfc902fe368,EventName: notebookClusterChange,Timestamp: 2017-01-02 23:14:12.892880,ClusterDnsName: https://agulatejuly.azurehdinsight.net/livy,StatusCode: 200,Success: True,ErrorMessage: None
-        """
         self.logger = SparkLog(u"ReconnectHandler")
 
         spark_events = self._get_spark_events()
