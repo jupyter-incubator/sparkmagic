@@ -111,7 +111,7 @@ class ReconnectHandler(IPythonHandler):
             k_m = self.kernel_manager.get_kernel(kernel_id)
             k_m.restart_kernel()
 
-        return k_m
+        raise gen.Return(k_m)
 
     @gen.coroutine
     def _get_kernel_manager_new_session(self, path, kernel_name):
@@ -120,7 +120,7 @@ class ReconnectHandler(IPythonHandler):
         kernel_id = model["kernel"]["id"]
         self.logger.debug("Kernel created with id {}".format(str(kernel_id)))
         k_m = self.kernel_manager.get_kernel(kernel_id)
-        return k_m
+        raise gen.Return(k_m)
 
     def _delete_session(self, session_id):
         self.session_manager.delete_session(session_id)
