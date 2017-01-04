@@ -13,7 +13,8 @@ from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.utils import parse_argstring_or_throw
-from sparkmagic.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
+from sparkmagic.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA, \
+    NONE_AUTH, POSSIBLE_AUTH
 from sparkmagic.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
@@ -52,6 +53,8 @@ class RemoteSparkMagics(SparkMagicBase):
                                                                         "from the server for SQL queries")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
     @argument("-u", "--url", type=str, default=None, help="URL for Livy endpoint")
+    @argument("--authentication", type=str, default=NONE_AUTH, choices=POSSIBLE_AUTH, \
+              help="Authentication type for HTTP access to Livy endpoint")
     @argument("-a", "--user", type=str, default="", help="Username for HTTP access to Livy endpoint")
     @argument("-p", "--password", type=str, default="", help="Password for HTTP access to Livy endpoint")
     @argument("-l", "--language", type=str, default=None,
@@ -112,7 +115,7 @@ class RemoteSparkMagics(SparkMagicBase):
         # info
         if subcommand == "info":
             if args.url is not None:
-                endpoint = Endpoint(args.url, args.user, args.password)
+                endpoint = Endpoint(args.url, args.authentication, args.user, args.password)
                 info_sessions = self.spark_controller.get_all_sessions_endpoint_info(endpoint)
                 self._print_endpoint_info(info_sessions)
             else:
@@ -128,7 +131,7 @@ class RemoteSparkMagics(SparkMagicBase):
 
             name = args.session
             language = args.language
-            endpoint = Endpoint(args.url, args.user, args.password)
+            endpoint = Endpoint(args.url, args.authentication, args.user, args.password)
             skip = args.skip
 
             properties = conf.get_session_properties(language)
@@ -142,7 +145,7 @@ class RemoteSparkMagics(SparkMagicBase):
                 if args.id is None:
                     self.ipython_display.send_error("Must provide --id or -i option to delete session at endpoint from URL")
                     return
-                endpoint = Endpoint(args.url, args.user, args.password)
+                endpoint = Endpoint(args.url, args.authentication, args.user, args.password)
                 session_id = args.id
                 self.spark_controller.delete_session_by_id(endpoint, session_id)
             else:
@@ -150,7 +153,7 @@ class RemoteSparkMagics(SparkMagicBase):
         # cleanup
         elif subcommand == "cleanup":
             if args.url is not None:
-                endpoint = Endpoint(args.url, args.user, args.password)
+                endpoint = Endpoint(args.url, args.authentication, args.user, args.password)
                 self.spark_controller.cleanup_endpoint(endpoint)
             else:
                 self.spark_controller.cleanup()

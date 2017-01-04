@@ -52,7 +52,7 @@ class Command(ObjectWithGuid):
 
             self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
 
-            if status == u"running":
+            if status == u"running" or status == u"waiting":
                 session.sleep()
             else:
                 statement_running = False

@@ -165,11 +165,12 @@ def test_change_endpoint():
     u = 'user'
     p = 'password'
     s = 'server'
-    line = "-s {} -u {} -p {}".format(s, u, p)
+    a = constants.BASIC_AUTH
+    line = "-s {} --authentication {} -u {} -p {}".format(s, a, u, p)
 
     magic._do_not_call_change_endpoint(line)
 
-    assert_equals(Endpoint(s, u, p), magic.endpoint)
+    assert_equals(Endpoint(s, a, u, p), magic.endpoint)
 
 
 @with_setup(_setup, _teardown)
@@ -178,7 +179,8 @@ def test_change_endpoint_session_started():
     u = 'user'
     p = 'password'
     s = 'server'
-    line = "-s {} -u {} -p {}".format(s, u, p)
+    a = constants.BASIC_AUTH
+    line = "-s {} --authentication {} -u {} -p {}".format(s, a, u, p)
     magic.session_started = True
 
     magic._do_not_call_change_endpoint(line)
