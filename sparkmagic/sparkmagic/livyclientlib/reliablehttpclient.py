@@ -6,7 +6,7 @@ import requests
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
-from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
+from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, NONE_AUTH, BASIC_AUTH, KERBEROS_AUTH
 from sparkmagic.livyclientlib.exceptions import HttpClientException
 
 
@@ -44,20 +44,27 @@ class ReliableHttpClient(object):
         return self._send_request_helper(self.compose_url(relative_url), accepted_status_codes, function, data, 0)
 
     def _send_request_helper(self, url, accepted_status_codes, function, data, retry_count):
+        self.logger.debug("Starting Url = {}, Auth Type = {}, Data = {}".format(url, self._endpoint.authentication, \
+                json.dumps(data)))
         while True:
             try:
-                if not self._endpoint.authenticate:
+                if self._endpoint.authentication == NONE_AUTH:
                     if data is None:
                         r = function(url, headers=self._headers, verify=self.verify_ssl)
                     else:
                         r = function(url, headers=self._headers, data=json.dumps(data), verify=self.verify_ssl)
                 else:
-                    if data is None:
-                        r = function(url, headers=self._headers, auth=(self._endpoint.username, self._endpoint.password),
-                                     verify=self.verify_ssl)
+                    if self._endpoint.authentication == BASIC_AUTH:
+                        auth = (self._endpoint.username, self._endpoint.password)
+                    elif self._endpoint.authentication == KERBEROS_AUTH:
+                        from requests_kerberos import HTTPKerberosAuth, REQUIRED
+                        auth = HTTPKerberosAuth(mutual_authentication=REQUIRED, force_preemptive=True)
                     else:
-                        r = function(url, headers=self._headers, auth=(self._endpoint.username, self._endpoint.password),
-                                     data=json.dumps(data), verify=self.verify_ssl)
+                        raise ValueError("Unsupported authentication type {}".format(self._endpoint.authentication))
+                    if data is None:
+                        r = function(url, headers=self._headers, auth=auth, verify=self.verify_ssl)
+                    else:
+                        r = function(url, headers=self._headers, auth=auth, data=json.dumps(data), verify=self.verify_ssl)
             except requests.exceptions.RequestException as e:
                 error = True
                 r = None
