@@ -1,165 +1,188 @@
-from mock import MagicMock
+from mock import MagicMock, patch
 from nose.tools import with_setup, raises, assert_equals, assert_is
+from tornado.concurrent import Future
 from tornado.web import MissingArgumentError
+from tornado.testing import gen_test
+from tornado.testing import AsyncTestCase
 import json
 
 from sparkmagic.serverextension.handlers import ReconnectHandler
 from sparkmagic.kernels.kernelmagics import KernelMagics
-
-
-reconnect_handler = None
-session_manager = None
-kernel_manager = None
-individual_kernel_manager = None
-client = None
-session_list = None
-spark_events = None
-path = 'some_path.ipynb'
-kernel_id = '1'
-username = 'username'
-password = 'password'
-endpoint = 'http://endpoint.com'
-response_id = '0'
-good_msg = dict(content=dict(status='ok'))
-bad_msg = dict(content=dict(status='error', ename='SyntaxError', evalue='oh no!'))
-request = None
-
-
-def create_session_dict(path, kernel_id):
-    return dict(notebook=dict(path=path), kernel=dict(id=kernel_id))
-
-
-def get_argument(key):
-    return dict(username=username, password=password, endpoint=endpoint, path=path)[key]
+import sparkmagic.utils.configuration as conf
 
 
 class SimpleObject(object):
     pass
 
 
-def _setup():
-    global reconnect_handler, session_manager, session_list, path, kernel_id, kernel_manager,\
-     individual_kernel_manager, response_id, good_msg, client, spark_events, request
+class TestSparkMagicHandler(AsyncTestCase):
+    reconnect_handler = None
+    session_manager = None
+    kernel_manager = None
+    individual_kernel_manager = None
+    client = None
+    session_list = None
+    spark_events = None
+    path = 'some_path.ipynb'
+    kernel_id = '1'
+    kernel_name = 'pysparkkernel'
+    session_id = '1'
+    username = 'username'
+    password = 'password'
+    endpoint = 'http://endpoint.com'
+    response_id = '0'
+    good_msg = dict(content=dict(status='ok'))
+    bad_msg = dict(content=dict(status='error', ename='SyntaxError', evalue='oh no!'))
+    request = None
 
-    # Mock kernel manager
-    client = MagicMock()
-    client.execute = MagicMock(return_value=response_id)
-    client.get_shell_msg = MagicMock(return_value=good_msg)
-    individual_kernel_manager = MagicMock()
-    individual_kernel_manager.client = MagicMock(return_value=client)
-    kernel_manager = MagicMock()
-    kernel_manager.get_kernel = MagicMock(return_value=individual_kernel_manager)
+    def create_session_dict(self, path, kernel_id):
+        return dict(notebook=dict(path=path), kernel=dict(id=kernel_id, name=self.kernel_name), id=self.session_id)
 
-    # Mock session manager
-    session_list = [create_session_dict(path, kernel_id)]
-    session_manager = MagicMock()
-    session_manager.list_sessions = MagicMock(return_value=session_list)
+    def get_argument(self, key):
+        return dict(username=self.username, password=self.password, endpoint=self.endpoint, path=self.path)[key]
 
-    # Mock spark events
-    spark_events = MagicMock()
+    def setUp(self):
+        # Mock kernel manager
+        self.client = MagicMock()
+        self.client.execute = MagicMock(return_value=self.response_id)
+        self.client.get_shell_msg = MagicMock(return_value=self.good_msg)
+        self.individual_kernel_manager = MagicMock()
+        self.individual_kernel_manager.client = MagicMock(return_value=self.client)
+        self.kernel_manager = MagicMock()
+        self.kernel_manager.get_kernel = MagicMock(return_value=self.individual_kernel_manager)
 
-    # Mock request 
-    request = MagicMock()
-    request.body = json.dumps({"path": path, "username": username, "password": password, "endpoint": endpoint})
+        # Mock session manager
+        self.session_list = [self.create_session_dict(self.path, self.kernel_id)]
+        self.session_manager = MagicMock()
+        self.session_manager.list_sessions = MagicMock(return_value=self.session_list)
+        self.session_manager.create_session = MagicMock(return_value=self.create_session_dict(self.path, self.kernel_id))
 
-    # Create mocked reconnect_handler        
-    ReconnectHandler.__bases__ = (SimpleObject,)
-    reconnect_handler = ReconnectHandler()
-    reconnect_handler.spark_events = spark_events
-    reconnect_handler.session_manager = session_manager
-    reconnect_handler.kernel_manager = kernel_manager
-    reconnect_handler.set_status = MagicMock()
-    reconnect_handler.finish = MagicMock()
-    reconnect_handler.current_user = 'alex'
-    reconnect_handler.request = request
+        # Mock spark events
+        self.spark_events = MagicMock()
 
+        # Mock request
+        self.request = MagicMock()
+        self.request.body = json.dumps({"path": self.path, "username": self.username, "password": self.password, "endpoint": self.endpoint})
 
-def _teardown():
-    pass
+        # Create mocked reconnect_handler
+        ReconnectHandler.__bases__ = (SimpleObject,)
+        self.reconnect_handler = ReconnectHandler()
+        self.reconnect_handler.spark_events = self.spark_events
+        self.reconnect_handler.session_manager = self.session_manager
+        self.reconnect_handler.kernel_manager = self.kernel_manager
+        self.reconnect_handler.set_status = MagicMock()
+        self.reconnect_handler.finish = MagicMock()
+        self.reconnect_handler.current_user = 'alex'
+        self.reconnect_handler.request = self.request
+        self.reconnect_handler.logger = MagicMock()
 
+        super(TestSparkMagicHandler, self).setUp()
 
-@with_setup(_setup, _teardown)
-def test_msg_status():
-    assert_equals(reconnect_handler._msg_status(good_msg), 'ok')
-    assert_equals(reconnect_handler._msg_status(bad_msg), 'error')
+    def test_msg_status(self):
+        assert_equals(self.reconnect_handler._msg_status(self.good_msg), 'ok')
+        assert_equals(self.reconnect_handler._msg_status(self.bad_msg), 'error')
 
+    def test_msg_successful(self):
+        assert_equals(self.reconnect_handler._msg_successful(self.good_msg), True)
+        assert_equals(self.reconnect_handler._msg_successful(self.bad_msg), False)
 
-@with_setup(_setup, _teardown)
-def test_msg_successful():
-    assert_equals(reconnect_handler._msg_successful(good_msg), True)
-    assert_equals(reconnect_handler._msg_successful(bad_msg), False)
+    def test_msg_error(self):
+        assert_equals(self.reconnect_handler._msg_error(self.good_msg), None)
+        assert_equals(self.reconnect_handler._msg_error(self.bad_msg), u'{}:\n{}'.format('SyntaxError', 'oh no!'))
 
+    @gen_test
+    def test_post_no_json(self):
+        self.reconnect_handler.request.body = "{{}"
 
-@with_setup(_setup, _teardown)
-def test_msg_error():
-    assert_equals(reconnect_handler._msg_error(good_msg), None)
-    assert_equals(reconnect_handler._msg_error(bad_msg), u'{}:\n{}'.format('SyntaxError', 'oh no!'))
+        res = yield self.reconnect_handler.post()
+        assert_equals(res, None)
 
+        msg = "Invalid JSON in request body."
+        self.reconnect_handler.set_status.assert_called_once_with(400)
+        self.reconnect_handler.finish.assert_called_once_with(msg)
+        self.spark_events.emit_cluster_change_event.assert_called_once_with(None, 400, False, msg)
 
-@with_setup(_setup, _teardown)
-def test_get_kernel_manager():
-    assert_equals(reconnect_handler._get_kernel_manager('not_existing_path.ipynb'), None)
-    assert_equals(reconnect_handler._get_kernel_manager(path), individual_kernel_manager)
+    @gen_test
+    def test_post_no_key(self):
+        self.reconnect_handler.request.body = json.dumps({})
 
-    kernel_manager.get_kernel.assert_called_once_with(kernel_id)
+        res = yield self.reconnect_handler.post()
+        assert_equals(res, None)
 
+        msg = 'HTTP 400: Bad Request (Missing argument path)'
+        self.reconnect_handler.set_status.assert_called_once_with(400)
+        self.reconnect_handler.finish.assert_called_once_with(msg)
+        self.spark_events.emit_cluster_change_event.assert_called_once_with(None, 400, False, msg)
 
-@with_setup(_setup, _teardown)
-def test_post_no_json():
-    reconnect_handler.request.body = "{{}"
+    @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager')
+    @gen_test
+    def test_post_existing_kernel(self, _get_kernel_manager):
+        kernel_manager_future = Future()
+        kernel_manager_future.set_result(self.individual_kernel_manager)
+        _get_kernel_manager.return_value = kernel_manager_future
 
-    assert reconnect_handler.post() is None
+        res = yield self.reconnect_handler.post()
+        assert_equals(res, None)
 
-    msg = "Invalid JSON in request body."
-    reconnect_handler.set_status.assert_called_once_with(400)
-    reconnect_handler.finish.assert_called_once_with(msg)
-    spark_events.emit_cluster_change_event.assert_called_once_with(None, 400, False, msg)
+        code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, self.endpoint, self.username, self.password)
+        self.client.execute.assert_called_once_with(code, silent=False, store_history=False)
+        self.reconnect_handler.set_status.assert_called_once_with(200)
+        self.reconnect_handler.finish.assert_called_once_with('{"error": null, "success": true}')
+        self.spark_events.emit_cluster_change_event.assert_called_once_with(self.endpoint, 200, True, None)
 
+    @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager')
+    @gen_test
+    def test_post_existing_kernel_failed(self, _get_kernel_manager):
+        kernel_manager_future = Future()
+        kernel_manager_future.set_result(self.individual_kernel_manager)
+        _get_kernel_manager.return_value = kernel_manager_future
+        self.client.get_shell_msg = MagicMock(return_value=self.bad_msg)
 
-@with_setup(_setup, _teardown)
-def test_post_no_key():
-    reconnect_handler.request.body = json.dumps({})
+        res = yield self.reconnect_handler.post()
+        assert_equals(res, None)
 
-    assert reconnect_handler.post() is None
+        code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, self.endpoint, self.username, self.password)
+        self.client.execute.assert_called_once_with(code, silent=False, store_history=False)
+        self.reconnect_handler.set_status.assert_called_once_with(500)
+        self.reconnect_handler.finish.assert_called_once_with('{"error": "SyntaxError:\\noh no!", "success": false}')
+        self.spark_events.emit_cluster_change_event.assert_called_once_with(self.endpoint, 500, False, "SyntaxError:\noh no!")
 
-    msg = 'HTTP 400: Bad Request (Missing argument path)'
-    reconnect_handler.set_status.assert_called_once_with(400)
-    reconnect_handler.finish.assert_called_once_with(msg)
-    spark_events.emit_cluster_change_event.assert_called_once_with(None, 400, False, msg)
+    @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager_new_session')
+    @gen_test
+    def test_get_kernel_manager_no_existing_kernel(self, _get_kernel_manager_new_session):
+        different_path = "different_path.ipynb"
+        km_future = Future()
+        km_future.set_result(self.individual_kernel_manager)
+        _get_kernel_manager_new_session.return_value = km_future
+        
+        km = yield self.reconnect_handler._get_kernel_manager(different_path, self.kernel_name)
 
+        assert_equals(self.individual_kernel_manager, km)
+        self.individual_kernel_manager.restart_kernel.assert_not_called()
+        self.kernel_manager.get_kernel.assert_not_called()
+        _get_kernel_manager_new_session.assert_called_once_with(different_path, self.kernel_name)
 
-@with_setup(_setup, _teardown)
-def test_post_non_existing_kernel():
-    reconnect_handler._get_kernel_manager = MagicMock(return_value=None)
+    @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager_new_session')
+    @gen_test
+    def test_get_kernel_manager_existing_kernel(self, _get_kernel_manager_new_session):
+        km = yield self.reconnect_handler._get_kernel_manager(self.path, self.kernel_name)
 
-    assert reconnect_handler.post() is None
+        assert_equals(self.individual_kernel_manager, km)
+        self.individual_kernel_manager.restart_kernel.assert_called_once_with()
+        _get_kernel_manager_new_session.assert_not_called()
 
-    reconnect_handler.set_status.assert_called_once_with(404)
-    reconnect_handler.finish.assert_called_once_with('{"error": "No kernel for given path", "success": false}')
-    spark_events.emit_cluster_change_event.assert_called_once_with(endpoint, 404, False, "No kernel for given path")
+    @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager_new_session')
+    @gen_test
+    def test_get_kernel_manager_different_kernel_type(self, _get_kernel_manager_new_session):
+        different_kernel = "sparkkernel"
+        km_future = Future()
+        km_future.set_result(self.individual_kernel_manager)
+        _get_kernel_manager_new_session.return_value = km_future
+        
+        km = yield self.reconnect_handler._get_kernel_manager(self.path, different_kernel)
 
-
-@with_setup(_setup, _teardown)
-def test_post_existing_kernel():
-    assert reconnect_handler.post() is None
-
-    individual_kernel_manager.restart_kernel.assert_called_once_with()
-    code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)
-    client.execute.assert_called_once_with(code, silent=False, store_history=False)
-    reconnect_handler.set_status.assert_called_once_with(200)
-    reconnect_handler.finish.assert_called_once_with('{"error": null, "success": true}')
-    spark_events.emit_cluster_change_event.assert_called_once_with(endpoint, 200, True, None)
-
-
-@with_setup(_setup, _teardown)
-def test_post_existing_kernel_failed():
-    client.get_shell_msg = MagicMock(return_value=bad_msg)
-
-    assert reconnect_handler.post() is None
-
-    individual_kernel_manager.restart_kernel.assert_called_once_with()
-    code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)
-    client.execute.assert_called_once_with(code, silent=False, store_history=False)
-    reconnect_handler.set_status.assert_called_once_with(500)
-    reconnect_handler.finish.assert_called_once_with('{"error": "SyntaxError:\\noh no!", "success": false}')
-    spark_events.emit_cluster_change_event.assert_called_once_with(endpoint, 500, False, "SyntaxError:\noh no!")
+        assert_equals(self.individual_kernel_manager, km)
+        self.individual_kernel_manager.restart_kernel.assert_not_called()
+        self.kernel_manager.get_kernel.assert_not_called()
+        _get_kernel_manager_new_session.assert_called_once_with(self.path, different_kernel)
+        self.session_manager.delete_session.assert_called_once_with(self.session_id)
