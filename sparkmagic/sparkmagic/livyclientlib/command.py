@@ -5,7 +5,7 @@ from hdijupyterutils.guid import ObjectWithGuid
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
-from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
+from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS
 from .exceptions import LivyUnexpectedStatusException
 
 
@@ -47,11 +47,11 @@ class Command(ObjectWithGuid):
         out = u""
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
-            status = statement[u"state"]
+            status = statement[u"state"].lower()
 
             self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
 
-            if status != u"error" and status != u"cancelled" and status != u"available":
+            if status not in FINAL_STATEMENT_STATUS:
                 session.sleep()
             else:                
                 statement_output = statement[u"output"]
