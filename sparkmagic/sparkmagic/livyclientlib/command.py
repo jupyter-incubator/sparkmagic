@@ -44,24 +44,25 @@ class Command(ObjectWithGuid):
             return output
 
     def _get_statement_output(self, session, statement_id):
-        statement_running = True
         out = u""
-        while statement_running:
+        while True:
             statement = session.http_client.get_statement(session.id, statement_id)
             status = statement[u"state"]
 
             self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
 
-            if status == u"running":
+            if status != u"error" and status != u"cancelled" and status != u"available":
                 session.sleep()
-            else:
-                statement_running = False
-
+            else:                
                 statement_output = statement[u"output"]
+
+                if statement_output is None:
+                    return out
+
                 if statement_output[u"status"] == u"ok":
-                    out = (True, statement_output[u"data"][u"text/plain"])
+                    return (True, statement_output[u"data"][u"text/plain"])
                 elif statement_output[u"status"] == u"error":
-                    out = (False,
+                    return (False,
                            statement_output[u"evalue"] + u"\n" + u"".join(statement_output[u"traceback"]))
                 else:
                     raise LivyUnexpectedStatusException(u"Unknown output status from Livy: '{}'"
