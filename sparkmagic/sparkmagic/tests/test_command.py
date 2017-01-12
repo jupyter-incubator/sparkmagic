@@ -54,6 +54,67 @@ def test_execute():
                                                                                       session.id, command.guid,
                                                                                       0, True, "", "")
 
+@with_setup(_setup)
+def test_execute_waiting():
+    spark_events = MagicMock()
+    kind = SESSION_KIND_SPARK
+    http_client = MagicMock()
+    http_client.post_session.return_value = tls.TestLivySession.session_create_json
+    http_client.post_statement.return_value = tls.TestLivySession.post_statement_json
+    http_client.get_session.return_value = tls.TestLivySession.ready_sessions_json
+    http_client.get_statement.side_effect = [tls.TestLivySession.waiting_statement_json, tls.TestLivySession.waiting_statement_json, tls.TestLivySession.ready_statement_json, tls.TestLivySession.ready_statement_json]
+    conf.override_all({
+        "status_sleep_seconds": 0.01,
+        "statement_sleep_seconds": 0.01
+    })
+    session = _create_session(kind=kind, http_client=http_client)
+    conf.override_all({})
+    session.start()
+    command = Command("command", spark_events=spark_events)
+
+    result = command.execute(session)
+
+    http_client.post_statement.assert_called_with(0, {"code": command.code})
+    http_client.get_statement.assert_called_with(0, 0)
+    assert result[0]
+    assert_equals(tls.TestLivySession.pi_result, result[1])
+    spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
+                                                                                        session.id, command.guid)
+    spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
+                                                                                      session.id, command.guid,
+                                                                                      0, True, "", "")
+
+
+@with_setup(_setup)
+def test_execute_null_ouput():
+    spark_events = MagicMock()
+    kind = SESSION_KIND_SPARK
+    http_client = MagicMock()
+    http_client.post_session.return_value = tls.TestLivySession.session_create_json
+    http_client.post_statement.return_value = tls.TestLivySession.post_statement_json
+    http_client.get_session.return_value = tls.TestLivySession.ready_sessions_json
+    http_client.get_statement.return_value = tls.TestLivySession.ready_statement_null_output_json
+    conf.override_all({
+        "status_sleep_seconds": 0.01,
+        "statement_sleep_seconds": 0.01
+    })
+    session = _create_session(kind=kind, http_client=http_client)
+    conf.override_all({})
+    session.start()
+    command = Command("command", spark_events=spark_events)
+
+    result = command.execute(session)
+
+    http_client.post_statement.assert_called_with(0, {"code": command.code})
+    http_client.get_statement.assert_called_with(0, 0)
+    assert result[0]
+    assert_equals(u"", result[1])
+    spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
+                                                                                        session.id, command.guid)
+    spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
+                                                                                      session.id, command.guid,
+                                                                                      0, True, "", "")
+
 
 @with_setup(_setup)
 def test_execute_failure_wait_for_session_emits_event():
