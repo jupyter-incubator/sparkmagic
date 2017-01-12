@@ -66,5 +66,3 @@ class Command(ObjectWithGuid):
                 else:
                     raise LivyUnexpectedStatusException(u"Unknown output status from Livy: '{}'"
                                                         .format(statement_output[u"status"]))
-
-        return out
