@@ -44,7 +44,6 @@ class Command(ObjectWithGuid):
             return output
 
     def _get_statement_output(self, session, statement_id):
-        out = u""
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
             status = statement[u"state"].lower()
@@ -57,7 +56,7 @@ class Command(ObjectWithGuid):
                 statement_output = statement[u"output"]
 
                 if statement_output is None:
-                    return out
+                    return (True, u"")
 
                 if statement_output[u"status"] == u"ok":
                     return (True, statement_output[u"data"][u"text/plain"])
