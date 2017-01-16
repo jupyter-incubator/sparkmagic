@@ -270,6 +270,7 @@ class LivySession(ObjectWithGuid):
         if status in constants.POSSIBLE_SESSION_STATUS:
             self.status = status
             self.session_info = u"\n".join(log_array)
+            self.logger.info("Current status {} and session {}".format(self.status, self.session_info))
         else:
            raise LivyUnexpectedStatusException(u"Status '{}' not supported by session.".format(status))
 
