@@ -115,7 +115,7 @@ class ReconnectHandler(IPythonHandler):
 
     @gen.coroutine
     def _get_kernel_manager_new_session(self, path, kernel_name):
-        model_future = self.session_manager.create_session(kernel_name=kernel_name, path=path)
+        model_future = self.session_manager.create_session(kernel_name=kernel_name, path=path, type="notebook")
         model = yield model_future
         kernel_id = model["kernel"]["id"]
         self.logger.debug("Kernel created with id {}".format(str(kernel_id)))
