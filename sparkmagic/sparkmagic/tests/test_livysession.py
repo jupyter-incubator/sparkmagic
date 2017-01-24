@@ -34,9 +34,11 @@ class TestLivySession(object):
     error_sessions_json = json.loads('{"id":0,"state":"error","kind":"spark","log":[""]}')
     busy_sessions_json = json.loads('{"id":0,"state":"busy","kind":"spark","log":[""]}')
     post_statement_json = json.loads('{"id":0,"state":"running","output":null}')
+    waiting_statement_json = json.loads('{"id":0,"state":"waiting","output":null}')
     running_statement_json = json.loads('{"id":0,"state":"running","output":null}')
     ready_statement_json = json.loads('{"id":0,"state":"available","output":{"status":"ok",'
                                       '"execution_count":0,"data":{"text/plain":"Pi is roughly 3.14336"}}}')
+    ready_statement_null_output_json = json.loads('{"id":0,"state":"available","output":null}')
     ready_statement_failed_json = json.loads('{"id":0,"state":"available","output":{"status":"error",'
                                              '"evalue":"error","traceback":"error"}}')
     log_json = json.loads('{"id":6,"from":0,"total":212,"log":["hi","hi"]}')
