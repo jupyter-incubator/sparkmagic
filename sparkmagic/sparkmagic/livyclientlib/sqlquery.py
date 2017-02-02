@@ -45,7 +45,7 @@ class SQLQuery(ObjectWithGuid):
         elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command(sql_context_variable_name)
         elif kind == constants.SESSION_KIND_SPARKR:
-            return self._r_command()
+            return self._r_command(sql_context_variable_name)
         else:
             raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
@@ -121,8 +121,11 @@ class SQLQuery(ObjectWithGuid):
             command = u'{}.collect'.format(command)
         return Command(u'{}.foreach(println)'.format(command))
 
-    def _r_command(self):
-        command = u'sql("{}")'.format(self.query)
+    def _r_command(self, sql_context_variable_name):
+        if sql_context_variable_name == 'spark':
+            command = u'sql("{}")'.format(self.query)
+        else:
+            command = u'sql({}, "{}")'.format(sql_context_variable_name, self.query)
         if self.samplemethod == u'sample':
             command = u'sample({}, FALSE, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:

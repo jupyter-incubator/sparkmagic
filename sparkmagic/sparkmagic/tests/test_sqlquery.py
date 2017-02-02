@@ -130,6 +130,27 @@ def test_scala_livy_sql_options():
     assert_equals(sqlquery._scala_command("sqlContext"),
                   Command('sqlContext.sql("""{}""").toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(query)))
 
+@with_setup(_setup, _teardown)
+def test_r_livy_sql_options_spark():
+        query = "abc"
+        sqlquery = SQLQuery(query, samplemethod='take', maxrows=100)
+        sqlContext = "sqlContext"
+
+        assert_equals(sqlquery._r_command(sqlContext),
+                      Command('for ({} in (jsonlite:::toJSON(take(sql({}, "{}"),100)))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, sqlContext, query, LONG_RANDOM_VARIABLE_NAME)))
+
+        sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
+        assert_equals(sqlquery._r_command(sqlContext),
+                      Command('for ({} in (jsonlite:::toJSON(collect(sql({}, "{}"))))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, sqlContext, query, LONG_RANDOM_VARIABLE_NAME)))
+
+        sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
+        assert_equals(sqlquery._r_command(sqlContext),
+                      Command('for ({} in (jsonlite:::toJSON(collect(sample(sql({}, "{}"), FALSE, 0.25))))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, sqlContext, query, LONG_RANDOM_VARIABLE_NAME)))
+
+        sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
+        assert_equals(sqlquery._r_command(sqlContext),
+                      Command('for ({} in (jsonlite:::toJSON(take(sample(sql({}, "{}"), FALSE, 0.33),3234)))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, sqlContext, query, LONG_RANDOM_VARIABLE_NAME)))
+
 
 @with_setup(_setup, _teardown)
 def test_execute_sql():
@@ -210,7 +231,7 @@ def test_unicode_sql():
                                   LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
     assert_equals(sqlquery._scala_command("spark"),
                   Command(u'spark.sql("""{}""").toJSON.take(120).foreach(println)'.format(query)))
-    assert_equals(sqlquery._r_command(),
+    assert_equals(sqlquery._r_command("spark"),
                   Command(u'for ({} in (jsonlite:::toJSON(take(sql("{}"),120)))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, query, LONG_RANDOM_VARIABLE_NAME)))
 
 @with_setup(_setup, _teardown)
@@ -264,21 +285,21 @@ def test_scala_livy_sql_options_spark2():
                       Command('spark.sql("""{}""").toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(query)))
 
 @with_setup(_setup, _teardown)
-def test_r_livy_sql_options_spark():
+def test_r_livy_sql_options_spark2():
         query = "abc"
         sqlquery = SQLQuery(query, samplemethod='take', maxrows=100)
 
-        assert_equals(sqlquery._r_command(),
+        assert_equals(sqlquery._r_command("spark"),
                       Command('for ({} in (jsonlite:::toJSON(take(sql("{}"),100)))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, query, LONG_RANDOM_VARIABLE_NAME)))
 
         sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
-        assert_equals(sqlquery._r_command(),
+        assert_equals(sqlquery._r_command("spark"),
                       Command('for ({} in (jsonlite:::toJSON(collect(sql("{}"))))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, query, LONG_RANDOM_VARIABLE_NAME)))
 
         sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
-        assert_equals(sqlquery._r_command(),
+        assert_equals(sqlquery._r_command("spark"),
                       Command('for ({} in (jsonlite:::toJSON(collect(sample(sql("{}"), FALSE, 0.25))))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, query, LONG_RANDOM_VARIABLE_NAME)))
 
         sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
-        assert_equals(sqlquery._r_command(),
+        assert_equals(sqlquery._r_command("spark"),
                       Command('for ({} in (jsonlite:::toJSON(take(sample(sql("{}"), FALSE, 0.33),3234)))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, query, LONG_RANDOM_VARIABLE_NAME)))
