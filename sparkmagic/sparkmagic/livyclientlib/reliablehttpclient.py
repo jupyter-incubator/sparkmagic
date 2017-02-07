@@ -3,6 +3,7 @@
 import json
 from time import sleep
 import requests
+import subprocess
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
@@ -58,7 +59,8 @@ class ReliableHttpClient(object):
                         auth = (self._endpoint.username, self._endpoint.password)
                     elif self._endpoint.authentication == KERBEROS_AUTH:
                         from requests_kerberos import HTTPKerberosAuth, REQUIRED
-                        auth = HTTPKerberosAuth(mutual_authentication=REQUIRED, force_preemptive=True)
+                        principal = subprocess.check_output("klist | grep 'Default principal:' | awk '{print $NF}'", shell=True).decode("utf-8").strip()
+                        auth = HTTPKerberosAuth(principal=principal, mutual_authentication=REQUIRED, force_preemptive=True)
                     else:
                         raise ValueError("Unsupported authentication type {}".format(self._endpoint.authentication))
                     if data is None:
