@@ -441,7 +441,7 @@ def test_spark():
     ipython_display.write.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
-    spark_controller.run_command.assert_called_once_with(Command(cell))
+    spark_controller.run_command.assert_called_once_with(Command(cell), None)
 
 
 @with_setup(_setup, _teardown)
@@ -466,7 +466,7 @@ def test_spark_error():
     ipython_display.send_error.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
-    spark_controller.run_command.assert_called_once_with(Command(cell))
+    spark_controller.run_command.assert_called_once_with(Command(cell), None)
 
 
 @with_setup(_setup, _teardown)
@@ -490,7 +490,7 @@ def test_spark_unexpected_exception():
     spark_controller.run_command = MagicMock(side_effect=Exception('oups'))
 
     magic.spark(line, cell)
-    spark_controller.run_command.assert_called_once_with(Command(cell))
+    spark_controller.run_command.assert_called_once_with(Command(cell), None)
     ipython_display.send_error.assert_called_once_with(constants.INTERNAL_ERROR_MSG
                                                        .format(spark_controller.run_command.side_effect))
 
@@ -502,7 +502,7 @@ def test_spark_expected_exception():
     spark_controller.run_command = MagicMock(side_effect=SessionManagementException('oups'))
 
     magic.spark(line, cell)
-    spark_controller.run_command.assert_called_once_with(Command(cell))
+    spark_controller.run_command.assert_called_once_with(Command(cell), None)
     ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
                                                        .format(spark_controller.run_command.side_effect))
 

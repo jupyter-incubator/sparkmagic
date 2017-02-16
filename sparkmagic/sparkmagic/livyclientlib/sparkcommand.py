@@ -1,15 +1,18 @@
-
+from sparkmagic.livyclientlib.command import Command
 
 class SparkStoreCommand(Command):
-    def __init__(self, code, output_var, spark_events=None):
+    def __init__(self, code, samplemethod, maxrows, samplefraction, output_var, spark_events=None):
         super(SparkStoreCommand, self).__init__(code, spark_events)
+        self.samplemethod = samplemethod
+        self.maxrows = maxrows
+        self.samplefraction = samplefraction
         self.output_var = output_var
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
 
     def execute(self, session):
-        self.store_to_context(session)
+        return self.store_to_context(session)
 
     def store_to_context(self, session):
         try:
@@ -36,8 +39,13 @@ class SparkStoreCommand(Command):
             raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
     def _pyspark_command(spark_context_variable_name):
-        #TODO add functionality
         command = u'{}.toJSON()'.format(spark_context_variable_name)
+        if self.samplemethod == u'sample':
+            command = u'{}.sample(False, {})'.format(command, self.samplefraction)
+        if self.maxrows >= 0:
+            command = u'{}.take({})'.format(command, self.maxrows)
+        else:
+            command = u'{}.collect()'.format(command)
         #what about encoding?
         return Command(command)
 

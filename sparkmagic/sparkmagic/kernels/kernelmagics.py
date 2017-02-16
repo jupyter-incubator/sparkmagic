@@ -191,14 +191,19 @@ class KernelMagics(SparkMagicBase):
 
     @magic_arguments()
     @cell_magic
+    @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
                                                              "of this name in user's local context.")
+    @argument("-m", "--samplemethod", type=str, default=None, help="Sample method for dataframe: either take or sample")
+    @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
+                                                                        "from the dataframe on the server for storing")
+    @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from dataframe")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(u""):
             args = parse_argstring_or_throw(self.spark, line)
-            return self.execute_spark(cell, args.output, None)
+            self.execute_spark(cell, args.samplemethod, args.maxrows, args.samplefraction, None, args.output)
         else:
             return
 

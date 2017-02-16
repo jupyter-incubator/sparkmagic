@@ -17,7 +17,9 @@ from sparkmagic.utils.utils import get_sessions_info_html
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
+from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.sparkcommand import SparkStoreCommand
+
 
 @magics_class
 class SparkMagicBase(Magics):
@@ -35,16 +37,16 @@ class SparkMagicBase(Magics):
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
-    def execute_spark(self, cell, output_var, session_name):
+    def execute_spark(self, cell, samplemethod, maxrows, samplefraction, session_name, output_var):
         (success, out) = self.spark_controller.run_command(Command(cell), session_name)
         if not success:
             self.ipython_display.send_error(out)
         else:
             self.ipython_display.write(out)
-        if output_var is not None:
-            spark_store_command = _spark_store_command(cel,output_var)
-            df = self.spark_controller.run_command(spark_store_command)
-            self.shell.user_ns[output_var] = df
+            if output_var is not None:
+                spark_store_command = _spark_store_command(cell, samplemethod, maxrows, samplefraction, output_var)
+                df = self.spark_controller.run_command(spark_store_command)
+                self.shell.user_ns[output_var] = df
 
     @staticmethod
     def _spark_store_command(cell, output_var):
