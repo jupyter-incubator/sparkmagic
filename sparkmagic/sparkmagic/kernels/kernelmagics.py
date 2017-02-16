@@ -191,18 +191,16 @@ class KernelMagics(SparkMagicBase):
 
     @magic_arguments()
     @cell_magic
+    @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
+                                                             "of this name in user's local context.")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
-        parse_argstring_or_throw(self.spark, line)
         if self._do_not_call_start_session(u""):
-            (success, out) = self.spark_controller.run_command(Command(cell))
-            if success:
-                self.ipython_display.write(out)
-            else:
-                self.ipython_display.send_error(out)
+            args = parse_argstring_or_throw(self.spark, line)
+            return self.execute_spark(cell, args.output, None)
         else:
-            return None
+            return
 
     @magic_arguments()
     @cell_magic
