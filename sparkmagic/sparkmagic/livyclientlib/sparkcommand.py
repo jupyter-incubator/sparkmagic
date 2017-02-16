@@ -56,7 +56,7 @@ class SparkStoreCommand(Command):
         if kind == constants.SESSION_KIND_PYSPARK:
             return self._pyspark_command(spark_context_variable_name)
         elif kind == constants.SESSION_KIND_PYSPARK3:
-            return self._pyspark_command(spark_context_variable_name)
+            return self._pyspark_command(spark_context_variable_name, False)
         elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command(spark_context_variable_name)
         elif kind == constants.SESSION_KIND_SPARKR:
@@ -65,7 +65,7 @@ class SparkStoreCommand(Command):
             raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
     def _pyspark_command(self, spark_context_variable_name, encode_result=True):
-        command = u'{}.toJSON(use_unicode=True)'.format(spark_context_variable_name)
+        command = u'{}.toJSON()'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
