@@ -12,7 +12,7 @@ from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUser
 import ast
 
 class SparkStoreCommand(Command):
-    def __init__(self, code, samplemethod=None, maxrows=None, samplefraction=None, output_var=None, spark_events=None):
+    def __init__(self, code, output_var, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None):
         super(SparkStoreCommand, self).__init__(code, spark_events)
 
         if samplemethod is None:
@@ -42,7 +42,7 @@ class SparkStoreCommand(Command):
 
     def store_to_context(self, session):
         try:
-            command = self._to_command(session.kind, self.output_var)
+            command = self.to_command(session.kind, self.output_var)
             (success, records_text) = command.execute(session)
             if not success:
                 raise BadUserDataException(records_text)
@@ -52,7 +52,7 @@ class SparkStoreCommand(Command):
         else:
             return result
 
-    def _to_command(self, kind, spark_context_variable_name):
+    def to_command(self, kind, spark_context_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
             return self._pyspark_command(spark_context_variable_name)
         elif kind == constants.SESSION_KIND_PYSPARK3:
@@ -75,7 +75,7 @@ class SparkStoreCommand(Command):
         # Unicode support has improved in Python 3 so we don't need to encode.
         if encode_result:
             print_command = '{}.encode("{}")'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                     conf.pyspark_sql_encoding())
+                                                     conf.pyspark_python_encoding())
         else:
             print_command = constants.LONG_RANDOM_VARIABLE_NAME
         command = u'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
@@ -84,8 +84,13 @@ class SparkStoreCommand(Command):
         return Command(command)
 
     def _scala_command(self, spark_context_variable_name):
-        #TODO add functionality
         command = u'{}.toJSON'.format(spark_context_variable_name)
+        if self.samplemethod == u'sample':
+            command = u'{}.sample(false, {})'.format(command, self.samplefraction)
+        if self.maxrows >= 0:
+            command = u'{}.take({})'.format(command, self.maxrows)
+        else:
+            command = u'{}.collect'.format(command)
         return Command(u'{}.foreach(println)'.format(command))
 
     def _r_command(self, spark_context_variable_name):
@@ -115,3 +120,14 @@ class SparkStoreCommand(Command):
             return df
         except ValueError:
             raise DataFrameParseException(u"Cannot parse object as JSON: '{}'".format(strings))
+
+    # Used only for unit testing
+    def __eq__(self, other):
+        return self.code == other.code and \
+            self.samplemethod == other.samplemethod and \
+            self.maxrows == other.maxrows and \
+            self.samplefraction == other.samplefraction and \
+            self.output_var == other.output_var
+
+    def __ne__(self, other):
+        return not (self == other)

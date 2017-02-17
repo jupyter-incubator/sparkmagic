@@ -203,7 +203,7 @@ class KernelMagics(SparkMagicBase):
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(u""):
             args = parse_argstring_or_throw(self.spark, line)
-            self.execute_spark(cell, args.samplemethod, args.maxrows, args.samplefraction, None, args.output)
+            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None)
         else:
             return
 

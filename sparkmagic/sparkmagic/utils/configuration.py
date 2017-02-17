@@ -175,7 +175,10 @@ def default_samplefraction():
 def pyspark_sql_encoding():
     return u'utf-8'
     
-    
+@_with_override
+def pyspark_python_encoding():
+    return u'utf-8'
+
 @_with_override
 def heartbeat_refresh_seconds():
     return 30
