@@ -94,14 +94,24 @@ class SparkStoreCommand(Command):
         return Command(u'{}.foreach(println)'.format(command))
 
     def _r_command(self, spark_context_variable_name):
-        #TODO implement
-        pass
+        command = spark_context_variable_name
+        if self.samplemethod == u'sample':
+            command = u'sample({}, FALSE, {})'.format(command,
+                                                      self.samplefraction)
+        if self.maxrows >= 0:
+            command = u'take({},{})'.format(command, self.maxrows)
+        else:
+            command = u'collect({})'.format(command)
+        command = u'jsonlite::toJSON({})'.format(command)
+        command = u'for ({} in ({})) {{cat({})}}'.format(constants.LONG_RANDOM_VARIABLE_NAME,
+                                                         command,
+                                                         constants.LONG_RANDOM_VARIABLE_NAME)
+        return Command(command)
 
 
     @staticmethod
     def _records_to_dataframe(records_text, kind):
-        #TODO currently, duplicate in sqlquery.py, move both to command.py?
-        if records_text in ['','[]']:
+        if records_text in ['', '[]']:
             strings = []
         else:
             strings = records_text.split('\n')
@@ -115,7 +125,7 @@ class SparkStoreCommand(Command):
                 df = pd.DataFrame(data_array, columns=data_array[0].keys())
             else:
                 df = pd.DataFrame(data_array)
-            
+
             coerce_pandas_df_to_numeric_datetime(df)
             return df
         except ValueError:

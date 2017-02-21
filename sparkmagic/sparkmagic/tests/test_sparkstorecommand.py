@@ -133,6 +133,29 @@ def test_scala_livy_sampling_options():
                   Command('{}.toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(variable_name)))
 
 
+
+@with_setup(_setup, _teardown)
+def test_r_livy_sampling_options():
+    variable_name = "abc"
+    code = "hugedataset.collect()"
+    sparkcommand = SparkStoreCommand(code, variable_name, samplemethod='take', maxrows=100)
+
+    assert_equals(sparkcommand._r_command(variable_name),
+                  Command('for ({} in (jsonlite::toJSON(take({},100)))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, variable_name, LONG_RANDOM_VARIABLE_NAME)))
+
+    sparkcommand = SparkStoreCommand(code, variable_name, samplemethod='take', maxrows=-1)
+    assert_equals(sparkcommand._r_command(variable_name),
+                  Command('for ({} in (jsonlite::toJSON(collect({})))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, variable_name, LONG_RANDOM_VARIABLE_NAME)))
+
+    sparkcommand = SparkStoreCommand(code, variable_name, samplemethod='sample', samplefraction=0.25, maxrows=-1)
+    assert_equals(sparkcommand._r_command(variable_name),
+                  Command('for ({} in (jsonlite::toJSON(collect(sample({}, FALSE, 0.25))))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, variable_name, LONG_RANDOM_VARIABLE_NAME)))
+
+    sparkcommand = SparkStoreCommand(code, variable_name, samplemethod='sample', samplefraction=0.33, maxrows=3234)
+    assert_equals(sparkcommand._r_command(variable_name),
+                 Command('for ({} in (jsonlite::toJSON(take(sample({}, FALSE, 0.33),3234)))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, variable_name, LONG_RANDOM_VARIABLE_NAME)))
+
+
 @with_setup(_setup, _teardown)
 def test_execute_code():
     spark_events = MagicMock()
@@ -159,7 +182,7 @@ def test_unicode():
     assert_equals(sparkcommand._pyspark_command(variable_name),
                   Command(u'for {} in {}.toJSON().take(120): print({}.encode("{}"))'\
                           .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_sql_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_python_encoding())))
     assert_equals(sparkcommand._scala_command(variable_name),
                   Command(u'{}.toJSON.take(120).foreach(println)'.format(variable_name)))
 
@@ -196,7 +219,7 @@ def test_pyspark_livy_sampling_options_spark2():
                                       LONG_RANDOM_VARIABLE_NAME, conf.pyspark_python_encoding())))
 
 @with_setup(_setup, _teardown)
-def test_scala_livy_sql_options_spark2():
+def test_scala_livy_options_spark2():
         variable_name = "abc"
         code = "hugedataset.collect()"
         sparkcommand = SparkStoreCommand(code, variable_name, samplemethod='take', maxrows=100)
@@ -215,3 +238,4 @@ def test_scala_livy_sql_options_spark2():
         sparkcommand = SparkStoreCommand(code, variable_name, samplemethod='sample', samplefraction=0.33, maxrows=3234)
         assert_equals(sparkcommand._scala_command(variable_name),
                       Command('{}.toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(variable_name)))
+
