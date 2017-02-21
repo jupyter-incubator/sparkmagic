@@ -8,7 +8,7 @@ from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.exceptions import *
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
-from sparkmagic.livyclientlib.sparkcommand import SparkStoreCommand
+
 
 magic = None
 spark_controller = None
@@ -266,99 +266,6 @@ def test_run_cell_command_exception():
     assert result is None
     ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(run_cell_method.side_effect))
-
-
-@with_setup(_setup, _teardown)
-def test_run_spark_command_parses():
-    run_cell_method = MagicMock()
-    run_cell_method.return_value = (True, "")
-    spark_controller.run_command = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "spark"
-    meth = "-m"
-    method_name = "sample"
-    line = " ".join([command, name, context, context_name, meth, method_name])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_called_once_with(Command(cell), name)
-
-
-@with_setup(_setup, _teardown)
-def test_run_spark_with_store_command_parses():
-    run_cell_method = MagicMock()
-    run_cell_method.return_value = (True, "")
-    spark_controller.run_command = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "spark"
-    meth = "-m"
-    method_name = "sample"
-    output = "-o"
-    output_var = "var_name"
-    line = " ".join([command, name, context, context_name, meth, method_name, output, output_var])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_any_call(Command(cell), name)
-    run_cell_method.assert_any_call(SparkStoreCommand(cell, output_var, samplemethod=method_name), name)
-
-
-@with_setup(_setup, _teardown)
-def test_run_spark_command_exception():
-    run_cell_method = MagicMock()
-    run_cell_method.side_effect = LivyUnexpectedStatusException('WOW')
-    spark_controller.run_command = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "spark"
-    meth = "-m"
-    method_name = "sample"
-    output = "-o"
-    output_var = "var_name"
-    line = " ".join([command, name, context, context_name, meth, method_name, output, output_var])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_any_call(Command(cell), name)
-    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
-                                                       .format(run_cell_method.side_effect))
-
-@with_setup(_setup, _teardown)
-def test_run_spark_command_exception_while_storing():
-    run_cell_method = MagicMock()
-    exception = LivyUnexpectedStatusException('WOW')
-    run_cell_method.side_effect = [(True, ""), exception]
-    spark_controller.run_command = run_cell_method
-
-    command = "-s"
-    name = "sessions_name"
-    context = "-c"
-    context_name = "spark"
-    meth = "-m"
-    method_name = "sample"
-    output = "-o"
-    output_var = "var_name"
-    line = " ".join([command, name, context, context_name, meth, method_name, output, output_var])
-    cell = "cell code"
-
-    result = magic.spark(line, cell)
-
-    run_cell_method.assert_any_call(Command(cell), name)
-    run_cell_method.assert_any_call(SparkStoreCommand(cell, output_var, samplemethod=method_name), name)
-    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
-                                                       .format(exception))
-
 
 
 @with_setup(_setup, _teardown)
