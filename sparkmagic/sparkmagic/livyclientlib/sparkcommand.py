@@ -1,8 +1,4 @@
-import json
-import pandas as pd
-from collections import OrderedDict
-
-from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime
+from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime, records_to_dataframe
 import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparkevents import SparkEvents
@@ -12,8 +8,8 @@ from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUser
 import ast
 
 class SparkStoreCommand(Command):
-    def __init__(self, code, output_var, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None):
-        super(SparkStoreCommand, self).__init__(code, spark_events)
+    def __init__(self, output_var, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None):
+        super(SparkStoreCommand, self).__init__("", spark_events)
 
         if samplemethod is None:
             samplemethod = conf.default_samplemethod()
@@ -37,20 +33,19 @@ class SparkStoreCommand(Command):
             spark_events = SparkEvents()
         self._spark_events = spark_events
 
-    def execute(self, session):
-        return self.store_to_context(session)
 
-    def store_to_context(self, session):
+    def execute(self, session):
         try:
             command = self.to_command(session.kind, self.output_var)
             (success, records_text) = command.execute(session)
             if not success:
                 raise BadUserDataException(records_text)
-            result = self._records_to_dataframe(records_text, session.kind)
+            result = records_to_dataframe(records_text, session.kind)
         except Exception as e:
             raise
         else:
             return result
+
 
     def to_command(self, kind, spark_context_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
@@ -63,6 +58,7 @@ class SparkStoreCommand(Command):
             return self._r_command(spark_context_variable_name)
         else:
             raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
+
 
     def _pyspark_command(self, spark_context_variable_name, encode_result=True):
         command = u'{}.toJSON()'.format(spark_context_variable_name)
@@ -83,6 +79,7 @@ class SparkStoreCommand(Command):
                                                     print_command)
         return Command(command)
 
+
     def _scala_command(self, spark_context_variable_name):
         command = u'{}.toJSON'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
@@ -92,6 +89,7 @@ class SparkStoreCommand(Command):
         else:
             command = u'{}.collect'.format(command)
         return Command(u'{}.foreach(println)'.format(command))
+
 
     def _r_command(self, spark_context_variable_name):
         command = spark_context_variable_name
@@ -109,27 +107,6 @@ class SparkStoreCommand(Command):
         return Command(command)
 
 
-    @staticmethod
-    def _records_to_dataframe(records_text, kind):
-        if records_text in ['', '[]']:
-            strings = []
-        else:
-            strings = records_text.split('\n')
-        try:
-            data_array = [json.JSONDecoder(object_pairs_hook=OrderedDict).decode(s) for s in strings]
-
-            if kind == constants.SESSION_KIND_SPARKR and len(data_array) > 0:
-                data_array = data_array[0]
-
-            if len(data_array) > 0:
-                df = pd.DataFrame(data_array, columns=data_array[0].keys())
-            else:
-                df = pd.DataFrame(data_array)
-
-            coerce_pandas_df_to_numeric_datetime(df)
-            return df
-        except ValueError:
-            raise DataFrameParseException(u"Cannot parse object as JSON: '{}'".format(strings))
 
     # Used only for unit testing
     def __eq__(self, other):

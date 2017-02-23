@@ -308,7 +308,7 @@ def test_run_spark_with_store_command_parses():
     result = magic.spark(line, cell)
 
     run_cell_method.assert_any_call(Command(cell), name)
-    run_cell_method.assert_any_call(SparkStoreCommand(cell, output_var, samplemethod=method_name), name)
+    run_cell_method.assert_any_call(SparkStoreCommand(output_var, samplemethod=method_name), name)
 
 
 @with_setup(_setup, _teardown)
@@ -355,7 +355,8 @@ def test_run_spark_command_exception_while_storing():
     result = magic.spark(line, cell)
 
     run_cell_method.assert_any_call(Command(cell), name)
-    run_cell_method.assert_any_call(SparkStoreCommand(cell, output_var, samplemethod=method_name), name)
+    run_cell_method.assert_any_call(SparkStoreCommand(output_var, samplemethod=method_name), name)
+    ipython_display.write.assert_called_once_with("")
     ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(exception))
 

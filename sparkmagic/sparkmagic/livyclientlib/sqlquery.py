@@ -1,9 +1,6 @@
-import json
-import pandas as pd
-from collections import OrderedDict
 from hdijupyterutils.guid import ObjectWithGuid
 
-from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime
+from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime, records_to_dataframe
 import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparkevents import SparkEvents
@@ -59,7 +56,7 @@ class SQLQuery(ObjectWithGuid):
             (success, records_text) = command.execute(session)
             if not success:
                 raise BadUserDataException(records_text)
-            result = self._records_to_dataframe(records_text, session.kind)
+            result = records_to_dataframe(records_text, session.kind)
         except Exception as e:
             self._spark_events.emit_sql_execution_end_event(session.guid, session.kind, session.id, self.guid,
                                                             command_guid, False, e.__class__.__name__, str(e))
@@ -70,27 +67,6 @@ class SQLQuery(ObjectWithGuid):
                                                             command_guid, True, "", "")
             return result
 
-    @staticmethod
-    def _records_to_dataframe(records_text, kind):
-        if records_text == '':
-            strings = []
-        else:
-            strings = records_text.split('\n')
-        try:
-            data_array = [json.JSONDecoder(object_pairs_hook=OrderedDict).decode(s) for s in strings]
-
-            if kind == constants.SESSION_KIND_SPARKR and len(data_array) > 0:
-                data_array = data_array[0]
-
-            if len(data_array) > 0:
-                df = pd.DataFrame(data_array, columns=data_array[0].keys())
-            else:
-                df = pd.DataFrame(data_array)
-            
-            coerce_pandas_df_to_numeric_datetime(df)
-            return df
-        except ValueError:
-            raise DataFrameParseException(u"Cannot parse object as JSON: '{}'".format(strings))
 
     def _pyspark_command(self, sql_context_variable_name, encode_result=True):
         command = u'{}.sql(u"""{} """).toJSON()'.format(sql_context_variable_name, self.query)

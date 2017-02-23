@@ -44,13 +44,13 @@ class SparkMagicBase(Magics):
         else:
             self.ipython_display.write(out)
             if output_var is not None:
-                spark_store_command = self._spark_store_command(cell, output_var, samplemethod, maxrows, samplefraction)
+                spark_store_command = self._spark_store_command(output_var, samplemethod, maxrows, samplefraction)
                 df = self.spark_controller.run_command(spark_store_command, session_name)
                 self.shell.user_ns[output_var] = df
 
     @staticmethod
-    def _spark_store_command(cell, output_var, samplemethod, maxrows, samplefraction):
-        return SparkStoreCommand(cell, output_var, samplemethod, maxrows, samplefraction)
+    def _spark_store_command(output_var, samplemethod, maxrows, samplefraction):
+        return SparkStoreCommand(output_var, samplemethod, maxrows, samplefraction)
 
     def execute_sqlquery(self, cell, samplemethod, maxrows, samplefraction,
                          session, output_var, quiet):

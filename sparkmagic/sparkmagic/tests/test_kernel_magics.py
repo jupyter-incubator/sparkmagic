@@ -507,7 +507,7 @@ def test_spark_expected_exception():
                                                        .format(spark_controller.run_command.side_effect))
 
 @with_setup(_setup, _teardown)
-def test_spark_expected_exception_in_storing():
+def test_spark_unexpected_exception_in_storing():
     line = "-o var_name"
     cell = "some spark code"
     side_effect = [(True,'ok'), Exception('oups')]
@@ -531,7 +531,7 @@ def test_spark_expected_exception_in_storing():
     assert spark_controller.run_command.call_count == 2
     spark_controller.run_command.assert_any_call(Command(cell), None)
     ipython_display.send_error.assert_called_with(constants.EXPECTED_ERROR_MSG
-                                                       .format(side_effect[1]))
+                                                  .format(side_effect[1]))
 
 
 
@@ -540,11 +540,8 @@ def test_spark_sample_options():
     line = "-o var_name -m sample -n 142 -r 0.3"
     cell = ""
     magic.execute_spark = MagicMock()
-
     ret = magic.spark(line, cell)
 
-    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                         {"kind": constants.SESSION_KIND_PYSPARK})
     magic.execute_spark.assert_called_once_with(cell, "var_name", "sample", 142, 0.3, None)
 
 
