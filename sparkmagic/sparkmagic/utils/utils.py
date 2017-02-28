@@ -7,7 +7,8 @@ import json
 from collections import OrderedDict
 import sparkmagic.utils.constants as constants
 
-from sparkmagic.livyclientlib.exceptions import BadUserDataException
+from sparkmagic.livyclientlib.exceptions import BadUserDataException, DataFrameParseException
+
 from .constants import LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
     SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3
 
@@ -23,8 +24,8 @@ def get_livy_kind(language):
         return SESSION_KIND_SPARKR
     else:
         raise ValueError("Cannot get session kind for {}.".format(language))
-        
-        
+
+
 def parse_argstring_or_throw(magic_func, argstring, parse_argstring=parse_argstring):
     """An alternative to the parse_argstring method from IPython.core.magic_arguments.
     Catches IPython.core.error.UsageError and propagates it as a

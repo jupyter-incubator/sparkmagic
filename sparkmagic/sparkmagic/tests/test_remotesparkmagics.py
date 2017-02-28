@@ -270,9 +270,7 @@ def test_run_cell_command_exception():
 
 @with_setup(_setup, _teardown)
 def test_run_spark_command_parses():
-    run_cell_method = MagicMock()
-    run_cell_method.return_value = (True, "")
-    spark_controller.run_command = run_cell_method
+    magic.execute_spark = MagicMock()
 
     command = "-s"
     name = "sessions_name"
@@ -285,11 +283,33 @@ def test_run_spark_command_parses():
 
     result = magic.spark(line, cell)
 
-    run_cell_method.assert_called_once_with(Command(cell), name)
+    magic.execute_spark.assert_called_once_with("cell code",
+                                                None, "sample", None, None, "sessions_name")
+
 
 
 @with_setup(_setup, _teardown)
 def test_run_spark_with_store_command_parses():
+    magic.execute_spark = MagicMock()
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    output = "-o"
+    output_var = "var_name"
+    line = " ".join([command, name, context, context_name, meth, method_name, output, output_var])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+    magic.execute_spark.assert_called_once_with("cell code",
+                                                "var_name", "sample", None, None, "sessions_name")
+    
+
+@with_setup(_setup, _teardown)
+def test_run_spark_with_store_correct_calls():
     run_cell_method = MagicMock()
     run_cell_method.return_value = (True, "")
     spark_controller.run_command = run_cell_method

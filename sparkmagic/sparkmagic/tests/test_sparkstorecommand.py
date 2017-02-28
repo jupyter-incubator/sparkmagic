@@ -130,6 +130,17 @@ def test_pyspark_livy_sampling_options():
                           u'print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, variable_name, LONG_RANDOM_VARIABLE_NAME)))
 
+    sparkcommand = SparkStoreCommand(variable_name, samplemethod=None, maxrows=100)
+    assert_equals(sparkcommand._pyspark_command(variable_name),
+                  Command(u'for {} in {}.toJSON().take(100): print({}.encode("{}"))'\
+                          .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
+                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_python_encoding())))
+
+    sparkcommand = SparkStoreCommand(variable_name, samplemethod=None, maxrows=100)
+    assert_equals(sparkcommand._pyspark_command(variable_name, False),
+                  Command(u'for {} in {}.toJSON().take(100): print({})'\
+                          .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
 @with_setup(_setup, _teardown)
 def test_scala_livy_sampling_options():
@@ -150,7 +161,10 @@ def test_scala_livy_sampling_options():
     sparkcommand = SparkStoreCommand(variable_name, samplemethod='sample', samplefraction=0.33, maxrows=3234)
     assert_equals(sparkcommand._scala_command(variable_name),
                   Command('{}.toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(variable_name)))
-
+    
+    sparkcommand = SparkStoreCommand(variable_name, samplemethod=None, maxrows=100)
+    assert_equals(sparkcommand._scala_command(variable_name),
+                  Command('{}.toJSON.take(100).foreach(println)'.format(variable_name)))
 
 @with_setup(_setup, _teardown)
 def test_r_livy_sampling_options():
@@ -173,6 +187,11 @@ def test_r_livy_sampling_options():
     assert_equals(sparkcommand._r_command(variable_name),
                  Command('for ({} in (jsonlite::toJSON(take(sample({}, FALSE, 0.33),3234)))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, variable_name, LONG_RANDOM_VARIABLE_NAME)))
 
+    sparkcommand = SparkStoreCommand(variable_name, samplemethod=None, maxrows=100)
+    assert_equals(sparkcommand._r_command(variable_name),
+                  Command('for ({} in (jsonlite::toJSON(take({},100)))) {{cat({})}}'\
+                          .format(LONG_RANDOM_VARIABLE_NAME, variable_name, 
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
 @with_setup(_setup, _teardown)
 def test_execute_code():
@@ -204,43 +223,3 @@ def test_unicode():
     assert_equals(sparkcommand._scala_command(variable_name),
                   Command(u'{}.toJSON.take(120).foreach(println)'.format(variable_name)))
 
-
-@with_setup(_setup, _teardown)
-def test_scala_livy_options_spark2():
-    variable_name = "var_name"
-    sparkcommand = SparkStoreCommand(variable_name, samplemethod='take', maxrows=100)
-    assert_equals(sparkcommand._scala_command(variable_name),
-                  Command('{}.toJSON.take(100).foreach(println)'.format(variable_name)))
-
-    sparkcommand = SparkStoreCommand(variable_name, samplemethod='take', maxrows=-1)
-    assert_equals(sparkcommand._scala_command(variable_name),
-                  Command('{}.toJSON.collect.foreach(println)'.format(variable_name)))
-
-    sparkcommand = SparkStoreCommand(variable_name, samplemethod='sample', samplefraction=0.25, maxrows=-1)
-    assert_equals(sparkcommand._scala_command(variable_name),
-                  Command('{}.toJSON.sample(false, 0.25).collect.foreach(println)'.format(variable_name)))
-
-    sparkcommand = SparkStoreCommand(variable_name, samplemethod='sample', samplefraction=0.33, maxrows=3234)
-    assert_equals(sparkcommand._scala_command(variable_name),
-                  Command('{}.toJSON.sample(false, 0.33).take(3234).foreach(println)'.format(variable_name)))
-
-def test_sample_method_none_all_langs():
-    variable_name = "var_name"
-
-    sparkcommand = SparkStoreCommand(variable_name, samplemethod=None, maxrows=100)
-
-
-    assert_equals(sparkcommand._pyspark_command(variable_name),
-                  Command(u'for {} in {}.toJSON().take(100): print({}.encode("{}"))'\
-                          .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_python_encoding())))
-    assert_equals(sparkcommand._pyspark_command(variable_name, False),
-                  Command(u'for {} in {}.toJSON().take(100): print({})'\
-                          .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
-                                  LONG_RANDOM_VARIABLE_NAME)))
-    assert_equals(sparkcommand._scala_command(variable_name),
-                  Command('{}.toJSON.take(100).foreach(println)'.format(variable_name)))
-    assert_equals(sparkcommand._r_command(variable_name),
-                  Command('for ({} in (jsonlite::toJSON(take({},100)))) {{cat({})}}'\
-                          .format(LONG_RANDOM_VARIABLE_NAME, variable_name, 
-                                  LONG_RANDOM_VARIABLE_NAME)))

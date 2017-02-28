@@ -111,13 +111,9 @@ class SparkStoreCommand(Command):
     # Used only for unit testing
     def __eq__(self, other):
         return self.code == other.code and \
-            hasattr(other, 'samplemethod') and \
             self.samplemethod == other.samplemethod and \
-            hasattr(other, 'maxrows') and \
             self.maxrows == other.maxrows and \
-            hasattr(other, 'samplefraction') and \
             self.samplefraction == other.samplefraction and \
-            hasattr(other, 'output_var') and \
             self.output_var == other.output_var
 
     def __ne__(self, other):
