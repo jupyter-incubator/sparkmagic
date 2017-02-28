@@ -5,10 +5,9 @@ import numpy as np
 import pandas as pd
 import json
 from collections import OrderedDict
+
 import sparkmagic.utils.constants as constants
-
 from sparkmagic.livyclientlib.exceptions import BadUserDataException, DataFrameParseException
-
 from .constants import LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
     SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3
 
