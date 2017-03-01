@@ -62,5 +62,3 @@ target/
 .idea/*
 MANIFEST
 .vscode/*
-
-own_config.json
