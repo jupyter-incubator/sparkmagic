@@ -18,7 +18,7 @@ from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
-from sparkmagic.livyclientlib.sparkcommand import SparkStoreCommand
+from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
 
 
 @magics_class

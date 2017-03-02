@@ -6,7 +6,7 @@ from pandas.util.testing import assert_frame_equal
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.constants import LONG_RANDOM_VARIABLE_NAME
-from sparkmagic.livyclientlib.sparkcommand import SparkStoreCommand
+from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 

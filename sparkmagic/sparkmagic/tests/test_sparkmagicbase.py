@@ -8,7 +8,7 @@ from sparkmagic.utils.constants import LANGS_SUPPORTED, SESSION_KIND_PYSPARK, SE
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
 from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUserDataException
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
-from sparkmagic.livyclientlib.sparkcommand import SparkStoreCommand
+from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
 
 def _setup():
     global magic, session, shell, ipython_display
