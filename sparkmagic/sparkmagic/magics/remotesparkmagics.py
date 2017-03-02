@@ -160,11 +160,8 @@ class RemoteSparkMagics(SparkMagicBase):
         # run
         elif len(subcommand) == 0:
             if args.context == CONTEXT_NAME_SPARK:
-                (success, out) = self.spark_controller.run_command(Command(cell), args.session)
-                if success:
-                    self.ipython_display.write(out)
-                else:
-                    self.ipython_display.send_error(out)
+                return self.execute_spark(cell, args.output, args.samplemethod,
+                                          args.maxrows, args.samplefraction, args.session)
             elif args.context == CONTEXT_NAME_SQL:
                 return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
                                              args.session, args.output, args.quiet)
