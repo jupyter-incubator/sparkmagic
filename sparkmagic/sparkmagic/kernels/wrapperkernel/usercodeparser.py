@@ -10,7 +10,7 @@ class UserCodeParser(object):
     #    %%info
     #    some_input
     _magics_with_no_cell_body = [i.__name__ for i in [KernelMagics.info, KernelMagics.logs, KernelMagics.cleanup,
-                                                      KernelMagics.delete, KernelMagics.help]]
+                                                      KernelMagics.delete, KernelMagics.help, KernelMagics.spark]]
 
     def get_code_to_run(self, code):
         try:
