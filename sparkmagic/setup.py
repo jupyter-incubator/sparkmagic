@@ -86,8 +86,8 @@ setup(name=NAME,
           'numpy',		
           'requests',
           'ipykernel>=4.2.2,<5',		
-          'ipywidgets>5.0.0',
-          'notebook>=4.2',
+          'ipywidgets>5.0.0,<7.0',
+          'notebook>=4.2,<5.0',
           'tornado>=4'
       ])
 
