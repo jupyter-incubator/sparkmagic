@@ -102,6 +102,21 @@ class KernelMagics(SparkMagicBase):
     Livy's POST /sessions Request Body</a> for a list of valid parameters. Parameters must be passed in as a JSON string.</td>
   </tr>
   <tr>
+    <td>spark</td>
+    <td>%%spark -o df<br/>df = spark.read.parquet('...</td>
+    <td>Executes spark commands.
+    Parameters:
+      <ul>
+        <li>-o VAR_NAME: The Spark dataframe of name VAR_NAME will be available in the %%local Python context as a
+          <a href="http://pandas.pydata.org/">Pandas</a> dataframe with the same name.</li>
+        <li>-m METHOD: Sample method, either <tt>take</tt> or <tt>sample</tt>.</li>
+        <li>-n MAXROWS: The maximum number of rows of a dataframe that will be pulled from Livy to Jupyter.
+            If this number is negative, then the number of rows will be unlimited.</li>
+        <li>-r FRACTION: Fraction used for sampling.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
     <td>sql</td>
     <td>%%sql -o tables -q<br/>SHOW TABLES</td>
     <td>Executes a SQL query against the variable sqlContext (Spark v1.x) or spark (Spark v2.x).
