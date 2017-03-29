@@ -122,13 +122,10 @@ class KernelMagics(SparkMagicBase):
     <td>Executes a SQL query against the variable sqlContext (Spark v1.x) or spark (Spark v2.x).
     Parameters:
       <ul>
-        <li>-o VAR_NAME: The result of the query will be available in the %%local Python context as a
+        <li>-o VAR_NAME: The result of the SQL query will be available in the %%local Python context as a
           <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</li>
         <li>-q: The magic will return None instead of the dataframe (no visualization).</li>
-        <li>-m METHOD: Sample method, either <tt>take</tt> or <tt>sample</tt>.</li>
-        <li>-n MAXROWS: The maximum number of rows of a SQL query that will be pulled from Livy to Jupyter.
-            If this number is negative, then the number of rows will be unlimited.</li>
-        <li>-r FRACTION: Fraction used for sampling.</li>
+        <li>-m, -n, -r are the same as the %%spark parameters above.</li>
       </ul>
     </td>
   </tr>
