@@ -158,9 +158,9 @@ def test_execute_sql():
     sqlquery = SQLQuery("HERE IS THE QUERY", "take", 100, 0.2, spark_events=spark_events)
     sqlquery.to_command = MagicMock(return_value=MagicMock())
     result = """{"z":100, "nullv":null, "y":50}
-{"z":25, "nullv":1, "y":10}"""
+{"z":25, "nullv":null, "y":10}"""
     sqlquery.to_command.return_value.execute = MagicMock(return_value=(True, result))
-    result_data = pd.DataFrame([{'z': 100, "nullv": None, 'y': 50}, {'z':25, "nullv":1, 'y':10}], columns=['z', "nullv", 'y'])
+    result_data = pd.DataFrame([{'z': 100, "nullv": None, 'y': 50}, {'z':25, "nullv":None, 'y':10}], columns=['z', "nullv", 'y'])
     session = MagicMock()
     session.kind = "pyspark"
     result = sqlquery.execute(session)
