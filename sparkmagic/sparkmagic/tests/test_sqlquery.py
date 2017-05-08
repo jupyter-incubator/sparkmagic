@@ -164,7 +164,6 @@ def test_execute_sql():
     session = MagicMock()
     session.kind = "pyspark"
     result = sqlquery.execute(session)
-    print(result, "\n", result_data)
     assert_frame_equal(result, result_data)
     sqlquery.to_command.return_value.execute.assert_called_once_with(session)
     spark_events.emit_sql_execution_start_event.assert_called_once_with(session.guid, session.kind,
