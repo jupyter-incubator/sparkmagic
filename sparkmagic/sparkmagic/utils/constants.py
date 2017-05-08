@@ -1,9 +1,11 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
+import os
 
-HOME_PATH = "~/.sparkmagic"
-CONFIG_FILE = "config.json"
+
+HOME_PATH = os.environ.get("SPARKMAGIC_CONF_DIR", "~/.sparkmagic")
+CONFIG_FILE = os.environ.get("SPARKMAGIC_CONF_FILE", "config.json")
 
 SESSION_KIND_SPARK = "spark"
 SESSION_KIND_PYSPARK = "pyspark"
