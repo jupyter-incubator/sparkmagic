@@ -78,11 +78,9 @@ def records_to_dataframe(records_text, kind):
             # Refer to https://github.com/jupyter-incubator/sparkmagic/issues/346 for
             # more details.
             for data in data_array:
-                try:
-                    df.columns = data.keys()
+                if len(data.keys()) == len(df.columns):
+                    df = df[list(data.keys())]
                     break
-                except ValueError as e:
-                    pass
         else:
             df = pd.DataFrame(data_array)
 
