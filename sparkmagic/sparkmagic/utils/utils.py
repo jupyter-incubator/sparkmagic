@@ -69,7 +69,20 @@ def records_to_dataframe(records_text, kind):
             data_array = data_array[0]
 
         if len(data_array) > 0:
-            df = pd.DataFrame(data_array, columns=data_array[0].keys())
+            df = pd.DataFrame(data_array)
+            
+            # This will assign the columns in the right order. If we simply did
+            # df = pd.DataFrame(data_array, columns=data_array[0].keys())
+            # in the code defining df, above, we could get an issue where the first element
+            # has some columns as null, and thus would drop the columns from the df altogether.
+            # Refer to https://github.com/jupyter-incubator/sparkmagic/issues/346 for
+            # more details.
+            for data in data_array:
+                try:
+                    df.columns = data.keys()
+                    break
+                except ValueError as e:
+                    pass
         else:
             df = pd.DataFrame(data_array)
 
