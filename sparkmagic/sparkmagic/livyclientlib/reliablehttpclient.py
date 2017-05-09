@@ -2,11 +2,13 @@
 # Distributed under the terms of the Modified BSD License.
 import json
 from time import sleep
+from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 import requests
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
+import sparkmagic.utils.constants as constants
 from sparkmagic.livyclientlib.exceptions import HttpClientException
 
 
@@ -17,6 +19,10 @@ class ReliableHttpClient(object):
         self._endpoint = endpoint
         self._headers = headers
         self._retry_policy = retry_policy
+        if self._endpoint.auth_type == constants.AUTH_KERBEROS:
+            self._auth = HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+        elif self._endpoint.auth_type == constants.AUTH_SSL:
+            self._auth = (self._endpoint.username, self._endpoint.password)
         self.logger = SparkLog(u"ReliableHttpClient")
 
         self.verify_ssl = not conf.ignore_ssl_errors()
@@ -53,10 +59,10 @@ class ReliableHttpClient(object):
                         r = function(url, headers=self._headers, data=json.dumps(data), verify=self.verify_ssl)
                 else:
                     if data is None:
-                        r = function(url, headers=self._headers, auth=(self._endpoint.username, self._endpoint.password),
+                        r = function(url, headers=self._headers, auth=self._auth,
                                      verify=self.verify_ssl)
                     else:
-                        r = function(url, headers=self._headers, auth=(self._endpoint.username, self._endpoint.password),
+                        r = function(url, headers=self._headers, auth=self._auth,
                                      data=json.dumps(data), verify=self.verify_ssl)
             except requests.exceptions.RequestException as e:
                 error = True
