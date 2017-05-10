@@ -10,7 +10,7 @@ from sparkmagic.livyclientlib.exceptions import LivyClientTimeoutException, BadU
     HttpClientException, DataFrameParseException, SqlContextNotFoundException
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.command import Command
-
+from sparkmagic.utils.constants import NO_AUTH, AUTH_BASIC
 
 magic = None
 spark_controller = None
@@ -165,11 +165,12 @@ def test_change_endpoint():
     u = 'user'
     p = 'password'
     s = 'server'
-    line = "-s {} -u {} -p {}".format(s, u, p)
+    t = AUTH_BASIC
+    line = "-s {} -u {} -p {} -t {}".format(s, u, p, t)
 
     magic._do_not_call_change_endpoint(line)
 
-    assert_equals(Endpoint(s, u, p), magic.endpoint)
+    assert_equals(Endpoint(s, t, u, p), magic.endpoint)
 
 
 @with_setup(_setup, _teardown)

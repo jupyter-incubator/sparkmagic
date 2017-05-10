@@ -89,3 +89,8 @@ RESOURCE_LIMIT_WARNING = "Warning: The Spark session does not have enough YARN r
 
 LIVY_HEARTBEAT_TIMEOUT_PARAM = u"heartbeatTimeoutInSecond"
 LIVY_KIND_PARAM = u"kind"
+
+NO_AUTH = "None"
+AUTH_KERBEROS = "Kerberos"
+AUTH_BASIC = "Basic_Access"
+
