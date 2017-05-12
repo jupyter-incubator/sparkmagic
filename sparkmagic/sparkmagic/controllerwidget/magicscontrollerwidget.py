@@ -6,6 +6,8 @@ from sparkmagic.controllerwidget.manageendpointwidget import ManageEndpointWidge
 from sparkmagic.controllerwidget.managesessionwidget import ManageSessionWidget
 from sparkmagic.controllerwidget.createsessionwidget import CreateSessionWidget
 
+from ipywidgets import Layout
+
 
 class MagicsControllerWidget(AbstractMenuWidget):
     def __init__(self, spark_controller, ipywidget_factory, ipython_display, endpoints=None):
@@ -23,7 +25,8 @@ class MagicsControllerWidget(AbstractMenuWidget):
     def _refresh(self):
         self.endpoints_dropdown_widget = self.ipywidget_factory.get_dropdown(
                 description="Endpoint:",
-                options=self.endpoints
+                options=self.endpoints.items(),
+                layout=Layout(min_width='400px')
         )
 
         self.manage_session = ManageSessionWidget(self.spark_controller, self.ipywidget_factory, self.ipython_display,

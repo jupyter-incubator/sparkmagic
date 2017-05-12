@@ -47,7 +47,7 @@ class KernelMagics(SparkMagicBase):
     def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
-        
+
         self.session_name = u"session_name"
         self.session_started = False
 

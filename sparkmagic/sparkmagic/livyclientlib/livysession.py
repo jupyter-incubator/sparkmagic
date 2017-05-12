@@ -12,7 +12,13 @@ from sparkmagic.utils.utils import get_sessions_info_html
 from .command import Command
 from .exceptions import LivyClientTimeoutException, \
     LivyUnexpectedStatusException, BadUserDataException, SqlContextNotFoundException
+import traceback
 
+def get_traceback(ex, ex_traceback=None):
+    if ex_traceback is None:
+        ex_traceback = ex.__traceback__
+    return "\n".join([ line.rstrip('\n') for line in 
+        traceback.format_exception(ex.__class__, ex, ex_traceback)])
 
 class _HeartbeatThread(threading.Thread):
     def __init__(self, livy_session, refresh_seconds, retry_seconds, run_at_most=None):
@@ -120,6 +126,7 @@ class LivySession(ObjectWithGuid):
         self._printed_resource_warning = False
 
         try:
+            self.logger.debug("Making request with: " + str(self.properties))
             r = self._http_client.post_session(self.properties)
             self.id = r[u"id"]
             self.status = str(r[u"state"])
@@ -158,6 +165,7 @@ class LivySession(ObjectWithGuid):
                 else:
                     raise SqlContextNotFoundException(u"Neither SparkSession nor HiveContext/SqlContext is available.")
         except Exception as e:
+            self.logger.error("Error starting: " + get_traceback(e))
             self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status,
                                                                False, e.__class__.__name__, str(e))
             raise
@@ -270,6 +278,7 @@ class LivySession(ObjectWithGuid):
         if status in constants.POSSIBLE_SESSION_STATUS:
             self.status = status
             self.session_info = u"\n".join(log_array)
+            self.logger.info("Current status {} and session {}".format(self.status, self.session_info))
         else:
            raise LivyUnexpectedStatusException(u"Status '{}' not supported by session.".format(status))
 
