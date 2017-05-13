@@ -68,10 +68,19 @@ def records_to_dataframe(records_text, kind):
         if kind == constants.SESSION_KIND_SPARKR and len(data_array) > 0:
             data_array = data_array[0]
 
-        if len(data_array) > 0:
-            df = pd.DataFrame(data_array, columns=data_array[0].keys())
-        else:
-            df = pd.DataFrame(data_array)
+        df = pd.DataFrame(data_array)
+
+        if len(data_array) > 0:    
+            # This will assign the columns in the right order. If we simply did
+            # df = pd.DataFrame(data_array, columns=data_array[0].keys())
+            # in the code defining df, above, we could get an issue where the first element
+            # has some columns as null, and thus would drop the columns from the df altogether.
+            # Refer to https://github.com/jupyter-incubator/sparkmagic/issues/346 for
+            # more details.
+            for data in data_array:
+                if len(data.keys()) == len(df.columns):
+                    df = df[list(data.keys())]
+                    break
 
         coerce_pandas_df_to_numeric_datetime(df)
         return df
