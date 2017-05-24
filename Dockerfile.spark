@@ -1,0 +1,29 @@
+FROM gettyimages/spark:2.1.0-hadoop-2.7
+
+RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
+    git \
+    openjdk-7-jdk \
+    maven && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV LIVY_BUILD_VERSION livy-server-0.3.0
+ENV LIVY_APP_PATH /apps/$LIVY_BUILD_VERSION
+ENV LIVY_BUILD_PATH /apps/build/livy
+
+RUN mkdir -p /apps/build && \
+    cd /apps/build && \
+	git clone https://github.com/cloudera/livy.git && \
+	cd $LIVY_BUILD_PATH && \
+  git checkout v0.3.0 && \
+    mvn -DskipTests -Dspark.version=$SPARK_VERSION clean package && \
+    ls -al $LIVY_BUILD_PATH && ls -al $LIVY_BUILD_PATH/assembly && ls -al $LIVY_BUILD_PATH/assembly/target && \
+    unzip $LIVY_BUILD_PATH/assembly/target/$LIVY_BUILD_VERSION.zip -d /apps && \
+    rm -rf $LIVY_BUILD_PATH && \
+	mkdir -p $LIVY_APP_PATH/upload && \
+  mkdir -p $LIVY_APP_PATH/logs
+
+
+EXPOSE 8998
+
+CMD ["/apps/livy-server-0.3.0/bin/livy-server"]
+

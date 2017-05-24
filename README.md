@@ -54,6 +54,27 @@ See [Pyspark](examples/Pyspark Kernel.ipynb) and [Spark](examples/Spark Kernel.i
 
         jupyter serverextension enable --py sparkmagic
         
+
+## Docker
+
+The included `docker-compose.yml` file will let you spin up a full
+sparkmagic stack that includes a Jupyter notebook with the appropriate
+extensions installed, and a Livy server backed by a local-mode Spark instance.
+(This is just for testing and developing sparkmagic itself; in reality,
+sparkmagic is not very useful if your Spark instance is on the same machine!)
+
+In order to use it, make sure you have [Docker](https://docker.com) and
+[Docker Compose](https://docs.docker.com/compose/) both installed, and
+then simply run:
+
+    docker-compose build
+    docker-compose up
+
+You will then be able to access the Jupyter notebook in your browser at
+http://localhost:8888. Inside this notebook, you can configure a
+sparkmagic endpoint at http://spark:8998. This endpoint is able to
+launch both Scala and Python sessions.
+
 ### Server extension API
 
 #### `/reconnectsparkmagic`:
