@@ -3,7 +3,9 @@ FROM gettyimages/spark:2.1.0-hadoop-2.7
 RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
     git \
     openjdk-7-jdk \
-    maven && \
+    maven \
+    r-base \
+    r-base-core && \
     rm -rf /var/lib/apt/lists/*
 
 ENV LIVY_BUILD_VERSION livy-server-0.3.0

@@ -10,6 +10,11 @@
     "password": "",
     "url": "http://localhost:8998"
   },
+  "kernel_r_credentials": {
+    "username": "",
+    "password": "",
+    "url": "http://localhost:8998"
+  },
 
   "logging_config": {
     "version": 1,
