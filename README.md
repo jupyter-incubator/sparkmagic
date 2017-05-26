@@ -73,7 +73,12 @@ then simply run:
 You will then be able to access the Jupyter notebook in your browser at
 http://localhost:8888. Inside this notebook, you can configure a
 sparkmagic endpoint at http://spark:8998. This endpoint is able to
-launch both Scala and Python sessions.
+launch both Scala and Python sessions. You can also choose to start a
+wrapper kernel for Scala, Python, or R from the list of kernels.
+
+To shut down the containers, you can interrupt `docker-compose` with
+`Ctrl-C`, and optionally remove the containers with `docker-compose
+down`.
 
 ### Server extension API
 
