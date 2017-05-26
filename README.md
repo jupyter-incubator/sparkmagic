@@ -80,6 +80,13 @@ To shut down the containers, you can interrupt `docker-compose` with
 `Ctrl-C`, and optionally remove the containers with `docker-compose
 down`.
 
+If you are developing sparkmagic and want to test out your changes in
+the Docker container without needing to push a version to PyPI, you can
+set the `dev_mode` build arg in `docker-compose.yml` to `true`, and then
+re-build the container. This will cause the container to install your
+local version of autovizwidget, hdijupyterutils, and sparkmagic. Make
+sure to re-run `docker-compose build` before each test run.
+
 ### Server extension API
 
 #### `/reconnectsparkmagic`:

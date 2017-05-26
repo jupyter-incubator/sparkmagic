@@ -1,8 +1,19 @@
 FROM jupyter/base-notebook:d0b2d159cc6c
 
+ARG dev_mode=false
+
 USER $NB_USER
 
-RUN pip install sparkmagic
+# Install sparkmagic - if DEV_MODE is set, use the one in the host directory.
+# Otherwise, just install from pip.
+COPY hdijupyterutils hdijupyterutils/
+COPY autovizwidget autovizwidget/
+COPY sparkmagic sparkmagic/
+RUN if [ "$dev_mode" = "true" ]; then \
+      cd hdijupyterutils && pip install . && cd ../ && \
+      cd autovizwidget && pip install . && cd ../ && \
+      cd sparkmagic && pip install . && cd ../ ; \
+    else pip install sparkmagic ; fi
 
 RUN mkdir /home/$NB_USER/.sparkmagic
 COPY sparkmagic/example_config.json /home/$NB_USER/.sparkmagic/config.json
@@ -14,4 +25,5 @@ RUN jupyter serverextension enable --py sparkmagic
 
 USER root
 RUN chown $NB_USER /home/$NB_USER/.sparkmagic/config.json
+RUN rm -rf hdijupyterutils/ autovizwidget/ sparkmagic/
 USER $NB_USER
