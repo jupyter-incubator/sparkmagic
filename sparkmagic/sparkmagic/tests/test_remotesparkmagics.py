@@ -2,7 +2,7 @@ from mock import MagicMock
 from nose.tools import with_setup
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, AUTH_BASIC
+from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, AUTH_BASIC, NO_AUTH
 from sparkmagic.magics.remotesparkmagics import RemoteSparkMagics
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
@@ -93,7 +93,7 @@ def test_add_sessions_command_parses():
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with("name", Endpoint("http://location:port"),
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://location:port", NO_AUTH),
                                               True, {"kind": "spark"})
 
 
@@ -132,7 +132,7 @@ def test_add_sessions_command_extra_properties():
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com"),
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com", NO_AUTH),
                                               False, {"kind": "spark", "extra": "yes"})
     conf.override_all({})
 
@@ -194,7 +194,7 @@ def test_cleanup_endpoint_command_parses():
 
     magic.spark(line)
 
-    mock_method.assert_called_once_with(Endpoint("endp"))
+    mock_method.assert_called_once_with(Endpoint("endp", NO_AUTH))
 
     line = "cleanup -u endp -a user -p passw -t {}".format(AUTH_BASIC)
     magic.spark(line)

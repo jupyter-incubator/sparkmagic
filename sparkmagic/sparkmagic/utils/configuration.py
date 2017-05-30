@@ -45,7 +45,7 @@ def session_configs():
 
 @_with_override
 def kernel_python_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth_type': constants.NO_AUTH}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
     
     
 def base64_kernel_python_credentials():
@@ -64,7 +64,7 @@ def base64_kernel_python3_credentials():
 
 @_with_override
 def kernel_scala_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth_type': constants.NO_AUTH}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
 
 
 def base64_kernel_scala_credentials():        
@@ -72,7 +72,7 @@ def base64_kernel_scala_credentials():
 
 @_with_override
 def kernel_r_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
 
 
 def base64_kernel_r_credentials():
@@ -203,7 +203,7 @@ def _credentials_override(f):
     If 'base64_password' is not set, it will fallback to to 'password' in config.
     """
     credentials = f()
-    base64_decoded_credentials = {k: credentials.get(k) for k in ('username', 'password', 'url', 'auth_type')}
+    base64_decoded_credentials = {k: credentials.get(k) for k in ('username', 'password', 'url', 'auth')}
     base64_password = credentials.get('base64_password')
     if base64_password is not None:
         try:
@@ -212,9 +212,10 @@ def _credentials_override(f):
             exception_type, exception, traceback = sys.exc_info()
             msg = "base64_password for %s contains invalid base64 string: %s %s" % (f.__name__, exception_type, exception)
             raise BadUserConfigurationException(msg)
+    if base64_decoded_credentials['auth'] is None:
+        if base64_decoded_credentials['username'] == '' and base64_decoded_credentials['password'] == '':
+            base64_decoded_credentials['auth'] = constants.NO_AUTH
+        else:
+            base64_decoded_credentials['auth'] = constants.AUTH_BASIC
     return base64_decoded_credentials
 
-
-@_with_override
-def default_livy_endpoint_auth_type():
-    return constants.NO_AUTH

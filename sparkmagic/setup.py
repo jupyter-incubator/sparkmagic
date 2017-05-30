@@ -89,6 +89,6 @@ setup(name=NAME,
           'ipywidgets>5.0.0,<7.0',
           'notebook>=4.2,<5.0',
           'tornado>=4',
-          'requests_kerberos'
+          'requests_kerberos>=0.8.0'
       ])
 

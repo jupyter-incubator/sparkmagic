@@ -2,13 +2,13 @@
 # Distributed under the terms of the Modified BSD License.
 
 from mock import patch, PropertyMock, MagicMock
-from nose.tools import raises, assert_equals, with_setup, assert_is_not_none
+from nose.tools import raises, assert_equals, with_setup, assert_is_not_none, assert_false, assert_true
 import requests
-from pandas.util.testing import assertIsInstance
 from requests_kerberos.kerberos_ import HTTPKerberosAuth
 
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.exceptions import HttpClientException
+from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 from sparkmagic.livyclientlib.linearretrypolicy import LinearRetryPolicy
 from sparkmagic.livyclientlib.reliablehttpclient import ReliableHttpClient
 import sparkmagic.utils.constants as constants
@@ -214,9 +214,16 @@ def test_will_retry_error_no():
 def test_basic_auth_check_auth():
     client = ReliableHttpClient(endpoint, {}, retry_policy)
     assert_is_not_none(client._auth)
-    assertIsInstance(client._auth, tuple)
+    assert isinstance(client._auth, tuple)
     assert_equals(1, client._auth.count(endpoint.username))
     assert_equals(1, client._auth.count(endpoint.password))
+
+
+@with_setup(_setup, _teardown)
+def test_no_auth_check_auth():
+    endpoint = Endpoint("http://url.com", constants.NO_AUTH)
+    client = ReliableHttpClient(endpoint, {}, retry_policy)
+    assert_false(hasattr(client, '_auth'))
 
 
 @with_setup(_setup, _teardown)
@@ -224,4 +231,14 @@ def test_kerberos_auth_check_auth():
     endpoint = Endpoint("http://url.com", constants.AUTH_KERBEROS, "username", "password")
     client = ReliableHttpClient(endpoint, {}, retry_policy)
     assert_is_not_none(client._auth)
-    assertIsInstance(client._auth, HTTPKerberosAuth)
+    assert isinstance(client._auth, HTTPKerberosAuth)
+
+
+@with_setup(_setup, _teardown)
+def test_invalid_auth_check_auth():
+    endpoint = Endpoint("http://url.com", "Invalid_AUTH", "username", "password")
+    try:
+        client = ReliableHttpClient(endpoint, {}, retry_policy)
+        assert False
+    except BadUserConfigurationException:
+        assert True

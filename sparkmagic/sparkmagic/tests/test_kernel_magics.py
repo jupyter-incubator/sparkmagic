@@ -25,10 +25,10 @@ class TestKernelMagics(KernelMagics):
         super(TestKernelMagics, self).__init__(shell, spark_events=spark_events)
 
         self.language = constants.LANG_PYTHON
-        self.endpoint = Endpoint("url")
+        self.endpoint = Endpoint("url", NO_AUTH)
 
     def refresh_configuration(self):
-        self.endpoint = Endpoint("new_url")
+        self.endpoint = Endpoint("new_url", NO_AUTH)
 
 
 def _setup():
@@ -132,7 +132,7 @@ def test_change_language():
     magic._do_not_call_change_language(line)
 
     assert_equals(constants.LANG_SCALA, magic.language)
-    assert_equals(Endpoint("new_url"), magic.endpoint)
+    assert_equals(Endpoint("new_url", NO_AUTH), magic.endpoint)
 
 
 @with_setup(_setup, _teardown)
@@ -145,7 +145,7 @@ def test_change_language_session_started():
 
     assert_equals(ipython_display.send_error.call_count, 1)
     assert_equals(constants.LANG_PYTHON, magic.language)
-    assert_equals(Endpoint("url"), magic.endpoint)
+    assert_equals(Endpoint("url", NO_AUTH), magic.endpoint)
 
 
 @with_setup(_setup, _teardown)
@@ -157,7 +157,7 @@ def test_change_language_not_valid():
 
     assert_equals(ipython_display.send_error.call_count, 1)
     assert_equals(constants.LANG_PYTHON, magic.language)
-    assert_equals(Endpoint("url"), magic.endpoint)
+    assert_equals(Endpoint("url", NO_AUTH), magic.endpoint)
 
 
 @with_setup(_setup, _teardown)

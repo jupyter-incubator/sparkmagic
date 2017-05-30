@@ -79,7 +79,7 @@ class RemoteSparkMagics(SparkMagicBase):
            add
                Add a Livy session given a session name (-s), language (-l), and endpoint credentials.
                The -k argument, if present, will skip adding this session if it already exists.
-               e.g. `%spark add -s test -l python -u https://sparkcluster.net/livy -a u -p -k`
+               e.g. `%spark add -s test -l python -u https://sparkcluster.net/livy -t Kerberos -a u -p -k`
            config
                Override the livy session properties sent to Livy on session creation. All session creations will
                contain these config settings from then on.

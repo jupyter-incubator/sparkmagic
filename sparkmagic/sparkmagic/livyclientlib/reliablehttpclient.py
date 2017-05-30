@@ -4,13 +4,13 @@ import json
 from time import sleep
 import requests
 from requests_kerberos import HTTPKerberosAuth, REQUIRED
-import subprocess
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 import sparkmagic.utils.constants as constants
 from sparkmagic.livyclientlib.exceptions import HttpClientException
+from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 
 
 class ReliableHttpClient(object):
@@ -20,10 +20,12 @@ class ReliableHttpClient(object):
         self._endpoint = endpoint
         self._headers = headers
         self._retry_policy = retry_policy
-        if self._endpoint.auth_type == constants.AUTH_KERBEROS:
+        if self._endpoint.auth == constants.AUTH_KERBEROS:
             self._auth = HTTPKerberosAuth(mutual_authentication=REQUIRED)
-        elif self._endpoint.auth_type == constants.AUTH_BASIC:
+        elif self._endpoint.auth == constants.AUTH_BASIC:
             self._auth = (self._endpoint.username, self._endpoint.password)
+        elif self._endpoint.auth != constants.NO_AUTH:
+            raise BadUserConfigurationException(u"Unsupported auth %s" %self._endpoint.auth)
 
         self.logger = SparkLog(u"ReliableHttpClient")
 
@@ -54,7 +56,7 @@ class ReliableHttpClient(object):
     def _send_request_helper(self, url, accepted_status_codes, function, data, retry_count):
         while True:
             try:
-                if self._endpoint.auth_type is constants.NO_AUTH:
+                if self._endpoint.auth == constants.NO_AUTH:
                     if data is None:
                         r = function(url, headers=self._headers, verify=self.verify_ssl)
                     else:

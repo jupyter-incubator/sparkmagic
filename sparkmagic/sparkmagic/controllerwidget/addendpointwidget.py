@@ -33,7 +33,7 @@ class AddEndpointWidget(AbstractMenuWidget):
             value='password',
             width=widget_width
         )
-        self.auth_type = self.ipywidget_factory.get_dropdown(
+        self.auth = self.ipywidget_factory.get_dropdown(
             options={constants.AUTH_KERBEROS: constants.AUTH_KERBEROS, constants.AUTH_BASIC: constants.AUTH_BASIC,
                      constants.NO_AUTH: constants.NO_AUTH},
             description=u"Auth type:"
@@ -44,17 +44,19 @@ class AddEndpointWidget(AbstractMenuWidget):
             description='Add endpoint'
         )
 
-        self.auth_type.on_trait_change(self.update_endpoint)
+        self.auth.on_trait_change(self._show_correct_endpoint_fields)
 
         self.children = [self.ipywidget_factory.get_html(value="<br/>", width=widget_width),
-                         self.address_widget, self.auth_type, self.user_widget, self.password_widget,
+                         self.address_widget, self.auth, self.user_widget, self.password_widget,
                          self.ipywidget_factory.get_html(value="<br/>", width=widget_width), self.submit_widget]
 
         for child in self.children:
             child.parent_widget = self
 
+        self._show_correct_endpoint_fields()
+
     def run(self):
-        endpoint = Endpoint(self.address_widget.value, self.auth_type.value, self.user_widget.value, self.password_widget.value)
+        endpoint = Endpoint(self.address_widget.value, self.auth.value, self.user_widget.value, self.password_widget.value)
         self.endpoints[self.address_widget.value] = endpoint
         self.ipython_display.writeln("Added endpoint {}".format(self.address_widget.value))
 
@@ -62,8 +64,8 @@ class AddEndpointWidget(AbstractMenuWidget):
         # value otherwise.
         self.refresh_method()
 
-    def update_endpoint(self):
-        if self.auth_type.value == constants.NO_AUTH or self.auth_type.value == constants.AUTH_KERBEROS:
+    def _show_correct_endpoint_fields(self):
+        if self.auth.value == constants.NO_AUTH or self.auth.value == constants.AUTH_KERBEROS:
             self.user_widget.layout.display = 'none'
             self.password_widget.layout.display = 'none'
         else:

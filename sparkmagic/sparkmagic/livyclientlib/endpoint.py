@@ -1,15 +1,14 @@
 from .exceptions import BadUserDataException
-import sparkmagic.utils.configuration as conf
 
 
 class Endpoint(object):
-    def __init__(self, url, auth_type=conf.default_livy_endpoint_auth_type(), username="", password=""):
+    def __init__(self, url, auth, username="", password=""):
         if not url:
             raise BadUserDataException(u"URL must not be empty")
         self.url = url.rstrip(u"/")
         self.username = username
         self.password = password
-        self.auth_type = auth_type
+        self.auth = auth
 
     def __eq__(self, other):
         if type(other) is not Endpoint:
