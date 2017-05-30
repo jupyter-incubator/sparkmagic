@@ -44,6 +44,8 @@ class AddEndpointWidget(AbstractMenuWidget):
             description='Add endpoint'
         )
 
+        self.auth_type.on_trait_change(self.update_endpoint)
+
         self.children = [self.ipywidget_factory.get_html(value="<br/>", width=widget_width),
                          self.address_widget, self.auth_type, self.user_widget, self.password_widget,
                          self.ipywidget_factory.get_html(value="<br/>", width=widget_width), self.submit_widget]
@@ -59,3 +61,12 @@ class AddEndpointWidget(AbstractMenuWidget):
         # We need to call the refresh method because drop down in Tab 2 for endpoints wouldn't refresh with the new
         # value otherwise.
         self.refresh_method()
+
+    def update_endpoint(self):
+        if self.auth_type.value == constants.NO_AUTH or self.auth_type.value == constants.AUTH_KERBEROS:
+            self.user_widget.layout.display = 'none'
+            self.password_widget.layout.display = 'none'
+        else:
+            self.user_widget.layout.display = 'flex'
+            self.password_widget.layout.display = 'flex'
+
