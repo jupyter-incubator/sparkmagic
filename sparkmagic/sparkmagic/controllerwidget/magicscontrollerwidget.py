@@ -22,13 +22,19 @@ class MagicsControllerWidget(AbstractMenuWidget):
     def run(self):
         pass
 
-    def _get_default_endpoints(self):
+    @staticmethod
+    def _get_default_endpoints():
         default_endpoints = set()
         kernel_types = ['python', 'python3', 'scala', 'r']
 
         for kernel_type in kernel_types:
-            endpoint_configuration = getattr(conf, 'kernel_%s_credentials' % kernel_type)()
-            default_endpoints.add(Endpoint(is_default=True, **endpoint_configuration))
+            endpoint_config = getattr(conf, 'kernel_%s_credentials' % kernel_type)()
+            if all([p in endpoint_config for p in ["url", "password", "username"]]) and endpoint_config["url"] != "":
+                default_endpoints.add(Endpoint(
+                    username=endpoint_config["username"],
+                    password=endpoint_config["password"],
+                    url=endpoint_config["url"],
+                    is_default=True))
 
         return default_endpoints
 
