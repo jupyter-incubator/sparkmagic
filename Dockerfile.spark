@@ -4,6 +4,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
     git \
     openjdk-7-jdk \
     maven \
+    python2.7 \
+    python3.4 \
     r-base \
     r-base-core && \
     rm -rf /var/lib/apt/lists/*
@@ -11,6 +13,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
 ENV LIVY_BUILD_VERSION livy-server-0.3.0
 ENV LIVY_APP_PATH /apps/$LIVY_BUILD_VERSION
 ENV LIVY_BUILD_PATH /apps/build/livy
+ENV PYSPARK_PYTHON python2.7
+ENV PYSPARK3_PYTHON python3.4
 
 RUN mkdir -p /apps/build && \
     cd /apps/build && \
