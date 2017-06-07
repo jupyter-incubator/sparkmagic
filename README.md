@@ -101,11 +101,12 @@ Request Body example:
                 'username': 'username',
                 'password': 'password',
                 'endpoint': 'url',
+                'auth': 'Kerberos',
                 'kernelname': 'pysparkkernel'
         }
         ```
 
-*Note that the kernelname parameter is optional and defaults to the one specified on the config file or pysparkkernel if not on the config file.*
+*Note that the auth can be either None, Basic_Access or Kerberos based on the authentication enabled in livy. The kernelname parameter is optional and defaults to the one specified on the config file or pysparkkernel if not on the config file.*
 Returns `200` if successful; `400` if body is not JSON string or key is not found; `500` if error is encountered changing clusters.
 
 Reply Body example:
@@ -139,6 +140,18 @@ However, there are some important limitations to note:
 
 2. Since all code is run on a remote driver through Livy, all structured data must be serialized to JSON and parsed by the Sparkmagic library so that it can be manipulated and visualized on the client side.
 In practice this means that you must use Python for client-side data manipulation in `%%local` mode.
+
+## Authentication Methods
+
+Sparkmagic supports:
+
+* No auth
+* Basic authentication
+* Kerberos
+
+Kerberos support is implemented via the [requests-kerberos](https://github.com/requests/requests-kerberos) package. Sparkmagic expects a kerberos ticket to be available in the system. Requests-kerberos will pick up the kerberos ticket from a cache file. For the ticket to be available, the user needs to have run [kinit](https://web.mit.edu/kerberos/krb5-1.12/doc/user/user_commands/kinit.html) to create the kerberos ticket.
+
+Currently, sparkmagic does not support passing a kerberos principal/token, but we welcome pull requests.
 
 ## Contributing
 

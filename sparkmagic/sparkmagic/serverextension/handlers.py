@@ -8,6 +8,7 @@ from tornado.escape import json_decode
 
 from sparkmagic.kernels.kernelmagics import KernelMagics
 import sparkmagic.utils.configuration as conf
+from sparkmagic.utils import constants
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.sparklogger import SparkLog
 
@@ -38,6 +39,12 @@ class ReconnectHandler(IPythonHandler):
             username = self._get_argument_or_raise(data, 'username')
             password = self._get_argument_or_raise(data, 'password')
             endpoint = self._get_argument_or_raise(data, 'endpoint')
+            auth = self._get_argument_if_exists(data, 'auth')
+            if auth is None:
+                if username == '' and password == '':
+                    auth = constants.NO_AUTH
+                else:
+                    auth = constants.AUTH_BASIC
         except MissingArgumentError as e:
             self.set_status(400)
             self.finish(str(e))
@@ -52,7 +59,7 @@ class ReconnectHandler(IPythonHandler):
 
         # Execute code
         client = kernel_manager.client()
-        code = '%{} -s {} -u {} -p {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password)
+        code = '%{} -s {} -u {} -p {} -t {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password, auth)
         response_id = client.execute(code, silent=False, store_history=False)
         msg = client.get_shell_msg(response_id)
 
