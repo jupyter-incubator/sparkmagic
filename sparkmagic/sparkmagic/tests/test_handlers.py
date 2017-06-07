@@ -118,6 +118,40 @@ class TestSparkMagicHandler(AsyncTestCase):
 
     @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager')
     @gen_test
+    def test_post_existing_kernel_with_auth_missing_no_auth(self, _get_kernel_manager):
+        self.request.body = json.dumps({ "path": self.path, "username": '', "password": '', "endpoint": self.endpoint })
+        kernel_manager_future = Future()
+        kernel_manager_future.set_result(self.individual_kernel_manager)
+        _get_kernel_manager.return_value = kernel_manager_future
+
+        res = yield self.reconnect_handler.post()
+        assert_equals(res, None)
+
+        code = '%{} -s {} -u {} -p {} -t {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, self.endpoint, '', '', constants.NO_AUTH)
+        self.client.execute.assert_called_once_with(code, silent=False, store_history=False)
+        self.reconnect_handler.set_status.assert_called_once_with(200)
+        self.reconnect_handler.finish.assert_called_once_with('{"error": null, "success": true}')
+        self.spark_events.emit_cluster_change_event.assert_called_once_with(self.endpoint, 200, True, None)
+
+    @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager')
+    @gen_test
+    def test_post_existing_kernel_with_auth_missing_basic_auth(self, _get_kernel_manager):
+        self.request.body = json.dumps({ "path": self.path, "username": self.username, "password": self.password, "endpoint": self.endpoint })
+        kernel_manager_future = Future()
+        kernel_manager_future.set_result(self.individual_kernel_manager)
+        _get_kernel_manager.return_value = kernel_manager_future
+
+        res = yield self.reconnect_handler.post()
+        assert_equals(res, None)
+
+        code = '%{} -s {} -u {} -p {} -t {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, self.endpoint, self.username, self.password, constants.AUTH_BASIC)
+        self.client.execute.assert_called_once_with(code, silent=False, store_history=False)
+        self.reconnect_handler.set_status.assert_called_once_with(200)
+        self.reconnect_handler.finish.assert_called_once_with('{"error": null, "success": true}')
+        self.spark_events.emit_cluster_change_event.assert_called_once_with(self.endpoint, 200, True, None)
+
+    @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager')
+    @gen_test
     def test_post_existing_kernel(self, _get_kernel_manager):
         kernel_manager_future = Future()
         kernel_manager_future.set_result(self.individual_kernel_manager)

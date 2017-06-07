@@ -28,10 +28,6 @@ def test_configuration_auth_missing_basic_auth():
     kpc = { 'username': 'U', 'password': 'P', 'url': 'L'}
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    conf.override(conf.status_sleep_seconds.__name__, 1)
-    assert_equals(conf.d, { conf.kernel_python_credentials.__name__: kpc,
-                                     conf.status_sleep_seconds.__name__: 1 })
-    assert_equals(conf.status_sleep_seconds(), 1)
     assert_equals(conf.base64_kernel_python_credentials(), { 'username': 'U', 'password': 'P', 'url': 'L', 'auth': AUTH_BASIC })
 
 
@@ -40,10 +36,6 @@ def test_configuration_auth_missing_no_auth():
     kpc = { 'username': '', 'password': '', 'url': 'L'}
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    conf.override(conf.status_sleep_seconds.__name__, 1)
-    assert_equals(conf.d, { conf.kernel_python_credentials.__name__: kpc,
-                                     conf.status_sleep_seconds.__name__: 1 })
-    assert_equals(conf.status_sleep_seconds(), 1)
     assert_equals(conf.base64_kernel_python_credentials(), { 'username': '', 'password': '', 'url': 'L', 'auth': NO_AUTH })
 
 
