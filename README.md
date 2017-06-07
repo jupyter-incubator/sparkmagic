@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/jupyter-incubator/sparkmagic.svg?branch=master)](https://travis-ci.org/jupyter-incubator/sparkmagic)
+
 # sparkmagic
 
 Sparkmagic is a set of tools for interactively working with remote Spark clusters through [Livy](https://github.com/cloudera/hue/tree/master/apps/spark/java), a Spark REST server, in [Jupyter](http://jupyter.org) notebooks.
@@ -17,6 +19,7 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 * Automatic visualization of SQL queries in the PySpark, PySpark3, Spark and SparkR kernels; use an easy visual interface to interactively construct visualizations, no code required
 * Easy access to Spark application information and logs (`%%info` magic)
 * Ability to capture the output of SQL queries as Pandas dataframes to interact with other Python libraries (e.g. matplotlib)
+* Authenticate to Livy via Basic Access authentication or via Kerberos
 
 ## Examples
 
@@ -54,9 +57,53 @@ See [Pyspark](examples/Pyspark Kernel.ipynb) and [Spark](examples/Spark Kernel.i
 
         jupyter serverextension enable --py sparkmagic
         
-### Server extension API
+## Authentication Methods
 
-#### `/reconnectsparkmagic`:
+Sparkmagic supports:
+
+* No auth
+* Basic authentication
+* Kerberos
+
+Kerberos support is implemented via the [requests-kerberos](https://github.com/requests/requests-kerberos) package. Sparkmagic expects a kerberos ticket to be available in the system. Requests-kerberos will pick up the kerberos ticket from a cache file. For the ticket to be available, the user needs to have run [kinit](https://web.mit.edu/kerberos/krb5-1.12/doc/user/user_commands/kinit.html) to create the kerberos ticket.
+
+Currently, sparkmagic does not support passing a kerberos principal/token, but we welcome pull requests.
+
+## Docker
+
+The included `docker-compose.yml` file will let you spin up a full
+sparkmagic stack that includes a Jupyter notebook with the appropriate
+extensions installed, and a Livy server backed by a local-mode Spark instance.
+(This is just for testing and developing sparkmagic itself; in reality,
+sparkmagic is not very useful if your Spark instance is on the same machine!)
+
+In order to use it, make sure you have [Docker](https://docker.com) and
+[Docker Compose](https://docs.docker.com/compose/) both installed, and
+then simply run:
+
+    docker-compose build
+    docker-compose up
+
+You will then be able to access the Jupyter notebook in your browser at
+http://localhost:8888. Inside this notebook, you can configure a
+sparkmagic endpoint at http://spark:8998. This endpoint is able to
+launch both Scala and Python sessions. You can also choose to start a
+wrapper kernel for Scala, Python, or R from the list of kernels.
+
+To shut down the containers, you can interrupt `docker-compose` with
+`Ctrl-C`, and optionally remove the containers with `docker-compose
+down`.
+
+If you are developing sparkmagic and want to test out your changes in
+the Docker container without needing to push a version to PyPI, you can
+set the `dev_mode` build arg in `docker-compose.yml` to `true`, and then
+re-build the container. This will cause the container to install your
+local version of autovizwidget, hdijupyterutils, and sparkmagic. Make
+sure to re-run `docker-compose build` before each test run.
+
+## Server extension API
+
+### `/reconnectsparkmagic`:
 * `POST`:
 Allows to specify Spark cluster connection information to a notebook passing in the notebook path and cluster information.
 Kernel will be started/restarted and connected to cluster specified.
@@ -68,11 +115,12 @@ Request Body example:
                 'username': 'username',
                 'password': 'password',
                 'endpoint': 'url',
+                'auth': 'Kerberos',
                 'kernelname': 'pysparkkernel'
         }
         ```
 
-*Note that the kernelname parameter is optional and defaults to the one specified on the config file or pysparkkernel if not on the config file.*
+*Note that the auth can be either None, Basic_Access or Kerberos based on the authentication enabled in livy. The kernelname parameter is optional and defaults to the one specified on the config file or pysparkkernel if not on the config file.*
 Returns `200` if successful; `400` if body is not JSON string or key is not found; `500` if error is encountered changing clusters.
 
 Reply Body example:
