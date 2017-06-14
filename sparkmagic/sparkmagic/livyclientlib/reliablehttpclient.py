@@ -3,11 +3,14 @@
 import json
 from time import sleep
 import requests
+from requests_kerberos import HTTPKerberosAuth, REQUIRED
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
+import sparkmagic.utils.constants as constants
 from sparkmagic.livyclientlib.exceptions import HttpClientException
+from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 
 
 class ReliableHttpClient(object):
@@ -17,6 +20,13 @@ class ReliableHttpClient(object):
         self._endpoint = endpoint
         self._headers = headers
         self._retry_policy = retry_policy
+        if self._endpoint.auth == constants.AUTH_KERBEROS:
+            self._auth = HTTPKerberosAuth(mutual_authentication=REQUIRED)
+        elif self._endpoint.auth == constants.AUTH_BASIC:
+            self._auth = (self._endpoint.username, self._endpoint.password)
+        elif self._endpoint.auth != constants.NO_AUTH:
+            raise BadUserConfigurationException(u"Unsupported auth %s" %self._endpoint.auth)
+
         self.logger = SparkLog(u"ReliableHttpClient")
 
         self.verify_ssl = not conf.ignore_ssl_errors()
@@ -46,17 +56,16 @@ class ReliableHttpClient(object):
     def _send_request_helper(self, url, accepted_status_codes, function, data, retry_count):
         while True:
             try:
-                if not self._endpoint.authenticate:
+                if self._endpoint.auth == constants.NO_AUTH:
                     if data is None:
                         r = function(url, headers=self._headers, verify=self.verify_ssl)
                     else:
                         r = function(url, headers=self._headers, data=json.dumps(data), verify=self.verify_ssl)
                 else:
                     if data is None:
-                        r = function(url, headers=self._headers, auth=(self._endpoint.username, self._endpoint.password),
-                                     verify=self.verify_ssl)
+                        r = function(url, headers=self._headers, auth=self._auth, verify=self.verify_ssl)
                     else:
-                        r = function(url, headers=self._headers, auth=(self._endpoint.username, self._endpoint.password),
+                        r = function(url, headers=self._headers, auth=self._auth,
                                      data=json.dumps(data), verify=self.verify_ssl)
             except requests.exceptions.RequestException as e:
                 error = True
