@@ -5,6 +5,7 @@ import json
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.constants import LANG_SCALA, LANG_PYTHON
 from sparkmagic.controllerwidget.abstractmenuwidget import AbstractMenuWidget
+from ipywidgets import Layout
 
 
 class CreateSessionWidget(AbstractMenuWidget):
@@ -18,21 +19,24 @@ class CreateSessionWidget(AbstractMenuWidget):
 
         self.session_widget = self.ipywidget_factory.get_text(
             description='Name:',
-            value='session-name'
+            value='session-name',
+            layout=Layout(min_width='200px')
         )
         self.lang_widget = self.ipywidget_factory.get_toggle_buttons(
             description='Language:',
             options=[LANG_SCALA, LANG_PYTHON],
         )
-        self.properties = self.ipywidget_factory.get_text(
+        self.properties = self.ipywidget_factory.get_text_area(
             description='Properties:',
-            value=json.dumps(conf.session_configs())
+            value=json.dumps(conf.session_configs()),
+            rows=7,
+            layout=Layout(min_width='400px')
         )
         self.submit_widget = self.ipywidget_factory.get_submit_button(
             description='Create Session'
         )
 
-        self.children = [self.ipywidget_factory.get_html(value="<br/>", width="600px"), self.endpoints_dropdown_widget,
+        self.children = [self.endpoints_dropdown_widget,
                          self.session_widget, self.lang_widget, self.properties,
                          self.ipywidget_factory.get_html(value="<br/>", width="600px"), self.submit_widget]
 

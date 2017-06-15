@@ -17,7 +17,7 @@ from .exceptions import LivyClientTimeoutException, \
 class _HeartbeatThread(threading.Thread):
     def __init__(self, livy_session, refresh_seconds, retry_seconds, run_at_most=None):
         super(_HeartbeatThread, self).__init__()
-        
+
         self.livy_session = livy_session
         self.refresh_seconds = refresh_seconds
         self.retry_seconds = retry_seconds
@@ -29,7 +29,7 @@ class _HeartbeatThread(threading.Thread):
             self.livy_session.logger.info(u'Starting heartbeat for session {}'.format(self.livy_session.id))
         else:
             self.livy_session.logger.info(u'Will not start heartbeat because session is none')
-        
+
         while self.livy_session is not None:
             try:
                 self.livy_session.refresh_status_and_info()
@@ -37,17 +37,17 @@ class _HeartbeatThread(threading.Thread):
             except Exception as e:
                 self.livy_session.logger.error(u'{}'.format(e))
                 sleep(self.retry_seconds)
-            
+
             if self.run_at_most is not None:
                 i += 1
-                
+
                 if i >= self.run_at_most:
                     return
 
     def stop(self):
         if self.livy_session is not None:
             self.livy_session.logger.info(u'Stopping heartbeat for session {}'.format(self.livy_session.id))
-        
+
         self.livy_session = None
         self.join()
 
@@ -102,7 +102,7 @@ class LivySession(ObjectWithGuid):
         self.kind = kind
         self.id = session_id
         self.session_info = u""
-        
+
         self._heartbeat_thread = None
         if session_id == -1:
             self.status = constants.NOT_STARTED_SESSION_STATUS
@@ -125,10 +125,10 @@ class LivySession(ObjectWithGuid):
             self.status = str(r[u"state"])
 
             self.ipython_display.writeln(u"Starting Spark application")
-            
+
             # Start heartbeat thread to keep Livy interactive session alive.
             self._start_heartbeat_thread()
-            
+
             # We wait for livy_session_startup_timeout_seconds() for the session to start up.
             try:
                 self.wait_for_idle(conf.livy_session_startup_timeout_seconds())
@@ -201,7 +201,7 @@ class LivySession(ObjectWithGuid):
 
         try:
             self.logger.debug(u"Deleting session '{}'".format(session_id))
-            
+
             if self.status != constants.NOT_STARTED_SESSION_STATUS:
                 self._http_client.delete_session(session_id)
                 self._stop_heartbeat_thread()
@@ -210,7 +210,7 @@ class LivySession(ObjectWithGuid):
             else:
                 self.ipython_display.send_error(u"Cannot delete session {} that is in state '{}'."
                                                 .format(session_id, self.status))
-            
+
         except Exception as e:
             self._spark_events.emit_session_deletion_end_event(self.guid, self.kind, session_id, self.status, False,
                                                                e.__class__.__name__, str(e))
@@ -277,12 +277,12 @@ class LivySession(ObjectWithGuid):
         if self._should_heartbeat and self._heartbeat_thread is None:
             refresh_seconds = conf.heartbeat_refresh_seconds()
             retry_seconds = conf.heartbeat_retry_seconds()
-            
+
             if self._user_passed_heartbeat_thread is None:
                 self._heartbeat_thread = _HeartbeatThread(self, refresh_seconds, retry_seconds)
             else:
                 self._heartbeat_thread = self._user_passed_heartbeat_thread
-            
+
             self._heartbeat_thread.daemon = True
             self._heartbeat_thread.start()
 

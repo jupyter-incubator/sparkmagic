@@ -17,7 +17,7 @@ import sparkmagic.utils.constants as constants
 d = {}
 path = join_paths(HOME_PATH, CONFIG_FILE)
 
-    
+
 def override(config, value):
     _override(d, path, config, value)
 
@@ -31,7 +31,7 @@ _with_override = with_override(d, path)
 
 # Configs
 
- 
+
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
@@ -46,8 +46,8 @@ def session_configs():
 @_with_override
 def kernel_python_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
-    
-    
+
+
 def base64_kernel_python_credentials():
     return _credentials_override(kernel_python_credentials)
 
@@ -67,7 +67,7 @@ def kernel_scala_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
 
 
-def base64_kernel_scala_credentials():        
+def base64_kernel_scala_credentials():
     return _credentials_override(kernel_scala_credentials)
 
 @_with_override
@@ -180,7 +180,7 @@ def pyspark_dataframe_encoding():
 @_with_override
 def heartbeat_refresh_seconds():
     return 30
-    
+
 
 @_with_override
 def heartbeat_retry_seconds():
@@ -195,6 +195,21 @@ def livy_server_heartbeat_timeout_seconds():
 @_with_override
 def server_extension_default_kernel_name():
     return "pysparkkernel"
+
+
+@_with_override
+def authentication_type():
+    return None
+
+
+@_with_override
+def authentication_cookie_name():
+    return None
+
+
+@_with_override
+def endpoints():
+    return None
 
 
 def _credentials_override(f):
@@ -218,4 +233,3 @@ def _credentials_override(f):
         else:
             base64_decoded_credentials['auth'] = constants.AUTH_BASIC
     return base64_decoded_credentials
-

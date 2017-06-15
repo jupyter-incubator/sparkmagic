@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import pandas as pd
-from ipywidgets import Box
+from ipywidgets import Box, Layout
 from hdijupyterutils.ipythondisplay import IpythonDisplay
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 
@@ -49,7 +49,7 @@ class AutoVizWidget(Box):
 
         # Create output area
         self.to_display = self.ipywidget_factory.get_output()
-        self.to_display.width = "800px"
+        self.to_display.layout = Layout(width='800px')
         self.output = self.ipywidget_factory.get_hbox()
         self.output.children = [self.to_display]
 
@@ -97,7 +97,7 @@ class AutoVizWidget(Box):
         children = list()
 
         if len(self.df) > 0:
-            self.heading = self.ipywidget_factory.get_html('Type:', width='80px', height='32px')
+            self.heading = self.ipywidget_factory.get_html('Type:', layout=Layout(width='80px', height='32px'))
             children.append(self.heading)
 
             self._create_type_button(Encoding.chart_type_table, children)
@@ -118,8 +118,9 @@ class AutoVizWidget(Box):
             self.encoding.chart_type = name
             return self.on_render_viz()
 
-        button = self.ipywidget_factory.get_button(description=name)
-        button.layout.width = "70px"
+        button = self.ipywidget_factory.get_button(description=name,
+                                                   layout=Layout(width='70px'))
+        # button.layout.width = "70px"
         button.on_click(on_render)
 
         children.append(button)

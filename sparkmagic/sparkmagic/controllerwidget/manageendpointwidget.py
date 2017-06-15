@@ -1,6 +1,10 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
+from threading import Event
+import time
+
 from sparkmagic.controllerwidget.abstractmenuwidget import AbstractMenuWidget
+import sparkmagic.utils.constants as constants
 
 
 class ManageEndpointWidget(AbstractMenuWidget):
@@ -10,7 +14,6 @@ class ManageEndpointWidget(AbstractMenuWidget):
 
         self.endpoints = endpoints
         self.refresh_method = refresh_method
-
         self.children = self.get_existing_endpoint_widgets()
 
         for child in self.children:
@@ -94,7 +97,10 @@ class ManageEndpointWidget(AbstractMenuWidget):
         return delete_w
 
     def get_delete_session_endpoint_widget(self, url, endpoint):
-        session_text = self.ipywidget_factory.get_text(description="Session to delete:", value="0", width="50px")
+        session_text = self.ipywidget_factory.get_text(description="Session to delete:",
+                                                       width='50px',
+                                                       style=dict(description_width='initial'),
+                                                       value="0")
 
         def delete_endpoint(button):
             try:
@@ -105,7 +111,8 @@ class ManageEndpointWidget(AbstractMenuWidget):
                 self.ipython_display.send_error(str(e))
                 return
 
-        button = self.ipywidget_factory.get_button(description="Delete")
+        button = self.ipywidget_factory.get_button(description="Delete",
+                                                   button_style='danger')
         button.on_click(delete_endpoint)
 
         return self.ipywidget_factory.get_hbox(children=[session_text, button], width="152px")

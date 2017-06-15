@@ -60,11 +60,11 @@ setup(name=NAME,
           'ipython>=4.0.2,<5',
           'nose',
           'mock',
-          'ipywidgets>5.0.0',
+          'ipywidgets>=7.0.0a4,<8.0',
           'ipykernel>=4.2.2,<5',
           'jupyter>=1,<2',
-          'pandas>=0.17.1',
+          'pandas>=0.20.2',
           'numpy',
-          'notebook>=4.2'
+          'notebook>=5.0.0'
       ])
 

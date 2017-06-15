@@ -183,7 +183,7 @@ def test_change_endpoint_session_started():
     magic.session_started = True
 
     magic._do_not_call_change_endpoint(line)
-    
+
 
 @with_setup(_setup, _teardown)
 def test_info():
