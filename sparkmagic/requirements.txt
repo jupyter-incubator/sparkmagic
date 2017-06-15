@@ -3,7 +3,7 @@ autovizwidget>=0.6
 ipython==4.0.2
 nose
 mock
-pandas==0.17.1
+pandas>=0.20.2
 numpy
 requests
 ipykernel>=4.2.2,<5

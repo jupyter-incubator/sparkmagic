@@ -45,7 +45,7 @@ def session_configs():
 
 @_with_override
 def kernel_python_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': NO_AUTH}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
 
 
 def base64_kernel_python_credentials():
