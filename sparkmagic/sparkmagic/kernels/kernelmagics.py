@@ -12,8 +12,9 @@ from IPython.core.magic_arguments import argument, magic_arguments
 from hdijupyterutils.utils import generate_uuid
 
 import sparkmagic.utils.configuration as conf
+from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils import constants
-from sparkmagic.utils.utils import get_livy_kind, parse_argstring_or_throw
+from sparkmagic.utils.utils import parse_argstring_or_throw
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import LANGS_SUPPORTED
 from sparkmagic.livyclientlib.command import Command

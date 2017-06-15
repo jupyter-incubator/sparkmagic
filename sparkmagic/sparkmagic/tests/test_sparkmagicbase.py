@@ -2,7 +2,7 @@
 from mock import MagicMock
 from nose.tools import with_setup, assert_equals, assert_raises
 
-from sparkmagic.utils.utils import get_livy_kind
+from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils.constants import LANGS_SUPPORTED, SESSION_KIND_PYSPARK, SESSION_KIND_SPARK, \
     IDLE_SESSION_STATUS, BUSY_SESSION_STATUS
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
