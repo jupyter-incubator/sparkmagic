@@ -153,6 +153,11 @@ def ignore_ssl_errors():
 
 
 @_with_override
+def coerce_dataframe():
+    return True
+
+
+@_with_override
 def use_auto_viz():
     return True
 

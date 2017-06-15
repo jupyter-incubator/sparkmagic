@@ -1,4 +1,4 @@
-from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime, records_to_dataframe
+from sparkmagic.utils.utils import records_to_dataframe
 import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparkevents import SparkEvents
@@ -8,7 +8,7 @@ from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUser
 import ast
 
 class SparkStoreCommand(Command):
-    def __init__(self, output_var, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None):
+    def __init__(self, output_var, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None, coerce=None):
         super(SparkStoreCommand, self).__init__("", spark_events)
 
         if samplemethod is None:
@@ -32,6 +32,7 @@ class SparkStoreCommand(Command):
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
+        self._coerce = coerce
 
 
     def execute(self, session):
@@ -40,7 +41,7 @@ class SparkStoreCommand(Command):
             (success, records_text) = command.execute(session)
             if not success:
                 raise BadUserDataException(records_text)
-            result = records_to_dataframe(records_text, session.kind)
+            result = records_to_dataframe(records_text, session.kind, self._coerce)
         except Exception as e:
             raise
         else:
@@ -114,7 +115,8 @@ class SparkStoreCommand(Command):
             self.samplemethod == other.samplemethod and \
             self.maxrows == other.maxrows and \
             self.samplefraction == other.samplefraction and \
-            self.output_var == other.output_var
+            self.output_var == other.output_var and \
+            self._coerce == other._coerce
 
     def __ne__(self, other):
         return not (self == other)

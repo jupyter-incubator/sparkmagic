@@ -211,12 +211,13 @@ class KernelMagics(SparkMagicBase):
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the dataframe on the server for storing")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from dataframe")
+    @argument("-c", "--coerce", type=bool, default=None, help="Whether to automatically coerce the types of the dataframe or not")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(u""):
             args = parse_argstring_or_throw(self.spark, line)
-            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None)
+            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, args.coerce)
         else:
             return
 
@@ -230,13 +231,14 @@ class KernelMagics(SparkMagicBase):
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the server for SQL queries")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
+    @argument("-c", "--coerce", type=bool, default=None, help="Whether to automatically coerce the types of the dataframe or not")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring_or_throw(self.sql, line)
             return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                         None, args.output, args.quiet)
+                                         None, args.output, args.quiet, args.coerce)
         else:
             return
 

@@ -6,6 +6,7 @@ import pandas as pd
 import json
 from collections import OrderedDict
 
+from . import configuration as conf
 import sparkmagic.utils.constants as constants
 from sparkmagic.livyclientlib.exceptions import BadUserDataException, DataFrameParseException
 from .constants import LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
@@ -57,7 +58,7 @@ def coerce_pandas_df_to_numeric_datetime(df):
                 pass
 
 
-def records_to_dataframe(records_text, kind):
+def records_to_dataframe(records_text, kind, coerce=None):
     if records_text in ['', '[]']:
         strings = []
     else:
@@ -81,8 +82,12 @@ def records_to_dataframe(records_text, kind):
                 if len(data.keys()) == len(df.columns):
                     df = df[list(data.keys())]
                     break
+                    
+        if coerce is None:
+            coerce = conf.coerce_dataframe()
+        if coerce:
+            coerce_pandas_df_to_numeric_datetime(df)
 
-        coerce_pandas_df_to_numeric_datetime(df)
         return df
     except ValueError:
         raise DataFrameParseException(u"Cannot parse object as JSON: '{}'".format(strings))

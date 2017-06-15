@@ -57,6 +57,7 @@
   },
 
   "use_auto_viz": true,
+  "coerce_dataframe": true,
   "max_results_sql": 2500,
   "pyspark_dataframe_encoding": "utf-8",
   

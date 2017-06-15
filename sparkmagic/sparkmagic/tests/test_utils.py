@@ -1,5 +1,6 @@
 from IPython.core.error import UsageError
 from mock import MagicMock
+import numpy as np
 from nose.tools import assert_equals, assert_is
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
@@ -29,8 +30,26 @@ def test_records_to_dataframe_missing_value_first():
     result = """{"z":100, "y":50}
 {"z":25, "nullv":1.0, "y":10}"""
     
-    df = records_to_dataframe(result, SESSION_KIND_PYSPARK)
+    df = records_to_dataframe(result, SESSION_KIND_PYSPARK, True)
     expected = pd.DataFrame([{'z': 100, "nullv": None, 'y': 50}, {'z':25, "nullv":1, 'y':10}], columns=['z', "nullv", 'y'])
+    assert_frame_equal(expected, df)
+
+
+def test_records_to_dataframe_coercing():
+    result = """{"z":"100", "y":"2016-01-01"}
+{"z":"25", "y":"2016-01-01"}"""
+    
+    df = records_to_dataframe(result, SESSION_KIND_PYSPARK, True)
+    expected = pd.DataFrame([{'z': 100, 'y': np.datetime64("2016-01-01")}, {'z':25, 'y':np.datetime64("2016-01-01")}], columns=['z', 'y'])
+    assert_frame_equal(expected, df)
+
+
+def test_records_to_dataframe_no_coercing():
+    result = """{"z":"100", "y":"2016-01-01"}
+{"z":"25", "y":"2016-01-01"}"""
+    
+    df = records_to_dataframe(result, SESSION_KIND_PYSPARK, False)
+    expected = pd.DataFrame([{'z': "100", 'y': "2016-01-01"}, {'z':"25", 'y':"2016-01-01"}], columns=['z', 'y'])
     assert_frame_equal(expected, df)
 
 
@@ -38,6 +57,6 @@ def test_records_to_dataframe_missing_value_later():
     result = """{"z":25, "nullv":1.0, "y":10}
 {"z":100, "y":50}"""
     
-    df = records_to_dataframe(result, SESSION_KIND_PYSPARK)
+    df = records_to_dataframe(result, SESSION_KIND_PYSPARK, True)
     expected = pd.DataFrame([{'z':25, "nullv":1, 'y':10}, {'z': 100, "nullv": None, 'y': 50}], columns=['z', "nullv", 'y'])
     assert_frame_equal(expected, df)

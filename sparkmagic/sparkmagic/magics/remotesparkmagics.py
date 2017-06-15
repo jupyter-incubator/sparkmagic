@@ -60,6 +60,7 @@ class RemoteSparkMagics(SparkMagicBase):
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @argument("-k", "--skip", type=bool, default=False, nargs="?", const=True, help="Skip adding session if it already exists")
     @argument("-i", "--id", type=int, default=None, help="Session ID")
+    @argument("-e", "--coerce", type=bool, default=None, help="Whether to automatically coerce the types of the dataframe or not")
     @needs_local_scope
     @line_cell_magic
     @handle_expected_exceptions
@@ -162,10 +163,10 @@ class RemoteSparkMagics(SparkMagicBase):
         elif len(subcommand) == 0:
             if args.context == CONTEXT_NAME_SPARK:
                 return self.execute_spark(cell, args.output, args.samplemethod,
-                                          args.maxrows, args.samplefraction, args.session)
+                                          args.maxrows, args.samplefraction, args.session, args.coerce)
             elif args.context == CONTEXT_NAME_SQL:
                 return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                             args.session, args.output, args.quiet)
+                                             args.session, args.output, args.quiet, args.coerce)
             else:
                 self.ipython_display.send_error("Context '{}' not found".format(args.context))
         # error

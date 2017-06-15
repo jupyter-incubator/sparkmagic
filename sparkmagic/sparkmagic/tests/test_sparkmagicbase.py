@@ -34,13 +34,14 @@ def test_get_livy_kind_covers_all_langs():
     for lang in LANGS_SUPPORTED:
         get_livy_kind(lang)
 
+
 @with_setup(_setup, _teardown)
 def test_sql_df_execution_without_output_var():
     df = 0
     query = SQLQuery("")
     output_var = None
     magic.spark_controller.run_sqlquery = MagicMock(return_value=df)
-    res = magic.execute_sqlquery("", None, None, None, session, output_var, False)
+    res = magic.execute_sqlquery("", None, None, None, session, output_var, False, None)
 
     magic.spark_controller.run_sqlquery.assert_called_once_with(query, session)
     assert res == df
@@ -56,7 +57,7 @@ def test_sql_df_execution_with_output_var():
     magic.spark_controller = MagicMock()
     magic.spark_controller.run_sqlquery = MagicMock(return_value=df)
 
-    res = magic.execute_sqlquery("", None, None, None, session, output_var, False)
+    res = magic.execute_sqlquery("", None, None, None, session, output_var, False, None)
 
     magic.spark_controller.run_sqlquery.assert_called_once_with(query, session)
     assert res == df
@@ -72,7 +73,7 @@ def test_sql_df_execution_quiet_without_output_var():
     magic.spark_controller = MagicMock()
     magic.spark_controller.run_sqlquery = MagicMock(return_value=df)
 
-    res = magic.execute_sqlquery("", None, None, None, session, output_var, True)
+    res = magic.execute_sqlquery("", None, None, None, session, output_var, True, None)
 
     magic.spark_controller.run_sqlquery.assert_called_once_with(cell, session)
     assert res is None
@@ -88,11 +89,28 @@ def test_sql_df_execution_quiet_with_output_var():
     magic.spark_controller = MagicMock()
     magic.spark_controller.run_sqlquery = MagicMock(return_value=df)
 
-    res = magic.execute_sqlquery("", None, None, None, session, output_var, True)
+    res = magic.execute_sqlquery("", None, None, None, session, output_var, True, None)
 
     magic.spark_controller.run_sqlquery.assert_called_once_with(cell, session)
     assert res is None
     assert shell.user_ns[output_var] == df
+
+
+@with_setup(_setup, _teardown)
+def test_sql_df_execution_quiet_with_coerce():
+    df = 0
+    cell = SQLQuery("", coerce=True)
+    output_var = "var_name"
+
+    magic.spark_controller = MagicMock()
+    magic.spark_controller.run_sqlquery = MagicMock(return_value=df)
+
+    res = magic.execute_sqlquery("", None, None, None, session, output_var, True, True)
+
+    magic.spark_controller.run_sqlquery.assert_called_once_with(cell, session)
+    assert res is None
+    assert shell.user_ns[output_var] == df
+
 
 @with_setup(_setup, _teardown)
 def test_print_endpoint_info():
@@ -122,12 +140,12 @@ def test_spark_execution_without_output_var():
     output_var = None
     
     magic.spark_controller.run_command.return_value = (True,'out')
-    magic.execute_spark("", output_var, None, None, None, session)
+    magic.execute_spark("", output_var, None, None, None, session, None)
     magic.ipython_display.write.assert_called_once_with('out')
     assert not magic.spark_controller._spark_store_command.called
 
     magic.spark_controller.run_command.return_value = (False,'out')
-    magic.execute_spark("", output_var, None, None, None, session)
+    magic.execute_spark("", output_var, None, None, None, session, None)
     magic.ipython_display.send_error.assert_called_once_with('out')
     assert not magic.spark_controller._spark_store_command.called
 
@@ -139,14 +157,14 @@ def test_spark_execution_with_output_var():
     df = 'df'
 
     magic.spark_controller.run_command.side_effect = [(True,'out'), df]
-    magic.execute_spark("", output_var, None, None, None, session)
+    magic.execute_spark("", output_var, None, None, None, session, True)
     magic.ipython_display.write.assert_called_once_with('out')
-    magic._spark_store_command.assert_called_once_with(output_var, None, None, None)
+    magic._spark_store_command.assert_called_once_with(output_var, None, None, None, True)
     assert shell.user_ns[output_var] == df
 
     magic.spark_controller.run_command.side_effect = None
     magic.spark_controller.run_command.return_value = (False,'out')
-    magic.execute_spark("", output_var, None, None, None, session)
+    magic.execute_spark("", output_var, None, None, None, session, True)
     magic.ipython_display.send_error.assert_called_once_with('out')
 
 
@@ -159,7 +177,7 @@ def test_spark_exception_with_output_var():
     df = 'df'
 
     magic.spark_controller.run_command.side_effect = [(True,'out'), exception]
-    assert_raises(BadUserDataException,magic.execute_spark,"", output_var, None, None, None, session)
+    assert_raises(BadUserDataException, magic.execute_spark,"", output_var, None, None, None, session, True)
     magic.ipython_display.write.assert_called_once_with('out')
-    magic._spark_store_command.assert_called_once_with(output_var, None, None, None)
+    magic._spark_store_command.assert_called_once_with(output_var, None, None, None, True)
     assert shell.user_ns == {}
