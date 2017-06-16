@@ -2,6 +2,13 @@ FROM jupyter/base-notebook:d0b2d159cc6c
 
 ARG dev_mode=false
 
+USER root
+
+RUN if [ "$dev_mode" = "true" ]; then \
+      apt-get update && apt-get install -yq --no-install-recommends --force-yes gcc && \
+      rm -rf /var/lib/apt/lists/* ; \
+    else echo "Skipping gcc install" ; fi
+
 USER $NB_USER
 
 # Install sparkmagic - if DEV_MODE is set, use the one in the host directory.
