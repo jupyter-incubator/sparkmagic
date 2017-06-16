@@ -12,7 +12,7 @@ from IPython.core.magic_arguments import argument, magic_arguments
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.utils import parse_argstring_or_throw
+from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
 from sparkmagic.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
 from sparkmagic.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
 from sparkmagic.livyclientlib.command import Command
@@ -60,7 +60,8 @@ class RemoteSparkMagics(SparkMagicBase):
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @argument("-k", "--skip", type=bool, default=False, nargs="?", const=True, help="Skip adding session if it already exists")
     @argument("-i", "--id", type=int, default=None, help="Session ID")
-    @argument("-e", "--coerce", type=bool, default=None, help="Whether to automatically coerce the types of the dataframe or not")
+    @argument("-e", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
+                                                                        "of the dataframe or not (pass False)")
     @needs_local_scope
     @line_cell_magic
     @handle_expected_exceptions
@@ -161,12 +162,13 @@ class RemoteSparkMagics(SparkMagicBase):
             self.ipython_display.write(self.spark_controller.get_logs(args.session))
         # run
         elif len(subcommand) == 0:
+            coerce = get_coerce_value(args.coerce)
             if args.context == CONTEXT_NAME_SPARK:
                 return self.execute_spark(cell, args.output, args.samplemethod,
-                                          args.maxrows, args.samplefraction, args.session, args.coerce)
+                                          args.maxrows, args.samplefraction, args.session, coerce)
             elif args.context == CONTEXT_NAME_SQL:
                 return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                             args.session, args.output, args.quiet, args.coerce)
+                                             args.session, args.output, args.quiet, coerce)
             else:
                 self.ipython_display.send_error("Context '{}' not found".format(args.context))
         # error

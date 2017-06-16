@@ -546,6 +546,16 @@ def test_spark_sample_options():
 
 
 @with_setup(_setup, _teardown)
+def test_spark_false_coerce():
+    line = "-o var_name -m sample -n 142 -r 0.3 -c False"
+    cell = ""
+    magic.execute_spark = MagicMock()
+    ret = magic.spark(line, cell)
+
+    magic.execute_spark.assert_called_once_with(cell, "var_name", "sample", 142, 0.3, None, False)
+
+
+@with_setup(_setup, _teardown)
 def test_sql_without_output():
     line = ""
     cell = "some spark code"
@@ -632,6 +642,19 @@ def test_sql_sample_options():
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
     magic.execute_sqlquery.assert_called_once_with(cell, "sample", 142, 0.3, None, None, True, True)
+
+
+@with_setup(_setup, _teardown)
+def test_sql_false_coerce():
+    line = "-q -m sample -n 142 -r 0.3 -c False"
+    cell = ""
+    magic.execute_sqlquery = MagicMock()
+
+    ret = magic.sql(line, cell)
+
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
+                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+    magic.execute_sqlquery.assert_called_once_with(cell, "sample", 142, 0.3, None, None, True, False)
 
 
 @with_setup(_setup, _teardown)

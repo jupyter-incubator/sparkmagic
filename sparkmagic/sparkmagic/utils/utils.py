@@ -11,6 +11,12 @@ import sparkmagic.utils.constants as constants
 from sparkmagic.livyclientlib.exceptions import BadUserDataException, DataFrameParseException
 
 
+def get_coerce_value(coerce):
+    if coerce is not None:
+        coerce = coerce.lower() in ("yes", "true", "t", "y", "1")
+    return coerce
+
+
 def parse_argstring_or_throw(magic_func, argstring, parse_argstring=parse_argstring):
     """An alternative to the parse_argstring method from IPython.core.magic_arguments.
     Catches IPython.core.error.UsageError and propagates it as a
@@ -70,6 +76,7 @@ def records_to_dataframe(records_text, kind, coerce=None):
                     
         if coerce is None:
             coerce = conf.coerce_dataframe()
+        print("coerce value: ", coerce)
         if coerce:
             coerce_pandas_df_to_numeric_datetime(df)
 
