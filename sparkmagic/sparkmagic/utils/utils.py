@@ -76,7 +76,6 @@ def records_to_dataframe(records_text, kind, coerce=None):
                     
         if coerce is None:
             coerce = conf.coerce_dataframe()
-        print("coerce value: ", coerce)
         if coerce:
             coerce_pandas_df_to_numeric_datetime(df)
 
