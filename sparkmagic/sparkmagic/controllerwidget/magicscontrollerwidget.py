@@ -6,6 +6,7 @@ from sparkmagic.controllerwidget.manageendpointwidget import ManageEndpointWidge
 from sparkmagic.controllerwidget.managesessionwidget import ManageSessionWidget
 from sparkmagic.controllerwidget.createsessionwidget import CreateSessionWidget
 from sparkmagic.livyclientlib.endpoint import Endpoint
+from sparkmagic.utils.constants import LANGS_SUPPORTED
 import sparkmagic.utils.configuration as conf
 
 
@@ -25,9 +26,8 @@ class MagicsControllerWidget(AbstractMenuWidget):
     @staticmethod
     def _get_default_endpoints():
         default_endpoints = set()
-        kernel_types = ['python', 'python3', 'scala', 'r']
 
-        for kernel_type in kernel_types:
+        for kernel_type in LANGS_SUPPORTED:
             endpoint_config = getattr(conf, 'kernel_%s_credentials' % kernel_type)()
             if all([p in endpoint_config for p in ["url", "password", "username"]]) and endpoint_config["url"] != "":
                 default_endpoints.add(Endpoint(
