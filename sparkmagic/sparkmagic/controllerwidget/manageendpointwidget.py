@@ -3,6 +3,7 @@
 from sparkmagic.controllerwidget.abstractmenuwidget import AbstractMenuWidget
 from sparkmagic.livyclientlib.exceptions import HttpClientException
 
+
 class ManageEndpointWidget(AbstractMenuWidget):
     def __init__(self, spark_controller, ipywidget_factory, ipython_display, endpoints, refresh_method):
         # This is nested
