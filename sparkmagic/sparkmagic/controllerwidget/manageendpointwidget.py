@@ -35,7 +35,7 @@ class ManageEndpointWidget(AbstractMenuWidget):
                 except HttpClientException:
                     # If we can't reach one of the default endpoints, just skip over it
                     # silently
-                    if not endpoint.is_default:
+                    if not endpoint.implicitly_added:
                         raise
 
             endpoint_widgets.append(self.ipywidget_factory.get_html(value="<br/>", width="600px"))

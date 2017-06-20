@@ -34,7 +34,7 @@ class MagicsControllerWidget(AbstractMenuWidget):
                     username=endpoint_config["username"],
                     password=endpoint_config["password"],
                     url=endpoint_config["url"],
-                    is_default=True))
+                    implicitly_added=True))
 
         return default_endpoints
 
