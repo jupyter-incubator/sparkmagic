@@ -220,7 +220,7 @@ def server_extension_default_kernel_name():
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.
-    If 'base64_password' is not set, it will fallback to to 'password' in config.
+    If 'base64_password' is not set, it will fallback to 'password' in config.
     """
     credentials = f()
     base64_decoded_credentials = {k: credentials.get(k) for k in ('username', 'password', 'url', 'auth')}
