@@ -2,6 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 from sparkmagic.controllerwidget.abstractmenuwidget import AbstractMenuWidget
 from sparkmagic.livyclientlib.exceptions import HttpClientException
+from sparkmagic.utils.sparklogger import SparkLog
 
 
 class ManageEndpointWidget(AbstractMenuWidget):
@@ -9,6 +10,7 @@ class ManageEndpointWidget(AbstractMenuWidget):
         # This is nested
         super(ManageEndpointWidget, self).__init__(spark_controller, ipywidget_factory, ipython_display, True)
 
+        self.logger = SparkLog("ManageEndpointWidget")
         self.endpoints = endpoints
         self.refresh_method = refresh_method
 
@@ -35,9 +37,10 @@ class ManageEndpointWidget(AbstractMenuWidget):
                     endpoint_widgets.append(self.get_endpoint_widget(url, endpoint))
                 except HttpClientException:
                     # If we can't reach one of the default endpoints, just skip over it
-                    # silently
                     if not endpoint.implicitly_added:
                         raise
+                    else:
+                        self.logger.info("Failed to connect to implicitly-defined endpoint at: %s" % url)
 
             endpoint_widgets.append(self.ipywidget_factory.get_html(value="<br/>", width="600px"))
         else:
