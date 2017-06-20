@@ -9,6 +9,9 @@ class Endpoint(object):
         self.username = username
         self.password = password
         self.authenticate = False if username == '' and password == '' else True
+        # implicitly_added is set to True only if the endpoint wasn't configured manually by the user through
+        # a widget, but was instead implicitly defined as an endpoint to a wrapper kernel in the configuration
+        # JSON file.
         self.implicitly_added = implicitly_added
 
     def __eq__(self, other):
