@@ -8,7 +8,7 @@ class Endpoint(object):
             raise BadUserDataException(u"URL must not be empty")
         if auth not in AUTHS_SUPPORTED:
             raise BadUserConfigurationException(u"Auth '{}' not supported".format(auth))
-        
+
         self.url = url.rstrip(u"/")
         self.username = username
         self.password = password
@@ -17,6 +17,7 @@ class Endpoint(object):
         # a widget, but was instead implicitly defined as an endpoint to a wrapper kernel in the configuration
         # JSON file.
         self.implicitly_added = implicitly_added
+        self.cookies = None
 
     def __eq__(self, other):
         if type(other) is not Endpoint:

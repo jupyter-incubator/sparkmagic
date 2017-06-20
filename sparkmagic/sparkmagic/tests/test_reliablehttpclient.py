@@ -4,6 +4,7 @@
 from mock import patch, PropertyMock, MagicMock
 from nose.tools import raises, assert_equals, with_setup, assert_is_not_none, assert_false, assert_true
 import requests
+from requests.auth import HTTPBasicAuth
 from requests_kerberos.kerberos_ import HTTPKerberosAuth
 
 from sparkmagic.livyclientlib.endpoint import Endpoint
@@ -212,11 +213,10 @@ def test_will_retry_error_no():
 
 @with_setup(_setup, _teardown)
 def test_basic_auth_check_auth():
+    endpoint = Endpoint("http://url.com", constants.AUTH_BASIC, "username", "password")
     client = ReliableHttpClient(endpoint, {}, retry_policy)
     assert_is_not_none(client._auth)
-    assert isinstance(client._auth, tuple)
-    assert_equals(1, client._auth.count(endpoint.username))
-    assert_equals(1, client._auth.count(endpoint.password))
+    assert isinstance(client._auth, HTTPBasicAuth)
 
 
 @with_setup(_setup, _teardown)
