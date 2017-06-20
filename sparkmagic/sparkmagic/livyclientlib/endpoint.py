@@ -17,10 +17,10 @@ class Endpoint(object):
     def __eq__(self, other):
         if type(other) is not Endpoint:
             return False
-        return self.url == other.url and self.username == other.username and self.password == other.password
+        return self.url == other.url and self.username == other.username and self.password == other.password and self.auth == other.auth
 
     def __hash__(self):
-        return hash((self.url, self.username, self.password))
+        return hash((self.url, self.username, self.password, self.auth))
 
     def __ne__(self, other):
         return not self == other
