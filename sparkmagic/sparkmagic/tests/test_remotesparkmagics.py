@@ -2,7 +2,7 @@ from mock import MagicMock
 from nose.tools import with_setup
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.constants import EXPECTED_ERROR_MSG
+from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, AUTH_BASIC, NO_AUTH
 from sparkmagic.magics.remotesparkmagics import RemoteSparkMagics
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
@@ -74,12 +74,12 @@ def test_add_sessions_command_parses():
     command = "add"
     name = "-s name"
     language = "-l python"
-    connection_string = "-u http://url.com -a sdf -p w"
+    connection_string = "-u http://url.com -t {} -a sdf -p w".format(AUTH_BASIC)
     line = " ".join([command, name, language, connection_string])
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", "sdf", "w"),
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", AUTH_BASIC, "sdf", "w"),
                                               False, {"kind": "pyspark"})
 
     # Skip and scala - upper case
@@ -93,7 +93,7 @@ def test_add_sessions_command_parses():
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with("name", Endpoint("http://location:port"),
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://location:port", NO_AUTH),
                                               True, {"kind": "spark"})
 
 
@@ -105,12 +105,12 @@ def test_add_sessions_command_exception():
     command = "add"
     name = "-s name"
     language = "-l python"
-    connection_string = "-u http://url.com -a sdf -p w"
+    connection_string = "-u http://url.com -t {} -a sdf -p w".format(AUTH_BASIC)
     line = " ".join([command, name, language, connection_string])
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", "sdf", "w"),
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", AUTH_BASIC, "sdf", "w"),
                                               False, {"kind": "pyspark"})
     ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(add_sessions_mock.side_effect))
@@ -132,7 +132,7 @@ def test_add_sessions_command_extra_properties():
 
     magic.spark(line)
 
-    add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com"),
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com", NO_AUTH),
                                               False, {"kind": "spark", "extra": "yes"})
     conf.override_all({})
 
@@ -145,11 +145,11 @@ def test_delete_sessions_command_parses():
     magic.spark(command)
     mock_method.assert_called_once_with("name")
 
-    command = "delete -u URL -a username -p password -i 4"
+    command = "delete -u URL -t {} -a username -p password -i 4".format(AUTH_BASIC)
     mock_method = MagicMock()
     spark_controller.delete_session_by_id = mock_method
     magic.spark(command)
-    mock_method.assert_called_once_with(Endpoint("URL", "username", "password"), 4)
+    mock_method.assert_called_once_with(Endpoint("URL", AUTH_BASIC, "username", "password"), 4)
 
 
 @with_setup(_setup, _teardown)
@@ -194,11 +194,11 @@ def test_cleanup_endpoint_command_parses():
 
     magic.spark(line)
 
-    mock_method.assert_called_once_with(Endpoint("endp"))
+    mock_method.assert_called_once_with(Endpoint("endp", NO_AUTH))
 
-    line = "cleanup -u endp -a user -p passw"
+    line = "cleanup -u endp -a user -p passw -t {}".format(AUTH_BASIC)
     magic.spark(line)
-    mock_method.assert_called_with(Endpoint("endp", "user", "passw"))
+    mock_method.assert_called_with(Endpoint("endp", AUTH_BASIC, "user", "passw"))
 
 
 @with_setup(_setup, _teardown)
@@ -284,8 +284,70 @@ def test_run_spark_command_parses():
     result = magic.spark(line, cell)
 
     magic.execute_spark.assert_called_once_with("cell code",
-                                                None, "sample", None, None, "sessions_name")
+                                                None, "sample", None, None, "sessions_name", None)
 
+
+@with_setup(_setup, _teardown)
+def test_run_spark_command_parses_with_coerce():
+    magic.execute_spark = MagicMock()
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    coer = "--coerce"
+    coerce_value = "True"
+    line = " ".join([command, name, context, context_name, meth, method_name, coer, coerce_value])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    magic.execute_spark.assert_called_once_with("cell code",
+                                                None, "sample", None, None, "sessions_name", True)
+
+
+@with_setup(_setup, _teardown)
+def test_run_spark_command_parses_with_coerce_false():
+    magic.execute_spark = MagicMock()
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    coer = "--coerce"
+    coerce_value = "False"
+    line = " ".join([command, name, context, context_name, meth, method_name, coer, coerce_value])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    magic.execute_spark.assert_called_once_with("cell code",
+                                                None, "sample", None, None, "sessions_name", False)
+
+
+@with_setup(_setup, _teardown)
+def test_run_sql_command_parses_with_coerce_false():
+    magic.execute_sqlquery = MagicMock()
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "sql"
+    meth = "-m"
+    method_name = "sample"
+    coer = "--coerce"
+    coerce_value = "False"
+    line = " ".join([command, name, context, context_name, meth, method_name, coer, coerce_value])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    magic.execute_sqlquery.assert_called_once_with("cell code",
+                                                "sample", None, None, "sessions_name", None, False, False)
 
 
 @with_setup(_setup, _teardown)
@@ -305,7 +367,7 @@ def test_run_spark_with_store_command_parses():
 
     result = magic.spark(line, cell)
     magic.execute_spark.assert_called_once_with("cell code",
-                                                "var_name", "sample", None, None, "sessions_name")
+                                                "var_name", "sample", None, None, "sessions_name", None)
     
 
 @with_setup(_setup, _teardown)
@@ -322,13 +384,15 @@ def test_run_spark_with_store_correct_calls():
     method_name = "sample"
     output = "-o"
     output_var = "var_name"
-    line = " ".join([command, name, context, context_name, meth, method_name, output, output_var])
+    coer = "--coerce"
+    coerce_value = "True"
+    line = " ".join([command, name, context, context_name, meth, method_name, output, output_var, coer, coerce_value])
     cell = "cell code"
 
     result = magic.spark(line, cell)
 
     run_cell_method.assert_any_call(Command(cell), name)
-    run_cell_method.assert_any_call(SparkStoreCommand(output_var, samplemethod=method_name), name)
+    run_cell_method.assert_any_call(SparkStoreCommand(output_var, samplemethod=method_name, coerce=True), name)
 
 
 @with_setup(_setup, _teardown)

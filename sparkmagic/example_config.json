@@ -2,13 +2,15 @@
   "kernel_python_credentials" : {
     "username": "",
     "password": "",
-    "url": "http://localhost:8998"
+    "url": "http://localhost:8998",
+    "auth": "None"
   },
 
   "kernel_scala_credentials" : {
     "username": "",
     "password": "",
-    "url": "http://localhost:8998"
+    "url": "http://localhost:8998",
+    "auth": "None"
   },
   "kernel_r_credentials": {
     "username": "",
@@ -55,6 +57,7 @@
   },
 
   "use_auto_viz": true,
+  "coerce_dataframe": true,
   "max_results_sql": 2500,
   "pyspark_dataframe_encoding": "utf-8",
   

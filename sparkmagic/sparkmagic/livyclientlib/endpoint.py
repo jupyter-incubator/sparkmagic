@@ -2,13 +2,13 @@ from .exceptions import BadUserDataException
 
 
 class Endpoint(object):
-    def __init__(self, url, username="", password="", implicitly_added=False):
+    def __init__(self, url, auth, username="", password="", implicitly_added=False):
         if not url:
             raise BadUserDataException(u"URL must not be empty")
         self.url = url.rstrip(u"/")
         self.username = username
         self.password = password
-        self.authenticate = False if username == '' and password == '' else True
+        self.auth = auth
         # implicitly_added is set to True only if the endpoint wasn't configured manually by the user through
         # a widget, but was instead implicitly defined as an endpoint to a wrapper kernel in the configuration
         # JSON file.
