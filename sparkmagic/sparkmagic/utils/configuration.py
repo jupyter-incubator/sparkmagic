@@ -217,6 +217,11 @@ def server_extension_default_kernel_name():
     return "pysparkkernel"
 
 
+@_with_override
+def authentication_cookie_name():
+    return None
+
+
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.

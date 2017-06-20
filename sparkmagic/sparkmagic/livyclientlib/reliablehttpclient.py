@@ -3,6 +3,7 @@
 import json
 from time import sleep
 import requests
+from requests.auth import HTTPBasicAuth
 from requests_kerberos import HTTPKerberosAuth, REQUIRED
 
 import sparkmagic.utils.configuration as conf
@@ -23,7 +24,7 @@ class ReliableHttpClient(object):
         if self._endpoint.auth == constants.AUTH_KERBEROS:
             self._auth = HTTPKerberosAuth(mutual_authentication=REQUIRED)
         elif self._endpoint.auth == constants.AUTH_BASIC:
-            self._auth = (self._endpoint.username, self._endpoint.password)
+            self._auth = HTTPBasicAuth(self._endpoint.username, self._endpoint.password)
         elif self._endpoint.auth != constants.NO_AUTH:
             raise BadUserConfigurationException(u"Unsupported auth %s" %self._endpoint.auth)
 
@@ -63,10 +64,11 @@ class ReliableHttpClient(object):
                         r = function(url, headers=self._headers, data=json.dumps(data), verify=self.verify_ssl)
                 else:
                     if data is None:
-                        r = function(url, headers=self._headers, auth=self._auth, verify=self.verify_ssl)
+                        r = function(url, headers=self._headers, auth=self._auth, verify=self.verify_ssl,
+                                     cookies = self._endpoint.cookies)
                     else:
                         r = function(url, headers=self._headers, auth=self._auth,
-                                     data=json.dumps(data), verify=self.verify_ssl)
+                                     data=json.dumps(data), verify=self.verify_ssl, cookies = self._endpoint.cookies)
             except requests.exceptions.RequestException as e:
                 error = True
                 r = None
@@ -78,6 +80,8 @@ class ReliableHttpClient(object):
                 error = False
                 status = r.status_code
                 text = r.text
+                if self._endpoint.auth == constants.AUTH_BASIC and self._endpoint.password:
+                    self._endpoint.password = ""
 
             if error or status not in accepted_status_codes:
                 if self._retry_policy.should_retry(status, error, retry_count):
@@ -90,4 +94,8 @@ class ReliableHttpClient(object):
                 else:
                     raise HttpClientException(u"Invalid status code '{}' from {} with error payload: {}"
                                               .format(status, url, text))
+
+            cookie_name = conf.authentication_cookie_name()
+            if cookie_name and r.cookies.get(cookie_name) and not self._endpoint.cookies:
+                self._endpoint.cookies = {cookie_name : r.cookies.get(cookie_name)}
             return r
