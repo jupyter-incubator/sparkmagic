@@ -245,5 +245,5 @@ def _credentials_override(f):
     return base64_decoded_credentials
 
 @_with_override
-def get_custom_headers():
+def custom_headers():
     return {}

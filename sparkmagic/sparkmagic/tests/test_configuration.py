@@ -84,4 +84,4 @@ def test_custom_headers():
     headers = { 'header1': 'value1'}
     overrides = { conf.custom_headers.__name__: headers }
     conf.override_all(overrides)
-    assert_equals(conf.get_custom_headers(), { 'header1': 'value1'})
+    assert_equals(conf.custom_headers(), { 'header1': 'value1'})

@@ -15,7 +15,7 @@ class LivyReliableHttpClient(object):
     @staticmethod
     def from_endpoint(endpoint):
         headers = {"Content-Type": "application/json" }
-        headers.update(conf.get_custom_headers())
+        headers.update(conf.custom_headers())
         retry_policy = LinearRetryPolicy(seconds_to_sleep=5, max_retries=5)
         return LivyReliableHttpClient(ReliableHttpClient(endpoint, headers, retry_policy))
 
