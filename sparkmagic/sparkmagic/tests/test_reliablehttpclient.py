@@ -232,13 +232,3 @@ def test_kerberos_auth_check_auth():
     client = ReliableHttpClient(endpoint, {}, retry_policy)
     assert_is_not_none(client._auth)
     assert isinstance(client._auth, HTTPKerberosAuth)
-
-
-@with_setup(_setup, _teardown)
-def test_invalid_auth_check_auth():
-    endpoint = Endpoint("http://url.com", "Invalid_AUTH", "username", "password")
-    try:
-        client = ReliableHttpClient(endpoint, {}, retry_policy)
-        assert False
-    except BadUserConfigurationException:
-        assert True
