@@ -3,6 +3,7 @@
 
 from .linearretrypolicy import LinearRetryPolicy
 from .reliablehttpclient import ReliableHttpClient
+import sparkmagic.utils.configuration as conf
 
 
 class LivyReliableHttpClient(object):
