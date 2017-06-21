@@ -244,3 +244,6 @@ def _credentials_override(f):
         base64_decoded_credentials['auth'] = get_auth_value(base64_decoded_credentials['username'], base64_decoded_credentials['password'])
     return base64_decoded_credentials
 
+@_with_override
+def get_custom_headers():
+    return {}
