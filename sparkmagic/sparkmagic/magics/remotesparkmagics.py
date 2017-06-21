@@ -13,7 +13,7 @@ from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
-from sparkmagic.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
+from sparkmagic.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA, NO_AUTH
 from sparkmagic.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
@@ -54,7 +54,7 @@ class RemoteSparkMagics(SparkMagicBase):
     @argument("-u", "--url", type=str, default=None, help="URL for Livy endpoint")
     @argument("-a", "--user", type=str, default="", help="Username for HTTP access to Livy endpoint")
     @argument("-p", "--password", type=str, default="", help="Password for HTTP access to Livy endpoint")
-    @argument("-t", "--auth", type=str, help="Auth type for HTTP access to Livy endpoint. [Kerberos, None, Basic Auth]")
+    @argument("-t", "--auth", type=str, default=None, help="Auth type for HTTP access to Livy endpoint. [Kerberos, None, Basic Auth]")
     @argument("-l", "--language", type=str, default=None,
               help="Language for Livy session; one of {}".format(', '.join([LANG_PYTHON, LANG_SCALA, LANG_R])))
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
@@ -111,6 +111,11 @@ class RemoteSparkMagics(SparkMagicBase):
         args = parse_argstring_or_throw(self.spark, user_input)
 
         subcommand = args.command[0].lower()
+
+        if args.auth is None:
+            args.auth = conf.get_auth_value(args.user, args.password)
+        else:
+            args.auth = args.auth
 
         # info
         if subcommand == "info":

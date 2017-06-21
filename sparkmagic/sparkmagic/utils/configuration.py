@@ -44,6 +44,14 @@ def get_livy_kind(language):
     else:
         raise BadUserConfigurationException("Cannot get session kind for {}.".format(language))
 
+
+def get_auth_value(username, password):
+    if username == '' and password == '':
+        return constants.NO_AUTH
+    
+    return constants.AUTH_BASIC
+
+
 # Configs
 
  
@@ -233,9 +241,6 @@ def _credentials_override(f):
             msg = "base64_password for %s contains invalid base64 string: %s %s" % (f.__name__, exception_type, exception)
             raise BadUserConfigurationException(msg)
     if base64_decoded_credentials['auth'] is None:
-        if base64_decoded_credentials['username'] == '' and base64_decoded_credentials['password'] == '':
-            base64_decoded_credentials['auth'] = constants.NO_AUTH
-        else:
-            base64_decoded_credentials['auth'] = constants.AUTH_BASIC
+        base64_decoded_credentials['auth'] = get_auth_value(base64_decoded_credentials['username'], base64_decoded_credentials['password'])
     return base64_decoded_credentials
 

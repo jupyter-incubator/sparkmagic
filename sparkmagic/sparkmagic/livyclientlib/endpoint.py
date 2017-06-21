@@ -1,10 +1,14 @@
-from .exceptions import BadUserDataException
+from .exceptions import BadUserDataException, BadUserConfigurationException
+from sparkmagic.utils.constants import AUTHS_SUPPORTED
 
 
 class Endpoint(object):
     def __init__(self, url, auth, username="", password="", implicitly_added=False):
         if not url:
             raise BadUserDataException(u"URL must not be empty")
+        if auth not in AUTHS_SUPPORTED:
+            raise BadUserConfigurationException(u"Auth '{}' not supported".format(auth))
+        
         self.url = url.rstrip(u"/")
         self.username = username
         self.password = password
