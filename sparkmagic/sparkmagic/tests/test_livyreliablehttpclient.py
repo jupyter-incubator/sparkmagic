@@ -2,6 +2,8 @@ from mock import MagicMock
 from nose.tools import assert_equals
 
 from sparkmagic.livyclientlib.livyreliablehttpclient import LivyReliableHttpClient
+from sparkmagic.livyclientlib.endpoint import Endpoint
+import sparkmagic.utils.configuration as conf
 
 
 def test_post_statement():
@@ -60,3 +62,11 @@ def test_get_all_session_logs():
     assert_equals(out, http_client.get.return_value.json.return_value)
     http_client.get.assert_called_once_with("/sessions/42/log?from=0", [200])
 
+def test_custom_headers():
+    custom_headers = {"header1": "value1"}
+    overrides = { conf.custom_headers.__name__: custom_headers }
+    conf.override_all(overrides)
+    endpoint = Endpoint("http://url.com")
+    client = LivyReliableHttpClient.from_endpoint(endpoint)
+    headers = client.get_headers()
+    assert_equals(custom_headers.items() <= headers.items(), True)

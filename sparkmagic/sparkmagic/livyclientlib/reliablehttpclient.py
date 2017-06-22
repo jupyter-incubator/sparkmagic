@@ -34,6 +34,9 @@ class ReliableHttpClient(object):
             self.logger.debug(u"ATTENTION: Will ignore SSL errors. This might render you vulnerable to attacks.")
             requests.packages.urllib3.disable_warnings()
 
+    def get_headers(self):
+        return self._headers
+
     def compose_url(self, relative_url):
         r_u = "/{}".format(relative_url.rstrip(u"/").lstrip(u"/"))
         return self._endpoint.url + r_u
