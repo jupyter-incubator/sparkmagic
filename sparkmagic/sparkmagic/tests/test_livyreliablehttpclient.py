@@ -4,6 +4,7 @@ from nose.tools import assert_equals
 from sparkmagic.livyclientlib.livyreliablehttpclient import LivyReliableHttpClient
 from sparkmagic.livyclientlib.endpoint import Endpoint
 import sparkmagic.utils.configuration as conf
+import sparkmagic.utils.constants as constants
 
 
 def test_post_statement():
@@ -66,7 +67,7 @@ def test_custom_headers():
     custom_headers = {"header1": "value1"}
     overrides = { conf.custom_headers.__name__: custom_headers }
     conf.override_all(overrides)
-    endpoint = Endpoint("http://url.com")
+    endpoint = Endpoint("http://url.com", constants.NO_AUTH)
     client = LivyReliableHttpClient.from_endpoint(endpoint)
     headers = client.get_headers()
     assert_equals(custom_headers.items() <= headers.items(), True)
