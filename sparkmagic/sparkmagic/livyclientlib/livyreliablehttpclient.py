@@ -41,7 +41,7 @@ class LivyReliableHttpClient(object):
         return self._http_client.get(self._session_url(session_id) + "/log?from=0", [200]).json()
 
     def get_headers(self):
-	return self._http_client.get_headers()
+        return self._http_client.get_headers()
 
     @staticmethod
     def _session_url(session_id):
