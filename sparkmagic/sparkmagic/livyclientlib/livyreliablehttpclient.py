@@ -3,6 +3,7 @@
 
 from .linearretrypolicy import LinearRetryPolicy
 from .reliablehttpclient import ReliableHttpClient
+import sparkmagic.utils.configuration as conf
 
 
 class LivyReliableHttpClient(object):
@@ -13,9 +14,10 @@ class LivyReliableHttpClient(object):
 
     @staticmethod
     def from_endpoint(endpoint):
+        headers = {"Content-Type": "application/json" }
+        headers.update(conf.custom_headers())
         retry_policy = LinearRetryPolicy(seconds_to_sleep=5, max_retries=5)
-        return LivyReliableHttpClient(ReliableHttpClient(endpoint, {"Content-Type": "application/json"},
-                                                         retry_policy))
+        return LivyReliableHttpClient(ReliableHttpClient(endpoint, headers, retry_policy))
 
     def post_statement(self, session_id, data):
         return self._http_client.post(self._statements_url(session_id), [201], data).json()
@@ -37,6 +39,9 @@ class LivyReliableHttpClient(object):
 
     def get_all_session_logs(self, session_id):
         return self._http_client.get(self._session_url(session_id) + "/log?from=0", [200]).json()
+
+    def get_headers(self):
+        return self._http_client.get_headers()
 
     @staticmethod
     def _session_url(session_id):

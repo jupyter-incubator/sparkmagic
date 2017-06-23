@@ -2,10 +2,17 @@
   "kernel_python_credentials" : {
     "username": "",
     "password": "",
-    "url": "http://localhost:8998"
+    "url": "http://localhost:8998",
+    "auth": "None"
   },
 
   "kernel_scala_credentials" : {
+    "username": "",
+    "password": "",
+    "url": "http://localhost:8998",
+    "auth": "None"
+  },
+  "kernel_r_credentials": {
     "username": "",
     "password": "",
     "url": "http://localhost:8998"
@@ -50,6 +57,7 @@
   },
 
   "use_auto_viz": true,
+  "coerce_dataframe": true,
   "max_results_sql": 2500,
   "pyspark_dataframe_encoding": "utf-8",
   
@@ -57,5 +65,6 @@
   "livy_server_heartbeat_timeout_seconds": 0,
   "heartbeat_retry_seconds": 10,
 
-  "server_extension_default_kernel_name": "pysparkkernel"
+  "server_extension_default_kernel_name": "pysparkkernel",
+  "custom_headers": {}
 }

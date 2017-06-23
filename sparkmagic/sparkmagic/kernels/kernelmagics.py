@@ -12,7 +12,9 @@ from IPython.core.magic_arguments import argument, magic_arguments
 from hdijupyterutils.utils import generate_uuid
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.utils import get_livy_kind, parse_argstring_or_throw
+from sparkmagic.utils.configuration import get_livy_kind
+from sparkmagic.utils import constants
+from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import LANGS_SUPPORTED
 from sparkmagic.livyclientlib.command import Command
@@ -210,12 +212,17 @@ class KernelMagics(SparkMagicBase):
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the dataframe on the server for storing")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from dataframe")
+    @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
+                                                                        "of the dataframe or not (pass False)")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(u""):
             args = parse_argstring_or_throw(self.spark, line)
-            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None)
+
+            coerce = get_coerce_value(args.coerce)
+
+            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
         else:
             return
 
@@ -229,13 +236,18 @@ class KernelMagics(SparkMagicBase):
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the server for SQL queries")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
+    @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
+                                                                        "of the dataframe or not (pass False)")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring_or_throw(self.sql, line)
+            
+            coerce = get_coerce_value(args.coerce)
+
             return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                         None, args.output, args.quiet)
+                                         None, args.output, args.quiet, coerce)
         else:
             return
 
@@ -349,23 +361,25 @@ class KernelMagics(SparkMagicBase):
     @argument("-u", "--username", type=str, help="Username to use.")
     @argument("-p", "--password", type=str, help="Password to use.")
     @argument("-s", "--server", type=str, help="Url of server to use.")
+    @argument("-t", "--auth", type=str, help="Auth type for authentication")
     @_event
     def _do_not_call_change_endpoint(self, line, cell="", local_ns=None):
         args = parse_argstring_or_throw(self._do_not_call_change_endpoint, line)
         username = args.username
         password = args.password
         server = args.server
+        auth = args.auth
 
         if self.session_started:
             error = u"Cannot change the endpoint if a session has been started."
             raise BadUserDataException(error)
 
-        self.endpoint = Endpoint(server, username, password)
+        self.endpoint = Endpoint(server, auth, username, password)
 
     def refresh_configuration(self):
         credentials = getattr(conf, 'base64_kernel_' + self.language + '_credentials')()
-        (username, password, url) = (credentials['username'], credentials['password'], credentials['url'])
-        self.endpoint = Endpoint(url, username, password)
+        (username, password, auth, url) = (credentials['username'], credentials['password'], credentials['auth'], credentials['url'])
+        self.endpoint = Endpoint(url, auth, username, password)
 
     def get_session_settings(self, line, force):
         line = line.strip()
