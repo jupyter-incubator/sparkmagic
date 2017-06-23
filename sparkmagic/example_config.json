@@ -65,5 +65,6 @@
   "livy_server_heartbeat_timeout_seconds": 0,
   "heartbeat_retry_seconds": 10,
 
-  "server_extension_default_kernel_name": "pysparkkernel"
+  "server_extension_default_kernel_name": "pysparkkernel",
+  "custom_headers": {}
 }
