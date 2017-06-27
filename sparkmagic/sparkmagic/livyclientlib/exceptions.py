@@ -46,6 +46,7 @@ class BadUserConfigurationException(LivyClientLibException):
 class BadUserDataException(LivyClientLibException):
     """An exception that is thrown when data provided by the user is invalid
     in some way."""
+    
 
 class SqlContextNotFoundException(LivyClientLibException):
     """Exception that is thrown when the SQL context is not found."""

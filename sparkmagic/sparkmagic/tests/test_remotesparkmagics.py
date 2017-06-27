@@ -284,8 +284,70 @@ def test_run_spark_command_parses():
     result = magic.spark(line, cell)
 
     magic.execute_spark.assert_called_once_with("cell code",
-                                                None, "sample", None, None, "sessions_name")
+                                                None, "sample", None, None, "sessions_name", None)
 
+
+@with_setup(_setup, _teardown)
+def test_run_spark_command_parses_with_coerce():
+    magic.execute_spark = MagicMock()
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    coer = "--coerce"
+    coerce_value = "True"
+    line = " ".join([command, name, context, context_name, meth, method_name, coer, coerce_value])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    magic.execute_spark.assert_called_once_with("cell code",
+                                                None, "sample", None, None, "sessions_name", True)
+
+
+@with_setup(_setup, _teardown)
+def test_run_spark_command_parses_with_coerce_false():
+    magic.execute_spark = MagicMock()
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    coer = "--coerce"
+    coerce_value = "False"
+    line = " ".join([command, name, context, context_name, meth, method_name, coer, coerce_value])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    magic.execute_spark.assert_called_once_with("cell code",
+                                                None, "sample", None, None, "sessions_name", False)
+
+
+@with_setup(_setup, _teardown)
+def test_run_sql_command_parses_with_coerce_false():
+    magic.execute_sqlquery = MagicMock()
+
+    command = "-s"
+    name = "sessions_name"
+    context = "-c"
+    context_name = "sql"
+    meth = "-m"
+    method_name = "sample"
+    coer = "--coerce"
+    coerce_value = "False"
+    line = " ".join([command, name, context, context_name, meth, method_name, coer, coerce_value])
+    cell = "cell code"
+
+    result = magic.spark(line, cell)
+
+    magic.execute_sqlquery.assert_called_once_with("cell code",
+                                                "sample", None, None, "sessions_name", None, False, False)
 
 
 @with_setup(_setup, _teardown)
@@ -305,7 +367,7 @@ def test_run_spark_with_store_command_parses():
 
     result = magic.spark(line, cell)
     magic.execute_spark.assert_called_once_with("cell code",
-                                                "var_name", "sample", None, None, "sessions_name")
+                                                "var_name", "sample", None, None, "sessions_name", None)
     
 
 @with_setup(_setup, _teardown)
@@ -322,13 +384,15 @@ def test_run_spark_with_store_correct_calls():
     method_name = "sample"
     output = "-o"
     output_var = "var_name"
-    line = " ".join([command, name, context, context_name, meth, method_name, output, output_var])
+    coer = "--coerce"
+    coerce_value = "True"
+    line = " ".join([command, name, context, context_name, meth, method_name, output, output_var, coer, coerce_value])
     cell = "cell code"
 
     result = magic.spark(line, cell)
 
     run_cell_method.assert_any_call(Command(cell), name)
-    run_cell_method.assert_any_call(SparkStoreCommand(output_var, samplemethod=method_name), name)
+    run_cell_method.assert_any_call(SparkStoreCommand(output_var, samplemethod=method_name, coerce=True), name)
 
 
 @with_setup(_setup, _teardown)

@@ -9,7 +9,7 @@ from .exceptions import DataFrameParseException, BadUserDataException
 
 
 class SQLQuery(ObjectWithGuid):
-    def __init__(self, query, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None):
+    def __init__(self, query, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None, coerce=None):
         super(SQLQuery, self).__init__()
         
         if samplemethod is None:
@@ -33,6 +33,7 @@ class SQLQuery(ObjectWithGuid):
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
+        self._coerce = coerce
 
     def to_command(self, kind, sql_context_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
@@ -56,7 +57,7 @@ class SQLQuery(ObjectWithGuid):
             (success, records_text) = command.execute(session)
             if not success:
                 raise BadUserDataException(records_text)
-            result = records_to_dataframe(records_text, session.kind)
+            result = records_to_dataframe(records_text, session.kind, self._coerce)
         except Exception as e:
             self._spark_events.emit_sql_execution_end_event(session.guid, session.kind, session.id, self.guid,
                                                             command_guid, False, e.__class__.__name__, str(e))
@@ -117,7 +118,8 @@ class SQLQuery(ObjectWithGuid):
         return self.query == other.query and \
             self.samplemethod == other.samplemethod and \
             self.maxrows == other.maxrows and \
-            self.samplefraction == other.samplefraction
+            self.samplefraction == other.samplefraction and \
+            self._coerce == other._coerce
 
     def __ne__(self, other):
         return not (self == other)

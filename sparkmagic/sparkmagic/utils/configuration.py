@@ -8,8 +8,9 @@ from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
 from hdijupyterutils.configuration import with_override
 
-from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM
-from .utils import get_livy_kind
+from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
+    LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 import sparkmagic.utils.constants as constants
 
@@ -27,6 +28,28 @@ def override_all(obj):
 
 
 _with_override = with_override(d, path)
+
+
+# Helpers
+
+def get_livy_kind(language):
+    if language == LANG_SCALA:
+        return SESSION_KIND_SPARK
+    elif language == LANG_PYTHON:
+        return SESSION_KIND_PYSPARK
+    elif language == LANG_PYTHON3:
+        return SESSION_KIND_PYSPARK3
+    elif language == LANG_R:
+        return SESSION_KIND_SPARKR
+    else:
+        raise BadUserConfigurationException("Cannot get session kind for {}.".format(language))
+
+
+def get_auth_value(username, password):
+    if username == '' and password == '':
+        return constants.NO_AUTH
+    
+    return constants.AUTH_BASIC
 
 
 # Configs
@@ -153,6 +176,11 @@ def ignore_ssl_errors():
 
 
 @_with_override
+def coerce_dataframe():
+    return True
+
+
+@_with_override
 def use_auto_viz():
     return True
 
@@ -200,7 +228,7 @@ def server_extension_default_kernel_name():
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.
-    If 'base64_password' is not set, it will fallback to to 'password' in config.
+    If 'base64_password' is not set, it will fallback to 'password' in config.
     """
     credentials = f()
     base64_decoded_credentials = {k: credentials.get(k) for k in ('username', 'password', 'url', 'auth')}
@@ -213,9 +241,10 @@ def _credentials_override(f):
             msg = "base64_password for %s contains invalid base64 string: %s %s" % (f.__name__, exception_type, exception)
             raise BadUserConfigurationException(msg)
     if base64_decoded_credentials['auth'] is None:
-        if base64_decoded_credentials['username'] == '' and base64_decoded_credentials['password'] == '':
-            base64_decoded_credentials['auth'] = constants.NO_AUTH
-        else:
-            base64_decoded_credentials['auth'] = constants.AUTH_BASIC
+        base64_decoded_credentials['auth'] = get_auth_value(base64_decoded_credentials['username'], base64_decoded_credentials['password'])
     return base64_decoded_credentials
 
+
+@_with_override
+def custom_headers():
+    return {}

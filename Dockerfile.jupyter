@@ -2,6 +2,11 @@ FROM jupyter/base-notebook:d0b2d159cc6c
 
 ARG dev_mode=false
 
+USER root
+
+# This is needed because requests-kerberos fails to install on debian due to missing linux headers
+RUN conda install requests-kerberos -y
+
 USER $NB_USER
 
 # Install sparkmagic - if DEV_MODE is set, use the one in the host directory.
