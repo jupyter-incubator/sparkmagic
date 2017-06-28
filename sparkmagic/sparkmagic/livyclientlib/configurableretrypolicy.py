@@ -14,7 +14,7 @@ class ConfigurableRetryPolicy(LinearRetryPolicy):
         super(ConfigurableRetryPolicy, self).__init__(-1, max_retries)
 
         # If user configured to an empty list, let's make this behave as
-        # a Linear Retry Policy by assigning a list of 1 element.abs
+        # a Linear Retry Policy by assigning a list of 1 element.
         if len(retry_seconds_to_sleep_list) == 0:
             retry_seconds_to_sleep_list = [5]
         elif not all(n > 0 for n in retry_seconds_to_sleep_list):
