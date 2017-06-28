@@ -10,7 +10,7 @@ from hdijupyterutils.configuration import with_override
 
 from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
     LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
-    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3, CONFIGURABLE_RETRY
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 import sparkmagic.utils.constants as constants
 
@@ -225,6 +225,28 @@ def server_extension_default_kernel_name():
     return "pysparkkernel"
 
 
+@_with_override
+def custom_headers():
+    return {}
+
+
+@_with_override
+def retry_policy():
+    return CONFIGURABLE_RETRY
+
+
+@_with_override
+def retry_seconds_to_sleep_list():
+    return [0.2, 0.5, 1, 3, 5]
+
+
+@_with_override
+def configurable_retry_policy_max_retries():
+    # Sum of default values is ~10 seconds.
+    # Plus 15 seconds more wanted, that's 3 more 5 second retries.
+    return 8
+
+
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.
@@ -243,8 +265,3 @@ def _credentials_override(f):
     if base64_decoded_credentials['auth'] is None:
         base64_decoded_credentials['auth'] = get_auth_value(base64_decoded_credentials['username'], base64_decoded_credentials['password'])
     return base64_decoded_credentials
-
-
-@_with_override
-def custom_headers():
-    return {}
