@@ -16,10 +16,10 @@ def test_configuration_override_base64_password():
     kpc = { 'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L', "auth": AUTH_BASIC }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    conf.override(conf.status_sleep_seconds.__name__, 1)
+    conf.override(conf.livy_session_startup_timeout_seconds.__name__, 1)
     assert_equals(conf.d, { conf.kernel_python_credentials.__name__: kpc,
-                                     conf.status_sleep_seconds.__name__: 1 })
-    assert_equals(conf.status_sleep_seconds(), 1)
+                                     conf.livy_session_startup_timeout_seconds.__name__: 1 })
+    assert_equals(conf.livy_session_startup_timeout_seconds(), 1)
     assert_equals(conf.base64_kernel_python_credentials(), { 'username': 'U', 'password': 'password', 'url': 'L', 'auth': AUTH_BASIC })
 
 
@@ -44,10 +44,10 @@ def test_configuration_override_fallback_to_password():
     kpc = { 'username': 'U', 'password': 'P', 'url': 'L', 'auth': NO_AUTH }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    conf.override(conf.status_sleep_seconds.__name__, 1)
+    conf.override(conf.livy_session_startup_timeout_seconds.__name__, 1)
     assert_equals(conf.d, { conf.kernel_python_credentials.__name__: kpc,
-                                     conf.status_sleep_seconds.__name__: 1 })
-    assert_equals(conf.status_sleep_seconds(), 1)
+                                     conf.livy_session_startup_timeout_seconds.__name__: 1 })
+    assert_equals(conf.livy_session_startup_timeout_seconds(), 1)
     assert_equals(conf.base64_kernel_python_credentials(), kpc)
 
 
@@ -56,10 +56,10 @@ def test_configuration_override_work_with_empty_password():
     kpc = { 'username': 'U', 'base64_password': '', 'password': '', 'url': '', 'auth': AUTH_BASIC }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    conf.override(conf.status_sleep_seconds.__name__, 1)
+    conf.override(conf.livy_session_startup_timeout_seconds.__name__, 1)
     assert_equals(conf.d, { conf.kernel_python_credentials.__name__: kpc,
-                                     conf.status_sleep_seconds.__name__: 1 })
-    assert_equals(conf.status_sleep_seconds(), 1)
+                                     conf.livy_session_startup_timeout_seconds.__name__: 1 })
+    assert_equals(conf.livy_session_startup_timeout_seconds(), 1)
     assert_equals(conf.base64_kernel_python_credentials(),  { 'username': 'U', 'password': '', 'url': '', 'auth': AUTH_BASIC })
 
 
@@ -69,7 +69,7 @@ def test_configuration_raise_error_for_bad_base64_password():
     kpc = { 'username': 'U', 'base64_password': 'P', 'url': 'L' }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    conf.override(conf.status_sleep_seconds.__name__, 1)
+    conf.override(conf.livy_session_startup_timeout_seconds.__name__, 1)
     conf.base64_kernel_python_credentials()
 
 
