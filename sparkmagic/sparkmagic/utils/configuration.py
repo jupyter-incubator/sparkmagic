@@ -135,16 +135,6 @@ def events_handler_class():
 
 
 @_with_override
-def status_sleep_seconds():
-    return 2
-
-
-@_with_override
-def statement_sleep_seconds():
-    return 2
-
-
-@_with_override
 def wait_for_idle_timeout_seconds():
     return 15
 
