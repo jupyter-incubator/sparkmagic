@@ -44,13 +44,13 @@ class Command(ObjectWithGuid):
             return output
 
     def _get_statement_output(self, session, statement_id):
+        retries = 1
+        
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
             status = statement[u"state"].lower()
 
             self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
-
-            retries = 1
 
             if status not in FINAL_STATEMENT_STATUS:
                 session.sleep(retries)
