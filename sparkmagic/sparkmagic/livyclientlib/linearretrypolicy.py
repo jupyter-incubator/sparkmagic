@@ -8,12 +8,12 @@ class LinearRetryPolicy(object):
 
     def __init__(self, seconds_to_sleep, max_retries):
         self._seconds_to_sleep = seconds_to_sleep
-        self._max_retries = max_retries
+        self.max_retries = max_retries
 
     def should_retry(self, status_code, error, retry_count):
         if None in (status_code, retry_count):
             return False
-        return (status_code >= 500 and retry_count <= self._max_retries) or error
+        return (status_code >= 500 and retry_count <= self.max_retries) or error
 
     def seconds_to_sleep(self, retry_count):
         return self._seconds_to_sleep
