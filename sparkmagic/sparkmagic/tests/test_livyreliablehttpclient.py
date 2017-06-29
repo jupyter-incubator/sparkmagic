@@ -5,6 +5,9 @@ from sparkmagic.livyclientlib.livyreliablehttpclient import LivyReliableHttpClie
 from sparkmagic.livyclientlib.endpoint import Endpoint
 import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
+from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
+from sparkmagic.livyclientlib.configurableretrypolicy import ConfigurableRetryPolicy
+from sparkmagic.livyclientlib.linearretrypolicy import LinearRetryPolicy
 
 
 def test_post_statement():
@@ -74,3 +77,33 @@ def test_custom_headers():
     assert_equals(len(headers), 2)
     assert_equals("Content-Type" in headers, True)
     assert_equals("header1" in headers, True)
+
+
+def test_retry_policy():
+    # Default is configurable retry
+    times = conf.retry_seconds_to_sleep_list()
+    max_retries = conf.configurable_retry_policy_max_retries()
+    policy = LivyReliableHttpClient._get_retry_policy()
+    assert type(policy) is ConfigurableRetryPolicy
+    assert_equals(times, policy.retry_seconds_to_sleep_list)
+    assert_equals(max_retries, policy.max_retries)
+
+    # Configure to linear retry
+    _override_policy(constants.LINEAR_RETRY)
+    policy = LivyReliableHttpClient._get_retry_policy()
+    assert type(policy) is LinearRetryPolicy
+    assert_equals(5, policy.seconds_to_sleep(1))
+    assert_equals(5, policy.max_retries)
+
+    # Configure to something invalid
+    _override_policy("garbage")
+    try:
+        policy = LivyReliableHttpClient._get_retry_policy()
+        assert False
+    except BadUserConfigurationException:
+        assert True
+
+
+def _override_policy(policy):
+    overrides = { conf.retry_policy.__name__: policy }
+    conf.override_all(overrides)
