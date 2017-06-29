@@ -50,8 +50,11 @@ class Command(ObjectWithGuid):
 
             self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
 
+            retries = 1
+
             if status not in FINAL_STATEMENT_STATUS:
-                session.sleep()
+                session.sleep(retries)
+                retries += 1
             else:                
                 statement_output = statement[u"output"]
 

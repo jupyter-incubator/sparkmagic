@@ -9,6 +9,7 @@ import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.utils import get_sessions_info_html
+from .configurableretrypolicy import ConfigurableRetryPolicy
 from .command import Command
 from .exceptions import LivyClientTimeoutException, \
     LivyUnexpectedStatusException, BadUserDataException, SqlContextNotFoundException
@@ -76,12 +77,9 @@ class LivySession(ObjectWithGuid):
             spark_events = SparkEvents()
         self._spark_events = spark_events
 
-        status_sleep_seconds = conf.status_sleep_seconds()
-        statement_sleep_seconds = conf.statement_sleep_seconds()
+        self._policy = ConfigurableRetryPolicy(retry_seconds_to_sleep_list=[0.2, 0.5, 0.5, 1, 1, 2], max_retries=5000)
         wait_for_idle_timeout_seconds = conf.wait_for_idle_timeout_seconds()
 
-        assert status_sleep_seconds > 0
-        assert statement_sleep_seconds > 0
         assert wait_for_idle_timeout_seconds > 0
 
         self.logger = SparkLog(u"LivySession")
@@ -94,8 +92,6 @@ class LivySession(ObjectWithGuid):
         self._app_id = None
         self._logs = u""
         self._http_client = http_client
-        self._status_sleep_seconds = status_sleep_seconds
-        self._statement_sleep_seconds = statement_sleep_seconds
         self._wait_for_idle_timeout_seconds = wait_for_idle_timeout_seconds
         self._printed_resource_warning = False
 
@@ -219,8 +215,7 @@ class LivySession(ObjectWithGuid):
             self._spark_events.emit_session_deletion_end_event(self.guid, self.kind, session_id, self.status, True, "", "")
 
     def wait_for_idle(self, seconds_to_wait=None):
-        """Wait for session to go to idle status. Sleep meanwhile. Calls done every status_sleep_seconds as
-        indicated by the constructor.
+        """Wait for session to go to idle status. Sleep meanwhile.
 
         Parameters:
             seconds_to_wait : number of seconds to wait before giving up.
@@ -228,6 +223,7 @@ class LivySession(ObjectWithGuid):
         if seconds_to_wait is None:
             seconds_to_wait = self._wait_for_idle_timeout_seconds
 
+        retries = 1
         while True:
             self.refresh_status_and_info()
             if self.status == constants.IDLE_SESSION_STATUS:
@@ -252,13 +248,16 @@ class LivySession(ObjectWithGuid):
                 self._printed_resource_warning = True
 
             start_time = time()
+            sleep_time = self._policy.seconds_to_sleep(retries)
+            retries += 1
+
             self.logger.debug(u"Session {} in state {}. Sleeping {} seconds."
-                              .format(self.id, self.status, self._status_sleep_seconds))
-            sleep(self._status_sleep_seconds)
+                              .format(self.id, self.status, sleep_time))
+            sleep(sleep_time)
             seconds_to_wait -= time() - start_time
 
-    def sleep(self):
-        sleep(self._statement_sleep_seconds)
+    def sleep(self, retries):
+        sleep(self._policy.seconds_to_sleep(retries))
 
     # This function will refresh the status and get the logs in a single call.
     # Only the status will be returned as the return value.
