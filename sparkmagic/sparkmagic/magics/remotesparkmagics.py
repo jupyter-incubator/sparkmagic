@@ -12,7 +12,7 @@ from IPython.core.magic_arguments import argument, magic_arguments
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.utils import parse_argstring_or_throw
+from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
 from sparkmagic.utils.constants import CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, LANG_PYTHON, LANG_R, LANG_SCALA
 from sparkmagic.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
 from sparkmagic.livyclientlib.command import Command
@@ -54,11 +54,14 @@ class RemoteSparkMagics(SparkMagicBase):
     @argument("-u", "--url", type=str, default=None, help="URL for Livy endpoint")
     @argument("-a", "--user", type=str, default="", help="Username for HTTP access to Livy endpoint")
     @argument("-p", "--password", type=str, default="", help="Password for HTTP access to Livy endpoint")
+    @argument("-t", "--auth", type=str, default=None, help="Auth type for HTTP access to Livy endpoint. [Kerberos, None, Basic Auth]")
     @argument("-l", "--language", type=str, default=None,
               help="Language for Livy session; one of {}".format(', '.join([LANG_PYTHON, LANG_SCALA, LANG_R])))
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
     @argument("-k", "--skip", type=bool, default=False, nargs="?", const=True, help="Skip adding session if it already exists")
     @argument("-i", "--id", type=int, default=None, help="Session ID")
+    @argument("-e", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
+                                                                        "of the dataframe or not (pass False)")
     @needs_local_scope
     @line_cell_magic
     @handle_expected_exceptions
@@ -78,7 +81,7 @@ class RemoteSparkMagics(SparkMagicBase):
            add
                Add a Livy session given a session name (-s), language (-l), and endpoint credentials.
                The -k argument, if present, will skip adding this session if it already exists.
-               e.g. `%spark add -s test -l python -u https://sparkcluster.net/livy -a u -p -k`
+               e.g. `%spark add -s test -l python -u https://sparkcluster.net/livy -t Kerberos -a u -p -k`
            config
                Override the livy session properties sent to Livy on session creation. All session creations will
                contain these config settings from then on.
@@ -109,10 +112,15 @@ class RemoteSparkMagics(SparkMagicBase):
 
         subcommand = args.command[0].lower()
 
+        if args.auth is None:
+            args.auth = conf.get_auth_value(args.user, args.password)
+        else:
+            args.auth = args.auth
+
         # info
         if subcommand == "info":
             if args.url is not None:
-                endpoint = Endpoint(args.url, args.user, args.password)
+                endpoint = Endpoint(args.url, args.auth, args.user, args.password)
                 info_sessions = self.spark_controller.get_all_sessions_endpoint_info(endpoint)
                 self._print_endpoint_info(info_sessions)
             else:
@@ -128,7 +136,7 @@ class RemoteSparkMagics(SparkMagicBase):
 
             name = args.session
             language = args.language
-            endpoint = Endpoint(args.url, args.user, args.password)
+            endpoint = Endpoint(args.url, args.auth, args.user, args.password)
             skip = args.skip
 
             properties = conf.get_session_properties(language)
@@ -142,7 +150,7 @@ class RemoteSparkMagics(SparkMagicBase):
                 if args.id is None:
                     self.ipython_display.send_error("Must provide --id or -i option to delete session at endpoint from URL")
                     return
-                endpoint = Endpoint(args.url, args.user, args.password)
+                endpoint = Endpoint(args.url, args.auth, args.user, args.password)
                 session_id = args.id
                 self.spark_controller.delete_session_by_id(endpoint, session_id)
             else:
@@ -150,7 +158,7 @@ class RemoteSparkMagics(SparkMagicBase):
         # cleanup
         elif subcommand == "cleanup":
             if args.url is not None:
-                endpoint = Endpoint(args.url, args.user, args.password)
+                endpoint = Endpoint(args.url, args.auth, args.user, args.password)
                 self.spark_controller.cleanup_endpoint(endpoint)
             else:
                 self.spark_controller.cleanup()
@@ -159,15 +167,13 @@ class RemoteSparkMagics(SparkMagicBase):
             self.ipython_display.write(self.spark_controller.get_logs(args.session))
         # run
         elif len(subcommand) == 0:
+            coerce = get_coerce_value(args.coerce)
             if args.context == CONTEXT_NAME_SPARK:
-                (success, out) = self.spark_controller.run_command(Command(cell), args.session)
-                if success:
-                    self.ipython_display.write(out)
-                else:
-                    self.ipython_display.send_error(out)
+                return self.execute_spark(cell, args.output, args.samplemethod,
+                                          args.maxrows, args.samplefraction, args.session, coerce)
             elif args.context == CONTEXT_NAME_SQL:
                 return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                             args.session, args.output, args.quiet)
+                                             args.session, args.output, args.quiet, coerce)
             else:
                 self.ipython_display.send_error("Context '{}' not found".format(args.context))
         # error

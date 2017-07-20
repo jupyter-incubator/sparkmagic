@@ -1,0 +1,75 @@
+{
+    // vscode tasks to easily run things.
+    // Ctrl + Shift + B to bring tasks up and select one
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "0.1.0",
+    "command": "cmd", 
+    "isShellCommand": true,
+    "showOutput": "silent",
+    "args": ["/C"],
+
+    "tasks": [
+        {
+            "taskName": "go to github",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "args": ["start https://github.com/jupyter-incubator/sparkmagic"]
+        },
+        {
+            "taskName": "docker build",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "args": ["docker-compose build"]
+        },
+        {
+            "taskName": "docker-compose up",
+            "suppressTaskName": true,
+            "isBuildCommand": false,
+            "isTestCommand": true,
+            "args": ["docker-compose up -d && start http://localhost:8888"]
+        },
+        {
+            "taskName": "docker-compose down",
+            "suppressTaskName": true,
+            "isBuildCommand": false,
+            "isTestCommand": true,
+            "args": ["docker-compose down"]
+        },
+        {
+            "taskName": "test all",
+            "suppressTaskName": true,
+            "isBuildCommand": false,
+            "isTestCommand": true,
+            "args": ["nosetests autovizwidget hdijupyterutils sparkmagic"]
+        },
+        {
+            "taskName": "test autovizwidget",
+            "suppressTaskName": true,
+            "isBuildCommand": false,
+            "isTestCommand": true,
+            "args": ["nosetests autovizwidget"]
+        },
+        {
+            "taskName": "test hdijupyterutils",
+            "suppressTaskName": true,
+            "isBuildCommand": false,
+            "isTestCommand": true,
+            "args": ["nosetests hdijupyterutils"]
+        },
+        {
+            "taskName": "test sparkmagic",
+            "suppressTaskName": true,
+            "isBuildCommand": false,
+            "isTestCommand": true,
+            "args": ["nosetests sparkmagic"]
+        },
+        {
+            "taskName": "test file",
+            "suppressTaskName": true,
+            "isBuildCommand": false,
+            "isTestCommand": true,
+            "args": ["nosetests --nocapture ${file}"]
+        }
+    ]
+}

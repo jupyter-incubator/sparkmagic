@@ -2,6 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 from sparkmagic.controllerwidget.abstractmenuwidget import AbstractMenuWidget
 from sparkmagic.livyclientlib.endpoint import Endpoint
+import sparkmagic.utils.constants as constants
 
 
 class AddEndpointWidget(AbstractMenuWidget):
@@ -32,24 +33,42 @@ class AddEndpointWidget(AbstractMenuWidget):
             value='password',
             width=widget_width
         )
+        self.auth = self.ipywidget_factory.get_dropdown(
+            options={constants.AUTH_KERBEROS: constants.AUTH_KERBEROS, constants.AUTH_BASIC: constants.AUTH_BASIC,
+                     constants.NO_AUTH: constants.NO_AUTH},
+            description=u"Auth type:"
+        )
 
         # Submit widget
         self.submit_widget = self.ipywidget_factory.get_submit_button(
             description='Add endpoint'
         )
 
+        self.auth.on_trait_change(self._show_correct_endpoint_fields)
+
         self.children = [self.ipywidget_factory.get_html(value="<br/>", width=widget_width),
-                         self.address_widget, self.user_widget, self.password_widget,
+                         self.address_widget, self.auth, self.user_widget, self.password_widget,
                          self.ipywidget_factory.get_html(value="<br/>", width=widget_width), self.submit_widget]
 
         for child in self.children:
             child.parent_widget = self
 
+        self._show_correct_endpoint_fields()
+
     def run(self):
-        endpoint = Endpoint(self.address_widget.value, self.user_widget.value, self.password_widget.value)
+        endpoint = Endpoint(self.address_widget.value, self.auth.value, self.user_widget.value, self.password_widget.value)
         self.endpoints[self.address_widget.value] = endpoint
         self.ipython_display.writeln("Added endpoint {}".format(self.address_widget.value))
 
         # We need to call the refresh method because drop down in Tab 2 for endpoints wouldn't refresh with the new
         # value otherwise.
         self.refresh_method()
+
+    def _show_correct_endpoint_fields(self):
+        if self.auth.value == constants.NO_AUTH or self.auth.value == constants.AUTH_KERBEROS:
+            self.user_widget.layout.display = 'none'
+            self.password_widget.layout.display = 'none'
+        else:
+            self.user_widget.layout.display = 'flex'
+            self.password_widget.layout.display = 'flex'
+

@@ -12,7 +12,9 @@ from IPython.core.magic_arguments import argument, magic_arguments
 from hdijupyterutils.utils import generate_uuid
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.utils import get_livy_kind, parse_argstring_or_throw
+from sparkmagic.utils.configuration import get_livy_kind
+from sparkmagic.utils import constants
+from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import LANGS_SUPPORTED
 from sparkmagic.livyclientlib.command import Command
@@ -102,18 +104,30 @@ class KernelMagics(SparkMagicBase):
     Livy's POST /sessions Request Body</a> for a list of valid parameters. Parameters must be passed in as a JSON string.</td>
   </tr>
   <tr>
+    <td>spark</td>
+    <td>%%spark -o df<br/>df = spark.read.parquet('...</td>
+    <td>Executes spark commands.
+    Parameters:
+      <ul>
+        <li>-o VAR_NAME: The Spark dataframe of name VAR_NAME will be available in the %%local Python context as a
+          <a href="http://pandas.pydata.org/">Pandas</a> dataframe with the same name.</li>
+        <li>-m METHOD: Sample method, either <tt>take</tt> or <tt>sample</tt>.</li>
+        <li>-n MAXROWS: The maximum number of rows of a dataframe that will be pulled from Livy to Jupyter.
+            If this number is negative, then the number of rows will be unlimited.</li>
+        <li>-r FRACTION: Fraction used for sampling.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
     <td>sql</td>
     <td>%%sql -o tables -q<br/>SHOW TABLES</td>
     <td>Executes a SQL query against the variable sqlContext (Spark v1.x) or spark (Spark v2.x).
     Parameters:
       <ul>
-        <li>-o VAR_NAME: The result of the query will be available in the %%local Python context as a
+        <li>-o VAR_NAME: The result of the SQL query will be available in the %%local Python context as a
           <a href="http://pandas.pydata.org/">Pandas</a> dataframe.</li>
         <li>-q: The magic will return None instead of the dataframe (no visualization).</li>
-        <li>-m METHOD: Sample method, either <tt>take</tt> or <tt>sample</tt>.</li>
-        <li>-n MAXROWS: The maximum number of rows of a SQL query that will be pulled from Livy to Jupyter.
-            If this number is negative, then the number of rows will be unlimited.</li>
-        <li>-r FRACTION: Fraction used for sampling.</li>
+        <li>-m, -n, -r are the same as the %%spark parameters above.</li>
       </ul>
     </td>
   </tr>
@@ -191,18 +205,26 @@ class KernelMagics(SparkMagicBase):
 
     @magic_arguments()
     @cell_magic
+    @needs_local_scope
+    @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
+                                                             "of this name in user's local context.")
+    @argument("-m", "--samplemethod", type=str, default=None, help="Sample method for dataframe: either take or sample")
+    @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
+                                                                        "from the dataframe on the server for storing")
+    @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from dataframe")
+    @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
+                                                                        "of the dataframe or not (pass False)")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
-        parse_argstring_or_throw(self.spark, line)
         if self._do_not_call_start_session(u""):
-            (success, out) = self.spark_controller.run_command(Command(cell))
-            if success:
-                self.ipython_display.write(out)
-            else:
-                self.ipython_display.send_error(out)
+            args = parse_argstring_or_throw(self.spark, line)
+
+            coerce = get_coerce_value(args.coerce)
+
+            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
         else:
-            return None
+            return
 
     @magic_arguments()
     @cell_magic
@@ -214,13 +236,18 @@ class KernelMagics(SparkMagicBase):
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the server for SQL queries")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
+    @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
+                                                                        "of the dataframe or not (pass False)")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring_or_throw(self.sql, line)
+            
+            coerce = get_coerce_value(args.coerce)
+
             return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                         None, args.output, args.quiet)
+                                         None, args.output, args.quiet, coerce)
         else:
             return
 
@@ -334,23 +361,25 @@ class KernelMagics(SparkMagicBase):
     @argument("-u", "--username", type=str, help="Username to use.")
     @argument("-p", "--password", type=str, help="Password to use.")
     @argument("-s", "--server", type=str, help="Url of server to use.")
+    @argument("-t", "--auth", type=str, help="Auth type for authentication")
     @_event
     def _do_not_call_change_endpoint(self, line, cell="", local_ns=None):
         args = parse_argstring_or_throw(self._do_not_call_change_endpoint, line)
         username = args.username
         password = args.password
         server = args.server
+        auth = args.auth
 
         if self.session_started:
             error = u"Cannot change the endpoint if a session has been started."
             raise BadUserDataException(error)
 
-        self.endpoint = Endpoint(server, username, password)
+        self.endpoint = Endpoint(server, auth, username, password)
 
     def refresh_configuration(self):
         credentials = getattr(conf, 'base64_kernel_' + self.language + '_credentials')()
-        (username, password, url) = (credentials['username'], credentials['password'], credentials['url'])
-        self.endpoint = Endpoint(url, username, password)
+        (username, password, auth, url) = (credentials['username'], credentials['password'], credentials['auth'], credentials['url'])
+        self.endpoint = Endpoint(url, auth, username, password)
 
     def get_session_settings(self, line, force):
         line = line.strip()

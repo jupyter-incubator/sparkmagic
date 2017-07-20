@@ -20,7 +20,7 @@ class FileSystemReaderWriter(object):
 
     def read_lines(self):
         if os.path.isfile(self.path):
-            with open(self.path, "r+") as f:
+            with open(self.path, "r") as f:
                 return f.readlines()
         else:
             return ""

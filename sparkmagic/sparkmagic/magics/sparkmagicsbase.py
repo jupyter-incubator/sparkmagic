@@ -17,6 +17,9 @@ from sparkmagic.utils.utils import get_sessions_info_html
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
+from sparkmagic.livyclientlib.command import Command
+from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
+
 
 @magics_class
 class SparkMagicBase(Magics):
@@ -34,9 +37,24 @@ class SparkMagicBase(Magics):
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
+    def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce):
+        (success, out) = self.spark_controller.run_command(Command(cell), session_name)
+        if not success:
+            self.ipython_display.send_error(out)
+        else:
+            self.ipython_display.write(out)
+            if output_var is not None:
+                spark_store_command = self._spark_store_command(output_var, samplemethod, maxrows, samplefraction, coerce)
+                df = self.spark_controller.run_command(spark_store_command, session_name)
+                self.shell.user_ns[output_var] = df
+
+    @staticmethod
+    def _spark_store_command(output_var, samplemethod, maxrows, samplefraction, coerce):
+        return SparkStoreCommand(output_var, samplemethod, maxrows, samplefraction, coerce=coerce)
+
     def execute_sqlquery(self, cell, samplemethod, maxrows, samplefraction,
-                         session, output_var, quiet):
-        sqlquery = self._sqlquery(cell, samplemethod, maxrows, samplefraction)
+                         session, output_var, quiet, coerce):
+        sqlquery = self._sqlquery(cell, samplemethod, maxrows, samplefraction, coerce)
         df = self.spark_controller.run_sqlquery(sqlquery, session)
         if output_var is not None:
             self.shell.user_ns[output_var] = df
@@ -46,8 +64,8 @@ class SparkMagicBase(Magics):
             return df
 
     @staticmethod
-    def _sqlquery(cell, samplemethod, maxrows, samplefraction):
-        return SQLQuery(cell, samplemethod, maxrows, samplefraction)
+    def _sqlquery(cell, samplemethod, maxrows, samplefraction, coerce):
+        return SQLQuery(cell, samplemethod, maxrows, samplefraction, coerce=coerce)
 
     def _print_endpoint_info(self, info_sessions, current_session_id):
         if info_sessions:

@@ -8,9 +8,11 @@ from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
 from hdijupyterutils.configuration import with_override
 
-from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM
-from .utils import get_livy_kind
+from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
+    LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3, CONFIGURABLE_RETRY
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
+import sparkmagic.utils.constants as constants
 
 
 d = {}
@@ -26,6 +28,28 @@ def override_all(obj):
 
 
 _with_override = with_override(d, path)
+
+
+# Helpers
+
+def get_livy_kind(language):
+    if language == LANG_SCALA:
+        return SESSION_KIND_SPARK
+    elif language == LANG_PYTHON:
+        return SESSION_KIND_PYSPARK
+    elif language == LANG_PYTHON3:
+        return SESSION_KIND_PYSPARK3
+    elif language == LANG_R:
+        return SESSION_KIND_SPARKR
+    else:
+        raise BadUserConfigurationException("Cannot get session kind for {}.".format(language))
+
+
+def get_auth_value(username, password):
+    if username == '' and password == '':
+        return constants.NO_AUTH
+    
+    return constants.AUTH_BASIC
 
 
 # Configs
@@ -44,7 +68,7 @@ def session_configs():
 
 @_with_override
 def kernel_python_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
     
     
 def base64_kernel_python_credentials():
@@ -63,7 +87,7 @@ def base64_kernel_python3_credentials():
 
 @_with_override
 def kernel_scala_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
 
 
 def base64_kernel_scala_credentials():        
@@ -71,7 +95,7 @@ def base64_kernel_scala_credentials():
 
 @_with_override
 def kernel_r_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998'}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
 
 
 def base64_kernel_r_credentials():
@@ -111,16 +135,6 @@ def events_handler_class():
 
 
 @_with_override
-def status_sleep_seconds():
-    return 2
-
-
-@_with_override
-def statement_sleep_seconds():
-    return 2
-
-
-@_with_override
 def wait_for_idle_timeout_seconds():
     return 15
 
@@ -152,6 +166,11 @@ def ignore_ssl_errors():
 
 
 @_with_override
+def coerce_dataframe():
+    return True
+
+
+@_with_override
 def use_auto_viz():
     return True
 
@@ -172,10 +191,10 @@ def default_samplefraction():
 
 
 @_with_override
-def pyspark_sql_encoding():
+def pyspark_dataframe_encoding():
     return u'utf-8'
-    
-    
+
+
 @_with_override
 def heartbeat_refresh_seconds():
     return 30
@@ -196,13 +215,35 @@ def server_extension_default_kernel_name():
     return "pysparkkernel"
 
 
+@_with_override
+def custom_headers():
+    return {}
+
+
+@_with_override
+def retry_policy():
+    return CONFIGURABLE_RETRY
+
+
+@_with_override
+def retry_seconds_to_sleep_list():
+    return [0.2, 0.5, 1, 3, 5]
+
+
+@_with_override
+def configurable_retry_policy_max_retries():
+    # Sum of default values is ~10 seconds.
+    # Plus 15 seconds more wanted, that's 3 more 5 second retries.
+    return 8
+
+
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.
-    If 'base64_password' is not set, it will fallback to to 'password' in config.
+    If 'base64_password' is not set, it will fallback to 'password' in config.
     """
     credentials = f()
-    base64_decoded_credentials = {k: credentials.get(k) for k in ('username', 'password', 'url')}
+    base64_decoded_credentials = {k: credentials.get(k) for k in ('username', 'password', 'url', 'auth')}
     base64_password = credentials.get('base64_password')
     if base64_password is not None:
         try:
@@ -211,4 +252,6 @@ def _credentials_override(f):
             exception_type, exception, traceback = sys.exc_info()
             msg = "base64_password for %s contains invalid base64 string: %s %s" % (f.__name__, exception_type, exception)
             raise BadUserConfigurationException(msg)
+    if base64_decoded_credentials['auth'] is None:
+        base64_decoded_credentials['auth'] = get_auth_value(base64_decoded_credentials['username'], base64_decoded_credentials['password'])
     return base64_decoded_credentials

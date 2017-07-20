@@ -5,6 +5,9 @@ from sparkmagic.controllerwidget.addendpointwidget import AddEndpointWidget
 from sparkmagic.controllerwidget.manageendpointwidget import ManageEndpointWidget
 from sparkmagic.controllerwidget.managesessionwidget import ManageSessionWidget
 from sparkmagic.controllerwidget.createsessionwidget import CreateSessionWidget
+from sparkmagic.livyclientlib.endpoint import Endpoint
+from sparkmagic.utils.constants import LANGS_SUPPORTED
+import sparkmagic.utils.configuration as conf
 
 
 class MagicsControllerWidget(AbstractMenuWidget):
@@ -12,13 +15,29 @@ class MagicsControllerWidget(AbstractMenuWidget):
         super(MagicsControllerWidget, self).__init__(spark_controller, ipywidget_factory, ipython_display)
 
         if endpoints is None:
-            endpoints = {}
+            endpoints = {endpoint.url: endpoint for endpoint in self._get_default_endpoints()}
         self.endpoints = endpoints
 
         self._refresh()
 
     def run(self):
         pass
+
+    @staticmethod
+    def _get_default_endpoints():
+        default_endpoints = set()
+
+        for kernel_type in LANGS_SUPPORTED:
+            endpoint_config = getattr(conf, 'kernel_%s_credentials' % kernel_type)()
+            if all([p in endpoint_config for p in ["url", "password", "username"]]) and endpoint_config["url"] != "":
+                default_endpoints.add(Endpoint(
+                    username=endpoint_config["username"],
+                    password=endpoint_config["password"],
+                    auth=endpoint_config.get("auth", None),
+                    url=endpoint_config["url"],
+                    implicitly_added=True))
+
+        return default_endpoints
 
     def _refresh(self):
         self.endpoints_dropdown_widget = self.ipywidget_factory.get_dropdown(
