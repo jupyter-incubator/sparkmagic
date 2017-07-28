@@ -114,6 +114,7 @@ class ManageEndpointWidget(AbstractMenuWidget):
             except ValueError as e:
                 self.ipython_display.send_error(str(e))
                 return
+            self.refresh_method()
 
         button = self.ipywidget_factory.get_button(description="Delete")
         button.on_click(delete_endpoint)
