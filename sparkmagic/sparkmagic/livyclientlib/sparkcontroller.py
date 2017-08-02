@@ -64,12 +64,17 @@ class SparkController(object):
         self.session_manager.delete_client(name)
 
     def delete_session_by_id(self, endpoint, session_id):
-        http_client = self._http_client(endpoint)
-        response = http_client.get_session(session_id)
-        http_client = self._http_client(endpoint)
-        session = self._livy_session(http_client, {constants.LIVY_KIND_PARAM: response[constants.LIVY_KIND_PARAM]},
-                                     self.ipython_display, session_id)
-        session.delete()
+        name = self.session_manager.get_session_name_by_id_endpoint(session_id, endpoint)
+        
+        if name in self.session_manager.get_sessions_list():
+            self.delete_session_by_name(name)
+        else:
+            http_client = self._http_client(endpoint)
+            response = http_client.get_session(session_id)
+            http_client = self._http_client(endpoint)
+            session = self._livy_session(http_client, {constants.LIVY_KIND_PARAM: response[constants.LIVY_KIND_PARAM]},
+                                        self.ipython_display, session_id)
+            session.delete()
 
     def add_session(self, name, endpoint, skip_if_exists, properties):
         if skip_if_exists and (name in self.session_manager.get_sessions_list()):

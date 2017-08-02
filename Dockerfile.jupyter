@@ -9,6 +9,8 @@ RUN conda install requests-kerberos -y
 
 USER $NB_USER
 
+COPY examples /home/jovyan/work
+
 # Install sparkmagic - if DEV_MODE is set, use the one in the host directory.
 # Otherwise, just install from pip.
 COPY hdijupyterutils hdijupyterutils/

@@ -187,6 +187,10 @@ class LivySession(ObjectWithGuid):
     def http_client(self):
         return self._http_client
 
+    @property
+    def endpoint(self):
+        return self._http_client.endpoint
+
     @staticmethod
     def is_final_status(status):
         return status in constants.FINAL_STATUS
