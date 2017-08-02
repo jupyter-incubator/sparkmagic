@@ -12,7 +12,8 @@ from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 class LivyReliableHttpClient(object):
     """A Livy-specific Http client which wraps the normal ReliableHttpClient. Propagates
     HttpClientExceptions up."""
-    def __init__(self, http_client):
+    def __init__(self, http_client, endpoint):
+        self.endpoint = endpoint
         self._http_client = http_client
 
     @staticmethod
@@ -20,7 +21,7 @@ class LivyReliableHttpClient(object):
         headers = {"Content-Type": "application/json" }
         headers.update(conf.custom_headers())
         retry_policy = LivyReliableHttpClient._get_retry_policy()
-        return LivyReliableHttpClient(ReliableHttpClient(endpoint, headers, retry_policy))
+        return LivyReliableHttpClient(ReliableHttpClient(endpoint, headers, retry_policy), endpoint)
 
     def post_statement(self, session_id, data):
         return self._http_client.post(self._statements_url(session_id), [201], data).json()

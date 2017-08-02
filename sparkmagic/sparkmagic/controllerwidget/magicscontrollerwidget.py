@@ -30,10 +30,17 @@ class MagicsControllerWidget(AbstractMenuWidget):
         for kernel_type in LANGS_SUPPORTED:
             endpoint_config = getattr(conf, 'kernel_%s_credentials' % kernel_type)()
             if all([p in endpoint_config for p in ["url", "password", "username"]]) and endpoint_config["url"] != "":
+                user = endpoint_config["username"]
+                passwd = endpoint_config["password"]
+                
+                authentication = endpoint_config.get("auth", None)
+                if authentication is None:
+                    authentication = conf.get_auth_value(user, passwd)
+
                 default_endpoints.add(Endpoint(
-                    username=endpoint_config["username"],
-                    password=endpoint_config["password"],
-                    auth=endpoint_config.get("auth", None),
+                    username=user,
+                    password=passwd,
+                    auth=authentication,
                     url=endpoint_config["url"],
                     implicitly_added=True))
 

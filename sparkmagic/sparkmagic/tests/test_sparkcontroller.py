@@ -156,7 +156,7 @@ def test_cleanup_endpoint():
 
 
 @with_setup(_setup, _teardown)
-def test_delete_session_by_id_existent():
+def test_delete_session_by_id_existent_non_managed():
     http_client = MagicMock()
     http_client.get_session.return_value = json.loads('{"id":0,"state":"starting","kind":"spark","log":[]}')
     controller._http_client = MagicMock(return_value=http_client)
@@ -167,6 +167,18 @@ def test_delete_session_by_id_existent():
 
     controller._livy_session.assert_called_once_with(http_client, {"kind": "spark"}, ipython_display, 0)
     session.delete.assert_called_once_with()
+
+
+@with_setup(_setup, _teardown)
+def test_delete_session_by_id_existent_managed():
+    name = "name"
+    controller.session_manager.get_session_name_by_id_endpoint = MagicMock(return_value=name)
+    controller.session_manager.get_sessions_list = MagicMock(return_value=[name])
+    controller.delete_session_by_name = MagicMock()
+
+    controller.delete_session_by_id("conn_str", 0)
+
+    controller.delete_session_by_name.assert_called_once_with(name)
 
 
 @with_setup(_setup, _teardown)
