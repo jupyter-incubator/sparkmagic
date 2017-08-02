@@ -51,6 +51,12 @@ class SessionManager(object):
             return self._sessions[name].id
         return None
 
+    def get_session_name_by_id_endpoint(self, id, endpoint):
+        for (name, session) in self._sessions.items():
+            if session.id == int(id) and session.endpoint == endpoint:
+                return name
+        return None
+
     def delete_client(self, name):
         self._remove_session(name)
     

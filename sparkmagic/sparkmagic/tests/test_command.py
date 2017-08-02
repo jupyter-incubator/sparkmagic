@@ -33,12 +33,7 @@ def test_execute():
     http_client.post_statement.return_value = tls.TestLivySession.post_statement_json
     http_client.get_session.return_value = tls.TestLivySession.ready_sessions_json
     http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
-    conf.override_all({
-        "status_sleep_seconds": 0.01,
-        "statement_sleep_seconds": 0.01
-    })
     session = _create_session(kind=kind, http_client=http_client)
-    conf.override_all({})
     session.start()
     command = Command("command", spark_events=spark_events)
 
@@ -63,12 +58,7 @@ def test_execute_waiting():
     http_client.post_statement.return_value = tls.TestLivySession.post_statement_json
     http_client.get_session.return_value = tls.TestLivySession.ready_sessions_json
     http_client.get_statement.side_effect = [tls.TestLivySession.waiting_statement_json, tls.TestLivySession.waiting_statement_json, tls.TestLivySession.ready_statement_json, tls.TestLivySession.ready_statement_json]
-    conf.override_all({
-        "status_sleep_seconds": 0.01,
-        "statement_sleep_seconds": 0.01
-    })
     session = _create_session(kind=kind, http_client=http_client)
-    conf.override_all({})
     session.start()
     command = Command("command", spark_events=spark_events)
 
@@ -94,12 +84,7 @@ def test_execute_null_ouput():
     http_client.post_statement.return_value = tls.TestLivySession.post_statement_json
     http_client.get_session.return_value = tls.TestLivySession.ready_sessions_json
     http_client.get_statement.return_value = tls.TestLivySession.ready_statement_null_output_json
-    conf.override_all({
-        "status_sleep_seconds": 0.01,
-        "statement_sleep_seconds": 0.01
-    })
     session = _create_session(kind=kind, http_client=http_client)
-    conf.override_all({})
     session.start()
     command = Command("command", spark_events=spark_events)
 
@@ -125,12 +110,7 @@ def test_execute_failure_wait_for_session_emits_event():
     http_client.post_statement.return_value = tls.TestLivySession.post_statement_json
     http_client.get_session.return_value = tls.TestLivySession.ready_sessions_json
     http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
-    conf.override_all({
-        "status_sleep_seconds": 0.01,
-        "statement_sleep_seconds": 0.01
-    })
     session = _create_session(kind=kind, http_client=http_client)
-    conf.override_all({})
     session.start()
     session.wait_for_idle = MagicMock(side_effect=ValueError("yo"))
     command = Command("command", spark_events=spark_events)
@@ -153,13 +133,8 @@ def test_execute_failure_post_statement_emits_event():
     kind = SESSION_KIND_SPARK
     http_client = MagicMock()
     http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
-    conf.override_all({
-        "status_sleep_seconds": 0.01,
-        "statement_sleep_seconds": 0.01
-    })
     session = _create_session(kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
-    conf.override_all({})
     session.start()
     session.wait_for_idle = MagicMock()
     command = Command("command", spark_events=spark_events)
@@ -183,15 +158,10 @@ def test_execute_failure_get_statement_output_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
     http_client = MagicMock()
-    conf.override_all({
-        "status_sleep_seconds": 0.01,
-        "statement_sleep_seconds": 0.01
-    })
     http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
 
     session = _create_session(kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
-    conf.override_all({})
     session.start()
     session.wait_for_idle = MagicMock()
     command = Command("command", spark_events=spark_events)

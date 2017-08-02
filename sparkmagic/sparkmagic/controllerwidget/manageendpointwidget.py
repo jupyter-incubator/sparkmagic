@@ -87,6 +87,7 @@ class ManageEndpointWidget(AbstractMenuWidget):
                 self.ipython_display.send_error("Could not clean up endpoint due to error: {}".format(e))
                 return
             self.ipython_display.writeln("Cleaned up endpoint {}".format(url))
+            self.refresh_method()
 
         cleanup_w = self.ipywidget_factory.get_button(description="Clean Up")
         cleanup_w.on_click(cleanup_on_click)
@@ -114,6 +115,7 @@ class ManageEndpointWidget(AbstractMenuWidget):
             except ValueError as e:
                 self.ipython_display.send_error(str(e))
                 return
+            self.refresh_method()
 
         button = self.ipywidget_factory.get_button(description="Delete")
         button.on_click(delete_endpoint)

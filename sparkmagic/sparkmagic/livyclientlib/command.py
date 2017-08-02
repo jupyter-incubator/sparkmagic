@@ -44,6 +44,8 @@ class Command(ObjectWithGuid):
             return output
 
     def _get_statement_output(self, session, statement_id):
+        retries = 1
+        
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
             status = statement[u"state"].lower()
@@ -51,7 +53,8 @@ class Command(ObjectWithGuid):
             self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
 
             if status not in FINAL_STATEMENT_STATUS:
-                session.sleep()
+                session.sleep(retries)
+                retries += 1
             else:                
                 statement_output = statement[u"output"]
 

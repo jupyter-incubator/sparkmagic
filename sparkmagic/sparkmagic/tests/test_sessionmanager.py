@@ -1,4 +1,4 @@
-﻿from mock import MagicMock
+﻿from mock import MagicMock, PropertyMock
 from nose.tools import raises, assert_equals
 
 from sparkmagic.livyclientlib.exceptions import SessionManagementException
@@ -105,6 +105,24 @@ def test_get_session_id_for_client():
     id = manager.get_session_id_for_client("name")
 
     assert id is not None
+
+
+def test_get_session_name_by_id_endpoint():
+    manager = SessionManager()
+    id_to_search = "0"
+    endpoint_to_search = "endpoint"
+    name_to_search = "name"
+
+    name = manager.get_session_name_by_id_endpoint(id_to_search, endpoint_to_search)
+    assert_equals(None, name)
+    
+    session = MagicMock()
+    type(session).id = PropertyMock(return_value=int(id_to_search))
+    session.endpoint = endpoint_to_search
+
+    manager.add_session(name_to_search, session)
+    name = manager.get_session_name_by_id_endpoint(id_to_search, endpoint_to_search)
+    assert_equals(name_to_search, name)
 
 
 def test_get_session_id_for_client_not_there():
