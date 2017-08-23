@@ -1,0 +1,62 @@
+From 9567f9d6fef34aaccaea1fcba9f600d044abe39b Mon Sep 17 00:00:00 2001
+From: Jeffrey Rodriguez <jeffreyr@us.ibm.com>
+Date: Wed, 23 Aug 2017 16:33:33 -0700
+Subject: [PATCH] Adding default CSRF header as a good security practice .
+
+---
+ sparkmagic/sparkmagic/tests/test_livyreliablehttpclient.py | 13 ++++++++++++-
+ sparkmagic/sparkmagic/utils/configuration.py               |  2 +-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/sparkmagic/sparkmagic/tests/test_livyreliablehttpclient.py b/sparkmagic/sparkmagic/tests/test_livyreliablehttpclient.py
+index 4a54ecd..7cdec75 100644
+--- a/sparkmagic/sparkmagic/tests/test_livyreliablehttpclient.py
++++ b/sparkmagic/sparkmagic/tests/test_livyreliablehttpclient.py
+@@ -1,5 +1,5 @@
+ from mock import MagicMock
+-from nose.tools import assert_equals
++from nose.tools import assert_equals,assert_true
+ 
+ from sparkmagic.livyclientlib.livyreliablehttpclient import LivyReliableHttpClient
+ from sparkmagic.livyclientlib.endpoint import Endpoint
+@@ -68,6 +68,7 @@ def test_get_all_session_logs():
+ 
+ 
+ def test_custom_headers():
++    original_custom_headers = conf.custom_headers()
+     custom_headers = {"header1": "value1"}
+     overrides = { conf.custom_headers.__name__: custom_headers }
+     conf.override_all(overrides)
+@@ -77,6 +78,16 @@ def test_custom_headers():
+     assert_equals(len(headers), 2)
+     assert_equals("Content-Type" in headers, True)
+     assert_equals("header1" in headers, True)
++    overrides = { conf.custom_headers.__name__: original_custom_headers }
++    conf.override_all(overrides)
++
++
++def test_default_custom_headers():
++    custom_headers = conf.custom_headers()
++    print custom_headers
++    assert_true( custom_headers != {})
++    assert_equals( custom_headers.has_key('X-Requested-By'),True)
++    assert_equals( custom_headers['X-Requested-By'],'sparkmagic',True)
+ 
+ 
+ def test_retry_policy():
+diff --git a/sparkmagic/sparkmagic/utils/configuration.py b/sparkmagic/sparkmagic/utils/configuration.py
+index 85bc80c..7fca2be 100644
+--- a/sparkmagic/sparkmagic/utils/configuration.py
++++ b/sparkmagic/sparkmagic/utils/configuration.py
+@@ -217,7 +217,7 @@ def server_extension_default_kernel_name():
+ 
+ @_with_override
+ def custom_headers():
+-    return {}
++    return {'X-Requested-By' :  'sparkmagic' }
+ 
+ 
+ @_with_override
+-- 
+2.11.0 (Apple Git-81)
+
