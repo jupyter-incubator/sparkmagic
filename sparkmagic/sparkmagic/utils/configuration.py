@@ -217,7 +217,7 @@ def server_extension_default_kernel_name():
 
 @_with_override
 def custom_headers():
-    return {}
+    return {'X-Requested-By' :  'sparkmagic' }
 
 
 @_with_override
