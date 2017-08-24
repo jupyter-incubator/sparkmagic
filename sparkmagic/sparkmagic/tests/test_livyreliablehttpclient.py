@@ -1,5 +1,5 @@
 from mock import MagicMock
-from nose.tools import assert_equals
+from nose.tools import assert_equals,assert_true
 
 from sparkmagic.livyclientlib.livyreliablehttpclient import LivyReliableHttpClient
 from sparkmagic.livyclientlib.endpoint import Endpoint
@@ -68,6 +68,7 @@ def test_get_all_session_logs():
 
 
 def test_custom_headers():
+    original_custom_headers = conf.custom_headers()
     custom_headers = {"header1": "value1"}
     overrides = { conf.custom_headers.__name__: custom_headers }
     conf.override_all(overrides)
@@ -77,6 +78,15 @@ def test_custom_headers():
     assert_equals(len(headers), 2)
     assert_equals("Content-Type" in headers, True)
     assert_equals("header1" in headers, True)
+    overrides = { conf.custom_headers.__name__: original_custom_headers }
+    conf.override_all(overrides)
+
+
+def test_default_custom_headers():
+    custom_headers = conf.custom_headers()
+    assert_true( custom_headers != {})
+    assert_true( 'X-Requested-By' in custom_headers)
+    assert_equals( custom_headers['X-Requested-By'],'sparkmagic',True)
 
 
 def test_retry_policy():
