@@ -1,4 +1,4 @@
-FROM gettyimages/spark:2.1.0-hadoop-2.7
+FROM gettyimages/spark:2.2.0-hadoop-2.7
 
 RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
     git \
@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
     r-base \
     r-base-core && \
     rm -rf /var/lib/apt/lists/*
+
+RUN pip install --upgrade pip setuptools wheel
 
 ENV LIVY_BUILD_VERSION livy-server-0.3.0
 ENV LIVY_APP_PATH /apps/$LIVY_BUILD_VERSION

@@ -1,4 +1,4 @@
-FROM jupyter/base-notebook:d0b2d159cc6c
+FROM jupyter/base-notebook:ae885c0a6226
 
 ARG dev_mode=false
 
