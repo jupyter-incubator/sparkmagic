@@ -60,6 +60,7 @@ setup(name=NAME,
           'plotly>=1.10.0,<3.0',
           'ipywidgets>5.0.0,<8.0',
           'hdijupyterutils>=0.6',
-          'notebook>=4.2,<6.0'
+          'notebook>=4.2,<6.0',
+          'pandas>=0.20.1'
       ])
 
