@@ -16,6 +16,8 @@ ENV LIVY_BUILD_PATH /apps/build/livy
 ENV PYSPARK_PYTHON python2.7
 ENV PYSPARK3_PYTHON python3.4
 
+RUN pip install --upgrade setuptools
+
 RUN mkdir -p /apps/build && \
     cd /apps/build && \
 	git clone https://github.com/cloudera/livy.git && \
