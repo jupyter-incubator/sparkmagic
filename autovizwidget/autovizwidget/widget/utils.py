@@ -13,7 +13,7 @@ def infer_vegalite_type(data):
     data: Numpy array or Pandas Series
     """
 
-    typ = pd.lib.infer_dtype(data)
+    typ = pd.api.types.infer_dtype(data)
 
     if typ in ['floating', 'mixed-integer-float', 'integer',
                'mixed-integer', 'complex']:
