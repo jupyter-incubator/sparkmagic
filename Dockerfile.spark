@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
     r-base-core && \
     rm -rf /var/lib/apt/lists/*
 
+RUN pip install --upgrade setuptools
+
 ENV LIVY_BUILD_VERSION livy-server-0.3.0
 ENV LIVY_APP_PATH /apps/$LIVY_BUILD_VERSION
 ENV LIVY_BUILD_PATH /apps/build/livy

@@ -9,6 +9,9 @@ RUN conda install requests-kerberos -y
 
 USER $NB_USER
 
+RUN pip install --upgrade pip
+RUN pip install --upgrade --ignore-installed setuptools
+
 COPY examples /home/jovyan/work
 
 # Install sparkmagic - if DEV_MODE is set, use the one in the host directory.
