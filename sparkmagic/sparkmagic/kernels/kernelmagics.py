@@ -134,16 +134,29 @@ class KernelMagics(SparkMagicBase):
   <tr>
     <td>local</td>
     <td>%%local<br/>a = 1</td>
-    <td>All the code in subsequent lines will be executed locally. Code must be valid Python code.</td>
+    <td>All the code in subsequent lines will be executed locally. Code must be valid Python code.
+    Parameters:
+      <ul>
+        <li>-o VAR_NAME: Local dataframe of name VAR_NAME will be available in the %%spark context as a 
+          Spark dataframe with the same name.</li>
+      </ul>
+    </td>
   </tr>
 </table>
 """
         self.ipython_display.html(help_html)
 
+    @magic_arguments()
     @cell_magic
+    @needs_local_scope
+    @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
+                                                             "of this name in Spark's context.")
     def local(self, line, cell=u"", local_ns=None):
-        # This should not be reachable thanks to UserCodeParser. Registering it here so that it auto-completes with tab.
-        raise NotImplementedError(u"UserCodeParser should have prevented code execution from reaching here.")
+        args = parse_argstring_or_throw(self.local, line)
+        if not args.output:
+            raise NotImplementedError
+
+        self.ipython_display.html(u"variable name seems to be " + args.output)
 
     @magic_arguments()
     @cell_magic

@@ -18,7 +18,7 @@ class UserCodeParser(object):
         except IndexError:
             all_but_first_line = ""
 
-        if code.startswith("%%local") or code.startswith("%local"):
+        if (code.startswith("%%local") or code.startswith("%local")) and not "-o" in code:
             return all_but_first_line
         elif any(code.startswith("%%" + s) for s in self._magics_with_no_cell_body):
             return u"{}\n ".format(code)
