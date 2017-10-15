@@ -17,7 +17,7 @@ class SendToSparkCommand(Command):
             (success, result) = command.execute(session)
             result = self.input_variable_value #todo ISSUE#412
             if not success:
-                raise BadUserDataException()
+                raise BadUserDataException(result)
         except Exception as e:
             raise
         else:
