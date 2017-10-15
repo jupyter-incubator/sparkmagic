@@ -48,7 +48,7 @@ class KernelMagics(SparkMagicBase):
     def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
-        
+
         self.session_name = u"session_name"
         self.session_started = False
 
@@ -140,8 +140,9 @@ class KernelMagics(SparkMagicBase):
       <ul>
         <li>-o VAR_NAME: Local dataframe of name VAR_NAME will be available in the %%spark context as a 
           Spark dataframe with the same name.</li>
-        <li>-t TYPE: Used optionally with -o. Specifies the type of variable passed as -o. Available options are:
-         `str` for string and `df` for Pandas DataFrame</li>
+        <li>-t TYPE: Specifies the type of variable passed as -o. Available options are:
+         `str` for string and `df` for Pandas DataFrame. Optional, defaults to `str`.</li>
+        <li>-n NAME: Custom name of variable passed as -o. Optional, defaults to -o variable name.</li>
       </ul>
     </td>
   </tr>
@@ -150,21 +151,17 @@ class KernelMagics(SparkMagicBase):
         self.ipython_display.html(help_html)
 
     @magic_arguments()
-    @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
                                                              " in Spark's context.")
-    @argument("-t", "--type", type=str, default='str', help="Optional param to use with -i. Specifies the type of variable."
-                                                            "Available: 'str' - string or 'df' - Pandas DataFrame")
-    @argument("-n", "--name", type=str, default=None, help="Optional param to use with -i. Input -i will be saved to variable"
-                                                           "with specified name. If not present, the name of Spark's variable"
-                                                           " will be the same as input's.")
+    @argument("-t", "--type", type=str, default='str', help="Optionally specify the type of input variable. "
+                                                            "Available: 'str' - string(default) or 'df' - Pandas DataFrame")
+    @argument("-n", "--name", type=str, default=None, help="Optionally specify the custom name for output variable.")
     @cell_magic
-    @_event
+    @needs_local_scope
     #todo ISSUE#412 - remove comment before PR @wrap_unexpected_exceptions
     #todo ISSUE#412 - remove comment before PR @handle_expected_exceptions
     def local(self, line, cell=u"", local_ns=None):
         args = parse_argstring_or_throw(self.local, line)
-        self._assure_cell_body_is_empty(KernelMagics.local.__name__, cell)
         if not args.output:
             raise BadUserDataException("-o param not provided.")
 
@@ -271,7 +268,7 @@ class KernelMagics(SparkMagicBase):
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring_or_throw(self.sql, line)
-            
+
             coerce = get_coerce_value(args.coerce)
 
             return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
