@@ -152,9 +152,12 @@ class KernelMagics(SparkMagicBase):
     @magic_arguments()
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
-                                                             "of this name in Spark's context.")
-    @argument("-t", "--type", type=str, default='str', help="Optional param to use with -o. Specifies the type of variable."
+                                                             " in Spark's context.")
+    @argument("-t", "--type", type=str, default='str', help="Optional param to use with -i. Specifies the type of variable."
                                                             "Available: 'str' - string or 'df' - Pandas DataFrame")
+    @argument("-n", "--name", type=str, default=None, help="Optional param to use with -i. Input -i will be saved to variable"
+                                                           "with specified name. If not present, the name of Spark's variable"
+                                                           " will be the same as input's.")
     @cell_magic
     #todo ISSUE#412 - remove comment before PR @wrap_unexpected_exceptions
     #todo ISSUE#412 - remove comment before PR @handle_expected_exceptions
@@ -165,7 +168,7 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException()
 
         if self._do_not_call_start_session(""):
-            self.execute_local(cell, args.output, args.type, None)
+            self.execute_local(cell, args.output, args.type, args.name, None)
         else:
             return
 

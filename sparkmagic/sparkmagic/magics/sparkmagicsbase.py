@@ -41,16 +41,19 @@ class SparkMagicBase(Magics):
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
-    def execute_local(self, cell, output_var_name, type, session_name):
-        output_var_value = self.shell.user_ns[output_var_name]
+    def execute_local(self, cell, input_variable_name, type, output_variable_name, session_name):
+        input_variable_value = self.shell.user_ns[input_variable_name]
 
-        if not output_var_value:
+        if not input_variable_value:
             raise BadUserDataException("Value of specified -o variable is None!")
 
+        if not output_variable_name:
+            output_variable_name = input_variable_name
+
         if type == 'str':
-            command = SendStringToSparkCommand(output_var_name, output_var_value)
+            command = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
         elif type == 'df':
-            command = SendPandasDfToSparkCommand(output_var_name, output_var_value)
+            command = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
         else:
             raise BadUserDataException("Invalid -t type. Available are: `str` or `df`.")
 
@@ -58,7 +61,7 @@ class SparkMagicBase(Magics):
         if not success:
             self.ipython_display.send_error(out)
         else:
-            self.ipython_display.write(u'Successfully passed variable \'{}\' with value \'{}\' to Spark kernel'.format(output_var_name, out))
+            self.ipython_display.write(u'Successfully passed \'{}\' as \'{}\' with value \'{}\' to Spark kernel'.format(input_variable_name, output_variable_name, out))
 
     def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce):
         (success, out) = self.spark_controller.run_command(Command(cell), session_name)

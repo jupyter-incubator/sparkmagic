@@ -4,13 +4,13 @@ from sparkmagic.livyclientlib.command import Command
 
 class SendPandasDfToSparkCommand(SendToSparkCommand):
 
-    def _scala_command(self, spark_context_variable_name, local_context_variable_value):
+    def _scala_command(self, input_variable_name, input_variable_value, output_variable_name):
         raise NotImplementedError
 
 
-    def _pyspark_command(self, spark_context_variable_name, local_context_variable_value, encode_result=True):
+    def _pyspark_command(self, input_variable_name, input_variable_value, output_variable_name, encode_result=True):
         raise NotImplementedError
 
 
-    def _r_command(self, spark_context_variable_name, local_context_variable_value):
+    def _r_command(self, input_variable_name, input_variable_value, output_variable_name):
         raise NotImplementedError

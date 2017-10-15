@@ -48,7 +48,7 @@ class SparkStoreCommand(Command):
             return result
 
 
-    def _pyspark_command(self, spark_context_variable_name, local_context_variable_value, encode_result=True):
+    def _pyspark_command(self, spark_context_variable_name, encode_result=True):
         command = u'{}.toJSON()'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
@@ -68,7 +68,7 @@ class SparkStoreCommand(Command):
         return Command(command)
 
 
-    def _scala_command(self, spark_context_variable_name, local_context_variable_value):
+    def _scala_command(self, spark_context_variable_name):
         command = u'{}.toJSON'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(false, {})'.format(command, self.samplefraction)
@@ -79,7 +79,7 @@ class SparkStoreCommand(Command):
         return Command(u'{}.foreach(println)'.format(command))
 
 
-    def _r_command(self, spark_context_variable_name, local_context_variable_value):
+    def _r_command(self, spark_context_variable_name):
         command = spark_context_variable_name
         if self.samplemethod == u'sample':
             command = u'sample({}, FALSE, {})'.format(command,
@@ -94,6 +94,18 @@ class SparkStoreCommand(Command):
                                                          constants.LONG_RANDOM_VARIABLE_NAME)
         return Command(command)
 
+
+    def to_command(self, kind, spark_context_variable_name):
+        if kind == constants.SESSION_KIND_PYSPARK:
+            return self._pyspark_command(spark_context_variable_name)
+        elif kind == constants.SESSION_KIND_PYSPARK3:
+            return self._pyspark_command(spark_context_variable_name, encode_result = False)
+        elif kind == constants.SESSION_KIND_SPARK:
+            return self._scala_command(spark_context_variable_name)
+        elif kind == constants.SESSION_KIND_SPARKR:
+            return self._r_command(spark_context_variable_name)
+        else:
+            raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
 
     # Used only for unit testing
