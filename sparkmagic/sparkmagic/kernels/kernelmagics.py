@@ -173,7 +173,6 @@ class KernelMagics(SparkMagicBase):
         else:
             return
 
-
     @magic_arguments()
     @cell_magic
     @wrap_unexpected_exceptions

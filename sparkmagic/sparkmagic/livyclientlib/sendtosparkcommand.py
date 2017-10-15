@@ -23,7 +23,6 @@ class SendToSparkCommand(Command):
         else:
             return (success, result)
 
-
     def to_command(self, kind, input_variable_name, input_variable_value, output_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
             return self._pyspark_command(input_variable_name, input_variable_value, output_variable_name)

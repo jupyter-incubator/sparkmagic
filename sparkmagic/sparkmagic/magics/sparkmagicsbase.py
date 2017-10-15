@@ -23,8 +23,6 @@ from sparkmagic.livyclientlib.sendpandasdftosparkcommand import SendPandasDfToSp
 from sparkmagic.livyclientlib.sendstringtosparkcommand import SendStringToSparkCommand
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 
-
-
 @magics_class
 class SparkMagicBase(Magics):
     def __init__(self, shell, data=None, spark_events=None):
@@ -57,11 +55,12 @@ class SparkMagicBase(Magics):
         else:
             raise BadUserDataException("Invalid -t type. Available are: `str` or `df`.")
 
-        (success, out) = self.spark_controller.run_command(command, None)
+        (success, result) = self.spark_controller.run_command(command, None)
         if not success:
-            self.ipython_display.send_error(out)
+            self.ipython_display.send_error(result)
         else:
-            self.ipython_display.write(u'Successfully passed \'{}\' as \'{}\' with value \'{}\' to Spark kernel'.format(input_variable_name, output_variable_name, out))
+            self.ipython_display.write(u'Successfully passed \'{}\' as \'{}\' to Spark'
+                                       u' kernel'.format(input_variable_name, output_variable_name))
 
     def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce):
         (success, out) = self.spark_controller.run_command(Command(cell), session_name)
