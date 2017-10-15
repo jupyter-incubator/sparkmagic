@@ -134,7 +134,8 @@ class KernelMagics(SparkMagicBase):
   <tr>
     <td>local</td>
     <td>%%local<br/>a = 1</td>
-    <td>All the code in subsequent lines will be executed locally. Code must be valid Python code.
+    <td>All the code in subsequent lines will be executed locally. Code must be valid Python code. Automatically starts 
+    up SparkContext if -o param is present.
     Parameters:
       <ul>
         <li>-o VAR_NAME: Local dataframe of name VAR_NAME will be available in the %%spark context as a 
