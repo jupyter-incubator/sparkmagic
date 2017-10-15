@@ -19,6 +19,9 @@ from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
+from sparkmagic.livyclientlib.sendtosparkcommand import SendToSparkCommand
+
+from sparkmagic.livyclientlib.exceptions import BadUserDataException
 
 
 @magics_class
@@ -36,6 +39,19 @@ class SparkMagicBase(Magics):
         if spark_events is None:
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
+
+    def execute_local(self, cell, output_var_name, session_name):
+        output_var_value = self.shell.user_ns[output_var_name]
+
+        if not output_var_value:
+            raise BadUserDataException()
+
+        send_to_spark_command = SendToSparkCommand(output_var_name, output_var_value)
+        (success, out) = self.spark_controller.run_command(send_to_spark_command, None)
+        if not success:
+            self.ipython_display.send_error(out)
+        else:
+            self.ipython_display.write(u'Successfully passed variable \'{}\' with value \'{}\' to Spark kernel'.format(output_var_name, out))
 
     def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce):
         (success, out) = self.spark_controller.run_command(Command(cell), session_name)

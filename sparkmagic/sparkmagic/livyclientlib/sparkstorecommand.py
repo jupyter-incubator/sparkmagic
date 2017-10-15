@@ -1,9 +1,9 @@
 from sparkmagic.utils.utils import records_to_dataframe
 import sparkmagic.utils.configuration as conf
-import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUserDataException
+import sparkmagic.utils.constants as constants
 
 import ast
 
@@ -48,20 +48,7 @@ class SparkStoreCommand(Command):
             return result
 
 
-    def to_command(self, kind, spark_context_variable_name):
-        if kind == constants.SESSION_KIND_PYSPARK:
-            return self._pyspark_command(spark_context_variable_name)
-        elif kind == constants.SESSION_KIND_PYSPARK3:
-            return self._pyspark_command(spark_context_variable_name, False)
-        elif kind == constants.SESSION_KIND_SPARK:
-            return self._scala_command(spark_context_variable_name)
-        elif kind == constants.SESSION_KIND_SPARKR:
-            return self._r_command(spark_context_variable_name)
-        else:
-            raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
-
-
-    def _pyspark_command(self, spark_context_variable_name, encode_result=True):
+    def _pyspark_command(self, spark_context_variable_name, local_context_variable_value, encode_result=True):
         command = u'{}.toJSON()'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
@@ -81,7 +68,7 @@ class SparkStoreCommand(Command):
         return Command(command)
 
 
-    def _scala_command(self, spark_context_variable_name):
+    def _scala_command(self, spark_context_variable_name, local_context_variable_value):
         command = u'{}.toJSON'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(false, {})'.format(command, self.samplefraction)
@@ -92,7 +79,7 @@ class SparkStoreCommand(Command):
         return Command(u'{}.foreach(println)'.format(command))
 
 
-    def _r_command(self, spark_context_variable_name):
+    def _r_command(self, spark_context_variable_name, local_context_variable_value):
         command = spark_context_variable_name
         if self.samplemethod == u'sample':
             command = u'sample({}, FALSE, {})'.format(command,

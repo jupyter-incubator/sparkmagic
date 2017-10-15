@@ -147,16 +147,23 @@ class KernelMagics(SparkMagicBase):
         self.ipython_display.html(help_html)
 
     @magic_arguments()
-    @cell_magic
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
                                                              "of this name in Spark's context.")
+    @cell_magic
+    #todo ISSUE#412 - remove comment before PR @wrap_unexpected_exceptions
+    #todo ISSUE#412 - remove comment before PR @handle_expected_exceptions
     def local(self, line, cell=u"", local_ns=None):
-        args = parse_argstring_or_throw(self.local, line)
-        if not args.output:
-            raise NotImplementedError
+        if self._do_not_call_start_session(""):
+            args = parse_argstring_or_throw(self.local, line)
 
-        self.ipython_display.html(u"variable name seems to be " + args.output)
+            if not args.output:
+                raise NotImplementedError
+
+            self.execute_local(cell, args.output, None)
+        else:
+            return
+
 
     @magic_arguments()
     @cell_magic

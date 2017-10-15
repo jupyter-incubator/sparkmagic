@@ -3,6 +3,8 @@ import textwrap
 from hdijupyterutils.guid import ObjectWithGuid
 
 import sparkmagic.utils.configuration as conf
+from sparkmagic.livyclientlib.exceptions import BadUserDataException
+import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS
@@ -69,3 +71,15 @@ class Command(ObjectWithGuid):
                 else:
                     raise LivyUnexpectedStatusException(u"Unknown output status from Livy: '{}'"
                                                         .format(statement_output[u"status"]))
+
+    def to_command(self, kind, spark_context_variable_name, local_context_variable_value = None):
+        if kind == constants.SESSION_KIND_PYSPARK:
+            return self._pyspark_command(spark_context_variable_name, local_context_variable_value)
+        elif kind == constants.SESSION_KIND_PYSPARK3:
+            return self._pyspark_command(spark_context_variable_name, local_context_variable_value, encode_result = False)
+        elif kind == constants.SESSION_KIND_SPARK:
+            return self._scala_command(spark_context_variable_name, local_context_variable_value)
+        elif kind == constants.SESSION_KIND_SPARKR:
+            return self._r_command(spark_context_variable_name, local_context_variable_value)
+        else:
+            raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
