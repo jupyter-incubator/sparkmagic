@@ -48,6 +48,19 @@ class SparkStoreCommand(Command):
             return result
 
 
+    def to_command(self, kind, spark_context_variable_name):
+        if kind == constants.SESSION_KIND_PYSPARK:
+            return self._pyspark_command(spark_context_variable_name)
+        elif kind == constants.SESSION_KIND_PYSPARK3:
+            return self._pyspark_command(spark_context_variable_name, False)
+        elif kind == constants.SESSION_KIND_SPARK:
+            return self._scala_command(spark_context_variable_name)
+        elif kind == constants.SESSION_KIND_SPARKR:
+            return self._r_command(spark_context_variable_name)
+        else:
+            raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
+
+
     def _pyspark_command(self, spark_context_variable_name, encode_result=True):
         command = u'{}.toJSON()'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
@@ -93,19 +106,6 @@ class SparkStoreCommand(Command):
                                                          command,
                                                          constants.LONG_RANDOM_VARIABLE_NAME)
         return Command(command)
-
-
-    def to_command(self, kind, spark_context_variable_name):
-        if kind == constants.SESSION_KIND_PYSPARK:
-            return self._pyspark_command(spark_context_variable_name)
-        elif kind == constants.SESSION_KIND_PYSPARK3:
-            return self._pyspark_command(spark_context_variable_name, encode_result = False)
-        elif kind == constants.SESSION_KIND_SPARK:
-            return self._scala_command(spark_context_variable_name)
-        elif kind == constants.SESSION_KIND_SPARKR:
-            return self._r_command(spark_context_variable_name)
-        else:
-            raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
 
     # Used only for unit testing

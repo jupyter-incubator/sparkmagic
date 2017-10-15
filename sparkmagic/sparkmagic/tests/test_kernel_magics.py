@@ -49,7 +49,7 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
-@raises(NotImplementedError)
+@raises(BadUserDataException)
 def test_local():
     magic.local("")
 

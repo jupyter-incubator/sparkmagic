@@ -3,8 +3,6 @@ import textwrap
 from hdijupyterutils.guid import ObjectWithGuid
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.livyclientlib.exceptions import BadUserDataException
-import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS

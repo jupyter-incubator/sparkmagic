@@ -159,13 +159,14 @@ class KernelMagics(SparkMagicBase):
                                                            "with specified name. If not present, the name of Spark's variable"
                                                            " will be the same as input's.")
     @cell_magic
+    @_event
     #todo ISSUE#412 - remove comment before PR @wrap_unexpected_exceptions
     #todo ISSUE#412 - remove comment before PR @handle_expected_exceptions
     def local(self, line, cell=u"", local_ns=None):
         args = parse_argstring_or_throw(self.local, line)
-
+        self._assure_cell_body_is_empty(KernelMagics.local.__name__, cell)
         if not args.output:
-            raise BadUserDataException()
+            raise BadUserDataException("-o param not provided.")
 
         if self._do_not_call_start_session(""):
             self.execute_local(cell, args.output, args.type, args.name, None)
