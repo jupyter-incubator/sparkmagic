@@ -140,6 +140,8 @@ class KernelMagics(SparkMagicBase):
       <ul>
         <li>-o VAR_NAME: Local dataframe of name VAR_NAME will be available in the %%spark context as a 
           Spark dataframe with the same name.</li>
+        <li>-t TYPE: Used optionally with -o. Specifies the type of variable passed as -o. Available options are:
+         `str` for string and `df` for Pandas DataFrame</li>
       </ul>
     </td>
   </tr>
@@ -151,17 +153,19 @@ class KernelMagics(SparkMagicBase):
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
                                                              "of this name in Spark's context.")
+    @argument("-t", "--type", type=str, default='str', help="Optional param to use with -o. Specifies the type of variable."
+                                                            "Available: 'str' - string or 'df' - Pandas DataFrame")
     @cell_magic
     #todo ISSUE#412 - remove comment before PR @wrap_unexpected_exceptions
     #todo ISSUE#412 - remove comment before PR @handle_expected_exceptions
     def local(self, line, cell=u"", local_ns=None):
+        args = parse_argstring_or_throw(self.local, line)
+
+        if not args.output:
+            raise BadUserDataException()
+
         if self._do_not_call_start_session(""):
-            args = parse_argstring_or_throw(self.local, line)
-
-            if not args.output:
-                raise NotImplementedError
-
-            self.execute_local(cell, args.output, None)
+            self.execute_local(cell, args.output, args.type, None)
         else:
             return
 

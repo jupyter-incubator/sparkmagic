@@ -19,9 +19,10 @@ from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
-from sparkmagic.livyclientlib.sendtosparkcommand import SendToSparkCommand
-
+from sparkmagic.livyclientlib.sendpandasdftosparkcommand import SendPandasDfToSparkCommand
+from sparkmagic.livyclientlib.sendstringtosparkcommand import SendStringToSparkCommand
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
+
 
 
 @magics_class
@@ -40,14 +41,20 @@ class SparkMagicBase(Magics):
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
-    def execute_local(self, cell, output_var_name, session_name):
+    def execute_local(self, cell, output_var_name, type, session_name):
         output_var_value = self.shell.user_ns[output_var_name]
 
         if not output_var_value:
-            raise BadUserDataException()
+            raise BadUserDataException("Value of specified -o variable is None!")
 
-        send_to_spark_command = SendToSparkCommand(output_var_name, output_var_value)
-        (success, out) = self.spark_controller.run_command(send_to_spark_command, None)
+        if type == 'str':
+            command = SendStringToSparkCommand(output_var_name, output_var_value)
+        elif type == 'df':
+            command = SendPandasDfToSparkCommand(output_var_name, output_var_value)
+        else:
+            raise BadUserDataException("Invalid -t type. Available are: `str` or `df`.")
+
+        (success, out) = self.spark_controller.run_command(command, None)
         if not success:
             self.ipython_display.send_error(out)
         else:
