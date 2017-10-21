@@ -153,7 +153,7 @@ class KernelMagics(SparkMagicBase):
     @magic_arguments()
     @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
                                                              " in Spark's context.")
-    @argument("-t", "--type", type=str, default='str', help="Optionally specify the type of input variable. "
+    @argument("-t", "--vartype", type=str, default='str', help="Optionally specify the type of input variable. "
                                                             "Available: 'str' - string(default) or 'df' - Pandas DataFrame")
     @argument("-n", "--name", type=str, default=None, help="Optionally specify the custom name for output variable.")
     @cell_magic
@@ -166,7 +166,7 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException("-o param not provided.")
 
         if self._do_not_call_start_session(""):
-            self.execute_local(cell, args.output, args.type, args.name, None)
+            self.execute_local(cell, args.output, args.vartype, args.name, None)
         else:
             return
 

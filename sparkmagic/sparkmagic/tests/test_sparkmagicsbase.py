@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from mock import MagicMock
-from nose.tools import with_setup, assert_equals, assert_raises
+from nose.tools import with_setup, assert_equals, assert_raises, raises
 
 from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils.constants import LANGS_SUPPORTED, SESSION_KIND_PYSPARK, SESSION_KIND_SPARK, \
@@ -134,6 +134,57 @@ def test_print_empty_endpoint_info():
     magic._print_endpoint_info([], current_session_id)
     magic.ipython_display.html.assert_called_once_with(u'No active sessions.')
 
+
+@with_setup(_setup, _teardown)
+@raises(BadUserDataException)
+def test_should_raise_when_variable_value_is_none():
+    input_variable_name = "x_in"
+    output_variable_name = "x_out"
+    var_type = "str"
+    magic.shell.user_ns.return_value = None
+
+    magic.execute_local("", input_variable_name, var_type, output_variable_name, None)
+
+@with_setup(_setup, _teardown)
+@raises(BadUserDataException)
+def test_should_raise_when_type_is_incorrect():
+    input_variable_name = "x_in"
+    input_variable_value = "x_value"
+    output_variable_name = "x_out"
+    var_type = "incorrect"
+    magic.shell.user_ns.return_value = input_variable_value
+
+    magic.execute_local("", input_variable_name, var_type, output_variable_name, None)
+
+@with_setup(_setup, _teardown)
+def test_should_print_error_when_str_command_failed():
+    input_variable_name = "x_in"
+    input_variable_value = "x_value"
+    output_variable_name = "x_out"
+    var_type = "str"
+    output_value = "error"
+    magic.spark_controller.run_command.return_value = (False, output_value)
+
+    magic.execute_local("", input_variable_name, var_type, output_variable_name, None)
+
+    magic.ipython_display.send_error.assert_called_once_with(output_value)
+    assert not magic.ipython_display.write.called
+
+@with_setup(_setup, _teardown)
+def test_should_print_error_when_df_command_failed():
+    input_variable_name = "x_in"
+    input_variable_value = "x_value"
+    output_variable_name = "x_out"
+    var_type = "df"
+    output_value = "error"
+    magic.spark_controller.run_command.return_value = (False, output_value)
+
+    magic.execute_local("", input_variable_name, var_type, output_variable_name, None)
+
+    magic.ipython_display.send_error.assert_called_once_with(output_value)
+    assert not magic.ipython_display.write.called
+
+##todo issue#412 - add like 4 more cases
 
 @with_setup(_setup, _teardown)
 def test_spark_execution_without_output_var():
