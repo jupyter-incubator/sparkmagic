@@ -178,7 +178,7 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException("-i param not provided.")
 
         if self._do_not_call_start_session(""):
-            self.send_to_spark(cell, args.input, args.vartype, args.varname, None)
+            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, None)
         else:
             return
 

@@ -137,27 +137,27 @@ def test_print_empty_endpoint_info():
 
 @with_setup(_setup, _teardown)
 @raises(BadUserDataException)
-def test_should_raise_when_variable_value_is_none():
+def test_send_to_spark_should_raise_when_variable_value_is_none():
     input_variable_name = "x_in"
     output_variable_name = "x_out"
     var_type = "str"
     magic.shell.user_ns[input_variable_name] = None
 
-    magic.send_to_spark("", input_variable_name, var_type, output_variable_name, None)
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, None)
 
 @with_setup(_setup, _teardown)
 @raises(BadUserDataException)
-def test_should_raise_when_type_is_incorrect():
+def test_send_to_spark_should_raise_when_type_is_incorrect():
     input_variable_name = "x_in"
     input_variable_value = "x_value"
     output_variable_name = "x_out"
     var_type = "incorrect"
     magic.shell.user_ns[input_variable_name] = input_variable_value
 
-    magic.send_to_spark("", input_variable_name, var_type, output_variable_name, None)
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, None)
 
 @with_setup(_setup, _teardown)
-def test_should_print_error_when_str_command_failed():
+def test_send_to_spark_should_print_error_when_str_command_failed():
     input_variable_name = "x_in"
     input_variable_value = "x_value"
     output_variable_name = "x_out"
@@ -166,13 +166,13 @@ def test_should_print_error_when_str_command_failed():
     magic.shell.user_ns[input_variable_name] = input_variable_value
     magic.spark_controller.run_command.return_value = (False, output_value)
 
-    magic.send_to_spark("", input_variable_name, var_type, output_variable_name, None)
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, None)
 
     magic.ipython_display.send_error.assert_called_once_with(output_value)
     assert not magic.ipython_display.write.called
 
 @with_setup(_setup, _teardown)
-def test_should_print_error_when_df_command_failed():
+def test_send_to_spark_should_print_error_when_df_command_failed():
     input_variable_name = "x_in"
     input_variable_value = "x_value"
     output_variable_name = "x_out"
@@ -181,13 +181,13 @@ def test_should_print_error_when_df_command_failed():
     magic.shell.user_ns[input_variable_name] = input_variable_value
     magic.spark_controller.run_command.return_value = (False, output_value)
 
-    magic.send_to_spark("", input_variable_name, var_type, output_variable_name, None)
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, None)
 
     magic.ipython_display.send_error.assert_called_once_with(output_value)
     assert not magic.ipython_display.write.called
 
 @with_setup(_setup, _teardown)
-def should_name_the_output_variable_the_same_as_input_name_when_custom_name_not_provided():
+def test_send_to_spark_should_name_the_output_variable_the_same_as_input_name_when_custom_name_not_provided():
     input_variable_name = "x_in"
     input_variable_value = output_value = "x_value"
     var_type = "str"
@@ -196,13 +196,13 @@ def should_name_the_output_variable_the_same_as_input_name_when_custom_name_not_
     magic.spark_controller.run_command.return_value = (True, output_value)
     expected_message = u'Successfully passed \'{}\' as \'{}\' to Spark kernel'.format(input_variable_name, input_variable_name)
 
-    magic.send_to_spark("", input_variable_name, var_type, output_variable_name, None)
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, None)
 
     magic.ipython_display.write.assert_called_once_with(expected_message)
     assert not magic.ipython_display.send_error.called
 
 @with_setup(_setup, _teardown)
-def should_write_successfully_when_everything_is_correct():
+def test_send_to_spark_should_write_successfully_when_everything_is_correct():
     input_variable_name = "x_in"
     input_variable_value = output_value = "x_value"
     output_variable_name = "x_out"
@@ -211,7 +211,7 @@ def should_write_successfully_when_everything_is_correct():
     magic.spark_controller.run_command.return_value = (True, output_value)
     expected_message = u'Successfully passed \'{}\' as \'{}\' to Spark kernel'.format(input_variable_name, output_variable_name)
 
-    magic.send_to_spark("", input_variable_name, var_type, output_variable_name, None)
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, None)
 
     magic.ipython_display.write.assert_called_once_with(expected_message)
     assert not magic.ipython_display.send_error.called

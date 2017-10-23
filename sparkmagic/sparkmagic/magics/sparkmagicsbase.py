@@ -44,7 +44,7 @@ class SparkMagicBase(Magics):
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
-    def send_to_spark(self, cell, input_variable_name, var_type, output_variable_name, session_name):
+    def do_send_to_spark(self, cell, input_variable_name, var_type, output_variable_name, session_name):
         input_variable_value = self.shell.user_ns[input_variable_name]
         input_variable_type = var_type.lower()
 
