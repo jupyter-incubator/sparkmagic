@@ -10,7 +10,8 @@ class UserCodeParser(object):
     #    %%info
     #    some_input
     _magics_with_no_cell_body = [i.__name__ for i in [KernelMagics.info, KernelMagics.logs, KernelMagics.cleanup,
-                                                      KernelMagics.delete, KernelMagics.help, KernelMagics.spark]]
+                                                      KernelMagics.delete, KernelMagics.help, KernelMagics.spark,
+                                                      KernelMagics.send_to_spark]]
 
     def get_code_to_run(self, code):
         try:
@@ -18,7 +19,7 @@ class UserCodeParser(object):
         except IndexError:
             all_but_first_line = ""
 
-        if (code.startswith("%%local") or code.startswith("%local")) and not "-o" in code:
+        if code.startswith("%%local") or code.startswith("%local"):
             return all_but_first_line
         elif any(code.startswith("%%" + s) for s in self._magics_with_no_cell_body):
             return u"{}\n ".format(code)

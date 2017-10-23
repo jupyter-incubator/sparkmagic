@@ -26,6 +26,10 @@ from sparkmagic.livyclientlib.exceptions import BadUserDataException
 @magics_class
 class SparkMagicBase(Magics):
 
+    _STRING_VAR_TYPE = 'str'
+    _PANDAS_DATAFRAME_VAR_TYPE = 'df'
+    _ALLOWED_LOCAL_TO_SPARK_TYPES = [_STRING_VAR_TYPE, _PANDAS_DATAFRAME_VAR_TYPE]
+
     def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(SparkMagicBase, self).__init__(shell)
@@ -34,17 +38,13 @@ class SparkMagicBase(Magics):
         self.ipython_display = IpythonDisplay()
         self.spark_controller = SparkController(self.ipython_display)
 
-        self.STRING_VAR_TYPE = 'str'
-        self.PANDAS_DATAFRAME_VAR_TYPE = 'df'
-        self.ALLOWED_LOCAL_TO_SPARK_TYPES = [self.STRING_VAR_TYPE, self.PANDAS_DATAFRAME_VAR_TYPE]
-
         self.logger.debug("Initialized spark magics.")
 
         if spark_events is None:
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
-    def execute_local(self, cell, input_variable_name, var_type, output_variable_name, session_name):
+    def send_to_spark(self, cell, input_variable_name, var_type, output_variable_name, session_name):
         input_variable_value = self.shell.user_ns[input_variable_name]
         input_variable_type = var_type.lower()
 
@@ -54,12 +54,12 @@ class SparkMagicBase(Magics):
         if not output_variable_name:
             output_variable_name = input_variable_name
 
-        if input_variable_type == self.STRING_VAR_TYPE:
+        if input_variable_type == self._STRING_VAR_TYPE:
             command = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
-        elif input_variable_type == self.PANDAS_DATAFRAME_VAR_TYPE:
+        elif input_variable_type == self._PANDAS_DATAFRAME_VAR_TYPE:
             command = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
         else:
-            raise BadUserDataException("Invalid -t type. Available are: [{}]".format(",".join(self.ALLOWED_LOCAL_TO_SPARK_TYPES)))
+            raise BadUserDataException("Invalid or incorrect -t type. Available are: [{}]".format(",".join(self._ALLOWED_LOCAL_TO_SPARK_TYPES)))
 
         (success, result) = self.spark_controller.run_command(command, None)
         if not success:

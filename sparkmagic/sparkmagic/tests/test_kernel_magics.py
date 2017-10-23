@@ -49,7 +49,7 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
-@raises(BadUserDataException)
+@raises(NotImplementedError)
 def test_local():
     magic.local("")
 
@@ -430,6 +430,35 @@ def test_get_session_settings():
     assert magic.get_session_settings("something -f", True) == "something"
     assert magic.get_session_settings("something", True) is None
 
+@with_setup(_setup, _teardown)
+@raises(BadUserDataException)
+def test_send_to_spark_with_non_empty_cell():
+    line = ""
+    cell = "non empty"
+
+    magic.send_to_spark(line, cell)
+
+@with_setup(_setup, _teardown)
+@raises(BadUserDataException)
+def test_send_to_spark_with_non_empty_cell():
+    line = "-n tst"
+    cell = ""
+
+    magic.send_to_spark(line, cell)
+
+@with_setup(_setup, _teardown)
+def test_send_to_spark_ok():
+    line = "-i input -n name -t str"
+    cell = ""
+    magic.shell.user_ns["input"] = None
+    spark_controller.run_command = MagicMock(return_value=(True, line))
+
+    magic.send_to_spark(line, cell)
+
+    assert ipython_display.write.called
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
+                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+    spark_controller.run_command.assert_called_once_with(Command(cell), None)
 
 @with_setup(_setup, _teardown)
 def test_spark():

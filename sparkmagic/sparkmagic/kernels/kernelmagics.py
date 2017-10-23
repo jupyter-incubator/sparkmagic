@@ -134,15 +134,20 @@ class KernelMagics(SparkMagicBase):
   <tr>
     <td>local</td>
     <td>%%local<br/>a = 1</td>
-    <td>All the code in subsequent lines will be executed locally. Code must be valid Python code. Automatically starts 
-    up SparkContext if -o param is present.
+    <td>All the code in subsequent lines will be executed locally. Code must be valid Python code.</td>
+  </tr>
+  <tr>
+    <td>send_to_spark</td>
+    <td>%%send_to_spark -o variable -t str -n var</td>
+    <td>Sends a variable from local output to spark cluster.
+    <br/>
     Parameters:
       <ul>
-        <li>-o VAR_NAME: Local dataframe of name VAR_NAME will be available in the %%spark context as a 
-          Spark dataframe with the same name.</li>
-        <li>-t TYPE: Specifies the type of variable passed as -o. Available options are:
+        <li>-i VAR_NAME: Local Pandas DataFrame(or String) of name VAR_NAME will be available in the %%spark context as a 
+          Spark dataframe(or String) with the same name.</li>
+        <li>-t TYPE: Specifies the type of variable passed as -i. Available options are:
          `str` for string and `df` for Pandas DataFrame. Optional, defaults to `str`.</li>
-        <li>-n NAME: Custom name of variable passed as -o. Optional, defaults to -o variable name.</li>
+        <li>-n NAME: Custom name of variable passed as -i. Optional, defaults to -i variable name.</li>
       </ul>
     </td>
   </tr>
@@ -150,23 +155,30 @@ class KernelMagics(SparkMagicBase):
 """
         self.ipython_display.html(help_html)
 
+    @cell_magic
+    def local(self, line, cell=u"", local_ns=None):
+        # This should not be reachable thanks to UserCodeParser. Registering it here so that it auto-completes with tab.
+        raise NotImplementedError(u"UserCodeParser should have prevented code execution from reaching here.")
+
     @magic_arguments()
-    @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
+    @argument("-i", "--input", type=str, default=None, help="If present, indicated variable will be stored in variable"
                                                              " in Spark's context.")
     @argument("-t", "--vartype", type=str, default='str', help="Optionally specify the type of input variable. "
-                                                            "Available: 'str' - string(default) or 'df' - Pandas DataFrame")
-    @argument("-n", "--name", type=str, default=None, help="Optionally specify the custom name for output variable.")
+                                                               "Available: 'str' - string(default) or 'df' - Pandas DataFrame")
+    @argument("-n", "--varname", type=str, default=None, help="Optionally specify the custom name for the input variable.")
     @cell_magic
     @needs_local_scope
     #todo ISSUE#412 - remove comment before PR @wrap_unexpected_exceptions
     #todo ISSUE#412 - remove comment before PR @handle_expected_exceptions
-    def local(self, line, cell=u"", local_ns=None):
-        args = parse_argstring_or_throw(self.local, line)
-        if not args.output:
-            raise BadUserDataException("-o param not provided.")
+    def send_to_spark(self, line, cell=u"", local_ns=None):
+        self._assure_cell_body_is_empty(KernelMagics.send_to_spark.__name__, cell)
+        args = parse_argstring_or_throw(self.send_to_spark, line)
+
+        if not args.input:
+            raise BadUserDataException("-i param not provided.")
 
         if self._do_not_call_start_session(""):
-            self.execute_local(cell, args.output, args.vartype, args.name, None)
+            self.send_to_spark(cell, args.input, args.vartype, args.varname, None)
         else:
             return
 
