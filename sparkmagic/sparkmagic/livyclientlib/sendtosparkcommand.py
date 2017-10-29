@@ -14,14 +14,9 @@ class SendToSparkCommand(Command):
     def execute(self, session):
         try:
             command = self.to_command(session.kind, self.input_variable_name, self.input_variable_value, self.output_variable_name)
-            (success, result) = command.execute(session)
-            result = self.input_variable_value #todo ISSUE#412
-            if not success:
-                raise BadUserDataException(result)
+            return command.execute(session)
         except Exception as e:
-            raise
-        else:
-            return (success, result)
+            raise e
 
     def to_command(self, kind, input_variable_name, input_variable_value, output_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
@@ -39,11 +34,9 @@ class SendToSparkCommand(Command):
     def _scala_command(self, input_variable_name, input_variable_value, output_variable_name):
         raise NotImplementedError #override and provide proper implementation in supertype!
 
-
     @abstractmethod
     def _pyspark_command(self, input_variable_name, input_variable_value, output_variable_name, python2):
         raise NotImplementedError #override and provide proper implementation in supertype!
-
 
     @abstractmethod
     def _r_command(self, input_variable_name, input_variable_value, output_variable_name):
