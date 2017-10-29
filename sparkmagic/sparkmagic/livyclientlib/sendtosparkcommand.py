@@ -25,9 +25,9 @@ class SendToSparkCommand(Command):
 
     def to_command(self, kind, input_variable_name, input_variable_value, output_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
-            return self._pyspark_command(input_variable_name, input_variable_value, output_variable_name)
+            return self._pyspark_command(input_variable_name, input_variable_value, output_variable_name, python2 = True)
         elif kind == constants.SESSION_KIND_PYSPARK3:
-            return self._pyspark_command(input_variable_name, input_variable_value, output_variable_name, encode_result = False)
+            return self._pyspark_command(input_variable_name, input_variable_value, output_variable_name, python2 = False)
         elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command(input_variable_name, input_variable_value, output_variable_name)
         elif kind == constants.SESSION_KIND_SPARKR:
@@ -41,7 +41,7 @@ class SendToSparkCommand(Command):
 
 
     @abstractmethod
-    def _pyspark_command(self, input_variable_name, input_variable_value, output_variable_name, encode_result=True):
+    def _pyspark_command(self, input_variable_name, input_variable_value, output_variable_name, python2):
         raise NotImplementedError #override and provide proper implementation in supertype!
 
 

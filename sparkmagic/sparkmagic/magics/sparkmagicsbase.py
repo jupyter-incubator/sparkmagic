@@ -38,28 +38,30 @@ class SparkMagicBase(Magics):
         self.ipython_display = IpythonDisplay()
         self.spark_controller = SparkController(self.ipython_display)
 
-        self.logger.debug("Initialized spark magics.")
+        self.logger.debug(u'Initialized spark magics.')
 
         if spark_events is None:
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
     def do_send_to_spark(self, cell, input_variable_name, var_type, output_variable_name, session_name):
-        input_variable_value = self.shell.user_ns[input_variable_name]
-        input_variable_type = var_type.lower()
-
-        if not input_variable_value:
+        try:
+            input_variable_value = self.shell.user_ns[input_variable_name]
+        except KeyError:
+            raise BadUserDataException(u'Variable named {} not found.'.format(input_variable_name))
+        if input_variable_value is None:
             raise BadUserDataException(u'Value of {} is None!'.format(input_variable_name))
 
         if not output_variable_name:
             output_variable_name = input_variable_name
 
+        input_variable_type = var_type.lower()
         if input_variable_type == self._STRING_VAR_TYPE:
             command = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
         elif input_variable_type == self._PANDAS_DATAFRAME_VAR_TYPE:
             command = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
         else:
-            raise BadUserDataException("Invalid or incorrect -t type. Available are: [{}]".format(",".join(self._ALLOWED_LOCAL_TO_SPARK_TYPES)))
+            raise BadUserDataException(u'Invalid or incorrect -t type. Available are: [{}]'.format(u','.join(self._ALLOWED_LOCAL_TO_SPARK_TYPES)))
 
         (success, result) = self.spark_controller.run_command(command, None)
         if not success:
