@@ -1,3 +1,6 @@
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 from sparkmagic.utils.utils import records_to_dataframe
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparkevents import SparkEvents
