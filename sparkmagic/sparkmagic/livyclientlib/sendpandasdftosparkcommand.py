@@ -43,32 +43,42 @@ class SendPandasDfToSparkCommand(SendToSparkCommand):
         self._assert_input_is_pandas_dataframe(input_variable_name, pandas_df)
         pandas_json = pandas_df.to_json(orient=u'records')
 
-        code = u'''
+        scala_code = u'''
         val rdd_json_array = spark.sparkContext.makeRDD("""{}""" :: Nil)
         val {} = spark.read.json(rdd_json_array)'''.format(pandas_json, output_variable_name)
 
-        return Command(code)
+        return Command(scala_code)
 
     def _pyspark_command(self, input_variable_name, pandas_df, output_variable_name, python2):
         self._assert_input_is_pandas_dataframe(input_variable_name, pandas_df)
 
         if python2:
-            code = self._python_2_decode
+            pyspark_code = self._python_2_decode
         else:
-            code = self._python_3_decode
+            pyspark_code = self._python_3_decode
 
         pandas_json = pandas_df.to_json(orient=u'records')
 
-        code += u'''
+        pyspark_code += u'''
         json_array = json_loads_byteified('{}')
         rdd_json_array = spark.sparkContext.parallelize(json_array)
         {} = spark.read.json(rdd_json_array)'''.format(pandas_json, output_variable_name)
 
-        return Command(code)
+        return Command(pyspark_code)
 
     def _r_command(self, input_variable_name, pandas_df, output_variable_name):
         self._assert_input_is_pandas_dataframe(input_variable_name, pandas_df)
-        raise NotImplementedError
+        pandas_json = pandas_df.to_json(orient=u'records')
+
+        r_code = u'''
+        fileConn<-file("temporary_pandas_df_sparkmagics.txt")
+        writeLines('{}', fileConn)
+        close(fileConn)
+        {} <- read.json("temporary_pandas_df_sparkmagics.txt")
+        {}.persist()
+        file.remove("temporary_pandas_df_sparkmagics.txt")'''.format(pandas_json, output_variable_name, output_variable_name)
+
+        return Command(r_code)
 
     def _assert_input_is_pandas_dataframe(self, input_variable_name, input_variable_value):
         if not isinstance(input_variable_value, pd.DataFrame):
