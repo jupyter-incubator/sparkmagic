@@ -1,4 +1,4 @@
-FROM jupyter/base-notebook:d0b2d159cc6c
+FROM jupyter/base-notebook:ae885c0a6226
 
 ARG dev_mode=false
 
@@ -8,6 +8,9 @@ USER root
 RUN conda install requests-kerberos -y
 
 USER $NB_USER
+
+RUN pip install --upgrade pip
+RUN pip install --upgrade --ignore-installed setuptools
 
 COPY examples /home/jovyan/work
 
@@ -35,4 +38,8 @@ RUN jupyter serverextension enable --py sparkmagic
 USER root
 RUN chown $NB_USER /home/$NB_USER/.sparkmagic/config.json
 RUN rm -rf hdijupyterutils/ autovizwidget/ sparkmagic/
+
+CMD ["start-notebook.sh", "--NotebookApp.iopub_data_rate_limit=1000000000"]
+
 USER $NB_USER
+
