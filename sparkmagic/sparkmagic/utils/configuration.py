@@ -32,7 +32,7 @@ _with_override = with_override(d, path)
 
 # Helpers
 
-def get_livy_kind(language):
+def get_session_kind(language):
     if language == LANG_SCALA:
         return SESSION_KIND_SPARK
     elif language == LANG_PYTHON:
@@ -57,7 +57,7 @@ def get_auth_value(username, password):
  
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
-    properties[LIVY_KIND_PARAM] = get_livy_kind(language)
+    properties[LIVY_KIND_PARAM] = get_session_kind(language)
     return properties
 
 

@@ -110,11 +110,22 @@ class LivySession(ObjectWithGuid):
         return u"Session id: {}\tYARN id: {}\tKind: {}\tState: {}\n\tSpark UI: {}\n\tDriver Log: {}"\
             .format(self.id, self.get_app_id(), self.kind, self.status, self.get_spark_ui_url(), self.get_driver_log_url())
 
+    def _translate_to_livy_kind(self, properties, kind):
+        # Livy does not support "pyspark3" as the kind from 0.4 onwards and only "pyspark" is valid.
+        # That's why we are leveraging PYSPARK_PYTHON_PARAM here to specifyf different python versions.
+        if kind == constants.SESSION_KIND_PYSPARK:
+            python_properties = {constants.PYSPARK_PYTHON_PARAM: constants.LANG_PYTHON}
+            properties[constants.LIVY_CONF_PARAM] = python_properties
+        elif kind == constants.SESSION_KIND_PYSPARK3:
+            properties[constants.LIVY_KIND_PARAM] = constants.SESSION_KIND_PYSPARK
+            python_properties = {constants.PYSPARK_PYTHON_PARAM: constants.LANG_PYTHON3}
+            properties[constants.LIVY_CONF_PARAM] = python_properties
+
     def start(self):
         """Start the session against actual livy server."""
         self._spark_events.emit_session_creation_start_event(self.guid, self.kind)
         self._printed_resource_warning = False
-
+        self._translate_to_livy_kind(self.properties, self.kind)
         try:
             r = self._http_client.post_session(self.properties)
             self.id = r[u"id"]

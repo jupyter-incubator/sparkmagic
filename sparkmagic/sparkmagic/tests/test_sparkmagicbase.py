@@ -2,7 +2,7 @@
 from mock import MagicMock
 from nose.tools import with_setup, assert_equals, assert_raises
 
-from sparkmagic.utils.configuration import get_livy_kind
+from sparkmagic.utils.configuration import get_session_kind
 from sparkmagic.utils.constants import LANGS_SUPPORTED, SESSION_KIND_PYSPARK, SESSION_KIND_SPARK, \
     IDLE_SESSION_STATUS, BUSY_SESSION_STATUS
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
@@ -32,7 +32,7 @@ def test_load_emits_event():
 
 def test_get_livy_kind_covers_all_langs():
     for lang in LANGS_SUPPORTED:
-        get_livy_kind(lang)
+        get_session_kind(lang)
 
 
 @with_setup(_setup, _teardown)

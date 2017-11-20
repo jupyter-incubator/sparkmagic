@@ -89,6 +89,8 @@ RESOURCE_LIMIT_WARNING = "Warning: The Spark session does not have enough YARN r
 
 LIVY_HEARTBEAT_TIMEOUT_PARAM = u"heartbeatTimeoutInSecond"
 LIVY_KIND_PARAM = u"kind"
+LIVY_CONF_PARAM = u"conf"
+PYSPARK_PYTHON_PARAM = u"spark.yarn.appMasterEnv.PYSPARK_PYTHON"
 
 NO_AUTH = "None"
 AUTH_KERBEROS = "Kerberos"
