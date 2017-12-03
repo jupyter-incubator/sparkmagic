@@ -148,6 +148,7 @@ class KernelMagics(SparkMagicBase):
         <li>-t TYPE: Specifies the type of variable passed as -i. Available options are:
          `str` for string and `df` for Pandas DataFrame. Optional, defaults to `str`.</li>
         <li>-n NAME: Custom name of variable passed as -i. Optional, defaults to -i variable name.</li>
+        <li>-m MAXROWS: Maximum amount of Pandas rows that will be sent to Spark. Defaults to 2500.</li>
       </ul>
     </td>
   </tr>
@@ -166,6 +167,8 @@ class KernelMagics(SparkMagicBase):
     @argument("-t", "--vartype", type=str, default='str', help="Optionally specify the type of input variable. "
                                                                "Available: 'str' - string(default) or 'df' - Pandas DataFrame")
     @argument("-n", "--varname", type=str, default=None, help="Optionally specify the custom name for the input variable.")
+    @argument("-m", "--maxrows", type=int, default=2500, help="Maximum number of rows that will be pulled back "
+                                                              "from the local dataframe")
     @cell_magic
     @needs_local_scope
     #todo ISSUE#412 - remove comment before PR @wrap_unexpected_exceptions
@@ -178,7 +181,7 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException("-i param not provided.")
 
         if self._do_not_call_start_session(""):
-            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, None)
+            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, args.maxrows, None)
         else:
             return
 

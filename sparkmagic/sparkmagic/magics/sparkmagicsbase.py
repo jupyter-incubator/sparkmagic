@@ -44,7 +44,7 @@ class SparkMagicBase(Magics):
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
-    def do_send_to_spark(self, cell, input_variable_name, var_type, output_variable_name, session_name):
+    def do_send_to_spark(self, cell, input_variable_name, var_type, output_variable_name, max_rows, session_name):
         try:
             input_variable_value = self.shell.user_ns[input_variable_name]
         except KeyError:
@@ -55,11 +55,14 @@ class SparkMagicBase(Magics):
         if not output_variable_name:
             output_variable_name = input_variable_name
 
+        if not max_rows:
+            max_rows = conf.default_maxrows()
+
         input_variable_type = var_type.lower()
         if input_variable_type == self._STRING_VAR_TYPE:
             command = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
         elif input_variable_type == self._PANDAS_DATAFRAME_VAR_TYPE:
-            command = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
+            command = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, max_rows)
         else:
             raise BadUserDataException(u'Invalid or incorrect -t type. Available are: [{}]'.format(u','.join(self._ALLOWED_LOCAL_TO_SPARK_TYPES)))
 
