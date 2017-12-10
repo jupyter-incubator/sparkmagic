@@ -14,7 +14,7 @@ class SendStringToSparkCommand(SendToSparkCommand):
 
     def _pyspark_command(self, input_variable_name, input_variable_value, output_variable_name, python2):
         self._assert_input_is_string_type(input_variable_name, input_variable_value)
-        pyspark_code = u'{} = \'\'\'{}\'\'\''.format(output_variable_name, input_variable_value)
+        pyspark_code = u'{} = \"\"\"{}\"\"\"'.format(output_variable_name, input_variable_value)
         return Command(pyspark_code)
 
     def _r_command(self, input_variable_name, input_variable_value, output_variable_name):
@@ -25,4 +25,5 @@ class SendStringToSparkCommand(SendToSparkCommand):
 
     def _assert_input_is_string_type(self, input_variable_name, input_variable_value):
         if not isinstance(input_variable_value, str):
-            raise BadUserDataException(u'{} is not a String!'.format(input_variable_name))
+            wrong_type = input_variable_value.__class__.__name__
+            raise BadUserDataException(u'{} is not a str or bytes! Got {} instead'.format(input_variable_name, wrong_type))

@@ -92,4 +92,5 @@ class SendPandasDfToSparkCommand(SendToSparkCommand):
 
     def _assert_input_is_pandas_dataframe(self, input_variable_name, input_variable_value):
         if not isinstance(input_variable_value, pd.DataFrame):
-            raise BadUserDataException(u'{} is not a Pandas DataFrame!'.format(input_variable_name))
+            wrong_type = input_variable_value.__class__.__name__
+            raise BadUserDataException(u'{} is not a Pandas DataFrame! Got {} instead.'.format(input_variable_name, wrong_type))
