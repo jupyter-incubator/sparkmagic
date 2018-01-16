@@ -5,7 +5,10 @@ from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUserDataException
 
-import ast
+import base64
+import json
+import pickle
+
 
 class SparkStoreCommand(Command):
     def __init__(self, output_var, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None, coerce=None):
@@ -38,11 +41,23 @@ class SparkStoreCommand(Command):
     def execute(self, session):
         try:
             command = self.to_command(session.kind, self.output_var)
-            (success, records_text) = command.execute(session)
+            (success, result_text) = command.execute(session)
             if not success:
-                raise BadUserDataException(records_text)
-            result = records_to_dataframe(records_text, session.kind, self._coerce)
-        except Exception as e:
+                raise BadUserDataException(result_text)
+
+            if session.kind in [constants.SESSION_KIND_PYSPARK, constants.SESSION_KIND_PYSPARK3]:
+                result_json = json.loads(result_text)
+                result_json["value"] = pickle.loads(base64.b64decode(result_json["value"]))
+
+                if result_json["type"] == "df":
+                    result = records_to_dataframe(result_json["value"], session.kind, self._coerce)
+                elif result_json["type"] == "raw":
+                    result = result_json["value"]
+                else:
+                    raise TypeError("Unexpected output variable type: %s" % result_json["type"])
+            else:
+                result = records_to_dataframe(result_text, session.kind, self._coerce)
+        except Exception:
             raise
         else:
             return result
@@ -62,6 +77,28 @@ class SparkStoreCommand(Command):
 
 
     def _pyspark_command(self, spark_context_variable_name, encode_result=True):
+        command = u"""
+        import pyspark, pyspark.sql
+        import base64
+        import json
+
+        if type({spark_context_variable_name}) == pyspark.sql.dataframe.DataFrame:
+            value = str(base64.b64encode({pyspark_command_dataframe}), 'utf-8')
+            type_ = "df"
+        else:
+            value = str(base64.b64encode({pyspark_command_cloudpickle}), 'utf-8')
+            type_ = "raw"
+
+        print(json.dumps({{"type": type_, "value": value}}))
+        """.format(
+            spark_context_variable_name=spark_context_variable_name,
+            pyspark_command_dataframe=self._pyspark_command_dataframe(spark_context_variable_name, encode_result),
+            pyspark_command_cloudpickle=self._pyspark_command_cloudpickle(spark_context_variable_name, encode_result)
+        )
+        return Command(command)
+
+
+    def _pyspark_command_dataframe(self, spark_context_variable_name, encode_result=True):
         command = u'{}.toJSON()'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
@@ -70,15 +107,13 @@ class SparkStoreCommand(Command):
         else:
             command = u'{}.collect()'.format(command)
         # Unicode support has improved in Python 3 so we don't need to encode.
-        if encode_result:
-            print_command = '{}.encode("{}")'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                     conf.pyspark_dataframe_encoding())
-        else:
-            print_command = constants.LONG_RANDOM_VARIABLE_NAME
-        command = u'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                    command,
-                                                    print_command)
-        return Command(command)
+
+        command = u'pyspark.cloudpickle.dumps({})'.format(command)
+        return command
+
+
+    def _pyspark_command_cloudpickle(self, spark_context_variable_name, encode_result=True):
+        return u'pyspark.cloudpickle.dumps({})'.format(spark_context_variable_name)
 
 
     def _scala_command(self, spark_context_variable_name):
