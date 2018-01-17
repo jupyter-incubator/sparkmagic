@@ -175,12 +175,12 @@ def test_execute_code():
     sparkcommand = SparkStoreCommand(variable_name, "take", 100, 0.2, spark_events=spark_events)
     sparkcommand.to_command = MagicMock(return_value=MagicMock())
     result = """{"type": "df",
-"value": "gANdcQAoWB8AAAB7InoiOjEwMCwgIm51bGx2IjpudWxsLCAieSI6NTB9cQFYHgAAAHsieiI6MjUsICJudWxsdiI6bnVsbCwgInkiOjEwfXECZS4="}"""
+"value": "gAJdcQAoWB8AAAB7InoiOjEwMCwgIm51bGx2IjpudWxsLCAieSI6NTB9cQFYHgAAAHsieiI6MjUsICJudWxsdiI6bnVsbCwgInkiOjEwfXECZS4="}"""
     sparkcommand.to_command.return_value.execute = MagicMock(return_value=(True, result))
     session = MagicMock()
     session.kind = "pyspark"
     result = sparkcommand.execute(session)
-    
+
     sparkcommand.to_command.assert_called_once_with(session.kind, variable_name)
     sparkcommand.to_command.return_value.execute.assert_called_once_with(session)
 
