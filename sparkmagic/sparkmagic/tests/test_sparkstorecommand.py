@@ -39,7 +39,7 @@ def test_to_command_pyspark3():
     sparkcommand = SparkStoreCommand(variable_name)
     sparkcommand._pyspark_command = MagicMock(return_value=MagicMock())
     sparkcommand.to_command("pyspark3", variable_name)
-    sparkcommand._pyspark_command.assert_called_with(variable_name, False)
+    sparkcommand._pyspark_command.assert_called_with(variable_name)
 
 
 @with_setup(_setup, _teardown)
