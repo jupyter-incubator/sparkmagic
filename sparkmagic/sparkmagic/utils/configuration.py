@@ -164,6 +164,9 @@ def resource_limit_mitigation_suggestion():
 def ignore_ssl_errors():
     return False
 
+@_with_override
+def custom_certfiles_path():
+    return None
 
 @_with_override
 def coerce_dataframe():
