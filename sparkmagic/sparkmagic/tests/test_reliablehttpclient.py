@@ -232,3 +232,4 @@ def test_kerberos_auth_check_auth():
     client = ReliableHttpClient(endpoint, {}, retry_policy)
     assert_is_not_none(client._auth)
     assert isinstance(client._auth, HTTPKerberosAuth)
+
