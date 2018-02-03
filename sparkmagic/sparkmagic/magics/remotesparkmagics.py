@@ -69,7 +69,7 @@ class RemoteSparkMagics(SparkMagicBase):
             args.quiet = None
             return self.execute_sqlquery(command, args.samplemethod, args.maxrows, args.samplefraction,
                                            args.session, args.output, args.quiet, coerce)
-            
+
         else:
             self.ipython_display.send_error("Context '{}' not found".format(args.context))
 
