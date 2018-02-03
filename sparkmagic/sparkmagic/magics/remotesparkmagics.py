@@ -54,7 +54,7 @@ class RemoteSparkMagics(SparkMagicBase):
     @argument("-e", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
                                                                         "of the dataframe or not (pass False)")
     @handle_expected_exceptions
-    def collect(self, line, local_ns=None):
+    def spark_collect(self, line, local_ns=None):
           args = parse_argstring_or_throw(self.spark, line)
           coerce = get_coerce_value(args.coerce)
           if (len(args.command) > 0):
