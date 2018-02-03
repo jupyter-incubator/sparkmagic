@@ -55,21 +55,23 @@ class RemoteSparkMagics(SparkMagicBase):
                                                                         "of the dataframe or not (pass False)")
     @handle_expected_exceptions
     def spark_collect(self, line, local_ns=None):
-          args = parse_argstring_or_throw(self.spark, line)
-          coerce = get_coerce_value(args.coerce)
-          if (len(args.command) > 0):
+        args = parse_argstring_or_throw(self.spark, line)
+        coerce = get_coerce_value(args.coerce)
+        if (len(args.command) > 0):
             command = " ".join(args.command)
-          else:
+        else:
             command = ""
-          if args.context == CONTEXT_NAME_SPARK:
+        if args.context == CONTEXT_NAME_SPARK:
             return self.execute_spark(command, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
-          elif args.context == CONTEXT_NAME_SQL:
+
+        elif args.context == CONTEXT_NAME_SQL:
             args.session = None
             args.quiet = None
             return self.execute_sqlquery(command, args.samplemethod, args.maxrows, args.samplefraction,
-                                             args.session, args.output, args.quiet, coerce)
-          else:
-              self.ipython_display.send_error("Context '{}' not found".format(args.context))
+                                           args.session, args.output, args.quiet, coerce)
+            
+        else:
+            self.ipython_display.send_error("Context '{}' not found".format(args.context))
 
               
     @magic_arguments()
