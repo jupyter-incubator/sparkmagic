@@ -141,6 +141,21 @@ def test_should_create_a_valid_python2_expression():
     assert_equals(sparkcommand._pyspark_command(input_variable_name, input_variable_value, output_variable_name, python2=True),
                   Command(expected_python2_code))
 
+def test_should_properly_limit_pandas_dataframe():
+    input_variable_name = "input"
+    max_rows = 1
+    input_variable_value = pd.DataFrame({'A': [0, 1, 2, 3, 4], 'B' : [5, 6, 7, 8, 9]})
+    output_variable_name = "output"
+
+    pandas_df_jsonized = u'''[{"A":0,"B":5}]''' #notice we expect json to have dropped all but one row
+    expected_scala_code = u'''
+        val rdd_json_array = spark.sparkContext.makeRDD("""{}""" :: Nil)
+        val {} = spark.read.json(rdd_json_array)'''.format(pandas_df_jsonized, output_variable_name)
+
+    sparkcommand = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, max_rows)
+    assert_equals(sparkcommand._scala_command(input_variable_name, input_variable_value, output_variable_name),
+                  Command(expected_scala_code))
+
 def test_should_raise_when_input_is_not_pandas_df():
     input_variable_name = "input"
     input_variable_value = "not a pandas dataframe"

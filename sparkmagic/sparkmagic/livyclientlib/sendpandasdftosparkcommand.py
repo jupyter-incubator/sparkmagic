@@ -5,6 +5,8 @@ from sparkmagic.livyclientlib.sendtosparkcommand import SendToSparkCommand
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 
+import sparkmagic.utils.configuration as conf
+
 import pandas as pd
 
 class SendPandasDfToSparkCommand(SendToSparkCommand):
