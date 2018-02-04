@@ -171,8 +171,8 @@ class KernelMagics(SparkMagicBase):
                                                               "from the local dataframe")
     @cell_magic
     @needs_local_scope
-    #todo ISSUE#412 - remove comment before PR @wrap_unexpected_exceptions
-    #todo ISSUE#412 - remove comment before PR @handle_expected_exceptions
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     def send_to_spark(self, line, cell=u"", local_ns=None):
         self._assure_cell_body_is_empty(KernelMagics.send_to_spark.__name__, cell)
         args = parse_argstring_or_throw(self.send_to_spark, line)

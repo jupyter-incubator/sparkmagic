@@ -10,17 +10,11 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
     r-base-core && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade setuptools
-
 ENV LIVY_BUILD_VERSION livy-server-0.3.0
 ENV LIVY_APP_PATH /apps/$LIVY_BUILD_VERSION
 ENV LIVY_BUILD_PATH /apps/build/livy
 ENV PYSPARK_PYTHON python2.7
 ENV PYSPARK3_PYTHON python3.4
-
-RUN pip install numpy==1.13.3
-RUN pip install scipy==1.0.0
-RUN pip install scikit-learn==0.19.1
 
 RUN mkdir -p /apps/build && \
     cd /apps/build && \
