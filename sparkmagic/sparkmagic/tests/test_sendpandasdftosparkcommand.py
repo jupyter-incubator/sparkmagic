@@ -10,7 +10,7 @@ from sparkmagic.livyclientlib.sendpandasdftosparkcommand import SendPandasDfToSp
 
 def test_send_to_scala():
     input_variable_name = 'input'
-    input_variable_value = pd.DataFrame({'A': 1, 'B' : 2})
+    input_variable_value = pd.DataFrame({'A': [1], 'B' : [2]})
     output_variable_name = 'output'
     maxrows = 1
     sparkcommand = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, maxrows)
@@ -20,7 +20,7 @@ def test_send_to_scala():
 
 def test_send_to_r():
     input_variable_name = 'input'
-    input_variable_value = pd.DataFrame({'A': 1, 'B' : 2})
+    input_variable_value = pd.DataFrame({'A': [1], 'B' : [2]})
     output_variable_name = 'output'
     maxrows = 1
     sparkcommand = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, maxrows)
@@ -30,7 +30,7 @@ def test_send_to_r():
 
 def test_send_to_python():
     input_variable_name = 'input'
-    input_variable_value = pd.DataFrame({'A': 1, 'B' : 2})
+    input_variable_value = pd.DataFrame({'A': [1], 'B' : [2]})
     output_variable_name = 'output'
     maxrows = 1
     sparkcommand = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, maxrows)
@@ -40,7 +40,7 @@ def test_send_to_python():
 
 def test_send_to_python3():
     input_variable_name = 'input'
-    input_variable_value = pd.DataFrame({'A': 1, 'B' : 2})
+    input_variable_value = pd.DataFrame({'A': [1], 'B' : [2]})
     output_variable_name = 'output'
     maxrows = 1
     sparkcommand = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, maxrows)
