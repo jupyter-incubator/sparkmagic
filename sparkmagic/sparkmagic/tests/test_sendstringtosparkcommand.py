@@ -4,6 +4,7 @@ from mock import MagicMock
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 from nose.tools import assert_raises, assert_equals
 from sparkmagic.livyclientlib.command import Command
+import sparkmagic.utils.constants as constants
 
 def test_send_to_scala():
     input_variable_name = "input"
@@ -11,7 +12,7 @@ def test_send_to_scala():
     output_variable_name = "output"
     sparkcommand = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
     sparkcommand._scala_command = MagicMock(return_value=MagicMock())
-    sparkcommand.to_command("spark", input_variable_name, input_variable_value, output_variable_name)
+    sparkcommand.to_command(constants.SESSION_KIND_SPARK, input_variable_name, input_variable_value, output_variable_name)
     sparkcommand._scala_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name)
 
 def test_send_to_r():
@@ -20,7 +21,7 @@ def test_send_to_r():
     output_variable_name = "output"
     sparkcommand = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
     sparkcommand._r_command = MagicMock(return_value=MagicMock())
-    sparkcommand.to_command("sparkr", input_variable_name, input_variable_value, output_variable_name)
+    sparkcommand.to_command(constants.SESSION_KIND_SPARKR, input_variable_name, input_variable_value, output_variable_name)
     sparkcommand._r_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name)
 
 def test_send_to_pyspark():
@@ -29,7 +30,7 @@ def test_send_to_pyspark():
     output_variable_name = "output"
     sparkcommand = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
     sparkcommand._pyspark_command = MagicMock(return_value=MagicMock())
-    sparkcommand.to_command("pyspark", input_variable_name, input_variable_value, output_variable_name)
+    sparkcommand.to_command(constants.SESSION_KIND_PYSPARK, input_variable_name, input_variable_value, output_variable_name)
     sparkcommand._pyspark_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name, python2=True)
 
 def test_send_to_pyspark3():
@@ -38,7 +39,7 @@ def test_send_to_pyspark3():
     output_variable_name = "output"
     sparkcommand = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
     sparkcommand._pyspark_command = MagicMock(return_value=MagicMock())
-    sparkcommand.to_command("pyspark3", input_variable_name, input_variable_value, output_variable_name)
+    sparkcommand.to_command(constants.SESSION_KIND_PYSPARK3, input_variable_name, input_variable_value, output_variable_name)
     sparkcommand._pyspark_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name, python2=False)
 
 def test_to_command_invalid():
