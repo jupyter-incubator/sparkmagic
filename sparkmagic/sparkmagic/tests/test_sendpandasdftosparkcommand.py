@@ -48,6 +48,20 @@ def test_send_to_python3():
     sparkcommand.to_command(constants.SESSION_KIND_PYSPARK3, input_variable_name, input_variable_value, output_variable_name)
     sparkcommand._pyspark_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name, python2=False)
 
+def test_should_create_a_valid_scala_expression():
+    input_variable_name = "input"
+    input_variable_value = pd.DataFrame({'A': [1], 'B' : [2]})
+    output_variable_name = "output"
+
+    pandas_df_jsonized = u'''[{"A":1,"B":2}]'''
+    expected_scala_code = u'''
+        val rdd_json_array = spark.sparkContext.makeRDD("""{}""" :: Nil)
+        val {} = spark.read.json(rdd_json_array)'''.format(pandas_df_jsonized, output_variable_name)
+
+    sparkcommand = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
+    assert_equals(sparkcommand._scala_command(input_variable_name, input_variable_value, output_variable_name),
+                  Command(expected_scala_code))
+
 def test_should_raise_when_input_is_not_pandas_df():
     input_variable_name = "input"
     input_variable_value = "not a pandas dataframe"
