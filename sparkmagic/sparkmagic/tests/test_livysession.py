@@ -220,7 +220,21 @@ class TestLivySession(object):
         assert_equals(kind, session.kind)
         assert_equals("idle", session.status)
         assert_equals(0, session.id)
-        self.http_client.post_session.assert_called_with({"kind": "pyspark", "heartbeatTimeoutInSecond": 60})
+        self.http_client.post_session.assert_called_with({"kind": "pyspark", "heartbeatTimeoutInSecond": 60, "conf": {"spark.pyspark.python": "python"}})
+
+    def test_start_python3_starts_session(self):
+        self.http_client.post_session.return_value = self.session_create_json
+        self.http_client.get_session.return_value = self.ready_sessions_json
+        self.http_client.get_statement.return_value = self.ready_statement_json
+
+        kind = constants.SESSION_KIND_PYSPARK3
+        session = self._create_session(kind=kind)
+        session.start()
+
+        assert_equals(kind, session.kind)
+        assert_equals("idle", session.status)
+        assert_equals(0, session.id)
+        self.http_client.post_session.assert_called_with({"kind": "pyspark", "heartbeatTimeoutInSecond": 60, "conf": {"spark.pyspark.python": "python3"}})
 
     def test_start_passes_in_all_properties(self):
         self.http_client.post_session.return_value = self.session_create_json

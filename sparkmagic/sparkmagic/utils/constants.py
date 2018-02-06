@@ -89,6 +89,9 @@ RESOURCE_LIMIT_WARNING = "Warning: The Spark session does not have enough YARN r
 
 LIVY_HEARTBEAT_TIMEOUT_PARAM = u"heartbeatTimeoutInSecond"
 LIVY_KIND_PARAM = u"kind"
+LIVY_CONF_PARAM = u"conf"
+# This spark setting is only supported in spark 2.1 onwards, but this is the only generic pyspark setting we can leverage
+PYSPARK_PYTHON_PARAM = u"spark.pyspark.python"
 
 NO_AUTH = "None"
 AUTH_KERBEROS = "Kerberos"
