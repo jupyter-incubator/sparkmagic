@@ -18,7 +18,7 @@ class GraphRenderer(object):
     @staticmethod
     def render(df, encoding, output):
         with output:
-            init_notebook_mode()
+            init_notebook_mode(connected=True)
 
         GraphRenderer._get_graph(encoding.chart_type).render(df, encoding, output)
 
