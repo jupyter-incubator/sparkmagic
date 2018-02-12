@@ -97,3 +97,6 @@ AUTHS_SUPPORTED = [NO_AUTH, AUTH_KERBEROS, AUTH_BASIC]
 
 CONFIGURABLE_RETRY = "configurable"
 LINEAR_RETRY = "linear"
+
+THRIFT_LOG_VAR = "thrift_logs"
+THRIFT_VAR = "thrift_df"

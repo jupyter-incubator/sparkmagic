@@ -407,6 +407,5 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException(u"Cell body for %%{} magic must be empty; got '{}' instead"
                                        .format(magic_name, cell.strip()))
 
-
 def load_ipython_extension(ip):
     ip.register_magics(KernelMagics)
