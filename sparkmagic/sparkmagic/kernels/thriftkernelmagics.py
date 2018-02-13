@@ -33,6 +33,16 @@ class ThriftKernelMagics(ThriftMagicBase):
 
         coerce = get_coerce_value(args.coerce)
 
+        # If just typing one word -> assume it is meant as a local variable and try to return that
+        if len(cell.split()) == 1:
+            try:
+                uservar = self.shell.user_ns[cell]
+                self.ipython_display.writeln(str(uservar))
+                return None
+            except KeyError as ke:
+                self.ipython_display.writeln('Could not find {!r} in user variables'.format(cell))
+                self.ipython_display.writeln('Attempting to execute {!r} as a query...'.format(cell))
+
         return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
                                      args.output, args.logs, args.quiet, coerce)
 

@@ -20,3 +20,14 @@ class QueryLogs:
 
     def __str__(self):
         return "\n".join(self._logs)
+
+    def __len__(self):
+        return sum(len(log.split('\n')) for log in self._logs)
+
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            indices = item.indices(len(self))
+            newline_logs = sum([log.split('\n') for log in self._logs],[])
+            return newline_logs.__getitem__(slice(*indices))
+        else:
+            return self._logs[item]

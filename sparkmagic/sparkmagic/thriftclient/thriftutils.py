@@ -46,7 +46,7 @@ def time_and_write(write_func=None):
             if write_func:
                 write_func("Total execution time: {:.2f}s".format(time() - t_all))
             else:
-                args[0].writeln("Total execution time: {:.2f}s".format(time() - t_all))
+                args[0].ipython_display.writeln("Total execution time: {:.2f}s".format(time() - t_all))
             return ret
         return _time_and_write_wrap
     return time_and_write_wrap

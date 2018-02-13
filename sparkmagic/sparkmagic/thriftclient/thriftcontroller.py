@@ -12,6 +12,7 @@ class ThriftController:
         self.port = 10000
         self.user = 'tnystrand' #os.getenv("USER")
         self.cursor = None
+        # Fix this ->
         self.conf = {'hive.execution.engine': 'tez',
                      'tez.cpu.vcores': '4',
                      'tez.queue.name': 'production',
@@ -58,7 +59,7 @@ class ThriftController:
         return True
 
     def execute(self, query, async=False):
-        self.cursor.execute(str(query), async)
+        self.cursor.execute(str(query), async=async)
 
     def reset(self):
         self.cursor.cancel()

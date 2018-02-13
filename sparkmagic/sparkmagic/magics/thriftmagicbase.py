@@ -8,6 +8,8 @@ from sparkmagic.thriftclient.querylogs import QueryLogs
 from sparkmagic.thriftclient.thriftutils import writeln, send_error, exit_with_none, exit_with_data, time_and_write
 from sparkmagic.utils.constants import THRIFT_VAR, THRIFT_LOG_VAR
 from sparkmagic.thriftclient.sqlquery import SqlQueries, SqlQuery
+from sparkmagic.thriftclient.outputhandler import OutputHandler
+from sparkmagic.thriftclient.ThriftExceptions import ThriftExecutionError
 
 from pyhive.exc import OperationalError, ProgrammingError
 from TCLIService.ttypes import TOperationState
@@ -17,6 +19,25 @@ import pandas as pd
 
 import re
 from time import time
+
+
+def interrupt_handle():
+    def interrupt_handle_wrapper(f):
+        def _interrupt_handle_wrapper(self, *args, **kwargs):
+            # Keyboard interrupts
+            try:
+                return f(self, *args, **kwargs)
+            except KeyboardInterrupt as kei:
+                self.writeln('Shutting down query...')
+                if self.thriftcontroller.cursor:
+                    self.thriftcontroller.cursor.cancel()
+                    self.thriftcontroller.cursor = None
+                self.ipython_display.writeln('DONE')
+                clear_output()
+                self.ipython_display.writeln('Interrupted query')
+                return None
+        return _interrupt_handle_wrapper
+    return interrupt_handle_wrapper
 
 @magics_class
 class ThriftMagicBase(Magics):
@@ -31,43 +52,42 @@ class ThriftMagicBase(Magics):
         self.thriftcontroller = ThriftController(self.ipython_display)
         self.has_started = False
 
-        self.querylogs = QueryLogs()
-        self.writeln = writeln(self.querylogs, self.ipython_display)
-        self.send_error = send_error(self.querylogs, self.ipython_display)
+        #self.executioncontexts = ExecutionContexts()
 
+    @interrupt_handle()
     @time_and_write()
     def execute_sqlquery(self, cell, samplemethod, maxrows, samplefraction,
                          output_var, log_var, quiet, coerce):
-        # if async, thread and return
+        # TODO: if async, thread and return
+        # Output handlers and logs for query
+        # Should be handled outside for all logs using the execution count id
+        # self.executioncontexts.add(ExecutionContext(querylogs, outputhandler...))
+        querylogs = QueryLogs()
+        # Avoid that long running queries fill the entire screen
+        outputhandler = OutputHandler(clear_output, ndisplay=30)
+        writeln = outputhandler.wrap(self.ipython_display.writeln)
+        send_error = outputhandler.wrap(self.ipython_display.send_error)
 
-        # Keyboard interrupts
+        # Exluding unicode to avoid non user-friendly internals
+        user_variables = SqlQueries.user_variables(self.shell)
+
+        # Create new controller if doesn't exists
+        if not self.thriftcontroller.cursor:
+            writeln("Establishing new connection to thriftserver...")
+            if not self.thriftcontroller.connect():
+                return None
+
+
         try:
-            # Exluding unicode to avoid non user-friendly internals
-            user_variables = SqlQueries.user_variables(self.shell)
-
-            # Clears internal log structure
-            self.querylogs.clear()
-
-            # Create new controller if doesn't exists
-            if not self.thriftcontroller.cursor:
-                self.writeln("Establishing new connection to thriftserver...")
-                if not self.thriftcontroller.connect():
-                    return None
-
-
             df = self._execute_sqlquery(cell, samplemethod, maxrows, samplefraction,
-                                        session, output_var, quiet, coerce)
-            # Clears the ipython text
-            clear_output()
-        except KeyboardInterrupt as kei:
-            self.writeln('Shutting down query...')
-            if self.thriftcontroller.cursor:
-                self.thriftcontroller.cursor.cancel()
-                self.thriftcontroller.cursor = None
-            self.writeln('DONE')
-            clear_output()
-            self.writeln('Interrupted query')
+                                    output_var, quiet, coerce, user_variables,
+                                    writeln, querylogs)
+        except ThriftExecutionError as tee:
+            send_error(tee.message)
             df = None
+        else:
+            # Clears ipython text output for active cell
+            clear_output()
 
         # Save the query runtime output for review
         if df is not None:
@@ -82,22 +102,21 @@ class ThriftMagicBase(Magics):
 
             return exit_with_data(self.shell,
                                   self.ipython_display,
-                                  self.querylogs,
+                                  outputhandler.fulllog(),
                                   df,
                                   log_var_name=log_var,
                                   data_var_name=output_var)
         else:
             return exit_with_none(self.shell,
                                   self.ipython_display,
-                                  self.querylogs,
+                                  outputhandler.fulllog(),
                                   log_var_name=log_var)
 
 
 
+
     def _execute_sqlquery(self, cell, samplemethod, maxrows, samplefraction,
-                         output_var, quiet, coerce):
-
-
+                         output_var, quiet, coerce, user_variables, writeln, querylogs):
 
         # Execute each subquery and eliminate empty list entries
 
@@ -110,44 +129,39 @@ class ThriftMagicBase(Magics):
             try:
                 query.parse(user_variables)
             except KeyError as ke:
-                self.send_error("Could not find variable: '{}'".format(str(ke.message)))
-                self.send_error(
-                        "Current user variables:\n{{{}}}".format('\n'.join('{} = {!r}'.format(*item) for item in user_variables.items()))
-                    )
-                return None
+                err = "Could not find variable: '{}'".format(str(ke.message))
+                err += "\nCurrent user variables:\n{{{}}}".format('\n'.join('{} = {!r}'.format(*item) for item in user_variables.items()))
+                raise ThriftExecutionError(err)
             except ValueError as ve:
-                self.send_error('{}: {}'.format(ve.__class__.__name__, ve.message))
-                self.send_error("Local variables need to be formatted similar to %()s - notice the s only applies to strings")
-                return None
+                err = '{}: {}'.format(ve.__class__.__name__, ve.message)
+                err += "\nLocal variables need to be formatted similar to %()s - notice the s only applies to strings"
+                raise ThriftExecutionError(err)
             except TypeError as te:
-                self.send_error('{}: {}'.format(te.__class__.__name__, te.message))
-                self.send_error("Local variables need to be formatted similar to %()s - notice the s only applies to strings")
-                return None
+                err = '{}: {}'.format(te.__class__.__name__, te.message)
+                err += "\nLocal variables need to be formatted similar to %()s - notice the s only applies to strings"
+                raise ThriftExecutionError(err)
 
             # Execute query
             try:
-                self.querylogs + query
                 self.thriftcontroller.execute(query, async=True)
             except OperationalError as ope:
                 # Returns a TCLIService.ttypes.TExecuteStatementResp
                 # Catches query syntax errors
-                msg = ope.args[0].status.errorMessage
-                self.ipython_display.send_error(msg)
-                return None
+                err = ope.args[0].status.errorMessage
+                raise ThriftExecutionError(err)
             except TTransportException as tte:
-                self.send_error('{}: {}'.format(tte.__class__.__name__,tte.message))
-                self.send_error(
-                    "Possible issues in order: {}".format(''.join(['\n-> {}']*2)).format(
+                err = '{}: {}'.format(tte.__class__.__name__,tte.message)
+                err += "\nPossible issues in order: {}".format(''.join(['\n-> {}']*2)).format(
                             "Connection to destination host is down",
                             "Thriftserver is not running"
                         )
-                    )
                 self.thriftcontroller.cursor = None
-                return None
-            
+                raise ThriftExecutionError(err)
+
             # for creating progressbars
-            self.has_started = False
-            self.ipython_display.writeln(query)
+            has_started = False
+            querylogs + query
+            writeln(query)
 
             # Wait for query to finish printing status updates
             try:
@@ -157,30 +171,31 @@ class ThriftMagicBase(Magics):
 
                 while status in (TOperationState.INITIALIZED_STATE, TOperationState.RUNNING_STATE):
                     logs = self.thriftcontroller.cursor.fetch_logs()
-                    self.querylogs + logs
+                    querylogs + logs
                     for message in logs:
-                        self.ipython_display.writeln(message)
+                        writeln(message)
 
                     if 'map' in ''.join(logs).lower():
-                        self.has_started = True
+                        has_started = True
 
                     t_current = time()-t_query
-                    if (not self.has_started) and t_current > 10:
-                        self.writeln(
-                                "Query is taking unusally long to start (waited {:.2f}s). Hadoop cluster memory or vcores might be saturated. Shutdown with interrupt (shortcut i,i in command mode).".format(t_current)
-                            )
+                    # Ping a potentially impatiant user
+                    if (not has_started) and t_current > 15:
+                        writeln(" ".join([
+                                "Query is taking unusally long to start (waited {:.2f}s).".format(t_current),
+                                "Hadoop cluster memory or vcores might be saturated.",
+                                "Shutdown with interrupt (shortcut i,i in command mode)."
+                            ]))
                     status = self.thriftcontroller.cursor.poll().operationState
             except TTransportException as tte:
-                self.send_error('{}: {}'.format(tte.__class__.__name__,tte.message))
-                self.send_error(
-                    "Possible issues in order: {}".format(''.join(['\n-> {}']*2)).format(
+                err = '{}: {}'.format(tte.__class__.__name__, tte.message)
+                err += "\nPossible issues in order: {}".format(''.join(['\n-> {}']*2)).format(
                             "Connection to destination host is down",
                             "Thriftserver is not running"
                         )
-                    )
                 self.thriftcontroller.cursor = None
-                return None
-            self.writeln("Query execution time: {:.2f}s\n".format(time() - t_query))
+                raise ThriftExecutionError(err)
+            writeln("Query execution time: {:.2f}s\n".format(time() - t_query))
 
             # Parse output for each query (intermediate results are printed to screen)
             try:
@@ -188,23 +203,18 @@ class ThriftMagicBase(Magics):
             except OperationalError as ope:
                 # Catches query syntax errors
                 # Returns a TCLIService.ttypes.TExecuteStatementResp
-                msg = ope.args[0].status.errorMessage
-                self.send_error(msg)
-                self.send_error(
-                    "Possible issues in order: {}".format(''.join(['\n-> {}']*4)).format(
+                err = ope.args[0].status.errorMessage
+                err += "\nPossible issues in order: {}".format(''.join(['\n-> {}']*4)).format(
                             "Query was killed by resourcemanager",
                             "Query was killed by a user",
                             "Connection dropped during execution",
                             "User could not be authenticated (i.e. bad/wrong username)"
                         )
-                    )
-                self.send_error(
-                    "{}\n{}".format(
+                err += "\n{}\n{}".format(
                             "Note that 'username' must match your workbench 'username'",
                             "If running jupyter as a service on remote machines 'username' should be set manually"
                         )
-                    )
-                return None
+                raise ThriftExecutionError(err)
 
             # Some queries does not return any data or description
             if headerdesc:
@@ -212,10 +222,12 @@ class ThriftMagicBase(Magics):
                 try:
                     records = self.thriftcontroller.cursor.fetchall()
                 except ProgrammingError as pre:
-                    self.send_error(str(pre))
-                    self.send_error("Likely a missing client side parser issue.")
-                    self.send_error("Consider filing a bug...")
-                    return None
+                    err = "{}\n{}\n{}".format(
+                                str(pre),
+                                "Likely a missing client side parser issue.",
+                                "Consider filing a bug..."
+                            )
+                    raise ThriftExecutionError(err)
 
                 # Create a dataframe from the output
                 header = [desc[0].split('.')[-1] for desc in headerdesc]
@@ -223,12 +235,13 @@ class ThriftMagicBase(Magics):
 
                 df = pd.DataFrame.from_records(records, columns=header)
                 # Last query does not display potential outputs, but returns dataframe for viz
+                # Might want to save this output elsewhere in the future
                 if query_i < len(queries)-1:
-                    self.ipython_display.writeln(df)
+                    writeln(df)
 
         # Notify user that last query did not return any data
         if not headerdesc:
-            self.writeln("Query did not return any data")
+            writeln("Query did not return any data")
             return None
 
         # If the user don't want any results

@@ -1,0 +1,2 @@
+class ThriftExecutionError(Exception):
+    pass
