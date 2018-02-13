@@ -439,12 +439,13 @@ def test_send_to_spark_with_non_empty_cell():
     magic.send_to_spark(line, cell)
 
 @with_setup(_setup, _teardown)
-@raises(BadUserDataException)
-def test_send_to_spark_with_non_empty_cell():
+def test_send_to_spark_with_empty_cell():
     line = "-n tst"
     cell = ""
 
     magic.send_to_spark(line, cell)
+    assert ipython_display.write.called
+
 
 @with_setup(_setup, _teardown)
 def test_send_to_spark_ok():
