@@ -431,9 +431,8 @@ def test_get_session_settings():
     assert magic.get_session_settings("something", True) is None
 
 @with_setup(_setup, _teardown)
-def test_send_to_spark_with_non_empty_cell():
+def test_send_to_spark_with_non_empty_cell_error():
     line = "-i input -n name -t str"
-    msg = "Cell body for %%send_to_spark magic must be empty; got 'non empty' instead"
     cell = "non empty"
 
     magic.session_started = True
@@ -442,12 +441,10 @@ def test_send_to_spark_with_non_empty_cell():
     magic.send_to_spark(line, cell)
 
     assert_equals(ipython_display.send_error.call_count, 1)
-    _assert_magic_failure_event_emitted_once('send_to_spark', BadUserDataException(msg))
 
 @with_setup(_setup, _teardown)
-def test_send_to_spark_with_no_i_param():
+def test_send_to_spark_with_no_i_param_error():
     line = "-n name -t str"
-    msg = "-i param not provided."
     cell = ""
 
     magic.session_started = True
@@ -456,7 +453,6 @@ def test_send_to_spark_with_no_i_param():
     magic.send_to_spark(line, cell)
 
     assert_equals(ipython_display.send_error.call_count, 1)
-    _assert_magic_failure_event_emitted_once('send_to_spark', BadUserDataException(msg))
 
 @with_setup(_setup, _teardown)
 def test_send_to_spark_ok():
