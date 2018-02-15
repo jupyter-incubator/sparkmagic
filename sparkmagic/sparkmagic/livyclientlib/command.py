@@ -1,5 +1,8 @@
 import textwrap
 
+from IPython.display import display
+import ipywidgets as widgets
+
 from hdijupyterutils.guid import ObjectWithGuid
 
 import sparkmagic.utils.configuration as conf
@@ -45,18 +48,26 @@ class Command(ObjectWithGuid):
 
     def _get_statement_output(self, session, statement_id):
         retries = 1
+
+        progress = widgets.FloatProgress(value=0.0, min=0.0, max=1.0)
+        display(progress)
         
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
+            
             status = statement[u"state"].lower()
 
             self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
 
             if status not in FINAL_STATEMENT_STATUS:
+                progress.value = statement.get('progress', 0.0)
+
                 session.sleep(retries)
                 retries += 1
             else:                
                 statement_output = statement[u"output"]
+
+                progress.close()
 
                 if statement_output is None:
                     return (True, u"")
