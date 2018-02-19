@@ -47,7 +47,7 @@ class ThriftMagicBase(Magics):
         self.shell = shell
 
         self.logger = SparkLog(u"ThriftMagics")
-        self.ipython_display = IpythonDisplay()
+        self.ipython_display = IpythonDisplay(shell)
 
         self.thriftcontroller = ThriftController(self.ipython_display)
         self.has_started = False

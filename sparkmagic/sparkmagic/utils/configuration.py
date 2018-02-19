@@ -18,7 +18,7 @@ import sparkmagic.utils.constants as constants
 d = {}
 path = join_paths(HOME_PATH, CONFIG_FILE)
 
-    
+
 def override(config, value):
     _override(d, path, config, value)
 
@@ -48,13 +48,13 @@ def get_livy_kind(language):
 def get_auth_value(username, password):
     if username == '' and password == '':
         return constants.NO_AUTH
-    
+
     return constants.AUTH_BASIC
 
 
 # Configs
 
- 
+
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
@@ -69,8 +69,8 @@ def session_configs():
 @_with_override
 def kernel_python_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
-    
-    
+
+
 def base64_kernel_python_credentials():
     return _credentials_override(kernel_python_credentials)
 
@@ -90,7 +90,7 @@ def kernel_scala_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
 
 
-def base64_kernel_scala_credentials():        
+def base64_kernel_scala_credentials():
     return _credentials_override(kernel_scala_credentials)
 
 @_with_override
@@ -198,7 +198,7 @@ def pyspark_dataframe_encoding():
 @_with_override
 def heartbeat_refresh_seconds():
     return 30
-    
+
 
 @_with_override
 def heartbeat_retry_seconds():
@@ -235,6 +235,39 @@ def configurable_retry_policy_max_retries():
     # Sum of default values is ~10 seconds.
     # Plus 15 seconds more wanted, that's 3 more 5 second retries.
     return 8
+
+
+@_with_override
+def thrift_hivetez_conf():
+    return {'hive.execution.engine': 'tez',
+             'tez.cpu.vcores': '4',
+             'tez.queue.name': 'production',
+             'hive.tez.container.size': '4096',
+             'hive.tez.java.opts': '-Xmx3686m',
+             'hive.exec.max.dynamic.partitions': '5000',
+             'hive.exec.max.dynamic.partitions.pernode': '5000',
+             'hive.exec.dynamic.partition': 'true',
+             'hive.support.sql11.reserved.keywords': 'false',
+             'hive.cbo.enable': 'true',
+             'hive.compute.query.using.stats': 'true',
+             'hive.stats.fetch.column.stats': 'true',
+             'hive.stats.fetch.partition.stats': 'true',
+             'hive.vectorized.execution.enabled': 'true',
+             'hive.vectorized.execution.reduce.enabled': 'true',
+             'hive.vectorized.execution.reduce.groupby.enabled': 'true',
+             'hive.exec.parallel': 'true',
+             'hive.exec.parallel.thread.number': '16',
+             'hive.cli.print.header': 'true'
+            }
+
+@_with_override
+def thrift_hive_hostname():
+    return 'localhost'
+
+@_with_override
+def thrift_hive_port():
+    return 10000
+
 
 
 def _credentials_override(f):

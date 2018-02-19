@@ -4,35 +4,21 @@ from time import time
 from pyhive import hive
 from thrift.transport.TTransport import TTransportException
 
+from sparkmagic.utils.utils import thrift_hivetez_conf, thrift_hive_hostname, thrift_hive_port
+
 class ThriftController:
     def __init__(self, ipython_display):
         self.ipython_display = ipython_display
         self.hiveconf = {}
         self.host = 'localhost'
+        #self.host = 'hive-dogfood.s3s.altiscale.com'
         self.port = 10000
+        self.port = 9083
+
         self.user = 'tnystrand' #os.getenv("USER")
         self.cursor = None
-        # Fix this ->
-        self.conf = {'hive.execution.engine': 'tez',
-                     'tez.cpu.vcores': '4',
-                     'tez.queue.name': 'production',
-                     'hive.tez.container.size': '4096',
-                     'hive.tez.java.opts': '-Xmx3686m',
-                     'hive.exec.max.dynamic.partitions': '5000',
-                     'hive.exec.max.dynamic.partitions.pernode': '5000',
-                     'hive.exec.dynamic.partition': 'true',
-                     'hive.support.sql11.reserved.keywords': 'false',
-                     'hive.cbo.enable': 'true',
-                     'hive.compute.query.using.stats': 'true',
-                     'hive.stats.fetch.column.stats': 'true',
-                     'hive.stats.fetch.partition.stats': 'true',
-                     'hive.vectorized.execution.enabled': 'true',
-                     'hive.vectorized.execution.reduce.enabled': 'true',
-                     'hive.vectorized.execution.reduce.groupby.enabled': 'true',
-                     'hive.exec.parallel': 'true',
-                     'hive.exec.parallel.thread.number': '16',
-                     'hive.cli.print.header': 'true'
-                     }
+
+        self.conf = thrift_hivetez_conf()
         self.conf = {'hive.execution.engine': 'tez'}
 
     def set_conf(_conf, replace=True):
@@ -49,8 +35,8 @@ class ThriftController:
             self.ipython_display.send_error(
                 "Possible issues in order: {}".format(''.join(['\n-> {}']*5)).format(
                         "Connection to destination host is down",
-                        "Bad/wrong hostname",
-                        "Bad/wrong port",
+                        "Bad/wrong hostname: {!r}".format(self.host),
+                        "Bad/wrong port: {!r}".format(self.port),
                         "Destination host is not reachable (ssh and port forward is not set up)",
                         "Thriftserver is not running"
                     )

@@ -47,5 +47,10 @@ class ThriftKernelMagics(ThriftMagicBase):
                                      args.output, args.logs, args.quiet, coerce)
 
 
+
+    def sqlconf(self, line, cell="", local_ns=None):
+        pass
+
+        
 def load_ipython_extension(ip):
     ip.register_magics(ThriftKernelMagics)

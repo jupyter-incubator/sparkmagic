@@ -4,8 +4,11 @@ import sys
 
 
 class IpythonDisplay(object):
-    def __init__(self):
-        self._ipython_shell = get_ipython()
+    def __init__(self, shell=None):
+        if shell:
+            self._ipython_shell = shell
+        else:
+            self._ipython_shell = get_ipython()
 
     def display(self, to_display):
         display(to_display)
