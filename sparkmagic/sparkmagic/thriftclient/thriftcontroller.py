@@ -4,16 +4,14 @@ from time import time
 from pyhive import hive
 from thrift.transport.TTransport import TTransportException
 
-from sparkmagic.utils.utils import thrift_hivetez_conf, thrift_hive_hostname, thrift_hive_port
+from sparkmagic.utils.configuration import thrift_hivetez_conf, thrift_hive_hostname, thrift_hive_port
 
 class ThriftController:
     def __init__(self, ipython_display):
         self.ipython_display = ipython_display
         self.hiveconf = {}
         self.host = 'localhost'
-        #self.host = 'hive-dogfood.s3s.altiscale.com'
         self.port = 10000
-        self.port = 9083
 
         self.user = 'tnystrand' #os.getenv("USER")
         self.cursor = None
