@@ -2,8 +2,8 @@ from __future__ import print_function
 from calljava import CallJava 
 
 class RemoteHiveMeta:
-    def __init__(self, hivexml):
-        self._remote = CallJava(hivexml)
+    def __init__(self, hivexml, timeout=600):
+        self._remote = CallJava(hivexml, timeout)
 
     def getDatabases(self):
         return self._remote.calljava("D:all")
