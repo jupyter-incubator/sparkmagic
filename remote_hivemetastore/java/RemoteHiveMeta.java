@@ -53,6 +53,17 @@ class RemoteHiveMeta {
         return out;
     }
 
+    public List<String> getTables(String database, String tblpattern) throws RMMException {
+        List<String> out = null;
+        try {
+            out = this.client.getTables(database, tblpattern);
+        }
+        catch (TException e) {
+            throw new RMMException(String.format("Failed to gather schema with: %s%n", e));
+        }
+        return out;
+    }
+
     public List<FieldSchema> getSchema(String table, String database) throws RMMException {
         List<FieldSchema> out = null;
         try {
@@ -105,6 +116,10 @@ class RemoteHiveMeta {
         System.out.println(String.join("\n", this.getAllTables(database)));
     }
 
+    public void printTables(String database, String tablepattern) throws RMMException {
+        System.out.println(String.join("\n", this.getTables(database, tablepattern)));
+    }
+
     public void printDescription(String table, String database) throws RMMException {
         System.out.println(String.join("\n", this.getDescription(table, database)));
     }
@@ -115,7 +130,7 @@ class RemoteHiveMeta {
 
     public static void main(String[] args) throws Exception {
         RemoteHiveMeta rm = null;
-        String[] types = new String[]{"D:all", "T:all", "D:spec", "T:spec"};
+        String[] types = new String[]{"D:all", "T:all", "D:spec", "T:spec", "T:pttn"};
         try {
             File f = new File(args[0]);
             if (!f.exists() || f.isDirectory()) { 
@@ -132,6 +147,8 @@ class RemoteHiveMeta {
                 rm.printTables(args[2]);
             else if (args[1].equals(types[3]))
                 rm.printDescription(args[2], args[3]);
+            else if (args[1].equals(types[4]))
+                rm.printTables(args[2], args[3]);
             else {
                 System.err.printf("Unrecognized format '%s'%n", args[1]);
                 System.err.printf("Please use one of: [%s] %n", String.join(", ", types));

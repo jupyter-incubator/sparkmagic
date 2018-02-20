@@ -30,9 +30,9 @@ class ThriftKernelBase(KernelBase):
 
         if matches is None:
             conent = {
-                'matches' : matches,
-                'cursor_start' : start_pos,
-                'cursor_end' : end_pos,
+                'matches' : [],
+                'cursor_start' : pos,
+                'cursor_end' : pos,
                 'metadata' : {},
                 'status' : 'ok'
             }

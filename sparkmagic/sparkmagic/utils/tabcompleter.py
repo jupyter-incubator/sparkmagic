@@ -2,8 +2,11 @@ import re
 
 from sparkmagic.utils.hivekeywords import HIVE_KEYWORDS
 from sparkmagic.utils.trie import TrieNode, Trie
+from sparkmagic.utils.configuration import hive_xml, metastore_timeout
 
-from hivemetastore.remotehivemeta import RemoteHiveMeta
+from sparkmagic.utils.hivemetaconnetion import HiveMetaStoreConnection
+
+from hivemetastore.metaexceptions import TimeOutException
 
 class Completer:
     def __init__(self):
@@ -16,13 +19,25 @@ class Completer:
         self._hktree = hktree
 
         # Keep all databases in memory
-        remote_hivemetastore = RemoteHiveMeta()
-        databases = remote_hivemetastore.getDatabases()
-        dbtree = Trie()
-        for database in databases:
-            dbtree.add(database)
+        # But if metastore is unreachable time out and do not use
+        usehivemeta = True
+        remote_hivemetastore = HiveMetaStoreConnection(hive_xml(), metastore_timeout())
+        try:
+            databases = remote_hivemetastore.getDatabases()
+        except TimeOutException as e:
+            print("Timedout waiting for databases")
+            print("Skipping HIVE metastore keywords...")
+            usehivemeta = False
+            dbtree = None
+            remote_hivemetastore = None
+
+        if usehivemeta:
+            dbtree = Trie()
+            for database in databases:
+                dbtree.add(database)
+
         self._dbtree = dbtree
-        self.remote_hivemetastore = remote_hivemetastore
+        self._remote_hivemetastore = remote_hivemetastore
 
     def _nullify(self):
         self._prefix = ""
@@ -30,7 +45,7 @@ class Completer:
         self._suggestions = []
 
     def complete(self, code, pos):
-        wordsincode = list(re.finditer(r'(\w+)', code))
+        wordsincode = list(re.finditer(r'([a-zA-Z0-9_\-.]+)', code))
         # No input words -> nothing to do
         if not wordsincode:
             self._nullify()
@@ -50,12 +65,31 @@ class Completer:
             return False
 
         prefix = wordtocomplete[0:pos-wordspan[0]]
+        print "PREFIX: " + prefix
 
         # Use trie structure to grab hive matches
-        hksuggestions = self._hktree.find_prefix(prefix.upper())
+        hksuggestions = self._hktree.find_prefix(prefix)
 
         # Add from metadata here
-        suggestions = hksuggestions
+        hmsuggestions = []
+        if self._remote_hivemetastore:
+            # Try to guess for databases or tables
+            db_tb = wordtocomplete.split(".")
+            print "THE SPLIT: " + str(db_tb)
+            # We are looking for a table and the position is in the 'table' area
+            if len(db_tb) > 1 and pos > len(db_tb[0])+wordspan[0]:
+                tableprefix = db_tb[1][0:pos-wordspan[0]+len(db_tb[1])] + "*"
+                print "TABLE PREFIX: " + tableprefix
+                try:
+                    tables = self._remote_hivemetastore.getTables(db_tb[0], tableprefix)
+                except TimeOutException as e:
+                    print("Timedout waiting for tables")
+                    print("Skipping HIVE table keywords...")
+                print "TABLES: " + str(tables)
+                hmsuggestions += ["{}.{}".format(db_tb[0],t) for t in tables]
+            hmsuggestions += self._dbtree.find_prefix(prefix)
+
+        suggestions = hmsuggestions + hksuggestions
 
         self._prefix = prefix
         self._wordspan = wordspan
@@ -79,7 +113,7 @@ class Completer:
 
 if __name__ == '__main__':
     completer = Completer()
-    completer.complete("select * from whe limit 5", 15)
+    completer.complete("select * from cluster_metrics_prod_2.c where limit 5", 38)
     matches = completer.suggestions()
     prefix = completer.prefix()
     (start_pos, end_pos) = completer.cursorpostitions()
