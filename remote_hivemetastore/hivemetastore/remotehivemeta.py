@@ -8,11 +8,14 @@ class RemoteHiveMeta:
     def getDatabases(self):
         return self._remote.calljava("D:all")
 
-    def getTables(self, table=None):
-        if not table:
+    def getTables(self, database=None, pattern=None):
+        # Get all tables for entire database
+        if not database:
             return self._remote.calljava("T:all")
+        elif not pattern:
+            return self._remote.calljava("D:spec", database)
         else:
-            return self._remote.calljava("D:spec", table)
+            return self._remote.calljava("T:pttn", database, pattern)
 
     def getDescription(self, database, table):
         return self._remote.calljava("T:spec", table, database)

@@ -24,8 +24,9 @@ class CallJava:
 
 
     def calljava(self, *args):
-        pipe = subprocess.Popen('{} {} {}'.format(self._runner, self._hivexml, ' '.join(args)), 
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        quotedargs = ["'{}'".format(arg) for arg in args]
+        thecmd = '{} {} {}'.format(self._runner, self._hivexml, ' '.join(quotedargs))
+        pipe = subprocess.Popen(thecmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         manager = multiprocessing.Manager()
         return_dict = manager.dict()
         process = multiprocessing.Process(target=self._calljava, args=(pipe, return_dict))

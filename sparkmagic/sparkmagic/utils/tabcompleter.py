@@ -34,7 +34,6 @@ class Completer:
         if usehivemeta:
             dbtree = Trie()
             for database in databases:
-                print database
                 dbtree.add(database)
 
         self._dbtree = dbtree
@@ -46,7 +45,7 @@ class Completer:
         self._suggestions = []
 
     def complete(self, code, pos):
-        wordsincode = list(re.finditer(r'(\w+)', code))
+        wordsincode = list(re.finditer(r'([a-zA-Z0-9_\-.]+)', code))
         # No input words -> nothing to do
         if not wordsincode:
             self._nullify()
@@ -66,6 +65,7 @@ class Completer:
             return False
 
         prefix = wordtocomplete[0:pos-wordspan[0]]
+        print "PREFIX: " + prefix
 
         # Use trie structure to grab hive matches
         hksuggestions = self._hktree.find_prefix(prefix)
@@ -73,7 +73,21 @@ class Completer:
         # Add from metadata here
         hmsuggestions = []
         if self._remote_hivemetastore:
-            hmsuggestions = self._dbtree.find_prefix(prefix)
+            # Try to guess for databases or tables
+            db_tb = wordtocomplete.split(".")
+            print "THE SPLIT: " + str(db_tb)
+            # We are looking for a table and the position is in the 'table' area
+            if len(db_tb) > 1 and pos > len(db_tb[0])+wordspan[0]:
+                tableprefix = db_tb[1][0:pos-wordspan[0]+len(db_tb[1])] + "*"
+                print "TABLE PREFIX: " + tableprefix
+                try:
+                    tables = self._remote_hivemetastore.getTables(db_tb[0], tableprefix)
+                except TimeOutException as e:
+                    print("Timedout waiting for tables")
+                    print("Skipping HIVE table keywords...")
+                print "TABLES: " + str(tables)
+                hmsuggestions += ["{}.{}".format(db_tb[0],t) for t in tables]
+            hmsuggestions += self._dbtree.find_prefix(prefix)
 
         suggestions = hmsuggestions + hksuggestions
 
@@ -99,7 +113,7 @@ class Completer:
 
 if __name__ == '__main__':
     completer = Completer()
-    completer.complete("select * from clus where limit 5", 15)
+    completer.complete("select * from cluster_metrics_prod_2.c where limit 5", 38)
     matches = completer.suggestions()
     prefix = completer.prefix()
     (start_pos, end_pos) = completer.cursorpostitions()

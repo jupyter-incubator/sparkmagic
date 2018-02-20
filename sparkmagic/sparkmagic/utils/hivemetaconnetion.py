@@ -7,8 +7,8 @@ class HiveMetaStoreConnection:
     def getDatabases(self):
         return self._rhm.getDatabases().stdout.split()
 
-    def getTables(self, table=None):
-        return self._rhm.getTables(table).stdout.split()
+    def getTables(self, database=None, pattern=None):
+        return self._rhm.getTables(database, pattern).stdout.split()
 
     def getDescription(self, database, table):
         return self._rhm.getDescription(table, database).stdout.split()
