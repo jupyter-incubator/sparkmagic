@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.io.FileInputStream;
 import java.io.File;
 
+import javax.jdo.JDOObjectNotFoundException;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient; 
 import org.apache.hadoop.fs.Path;
@@ -17,76 +19,71 @@ class RemoteHiveMeta {
     HiveMetaStoreClient client = null;
     List<String> dbs = null;
 
-    public RemoteHiveMeta() {
+    public RemoteHiveMeta(String hivexml) throws RMMException {
         HiveConf conf = new HiveConf();
-        //File initialFile = new File("/etc/hive-1.2.1/hive-site.xml");
-        //FileInputStream targetStream = new FileInputStream(initialFile);
-        //conf.addResource(targetStream);
-        conf.addResource(new Path("file:///etc/hive-1.2.1/hive-site.xml"));
+        conf.addResource(new Path(String.format("file://%s", hivexml)));
         try {
             this.client = new HiveMetaStoreClient(conf);
         }
         catch (MetaException e) {
-            System.err.printf("Failed to connect to hive metastore: %s%n", e);
-            System.exit(0);
+            throw new RMMException(String.format("Failed to connect to hive metastore: %s%n", e));
         }
         this.setDatabases();
     }
 
-    public List<String> getDatabases() {
+    public List<String> getDatabases() throws RMMException {
         List<String> out = null;
         try {
             out = this.client.getAllDatabases();
         }
         catch (MetaException e) {
-            System.err.printf("Failed to gather databases with: %s%n", e);
-            System.exit(0);
+            throw new RMMException(String.format("Failed to gatjer databases: %s%n", e));
         }
         return out;
     }
 
-    public List<String> getAllTables(String database) {
+    public List<String> getAllTables(String database) throws RMMException {
         List<String> out = null;
         try {
             out = this.client.getAllTables(database);
         }
         catch (MetaException e) {
-            System.err.printf("Failed to gather tables with: %s%n", e);
-            System.exit(0);
+            throw new RMMException(String.format("Failed to gather tables with: %s%n", e));
         }
         return out;
     }
 
-    public List<FieldSchema> getSchema(String table, String database) {
+    public List<FieldSchema> getSchema(String table, String database) throws RMMException {
         List<FieldSchema> out = null;
         try {
             out = this.client.getSchema(table, database);
         }
         catch (TException e) {
-            System.err.printf("Failed to gather schema with: %s%n", e);
-            System.exit(0);
+            throw new RMMException(String.format("Failed to gather schema with: %s%n", e));
         }
         return out;
     }
 
-    public void setDatabases() {
+    public void setDatabases() throws RMMException {
         this.dbs = this.getDatabases();
     }
 
-    public List<String> getDescription(String table, String database) {
+    public List<String> getDescription(String table, String database) throws RMMException {
         List<FieldSchema> fields = this.getSchema(table, database);
         List<String> description = new ArrayList<String>();
         fields.forEach(f -> description.add(f.getName()));
         return description;
     }
 
-    public Map<String, List<String>> getAllTables() {
+    public Map<String, List<String>> getAllTables() throws RMMException {
         Map<String, List<String>> dtbs = new HashMap<String, List<String>>();
-        this.dbs.forEach(db -> dtbs.put(db, this.getAllTables(db)));
+        for (String db : this.dbs) { 
+            dtbs.put(db, this.getAllTables(db));
+        }
         return dtbs;
     }
 
-    public List<String> getFullyQualifiedTablesNames() {
+    public List<String> getFullyQualifiedTableNames() throws RMMException {
         Map<String, List<String>> dtbs = this.getAllTables();
         List<String> tables = new ArrayList<String>();
         dtbs.forEach((db, tbs) -> {
@@ -96,19 +93,19 @@ class RemoteHiveMeta {
         return tables;
     }
 
-    public void printDatabases() {
+    public void printDatabases() throws RMMException {
         System.out.println(String.join("\n", this.dbs));
     }
 
-    public void printTables() {
-        System.out.println(String.join("\n", this.getFullyQualifiedTablesNames()));
+    public void printTables() throws RMMException {
+        System.out.println(String.join("\n", this.getFullyQualifiedTableNames()));
     }
 
-    public void printTables(String database) {
+    public void printTables(String database) throws RMMException {
         System.out.println(String.join("\n", this.getAllTables(database)));
     }
 
-    public void printDescription(String table, String database) {
+    public void printDescription(String table, String database) throws RMMException {
         System.out.println(String.join("\n", this.getDescription(table, database)));
     }
 
@@ -117,23 +114,43 @@ class RemoteHiveMeta {
     }
 
     public static void main(String[] args) throws Exception {
-        RemoteHiveMeta rm = new RemoteHiveMeta();
+        RemoteHiveMeta rm = null;
+        String[] types = new String[]{"D:all", "T:all", "D:spec", "T:spec"};
         try {
-            if (args[0].equals("D:all"))
+            File f = new File(args[0]);
+            if (!f.exists() || f.isDirectory()) { 
+                System.err.printf("Could not hive-xml file: '%s'%n", args[0]);
+                System.exit(0);
+            }
+
+            rm = new RemoteHiveMeta(args[0]);
+            if (args[1].equals(types[0]))
                 rm.printDatabases();
-            else if (args[0].equals("T:all"))
+            else if (args[1].equals(types[1]))
                 rm.printTables();
-            else if (args[0].equals("D:spec"))
-                rm.printTables(args[1]);
-            else if (args[0].equals("T:spec"))
-                rm.printDescription(args[1], args[2]);
-            else
-                System.err.printf("Unrecognized format '%s'%n", args[0]);
+            else if (args[1].equals(types[2]))
+                rm.printTables(args[2]);
+            else if (args[1].equals(types[3]))
+                rm.printDescription(args[2], args[3]);
+            else {
+                System.err.printf("Unrecognized format '%s'%n", args[1]);
+                System.err.printf("Please use one of: [%s] %n", String.join(", ", types));
+            }
         }
         catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println("Not enough input arguments");
-            System.exit(0);
+            System.err.printf("Not enough input arguments%nGot: (%s)%n", String.join(",", args));
+            System.err.printf("Usage: <program>.java <hive-xml_path> <{%s}> [<additional_args>]%n", String.join(",", types));
+        } catch (RMMException e) {
+            // Do nothing. Let program exit..
+            System.err.println(e.getMessage());
+            System.err.println("HELLO");
         }
         rm.closeClient();        
+    }
+
+    private class RMMException extends Exception {
+        public RMMException(String message) {
+            super(message);
+        }
     }
 }

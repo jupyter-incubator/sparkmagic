@@ -1,6 +1,6 @@
 DESCRIPTION         = "HiveMetaStoreWrapper: Wrap java hive calls in python with stdout communcation"
-NAME                = "hivemetastore_wrapper"
-PACKAGES            = ['hivemeta_python']
+NAME                = "hivemetastore"
+PACKAGES            = ['hivemetastore']
 AUTHOR              = "Thomas Nystrand"
 AUTHOR_EMAIL        = "thomas.nystrand@sap.com"
 URL                 = 'https://github.com/VertiCloud/alti-sparkmagic'
@@ -33,7 +33,7 @@ def version(path):
     raise RuntimeError("Unable to find version string.")
 
 
-VERSION = version('hivemeta_python/__init__.py')
+VERSION = version('hivemetastore/__init__.py')
 
 
 

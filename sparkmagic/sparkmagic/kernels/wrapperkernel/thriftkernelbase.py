@@ -3,13 +3,12 @@
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 from kernelbase import KernelBase
-import re
-from 
+from sparkmagic.utils.tabcompleter import Completer
 
 class ThriftKernelBase(KernelBase):
     def __init__(self, implementation, implementation_version, language, language_version, language_info, user_code_parser=None, **kwargs):
         self.logger = SparkLog(u"{}_jupyter_kernel".format('sqlthrift'))
-
+        self._completer = Completer()
         super(ThriftKernelBase, self).__init__(
                 implementation,
                 implementation_version,
@@ -21,23 +20,28 @@ class ThriftKernelBase(KernelBase):
                 **kwargs)
 
     def do_complete(self, code, pos):
-        re.finditer(r'(\w+)', code)
-        content = {
-            # The list of all matches to the completion request, such as
-            # ['a.isalnum', 'a.isalpha'] for the above example.
-            'matches' : ["show", "bitch"],
+        self._completer.complete(code, pos)
+        matches = self._completer.suggestions()
+        prefix = self._completer.prefix()
+        (start_pos, end_pos) = self._completer.cursorpostitions()
 
-            # The range of text that should be replaced by the above matches when a completion is accepted.
-            # typically cursor_end is the same as cursor_pos in the request.
-            'cursor_start' : pos,
-            'cursor_end' : pos,
+        # Append prefix before match to avoid 'auto-swap' at tab when only having one option
+        matches.append(prefix)
 
-            # Information that frontend plugins might use for extra display information about completions.
-            'metadata' : {},
-
-            # status should be 'ok' unless an exception was raised during the request,
-            # in which case it should be 'error', along with the usual error message content
-            # in other messages.
-            'status' : 'ok'
-        }
+        if matches is None:
+            conent = {
+                'matches' : matches,
+                'cursor_start' : start_pos,
+                'cursor_end' : end_pos,
+                'metadata' : {},
+                'status' : 'ok'
+            }
+        else:
+            content = {
+                'matches' : matches,
+                'cursor_start' : start_pos,
+                'cursor_end' : end_pos,
+                'metadata' : {},
+                'status' : 'ok'
+            }
         return content
