@@ -2,8 +2,11 @@ import re
 
 from sparkmagic.utils.hivekeywords import HIVE_KEYWORDS
 from sparkmagic.utils.trie import TrieNode, Trie
+from sparkmagic.utils.configuration import hive_xml, metastore_timeout
 
-from hivemetastore.remotehivemeta import RemoteHiveMeta
+from sparkmagic.utils.hivemetaconnetion import HiveMetaStoreConnection
+
+from hivemetastore.metaexceptions import TimeOutException
 
 class Completer:
     def __init__(self):
@@ -16,13 +19,26 @@ class Completer:
         self._hktree = hktree
 
         # Keep all databases in memory
-        remote_hivemetastore = RemoteHiveMeta()
-        databases = remote_hivemetastore.getDatabases()
-        dbtree = Trie()
-        for database in databases:
-            dbtree.add(database)
+        # But if metastore is unreachable time out and do not use
+        usehivemeta = True
+        remote_hivemetastore = HiveMetaStoreConnection(hive_xml(), metastore_timeout())
+        try:
+            databases = remote_hivemetastore.getDatabases()
+        except TimeOutException as e:
+            print("Timedout waiting for databases")
+            print("Skipping HIVE metastore keywords...")
+            usehivemeta = False
+            dbtree = None
+            remote_hivemetastore = None
+
+        if usehivemeta:
+            dbtree = Trie()
+            for database in databases:
+                print database
+                dbtree.add(database)
+
         self._dbtree = dbtree
-        self.remote_hivemetastore = remote_hivemetastore
+        self._remote_hivemetastore = remote_hivemetastore
 
     def _nullify(self):
         self._prefix = ""
@@ -52,10 +68,14 @@ class Completer:
         prefix = wordtocomplete[0:pos-wordspan[0]]
 
         # Use trie structure to grab hive matches
-        hksuggestions = self._hktree.find_prefix(prefix.upper())
+        hksuggestions = self._hktree.find_prefix(prefix)
 
         # Add from metadata here
-        suggestions = hksuggestions
+        hmsuggestions = []
+        if self._remote_hivemetastore:
+            hmsuggestions = self._dbtree.find_prefix(prefix)
+
+        suggestions = hmsuggestions + hksuggestions
 
         self._prefix = prefix
         self._wordspan = wordspan
@@ -79,7 +99,7 @@ class Completer:
 
 if __name__ == '__main__':
     completer = Completer()
-    completer.complete("select * from whe limit 5", 15)
+    completer.complete("select * from clus where limit 5", 15)
     matches = completer.suggestions()
     prefix = completer.prefix()
     (start_pos, end_pos) = completer.cursorpostitions()

@@ -39,11 +39,15 @@ class Trie(object):
         matches = []
         if not node.children:
             return matches
+
+        # To get prefix from trie
+        matchedchars = []
         for char in prefix:
             char_not_found = True
             # Search through all the children of the present `node`
             for child in node.children:
-                if child.char == char:
+                if child.char.upper() == char.upper():
+                    matchedchars.append(child.char)
                     char_not_found = False
                     # Assign node as the child containing the char and break
                     node = child
@@ -53,7 +57,7 @@ class Trie(object):
                 return matches
 
         # Grab all strings after the 'node'
-        tmp_match = [prefix[:-1]]
+        tmp_match = matchedchars[:-1]
         self.getall(node, tmp_match, matches)
         return matches
 
