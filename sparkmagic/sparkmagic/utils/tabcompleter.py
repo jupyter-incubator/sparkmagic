@@ -7,11 +7,13 @@ from sparkmagic.utils.configuration import hive_xml, metastore_timeout
 from sparkmagic.utils.hivemetaconnetion import HiveMetaStoreConnection
 
 from hivemetastore.metaexceptions import TimeOutException
+from hivemetastore.metaexceptions import JavaCallException
 
 class Completer:
     def __init__(self):
         self._suggestions = []
 
+        import sys
         # All hive keyword suggestions
         hktree = Trie()
         for key in HIVE_KEYWORDS:
@@ -25,14 +27,22 @@ class Completer:
         try:
             databases = remote_hivemetastore.getDatabases()
         except TimeOutException as e:
-            print("Timedout waiting for databases")
-            print("Skipping HIVE metastore keywords...")
+            sys.__stdout__.write("Timedout waiting for databases\n")
+            sys.__stdout__.write("Skipping HIVE metastore keywords...\n")
             usehivemeta = False
             dbtree = None
             remote_hivemetastore = None
+        except JavaCallException as e:
+            sys.__stdout__.write("Failed executing query with:\n{}\n".format(e))
+            sys.__stdout__.write("Skipping HIVE metastore keywords...\n")
+            usehivemeta = False
+            dbtree = None
+            remote_hivemetastore = None
+            
 
         if usehivemeta:
             dbtree = Trie()
+            sys.__stdout__.write("DATABAASES: {}\n".format(databases))
             for database in databases:
                 dbtree.add(database)
 
@@ -83,8 +93,12 @@ class Completer:
                 try:
                     tables = self._remote_hivemetastore.getTables(db_tb[0], tableprefix)
                 except TimeOutException as e:
-                    print("Timedout waiting for tables")
-                    print("Skipping HIVE table keywords...")
+                    sys.__stdout__.write("Timedout waiting for tables\n")
+                    sys.__stdout__.write("Skipping HIVE table keywords...\n")
+                except JavaCallException as e:
+                    sys.__stdout__.write("Failed to retrieve tables with:\n{}\n".format(e))
+                    sys.__stdout__.write("Skipping HIVE table keywords...\n")
+
                 print "TABLES: " + str(tables)
                 hmsuggestions += ["{}.{}".format(db_tb[0],t) for t in tables]
             hmsuggestions += self._dbtree.find_prefix(prefix)

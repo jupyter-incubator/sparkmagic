@@ -7,8 +7,8 @@ from sparkmagic.utils.tabcompleter import Completer
 
 class ThriftKernelBase(KernelBase):
     def __init__(self, implementation, implementation_version, language, language_version, language_info, user_code_parser=None, **kwargs):
-        self.logger = SparkLog(u"{}_jupyter_kernel".format('sqlthrift'))
         self._completer = Completer()
+        self.logger = SparkLog(u"{}_jupyter_kernel".format('thriftsql'))
         super(ThriftKernelBase, self).__init__(
                 implementation,
                 implementation_version,

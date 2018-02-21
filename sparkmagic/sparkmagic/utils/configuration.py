@@ -262,8 +262,8 @@ def thrift_hivetez_conf():
 
 @_with_override
 def hive_xml():
-    return "/Users/admin/altiscale_git/alti-sparkmagic/remote_hivemetastore/hive-site.xml"
-    #return "/etc/hive-1.2.1/hive-site.xml"
+    #return "/Users/admin/altiscale_git/alti-sparkmagic/remote_hivemetastore/hive-site.xml"
+    return "/etc/hive-1.2.1/hive-site.xml"
 
 @_with_override
 def metastore_timeout():

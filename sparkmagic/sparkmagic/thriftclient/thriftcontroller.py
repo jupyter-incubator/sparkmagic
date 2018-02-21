@@ -10,8 +10,9 @@ class ThriftController:
     def __init__(self, ipython_display):
         self.ipython_display = ipython_display
         self.hiveconf = {}
-        self.host = 'localhost'
-        self.port = 10000
+        self.host = thrift_hive_hostname()
+        self.port = thrift_hive_port()
+        self.host = 'hiveserver-dogfood.s3s.altiscale.com'
 
         self.user = 'tnystrand' #os.getenv("USER")
         self.cursor = None

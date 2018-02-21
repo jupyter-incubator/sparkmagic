@@ -5,8 +5,6 @@ from ipykernel.ipkernel import IPythonKernel
 from hdijupyterutils.ipythondisplay import IpythonDisplay
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.sparklogger import SparkLog
-from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 from sparkmagic.livyclientlib.exceptions import wrap_unexpected_exceptions
 from sparkmagic.kernels.wrapperkernel.usercodeparser import UserCodeParser
 
@@ -46,12 +44,13 @@ class KernelBase(IPythonKernel):
                 self._register_auto_viz()
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
-        def f(self):
-            if self._fatal_error is not None:
-                return self._repeat_fatal_error()
+        #def f(self):
+        #    if self._fatal_error is not None:
+        #        return self._repeat_fatal_error()
 
-            return self._do_execute(code, silent, store_history, user_expressions, allow_stdin)
-        return wrap_unexpected_exceptions(f, self._complete_cell)(self)
+        #    return self._do_execute(code, silent, store_history, user_expressions, allow_stdin)
+        #return wrap_unexpected_exceptions(f, self._complete_cell)(self)
+        return self._do_execute(code, silent, store_history, user_expressions, allow_stdin)
 
     def _do_execute(self, code, silent, store_history, user_expressions, allow_stdin):
         code_to_run = self.user_code_parser.get_code_to_run(code)
@@ -84,7 +83,6 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
 
         if shutdown_if_error and reply_content[u"status"] == u"error":
             error_from_reply = reply_content[u"evalue"]
-            print(error_from_reply)
             if log_if_error is not None:
                 message = "{}\nException details:\n\t\"{}\"".format(log_if_error, error_from_reply)
                 return self._abort_with_fatal_error(message)
