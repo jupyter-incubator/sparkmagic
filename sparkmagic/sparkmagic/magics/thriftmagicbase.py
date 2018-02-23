@@ -10,6 +10,7 @@ from sparkmagic.utils.constants import THRIFT_VAR, THRIFT_LOG_VAR
 from sparkmagic.thriftclient.sqlquery import SqlQueries, SqlQuery
 from sparkmagic.thriftclient.outputhandler import OutputHandler
 from sparkmagic.thriftclient.ThriftExceptions import ThriftExecutionError
+import sparkmagic.utils.configuration as conf
 
 from pyhive.exc import OperationalError, ProgrammingError
 from TCLIService.ttypes import TOperationState
@@ -46,12 +47,15 @@ class ThriftMagicBase(Magics):
         super(ThriftMagicBase, self).__init__(shell)
         self.shell = shell
 
-        self.logger = SparkLog(u"ThriftMagics")
+        self.logger = SparkLog(u"ThriftMagics", conf.logging_config_debug())
         self.ipython_display = IpythonDisplay(shell)
 
         self.thriftcontroller = ThriftController(self.ipython_display)
         self.has_started = False
 
+        self.logger.debug("Initialized thrift magics")
+
+        # TODO: rewrite as execution contexts
         #self.executioncontexts = ExecutionContexts()
 
     @interrupt_handle()
@@ -76,7 +80,6 @@ class ThriftMagicBase(Magics):
             writeln("Establishing new connection to thriftserver...")
             if not self.thriftcontroller.connect():
                 return None
-
 
         try:
             df = self._execute_sqlquery(cell, samplemethod, maxrows, samplefraction,
@@ -208,7 +211,7 @@ class ThriftMagicBase(Magics):
                             "Query was killed by resourcemanager",
                             "Query was killed by a user",
                             "Connection dropped during execution",
-                            "User could not be authenticated (i.e. bad/wrong username)"
+                            "User could not be authenticated (i.e. bad/wrong username/password)"
                         )
                 err += "\n{}\n{}".format(
                             "Note that 'username' must match your workbench 'username'",

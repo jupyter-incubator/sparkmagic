@@ -1,33 +1,42 @@
 import os
 from time import time
+from collections import namedtuple
 
 from pyhive import hive
 from thrift.transport.TTransport import TTransportException
 
-from sparkmagic.utils.configuration import thrift_hivetez_conf, thrift_hive_hostname, thrift_hive_port
+from sparkmagic.utils.configuration import thrift_hivetez_conf, thrift_hive_hostname, thrift_hive_port, hive_user
 
 class ThriftController:
     def __init__(self, ipython_display):
         self.ipython_display = ipython_display
         self.hiveconf = {}
-        self.host = thrift_hive_hostname()
-        self.port = thrift_hive_port()
-        self.host = 'hiveserver-dogfood.s3s.altiscale.com'
+        self.connection = ThriftConnection(
+            host=thrift_hive_hostname(),
+            port=thrift_hive_port(),
+            user=hive_user(),
+            conf=thrift_hivetez_conf())
 
-        self.user = 'tnystrand' #os.getenv("USER")
         self.cursor = None
 
-        self.conf = thrift_hivetez_conf()
-        self.conf = {'hive.execution.engine': 'tez'}
 
-    def set_conf(_conf, replace=True):
+    # Set query confs
+    def set_conf(conf, replace=True):
         # if not replace -> merge
-        self.conf.update(_conf)
+        self.connection.conf.update(conf)
+
+    # Set connection details
+    def set_connection(conf, replace=True):
+        for k,v in conf.items():
+            self.connection[k] = v
 
     def connect(self):
         try:
             t_all = time()
-            self.cursor = hive.connect(self.host, self.port, self.user, configuration=self.conf).cursor()
+            self.cursor = hive.connect(self.connection.host,
+                self.connection.port,
+                self.connection.user,
+                configuration=self.connection.conf).cursor()
             self.ipython_display.writeln("Start-up time: {:.2f}".format(time() - t_all))
         except TTransportException as tte:
             self.ipython_display.send_error(tte.message)
@@ -49,3 +58,10 @@ class ThriftController:
     def reset(self):
         self.cursor.cancel()
         self.connect()
+
+
+class ThriftConnection(namedtuple('ThriftConnection', 'host port user conf')):
+    __slots__ = ()
+
+    def __repr__(self):
+        return "\n".join("{}: {}".format(k,v) for k,v in self._asdict().items())

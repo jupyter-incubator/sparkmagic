@@ -66,3 +66,6 @@ MANIFEST
 
 # Mac
 .DS_STORE
+
+# Vim temp
+*.swp

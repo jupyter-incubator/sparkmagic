@@ -17,4 +17,3 @@ class MagicsFileHandler(logging.FileHandler):
             directory = FileSystemReaderWriter(join_paths(magics_home_path, logs_folder_name))
             directory.ensure_path_exists()
             super(MagicsFileHandler, self).__init__(filename=join_paths(directory.path, log_file_name), **kwargs)
-

@@ -1,6 +1,7 @@
 # Distributed under the terms of the Modified BSD License.
 import copy
 import sys
+import os
 import base64
 from hdijupyterutils.constants import EVENTS_HANDLER_CLASS_NAME, LOGGING_CONFIG_CLASS_NAME
 from hdijupyterutils.utils import join_paths
@@ -128,6 +129,31 @@ def logging_config():
         }
     }
 
+@_with_override
+def logging_config_debug():
+    return {
+        u"version": 1,
+        u"formatters": {
+            u"magicsFormatter": {
+                u"format": u"%(asctime)s\t%(levelname)s\t%(message)s",
+                u"datefmt": u""
+            }
+        },
+        u"handlers": {
+            u"magicsHandler": {
+                u"class": LOGGING_CONFIG_CLASS_NAME,
+                u"formatter": u"magicsFormatter",
+                u"filename": os.path.expanduser(HOME_PATH + "/lastlog.log")
+            }
+        },
+        u"loggers": {
+            MAGICS_LOGGER_NAME: {
+                u"handlers": [u"magicsHandler"],
+                u"level": u"DEBUG",
+                u"propagate": 0
+            }
+        }
+    }
 
 @_with_override
 def events_handler_class():
@@ -259,24 +285,30 @@ def thrift_hivetez_conf():
              'hive.exec.parallel.thread.number': '16',
              'hive.cli.print.header': 'true'
             }
-
-@_with_override
-def hive_xml():
-    #return "/Users/admin/altiscale_git/alti-sparkmagic/remote_hivemetastore/hive-site.xml"
-    return "/etc/hive-1.2.1/hive-site.xml"
+    #return {'hive.execution.engine': 'tez'}
 
 @_with_override
 def metastore_timeout():
-    return 2
+    return 5
+
+@_with_override
+def hive_xml():
+    return "/Users/admin/altiscale_git/alti-sparkmagic/remote_hivemetastore/hive-site.xml"
+    #return "/etc/hive-1.2.1/hive-site.xml"
 
 @_with_override
 def thrift_hive_hostname():
     return 'localhost'
+    #return 'hiveserver-dogfood.s3s.altiscale.com'
 
 @_with_override
 def thrift_hive_port():
     return 10000
 
+@_with_override
+def hive_user():
+    return 'tnystrand'
+    #return 'hive'
 
 
 def _credentials_override(f):

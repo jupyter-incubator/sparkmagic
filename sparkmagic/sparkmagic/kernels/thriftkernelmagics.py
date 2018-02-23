@@ -7,6 +7,8 @@ from IPython.core.magic_arguments import argument, magic_arguments
 from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
 from sparkmagic.utils.constants import THRIFT_VAR, THRIFT_LOG_VAR
 
+from sparkmagic.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions
+
 @magics_class
 class ThriftKernelMagics(ThriftMagicBase):
     def __init__(self, shell):
@@ -26,8 +28,8 @@ class ThriftKernelMagics(ThriftMagicBase):
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
     @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
                                                                         "of the dataframe or not (pass False)")
-    #@wrap_unexpected_exceptions
-    #@handle_expected_exceptions
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
         args = parse_argstring_or_throw(self.sql, line)
 
@@ -51,6 +53,6 @@ class ThriftKernelMagics(ThriftMagicBase):
     def sqlconf(self, line, cell="", local_ns=None):
         pass
 
-        
+
 def load_ipython_extension(ip):
     ip.register_magics(ThriftKernelMagics)
