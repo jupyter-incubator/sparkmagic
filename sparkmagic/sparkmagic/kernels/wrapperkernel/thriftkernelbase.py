@@ -2,7 +2,7 @@ import sys
 import traceback
 
 from sparkmagic.utils.sparklogger import SparkLog
-from kernelbase import KernelBase
+from sparkmagic.kernels.wrapperkernel.kernelbase import KernelBase
 from sparkmagic.utils.tabcompleter import Completer
 import sparkmagic.utils.configuration as conf
 

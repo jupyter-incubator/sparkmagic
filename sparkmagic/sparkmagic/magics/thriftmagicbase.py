@@ -147,10 +147,11 @@ class ThriftMagicBase(Magics):
                 try:
                     query.parse(user_variables)
                 except KeyError as ke:
+                    ke.message = str(ke)
                     err = "Could not find variable: '{}'".format(ke.message)
                     err += "\nCurrent user variables:\n{{{}}}".format('\n'.join('{} = {!r}'.format(*item) for item in user_variables.items()))
                     writeln(err)
-                    self.shell.user_ns[str(ke.message)] = raw_input("{}: ".format(ke.message))
+                    self.shell.user_ns[str(ke.message)] = str(input("{}: ".format(ke.message)))
                     user_variables = SqlQueries.user_variables(self.shell)
                     continue
                 except ValueError as ve:

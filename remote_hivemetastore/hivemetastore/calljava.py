@@ -1,8 +1,8 @@
 from os.path import dirname, abspath
 import subprocess
 
-from bashresult import BashResult
-from metaexceptions import TimeOutException
+from hivemetastore.bashresult import BashResult
+from hivemetastore.metaexceptions import TimeOutException
 import multiprocessing
 
 rundir = dirname(dirname(abspath(__file__)))

@@ -1,12 +1,12 @@
 from __future__ import print_function
-from calljava import CallJava 
-from metaexceptions import JavaCallException
+from hivemetastore.calljava import CallJava 
+from hivemetastore.metaexceptions import JavaCallException
 
 def raise_bash_exception(f):
     def wrapper(*args):
         bash_output = f(*args)
         stderr = bash_output.stderr.lower()
-        if "error" in stderr or "exception" in stderr:
+        if "error" in str(stderr) or "exception" in str(stderr):
             raise JavaCallException(bash_output.stderr)
         return bash_output
     return wrapper

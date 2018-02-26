@@ -22,7 +22,7 @@ class ThriftController:
         cluster_info = alti_or_local(conf.alti_cluster_info_env(), conf.local_cluster_info_env())
 
         matches = re.findall(r'[\t ]*HIVESERVER2_HOST[\t ]*=[\t ]*([a-zA-Z0-9_\-.]+)',
-                ''.join(line.strip() for line in cluster_info.read_lines()))
+                ''.join(line for line in cluster_info.read_lines()))
 
         if matches:
             thrift_hive_hostname = matches[0]

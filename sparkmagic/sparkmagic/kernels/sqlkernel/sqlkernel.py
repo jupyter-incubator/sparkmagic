@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 from sparkmagic.utils.constants import LANG_PYTHON
 from sparkmagic.kernels.wrapperkernel.thriftkernelbase import ThriftKernelBase
-from usercodeparser import UserCodeParser
+from sparkmagic.kernels.sqlkernel.usercodeparser import UserCodeParser
 
 
 class SQLKernel(ThriftKernelBase):
