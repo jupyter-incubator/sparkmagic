@@ -4,8 +4,10 @@ import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.hivekeywords import HIVE_KEYWORDS
 from sparkmagic.utils.trie import TrieNode, Trie
-from sparkmagic.utils.configuration import hive_xml, metastore_timeout
+import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.hivemetaconnetion import HiveMetaStoreConnection
+from sparkmagic.thriftclient.thriftexceptions import ThriftConfigurationError
+from sparkmagic.thriftclient.thriftutils import alti_or_local
 
 from hivemetastore.metaexceptions import TimeOutException
 from hivemetastore.metaexceptions import JavaCallException
@@ -24,24 +26,33 @@ class Completer:
             hktree.add(key)
         self._hktree = hktree
 
-        # Keep all databases in memory
-        # But if metastore is unreachable time out and do not use
         usehivemeta = True
-        remote_hivemetastore = HiveMetaStoreConnection(hive_xml(), metastore_timeout())
+        hive_xml = None
         try:
-            databases = remote_hivemetastore.getDatabases()
-        except TimeOutException as e:
-            self.logger.warn("Timedout waiting for databases")
-            self.logger.warn("Skipping HIVE metastore keywords...")
+            hive_xml = alti_or_local(conf.alti_hive_xml(), conf.local_hive_xml())
+        except ThriftConfigurationError as tce:
+            self.logger.warn(tce.message)
+            self.logger.warn("Skipping all hive metadata...")
             usehivemeta = False
-            dbtree = None
-            remote_hivemetastore = None
-        except JavaCallException as e:
-            self.logger.warn("Failed executing query with:\n{}".format(e))
-            self.logger.warn("Skipping HIVE metastore keywords...")
-            usehivemeta = False
-            dbtree = None
-            remote_hivemetastore = None
+
+        remote_hivemetastore = None
+        dbtree = None
+        if usehivemeta:
+            # Keep all databases in memory
+            # But if metastore is unreachable time out and do not use
+            remote_hivemetastore = HiveMetaStoreConnection(hive_xml.path, conf.metastore_timeout())
+            try:
+                databases = remote_hivemetastore.getDatabases()
+            except TimeOutException as e:
+                self.logger.warn("Timedout waiting for databases")
+                self.logger.warn("Skipping HIVE metastore keywords...")
+                usehivemeta = False
+                remote_hivemetastore = None
+            except JavaCallException as e:
+                self.logger.warn("Failed executing query with:\n{}".format(e))
+                self.logger.warn("Skipping HIVE metastore keywords...")
+                usehivemeta = False
+                remote_hivemetastore = None
 
         if usehivemeta:
             dbtree = Trie()

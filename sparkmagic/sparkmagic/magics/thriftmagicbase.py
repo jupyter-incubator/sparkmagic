@@ -9,7 +9,7 @@ from sparkmagic.thriftclient.thriftutils import writeln, send_error, exit_with_n
 from sparkmagic.utils.constants import THRIFT_VAR, THRIFT_LOG_VAR
 from sparkmagic.thriftclient.sqlquery import SqlQueries, SqlQuery
 from sparkmagic.thriftclient.outputhandler import OutputHandler
-from sparkmagic.thriftclient.ThriftExceptions import ThriftExecutionError
+from sparkmagic.thriftclient.thriftexceptions import ThriftExecutionError, ThriftMissingKeywordError, ThriftConfigurationError
 import sparkmagic.utils.configuration as conf
 
 from pyhive.exc import OperationalError, ProgrammingError
@@ -29,13 +29,13 @@ def interrupt_handle():
             try:
                 return f(self, *args, **kwargs)
             except KeyboardInterrupt as kei:
-                self.writeln('Shutting down query...')
+                self.ipython_display.writeln('Shutting down query...')
                 if self.thriftcontroller.cursor:
                     self.thriftcontroller.cursor.cancel()
                     self.thriftcontroller.cursor = None
                 self.ipython_display.writeln('DONE')
                 clear_output()
-                self.ipython_display.writeln('Interrupted query')
+                self.ipython_display.writeln('Interrupted query!')
                 return None
         return _interrupt_handle_wrapper
     return interrupt_handle_wrapper
@@ -51,6 +51,12 @@ class ThriftMagicBase(Magics):
         self.ipython_display = IpythonDisplay(shell)
 
         self.thriftcontroller = ThriftController(self.ipython_display)
+        try:
+            self.thriftcontroller.locate_connection_details()
+        except ThriftConfigurationError as th:
+            self.ipython_display.send_error(th.message)
+            self.logger.error(th.message)
+
         self.has_started = False
 
         self.logger.debug("Initialized thrift magics")
@@ -78,8 +84,16 @@ class ThriftMagicBase(Magics):
         # Create new controller if doesn't exists
         if not self.thriftcontroller.cursor:
             writeln("Establishing new connection to thriftserver...")
-            if not self.thriftcontroller.connect():
-                return None
+            try:
+                self.thriftcontroller.connect()
+            except ThriftConfigurationError as tce:
+                send_error(tce.message)
+                self.logger.error(tce.message)
+                return
+            except Exception as e:
+                send_error(e.message)
+                self.logger.error(e.message)
+                return
 
         try:
             df = self._execute_sqlquery(cell, samplemethod, maxrows, samplefraction,
@@ -129,20 +143,25 @@ class ThriftMagicBase(Magics):
         for query_i, query in enumerate(queries):
             t_query = time()
             # Do not use pyhives 'pramater' arguement since it quotes every parameter
-            try:
-                query.parse(user_variables)
-            except KeyError as ke:
-                err = "Could not find variable: '{}'".format(str(ke.message))
-                err += "\nCurrent user variables:\n{{{}}}".format('\n'.join('{} = {!r}'.format(*item) for item in user_variables.items()))
-                raise ThriftExecutionError(err)
-            except ValueError as ve:
-                err = '{}: {}'.format(ve.__class__.__name__, ve.message)
-                err += "\nLocal variables need to be formatted similar to %()s - notice the s only applies to strings"
-                raise ThriftExecutionError(err)
-            except TypeError as te:
-                err = '{}: {}'.format(te.__class__.__name__, te.message)
-                err += "\nLocal variables need to be formatted similar to %()s - notice the s only applies to strings"
-                raise ThriftExecutionError(err)
+            while True:
+                try:
+                    query.parse(user_variables)
+                except KeyError as ke:
+                    err = "Could not find variable: '{}'".format(ke.message)
+                    err += "\nCurrent user variables:\n{{{}}}".format('\n'.join('{} = {!r}'.format(*item) for item in user_variables.items()))
+                    writeln(err)
+                    self.shell.user_ns[str(ke.message)] = raw_input("{}: ".format(ke.message))
+                    user_variables = SqlQueries.user_variables(self.shell)
+                    continue
+                except ValueError as ve:
+                    err = '{}: {}'.format(ve.__class__.__name__, ve.message)
+                    err += "\nLocal variables need to be formatted similar to %()s - notice the s only applies to strings"
+                    raise ThriftExecutionError(err)
+                except TypeError as te:
+                    err = '{}: {}'.format(te.__class__.__name__, te.message)
+                    err += "\nLocal variables need to be formatted similar to %()s - notice the s only applies to strings"
+                    raise ThriftExecutionError(err)
+                break
 
             # Execute query
             try:

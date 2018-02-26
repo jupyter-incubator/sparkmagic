@@ -3,6 +3,8 @@ import copy
 import sys
 import os
 import base64
+from os.path import dirname, abspath, join
+
 from hdijupyterutils.constants import EVENTS_HANDLER_CLASS_NAME, LOGGING_CONFIG_CLASS_NAME
 from hdijupyterutils.utils import join_paths
 from hdijupyterutils.configuration import override as _override
@@ -292,9 +294,20 @@ def metastore_timeout():
     return 5
 
 @_with_override
-def hive_xml():
-    return "/Users/admin/altiscale_git/alti-sparkmagic/remote_hivemetastore/hive-site.xml"
-    #return "/etc/hive-1.2.1/hive-site.xml"
+def alti_hive_xml():
+    return "/etc/hive/hive-site.xml"
+
+@_with_override
+def local_hive_xml():
+    return abspath(join(dirname(dirname(dirname(dirname(abspath(__file__))))), "./remote_hivemetastore/hive-site.xml"))
+
+@_with_override
+def alti_cluster_info_env():
+    return "/etc/profile.d/cluster-info-env.sh"
+
+@_with_override
+def local_cluster_info_env():
+    return abspath(join(dirname(dirname(dirname(dirname(abspath(__file__))))), "./remote_hivemetastore/cluster-info-env.sh"))
 
 @_with_override
 def thrift_hive_hostname():

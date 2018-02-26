@@ -42,8 +42,8 @@ class SqlQuery:
     def __init__(self, query):
         self.query = query
 
-    def parse(self, parameters):
-        if parameters:
+    def parse(self, parameters=None):
+        if parameters is not None:
             # Hack to avoid % format conflicts - replace all % with %%
             query_mod = re.sub(r'%([^(])', r'%%\1', self.query)
             self.query = query_mod % parameters

@@ -60,7 +60,7 @@ class ThriftKernelBase(KernelBase):
                 'status' : 'ok'
             }
         else:
-            self.logger.debug("Found matches: {}".format(matches))
+            self.logger.debug("Found {} matches: {}...".format(len(matches), matches[:10]))
             self.logger.debug("pos, start, end: {}, {}, {}\n".format(pos, start_pos, end_pos))
             content = {
                 'matches' : matches,

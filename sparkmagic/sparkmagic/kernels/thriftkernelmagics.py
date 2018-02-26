@@ -28,8 +28,8 @@ class ThriftKernelMagics(ThriftMagicBase):
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
     @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
                                                                         "of the dataframe or not (pass False)")
-    @wrap_unexpected_exceptions
-    @handle_expected_exceptions
+    #@wrap_unexpected_exceptions
+    #@handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
         args = parse_argstring_or_throw(self.sql, line)
 

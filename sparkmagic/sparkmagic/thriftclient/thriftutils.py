@@ -1,5 +1,10 @@
+import os
 from sparkmagic.utils.constants import THRIFT_LOG_VAR
 from time import time
+
+from sparkmagic.thriftclient.thriftexceptions import ThriftConfigurationError
+from hdijupyterutils.filesystemreaderwriter import FileSystemReaderWriter
+
 
 def writeln(querylogs, ipython_display):
     def _writeln(*args, **kwargs):
@@ -50,3 +55,12 @@ def time_and_write(write_func=None):
             return ret
         return _time_and_write_wrap
     return time_and_write_wrap
+
+
+def alti_or_local(alti, local):
+    if os.path.isfile(os.path.expanduser(alti)):
+        return FileSystemReaderWriter(alti)
+    elif os.path.isfile(os.path.expanduser(local)):
+        return FileSystemReaderWriter(local)
+
+    raise ThriftConfigurationError("Could not locate either\n{!r}\nor\n{!r}\n".format(alti, local))

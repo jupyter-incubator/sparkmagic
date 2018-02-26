@@ -1,0 +1,1 @@
+export HIVESERVER2_HOST=localhost

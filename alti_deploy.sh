@@ -16,3 +16,5 @@ cd ..
 cd remote_hivemetastore
 pip install -e .
 cd ..
+
+jupyter-kernelspec install ./sparkmagic/sparkmagic/kernels/sqlkernel/
