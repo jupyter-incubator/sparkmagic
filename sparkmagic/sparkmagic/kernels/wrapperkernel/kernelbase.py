@@ -26,6 +26,7 @@ class KernelBase(IPythonKernel):
         self.language_info = language_info
 
         super(KernelBase, self).__init__(**kwargs)
+        self.logger.debug("Initialized IPythonKernel")
 
         self._fatal_error = None
         self.ipython_display = IpythonDisplay()
@@ -39,18 +40,21 @@ class KernelBase(IPythonKernel):
         requests.packages.urllib3.disable_warnings()
 
         if not kwargs.get("testing", False):
+            self.logger.debug("Loading magics...")
             self._load_magics_extension(kernelmagics)
             if conf.use_auto_viz():
+                self.logger.debug("Loading auto viz...")
                 self._register_auto_viz()
 
-    def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
-        #def f(self):
-        #    if self._fatal_error is not None:
-        #        return self._repeat_fatal_error()
+        self.logger.debug("Initialized '{}'".format(self.__class__))
 
-        #    return self._do_execute(code, silent, store_history, user_expressions, allow_stdin)
-        #return wrap_unexpected_exceptions(f, self._complete_cell)(self)
-        return self._do_execute(code, silent, store_history, user_expressions, allow_stdin)
+    def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
+        def f(self):
+            if self._fatal_error is not None:
+                return self._repeat_fatal_error()
+
+            return self._do_execute(code, silent, store_history, user_expressions, allow_stdin)
+        return wrap_unexpected_exceptions(f, self._complete_cell)(self)
 
     def _do_execute(self, code, silent, store_history, user_expressions, allow_stdin):
         code_to_run = self.user_code_parser.get_code_to_run(code)
@@ -61,7 +65,6 @@ class KernelBase(IPythonKernel):
         register_magics_code = "%load_ext {}".format(kernelmagics)
         self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
                            log_if_error="Failed to load the Spark kernels magics library.")
-        self.logger.debug("Loaded magics.")
 
     def _register_auto_viz(self):
         from sparkmagic.utils.sparkevents import get_spark_events_handler

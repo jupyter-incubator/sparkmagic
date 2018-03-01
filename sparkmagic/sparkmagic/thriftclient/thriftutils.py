@@ -57,10 +57,12 @@ def time_and_write(write_func=None):
     return time_and_write_wrap
 
 
-def alti_or_local(alti, local):
-    if os.path.isfile(os.path.expanduser(alti)):
+def env_alti_local(env=None, alti=None, local=None):
+    if env and os.getenv(env):
+        return env
+    if alti and os.path.isfile(os.path.expanduser(alti)):
         return FileSystemReaderWriter(alti)
-    elif os.path.isfile(os.path.expanduser(local)):
+    if local and os.path.isfile(os.path.expanduser(local)):
         return FileSystemReaderWriter(local)
 
     raise ThriftConfigurationError("Could not locate either\n{!r}\nor\n{!r}\n".format(alti, local))

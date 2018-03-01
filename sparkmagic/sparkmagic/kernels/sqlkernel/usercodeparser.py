@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from sparkmagic.kernels.kernelmagics import KernelMagics
+from sparkmagic.kernels.thriftkernelmagics import ThriftKernelMagics
 
 
 class UserCodeParser(object):
@@ -9,8 +9,10 @@ class UserCodeParser(object):
     # For example, the %%info magic has no cell body input, i.e. it is incorrect to call
     #    %%info
     #    some_input
-    _magics_with_no_cell_body = [i.__name__ for i in [KernelMagics.info, KernelMagics.logs, KernelMagics.cleanup,
-                                                      KernelMagics.delete, KernelMagics.help, KernelMagics.spark]]
+
+    _magics_with_no_cell_body = [i.__name__ for i in [ThriftKernelMagics.sqlrefresh,
+                                                      ThriftKernelMagics.sqlconnect]]
+    _magics_with_maybe_cell_body = [i.__name__ for i in [ThriftKernelMagics.sqlconfig]]
 
     def get_code_to_run(self, code):
         try:
@@ -23,6 +25,10 @@ class UserCodeParser(object):
         elif any(code.startswith("%%" + s) for s in self._magics_with_no_cell_body):
             return u"{}\n ".format(code)
         elif any(code.startswith("%" + s) for s in self._magics_with_no_cell_body):
+            return u"%{}\n ".format(code)
+        elif any(code.startswith("%%" + s) for s in self._magics_with_maybe_cell_body):
+            return "{}\n ".format(code)
+        elif any(code.startswith("%" + s) for s in self._magics_with_maybe_cell_body):
             return u"%{}\n ".format(code)
         elif code.startswith("%%") or code.startswith("%"):
             # If they use other line magics:

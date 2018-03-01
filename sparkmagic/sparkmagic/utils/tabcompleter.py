@@ -1,13 +1,13 @@
 import re
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.sparklogger import SparkLog
+from sparkmagic.utils.thriftlogger import ThriftLog
 from sparkmagic.utils.hivekeywords import HIVE_KEYWORDS
 from sparkmagic.utils.trie import TrieNode, Trie
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.hivemetaconnetion import HiveMetaStoreConnection
 from sparkmagic.thriftclient.thriftexceptions import ThriftConfigurationError
-from sparkmagic.thriftclient.thriftutils import alti_or_local
+from sparkmagic.thriftclient.thriftutils import env_alti_local
 
 from hivemetastore.metaexceptions import TimeOutException
 from hivemetastore.metaexceptions import JavaCallException
@@ -15,7 +15,7 @@ from hivemetastore.metaexceptions import JavaCallException
 
 class Completer:
     def __init__(self):
-        self.logger = SparkLog(u"Completer", conf.logging_config_debug())
+        self.logger = ThriftLog(self.__class__, conf.logging_config_debug())
 
         self._suggestions = []
 
@@ -29,7 +29,7 @@ class Completer:
         usehivemeta = True
         hive_xml = None
         try:
-            hive_xml = alti_or_local(conf.alti_hive_xml(), conf.local_hive_xml())
+            hive_xml = env_alti_local(alti=conf.alti_hive_xml(), local=conf.local_hive_xml())
         except ThriftConfigurationError as tce:
             self.logger.warn(tce.message)
             self.logger.warn("Skipping all hive metadata...")

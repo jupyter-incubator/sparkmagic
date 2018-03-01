@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import os
-
+from os.path import dirname, abspath, join
 
 HOME_PATH = os.environ.get("SPARKMAGIC_CONF_DIR", "~/.sparkmagic")
 CONFIG_FILE = os.environ.get("SPARKMAGIC_CONF_FILE", "config.json")
@@ -98,5 +98,15 @@ AUTHS_SUPPORTED = [NO_AUTH, AUTH_KERBEROS, AUTH_BASIC]
 CONFIGURABLE_RETRY = "configurable"
 LINEAR_RETRY = "linear"
 
+
+## Thrift constants ##
+
 THRIFT_LOG_VAR = "thrift_logs"
 THRIFT_VAR = "thrift_df"
+THRIFT_CONFS = abspath(join(dirname(dirname(__file__)), "thriftconfs"))
+
+HIVE_METASTORE_HOST = 'HIVE_METASTORE_HOST'
+HIVESERVER2_HOST = 'HIVESERVER2_HOST'
+HIVE_CONF_RC = 'HIVE_CONF_RC'
+
+THRIFT_LOGGER_NAME = "thriftLogger"

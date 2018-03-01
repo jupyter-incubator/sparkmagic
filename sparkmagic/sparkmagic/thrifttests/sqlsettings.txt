@@ -1,0 +1,3 @@
+port: 10000
+user: 'tnystrand'
+conf: {'SET hive.exec.max.dynamic.partitions': 10000}

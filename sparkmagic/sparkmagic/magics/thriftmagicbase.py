@@ -1,7 +1,11 @@
+import re
+from time import time
+
+import pandas as pd
+
 from IPython.core.magic import Magics, magics_class
 from IPython.display import clear_output
 
-from sparkmagic.utils.sparklogger import SparkLog
 from hdijupyterutils.ipythondisplay import IpythonDisplay
 from sparkmagic.thriftclient.thriftcontroller import ThriftController
 from sparkmagic.thriftclient.querylogs import QueryLogs
@@ -15,12 +19,6 @@ import sparkmagic.utils.configuration as conf
 from pyhive.exc import OperationalError, ProgrammingError
 from TCLIService.ttypes import TOperationState
 from thrift.transport.TTransport import TTransportException
-
-import pandas as pd
-
-import re
-from time import time
-
 
 def interrupt_handle():
     def interrupt_handle_wrapper(f):
@@ -47,7 +45,6 @@ class ThriftMagicBase(Magics):
         super(ThriftMagicBase, self).__init__(shell)
         self.shell = shell
 
-        self.logger = SparkLog(u"ThriftMagics", conf.logging_config_debug())
         self.ipython_display = IpythonDisplay(shell)
 
         self.thriftcontroller = ThriftController(self.ipython_display)
@@ -59,7 +56,7 @@ class ThriftMagicBase(Magics):
 
         self.has_started = False
 
-        self.logger.debug("Initialized thrift magics")
+        self.logger.debug("Initialized '{}'".format(self.__class__))
 
         # TODO: rewrite as execution contexts
         #self.executioncontexts = ExecutionContexts()
@@ -147,11 +144,16 @@ class ThriftMagicBase(Magics):
                 try:
                     query.parse(user_variables)
                 except KeyError as ke:
-                    ke.message = str(ke)
                     err = "Could not find variable: '{}'".format(ke.message)
                     err += "\nCurrent user variables:\n{{{}}}".format('\n'.join('{} = {!r}'.format(*item) for item in user_variables.items()))
                     writeln(err)
-                    self.shell.user_ns[str(ke.message)] = str(input("{}: ".format(ke.message)))
+
+                    # Python 2/3 compatability
+                    try:
+                        input = raw_input
+                    except NameError:
+                        pass
+                    self.shell.user_ns[str(ke.message)] = input("{}: ".format(ke.message))
                     user_variables = SqlQueries.user_variables(self.shell)
                     continue
                 except ValueError as ve:

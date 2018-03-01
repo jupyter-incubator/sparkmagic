@@ -1,14 +1,13 @@
 import sys
 import traceback
 
-from sparkmagic.utils.sparklogger import SparkLog
+from sparkmagic.utils.thriftlogger import ThriftLog
 from sparkmagic.kernels.wrapperkernel.kernelbase import KernelBase
 from sparkmagic.utils.tabcompleter import Completer
 import sparkmagic.utils.configuration as conf
 
 class ThriftKernelBase(KernelBase):
     def __init__(self, implementation, implementation_version, language, language_version, language_info, user_code_parser=None, **kwargs):
-        self.logger = SparkLog(u"{}_jupyter_kernel".format('thriftsql'), conf.logging_config_debug())
         super(ThriftKernelBase, self).__init__(
                 implementation,
                 implementation_version,
@@ -20,7 +19,7 @@ class ThriftKernelBase(KernelBase):
                 **kwargs)
 
         self._completer = Completer()
-        self.logger.debug("Initialized thrift kernel")
+        self.logger.debug("Initialized '{}'".format(self.__class__))
 
 
     # TODO: To remove dead links at restart and shutdown

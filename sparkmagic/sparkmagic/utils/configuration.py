@@ -3,7 +3,7 @@ import copy
 import sys
 import os
 import base64
-from os.path import dirname, abspath, join
+from os.path import join
 
 from hdijupyterutils.constants import EVENTS_HANDLER_CLASS_NAME, LOGGING_CONFIG_CLASS_NAME
 from hdijupyterutils.utils import join_paths
@@ -13,7 +13,8 @@ from hdijupyterutils.configuration import with_override
 
 from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
     LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
-    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3, CONFIGURABLE_RETRY
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, \
+    SESSION_KIND_PYSPARK3, CONFIGURABLE_RETRY, THRIFT_CONFS, THRIFT_LOGGER_NAME
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 import sparkmagic.utils.constants as constants
 
@@ -127,6 +128,11 @@ def logging_config():
                 u"handlers": [u"magicsHandler"],
                 u"level": u"DEBUG",
                 u"propagate": 0
+            },
+            THRIFT_LOGGER_NAME: {
+                u"handlers": [u"magicsHandler"],
+                u"level": u"DEBUG",
+                u"propagate": 0
             }
         }
     }
@@ -150,6 +156,11 @@ def logging_config_debug():
         },
         u"loggers": {
             MAGICS_LOGGER_NAME: {
+                u"handlers": [u"magicsHandler"],
+                u"level": u"DEBUG",
+                u"propagate": 0
+            },
+            THRIFT_LOGGER_NAME: {
                 u"handlers": [u"magicsHandler"],
                 u"level": u"DEBUG",
                 u"propagate": 0
@@ -265,29 +276,10 @@ def configurable_retry_policy_max_retries():
     return 8
 
 
+## Thrift related ##
 @_with_override
-def thrift_hivetez_conf():
-    return {'hive.execution.engine': 'tez',
-             'tez.cpu.vcores': '4',
-             'tez.queue.name': 'production',
-             'hive.tez.container.size': '4096',
-             'hive.tez.java.opts': '-Xmx3686m',
-             'hive.exec.max.dynamic.partitions': '5000',
-             'hive.exec.max.dynamic.partitions.pernode': '5000',
-             'hive.exec.dynamic.partition': 'true',
-             'hive.support.sql11.reserved.keywords': 'false',
-             'hive.cbo.enable': 'true',
-             'hive.compute.query.using.stats': 'true',
-             'hive.stats.fetch.column.stats': 'true',
-             'hive.stats.fetch.partition.stats': 'true',
-             'hive.vectorized.execution.enabled': 'true',
-             'hive.vectorized.execution.reduce.enabled': 'true',
-             'hive.vectorized.execution.reduce.groupby.enabled': 'true',
-             'hive.exec.parallel': 'true',
-             'hive.exec.parallel.thread.number': '16',
-             'hive.cli.print.header': 'true'
-            }
-    #return {'hive.execution.engine': 'tez'}
+def local_thrift_hivetez_conf():
+    return join(THRIFT_CONFS, "hiverc")
 
 @_with_override
 def metastore_timeout():
@@ -299,7 +291,7 @@ def alti_hive_xml():
 
 @_with_override
 def local_hive_xml():
-    return abspath(join(dirname(dirname(dirname(dirname(abspath(__file__))))), "./remote_hivemetastore/hive-site.xml"))
+    return join(THRIFT_CONFS, "hive-site.xml")
 
 @_with_override
 def alti_cluster_info_env():
@@ -307,22 +299,23 @@ def alti_cluster_info_env():
 
 @_with_override
 def local_cluster_info_env():
-    return abspath(join(dirname(dirname(dirname(dirname(abspath(__file__))))), "./remote_hivemetastore/cluster-info-env.sh"))
-
-@_with_override
-def thrift_hive_hostname():
-    return 'localhost'
-    #return 'hiveserver-dogfood.s3s.altiscale.com'
+    return join(THRIFT_CONFS, "cluster-info-env.sh")
 
 @_with_override
 def thrift_hive_port():
     return 10000
 
 @_with_override
+def thrift_spark_port():
+    return 28150
+
+@_with_override
 def hive_user():
     return 'tnystrand'
     #return 'hive'
 
+
+## Credentials ##
 
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
