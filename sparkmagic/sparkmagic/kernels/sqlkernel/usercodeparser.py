@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from sparkmagic.kernels.thriftkernelmagics import ThriftKernelMagics
-
+import re
 
 class UserCodeParser(object):
     # A list of the names of all magics that are cell magics, but which have no cell body input.
@@ -15,6 +15,9 @@ class UserCodeParser(object):
     _magics_with_maybe_cell_body = [i.__name__ for i in [ThriftKernelMagics.sqlconfig]]
 
     def get_code_to_run(self, code):
+        # Remove comments
+        splitcode = re.split(r'[\r\n]', code)
+        code = '\n'.join(line for line in splitcode if line and not line.startswith('--'))
         try:
             all_but_first_line = code.split(None, 1)[1]
         except IndexError:
