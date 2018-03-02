@@ -42,7 +42,7 @@ class ThriftController:
 
         # Find hive configuration setting
         hivercfile = None
-        if os.getenv(HIVESERVER2_HOST):
+        if os.getenv(HIVE_CONF_RC):
             hivercfile = os.getenv(HIVE_CONF_RC)
         elif os.path.isfile(conf.local_thrift_hivetez_conf()):
             hivercfile = conf.local_thrift_hivetez_conf()
