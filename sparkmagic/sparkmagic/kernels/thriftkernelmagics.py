@@ -62,6 +62,7 @@ class ThriftKernelMagics(ThriftMagicBase):
     @argument("-c", "--config", type=str, default=None, help="Specify a new config in cell body")
     @argument("-f", "--fileconfig", type=str, default=None, help="Specify a new config file to use")
     @argument("-r", "--restore", type=str, default=None, help="Restore to default conf")
+    @argument("-p", "--print", type=str, default=None, help="Print current connection info")
     #@wrap_unexpected_exceptions
     #@handle_expected_exceptions
     def sqlconfig(self, line, cell="", local_ns=None):
@@ -69,9 +70,10 @@ class ThriftKernelMagics(ThriftMagicBase):
         Specify or refresh connection information
 
         Has three modes:
-            * No arguments, No cell body -> display input boxes with default values
+            * TODO: No arguments, No cell body -> display input boxes with default values
             * File input -> grab input from file
             * Configuration input -> grab input from cell
+            * Can also restor to start-up config or print current configuration
 
         Expects dictionary format:
 
@@ -87,6 +89,13 @@ class ThriftKernelMagics(ThriftMagicBase):
         * conf: overwrites entire current conf
         * configuration_dict should be specified as {key1: 'str_val', key2: int_val}
         """
+
+        if "-p" in line or "--print" in line:
+            if self.thriftcontroller.connection:
+                self.magic_writeln(str(self.thriftcontroller.connection))
+            else:
+                self.magic_send_error(r"No connection detected!\nTry refreshing with %sqlrefresh")
+            return
 
         if "-r" in line or "--restore" in line:
             try:
@@ -189,6 +198,7 @@ class ThriftKernelMagics(ThriftMagicBase):
     @needs_local_scope
     @argument("-r", "--refresh", type=str, default=None, help="If present, resets and reconnect to thriftserver")
     @argument("-c", "--config", type=str, default=None, help="Specify a new config in cell body")
+    @argument("-p", "--print", type=str, default=None, help="Print current connection info")
     @argument("-f", "--fileconfig", type=str, default=None, help="Specify a new config file to use")
     #@wrap_unexpected_exceptions
     #@handle_expected_exceptions
