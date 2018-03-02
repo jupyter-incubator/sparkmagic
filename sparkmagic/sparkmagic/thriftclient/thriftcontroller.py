@@ -23,6 +23,8 @@ class ThriftController:
 
     def locate_connection_details(self):
         # Try to find altiscale cluster-info-env first - then local
+
+        # hiveserver host name
         if os.getenv(HIVESERVER2_HOST):
             thrift_hive_hostname = os.getenv(HIVESERVER2_HOST)
         else:
@@ -35,9 +37,10 @@ class ThriftController:
             if matches:
                 thrift_hive_hostname = matches[0]
             else:
-                raise ThriftConfigurationError("Could not locate HIVSERVER2_HOST in {!r}".format(cluster_info.path))
+                raise ThriftConfigurationError("Could not locate env {0!r} or {0!r} in file {1!r}".format(HIVSERVER2_HOST, cluster_info.path))
 
 
+        # Find hive configuration setting
         hivercfile = None
         if os.getenv(HIVESERVER2_HOST):
             hivercfile = os.getenv(HIVE_CONF_RC)
@@ -46,7 +49,7 @@ class ThriftController:
 
         hiveconf = {}
         if hivercfile is None:
-            self.logger.warn("No hive configuration found at env {!r} or file {!r}".format(HIVESERVER2_HOST, conf.local_thrift_hivetez_conf()))
+            self.logger.warn("No hive configuration found at env {!r} or file {!r}".format(HIVE_CONF_RC, conf.local_thrift_hivetez_conf()))
         else:
             with open(hivercfile, 'r') as f:
                 hiveconfs = f.readlines()
@@ -55,10 +58,16 @@ class ThriftController:
                 hiveconf[key.strip()] = val.strip()
         self.logger.info("Saving configuration: {}".format(hiveconf))
 
+        # Find username
+        user = conf.hive_user()
+        if not user:
+            self.logger.error("USER environmental variable was not found - please set user manually with:")
+            self.logger.error(r"%%sqlconfig -c")
+
         self.connection = ThriftConnection(
             host=thrift_hive_hostname,
             port=conf.thrift_hive_port(),
-            user=conf.hive_user(),
+            user=user,
             conf=hiveconf)
 
     # Update current configu

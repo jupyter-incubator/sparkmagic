@@ -311,8 +311,7 @@ def thrift_spark_port():
 
 @_with_override
 def hive_user():
-    return 'tnystrand'
-    #return 'hive'
+    return os.getenv('USER')
 
 
 ## Credentials ##
