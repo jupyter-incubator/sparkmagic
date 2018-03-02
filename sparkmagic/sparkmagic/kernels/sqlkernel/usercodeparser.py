@@ -11,7 +11,8 @@ class UserCodeParser(object):
     #    some_input
 
     _magics_with_no_cell_body = [i.__name__ for i in [ThriftKernelMagics.sqlrefresh,
-                                                      ThriftKernelMagics.sqlconnect]]
+                                                      ThriftKernelMagics.sqlconnect,
+                                                      ThriftKernelMagics.ls_sqlmagics]]
     _magics_with_maybe_cell_body = [i.__name__ for i in [ThriftKernelMagics.sqlconfig]]
 
     def get_code_to_run(self, code):

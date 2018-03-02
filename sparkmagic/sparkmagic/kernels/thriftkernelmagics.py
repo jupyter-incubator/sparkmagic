@@ -219,6 +219,13 @@ class ThriftKernelMagics(ThriftMagicBase):
         self.ipython_display.writeln(msg)
 
 
+    @cell_magic
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
+    def ls_sqlmagics(self, line, cell="", local_ns=None):
+        self.magic_writeln(' '.join("%{}".format(m) for m in sorted(i.__name__ for i in self.magicfunctions)))
+
+    magicfunctions = [sqlrefresh, sqlconnect, ls_sqlmagics, sql, sqlconfig]
 
 def load_ipython_extension(ip):
     ip.register_magics(ThriftKernelMagics)
