@@ -14,6 +14,7 @@ pip install -e .
 cd ..
 
 cd remote_hivemetastore
+. compile.sh
 pip install -e .
 cd ..
 
