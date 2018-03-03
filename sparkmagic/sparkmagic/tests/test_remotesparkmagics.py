@@ -812,5 +812,3 @@ def test_spark_collect_run_sql_command_exception():
     run_cell_method.assert_called_once_with(SQLQuery(commandline, samplemethod=method_name), None)
     ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(run_cell_method.side_effect))
-
-
