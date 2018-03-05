@@ -160,7 +160,6 @@ class RemoteHiveMeta {
         } catch (RMMException e) {
             // Do nothing. Let program exit..
             System.err.println(e.getMessage());
-            System.err.println("HELLO");
         }
         rm.closeClient();        
     }

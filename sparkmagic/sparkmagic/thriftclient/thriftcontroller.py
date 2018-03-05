@@ -94,6 +94,7 @@ class ThriftController:
                 new_connection = eval(r"new_connection._replace({}={!r})".format(k,guess))
             else:
                 raise ThriftConfigurationError("{!r} is not a valid configuration keyword".format(k))
+        # Final attempt at preventing uninteded input pattern
         try:
             new_connection.check_types()
         except AssertionError as ae:
@@ -125,7 +126,7 @@ class ThriftController:
                         "Bad/wrong hostname: {!r}".format(self.connection.host),
                         "Bad/wrong port: {!r}".format(self.connection.port),
                         "Destination host is not reachable (ssh and port forward is not set up)",
-                        "Thriftserver is not running")
+                        "Thriftserver is not running (on remote machine)")
             raise ThriftConfigurationError(err)
 
     def execute(self, query, async=False):
@@ -153,12 +154,12 @@ class ThriftConnection(namedtuple('ThriftConnection', 'host port user conf')):
     __slots__ = ()
 
     def check_types(self):
-        assert(type(self.host) == str)
-        assert(type(self.port) == str or type(self.port) == int)
-        assert(type(self.user) == str)
-        assert(type(self.conf) == dict)
+        assert type(self.host) == str
+        assert type(self.port) == str or type(self.port) == int
+        assert type(self.user) == str
+        assert type(self.conf) == dict
         for k,v in self.conf.items():
-            assert(type(v) == str, "{} for {} in {} must be 'str'".format(k, v, "conf"))
+            assert type(v) == str, "{} for {} in {} must be 'str'".format(k, v, "conf")
 
     def __repr__(self):
         return "\n".join("{}: {}".format(k,v) for k,v in self._asdict().items())

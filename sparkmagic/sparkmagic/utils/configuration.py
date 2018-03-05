@@ -189,9 +189,10 @@ def fatal_error_suggestion():
 \t{}.
 
 Some things to try:
-a) Make sure Spark has enough available resources for Jupyter to create a Spark context.
-b) Contact your Jupyter administrator to make sure the Spark magics library is configured correctly.
-c) Restart the kernel."""
+a) Restart the kernel.
+b) Make sure all libraries are installed (and you are in the right environment if using conda)
+c) Contact your Jupyter administrator to make sure the magics library is configured correctly.
+"""
 
 
 @_with_override

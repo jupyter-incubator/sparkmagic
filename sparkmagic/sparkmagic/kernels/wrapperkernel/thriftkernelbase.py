@@ -3,18 +3,19 @@ import traceback
 
 from sparkmagic.utils.thriftlogger import ThriftLog
 from sparkmagic.kernels.wrapperkernel.kernelbase import KernelBase
-from sparkmagic.utils.tabcompleter import Completer
+from sparkmagic.thriftclient.tabcompleter import Completer
 import sparkmagic.utils.configuration as conf
 
 class ThriftKernelBase(KernelBase):
     def __init__(self, implementation, implementation_version, language, language_version, language_info, user_code_parser=None, **kwargs):
+        magics_lib = "sparkmagic.thriftmagics.magics"
         super(ThriftKernelBase, self).__init__(
                 implementation,
                 implementation_version,
                 language,
                 language_version,
                 language_info,
-                "sparkmagic.kernels.thriftkernelmagics",
+                magics_lib,
                 user_code_parser,
                 **kwargs)
 

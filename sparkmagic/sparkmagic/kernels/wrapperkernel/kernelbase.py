@@ -64,7 +64,7 @@ class KernelBase(IPythonKernel):
     def _load_magics_extension(self, kernelmagics):
         register_magics_code = "%load_ext {}".format(kernelmagics)
         self._execute_cell(register_magics_code, True, False, shutdown_if_error=True,
-                           log_if_error="Failed to load the Spark kernels magics library.")
+                           log_if_error="Failed to load kernels magics library: {}".format(register_magics_code))
 
     def _register_auto_viz(self):
         from sparkmagic.utils.sparkevents import get_spark_events_handler

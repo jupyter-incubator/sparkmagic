@@ -2,9 +2,10 @@ import re
 import os
 
 from IPython.core.magic import magics_class
-from sparkmagic.magics.thriftmagicbase import ThriftMagicBase
 from IPython.core.magic import needs_local_scope, cell_magic, line_magic
 from IPython.core.magic_arguments import argument, magic_arguments
+
+from .base import ThriftMagicBase
 
 from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
 from sparkmagic.utils.constants import THRIFT_VAR, THRIFT_LOG_VAR
@@ -90,6 +91,12 @@ class ThriftKernelMagics(ThriftMagicBase):
         * configuration_dict should be specified as {key1: 'str_val', key2: int_val}
         """
 
+        # Show a widget with values to user for inputting the different configurations
+        if line.strip() == sqlconfig.__name__:
+            pass
+
+
+        # Print connection details to screen
         if "-p" in line or "--print" in line:
             if self.thriftcontroller.connection:
                 self.magic_writeln(str(self.thriftcontroller.connection))
@@ -97,6 +104,7 @@ class ThriftKernelMagics(ThriftMagicBase):
                 self.magic_send_error(r"No connection detected!\nTry refreshing with %sqlrefresh")
             return
 
+        # Restore connection details to defaults
         if "-r" in line or "--restore" in line:
             try:
                 self.thriftcontroller.reset_defaults()
@@ -107,10 +115,12 @@ class ThriftKernelMagics(ThriftMagicBase):
                 self.magic_writeln("Restored to default settings:\n{}".format(self.thriftcontroller.connection))
             return
 
+
         newsettings = None
-        # Hack since flags are not allowed in ipython
         filenamechars = r"[0-9a-zA-Z_\-./+=\\]"
+        # Get configuration from file
         if "-f" in line or "--fileconfig" in line:
+            # Find file in line input and whether it exists
             fileconfig = re.findall(r'-f ({}+)'.format(filenamechars), line)
             if not fileconfig:
                 fileconfig = re.findall(r'--fileconfig ({}+)'.format(filenamechars), line)
@@ -127,23 +137,30 @@ class ThriftKernelMagics(ThriftMagicBase):
                 self.magic_send_error("Could not locate file {!r}\nIgnoring command...".format(fileconfig))
                 return
 
+        # Get configuration from code
         if "-c" in line or "--config" in line:
             self.logger.debug("Using cell connection details {!r}".format(cell))
             newsettings = cell
 
+        # Parse the collected settings
         if newsettings is not None:
             self.magic_writeln("Setting new connection...")
             settings_list = []
             for ms in newsettings.split('\n'):
                 mss = ms.strip()
+                # Kewords set with hive syntax 'set k=v' or regular k:v
                 if mss and mss.lower().startswith("set"):
-                    settings_list.append(ms.strip().split('=',1))
+                    key, val = ms.strip().split('=',1)
+                    # Users shouldn't, but if they do use hivevar or hiveconf, remove it
+                    stripped_key = re.sub(r'hivevar:|hiveconf:','','set hiveconff:k=v')
+                    settings_list.append(key, val)
                 elif mss:
                     settings_list.append(ms.strip().split(':',1))
                 if settings_list and len(settings_list[-1]) != 2:
                     self.magic_send_error("Failed parsing input variables {!r}".format(mss))
                     self.magic_send_error("Make sure each setting is on a separate line with either set k=v, or k:v format")
                     return
+            # Strip away all spaces, newlines and tabs
             settings = {key.strip(): val.strip() for key,val in settings_list}
             self.logger.debug("New settings {}".format(settings))
             try:
@@ -154,7 +171,7 @@ class ThriftKernelMagics(ThriftMagicBase):
             else:
                 self.magic_writeln("Thrift connection updated, current connection is:\n{}".format(self.thriftcontroller.connection))
         else:
-            self.magic_writeln("No action since no flag was specified")
+            self.magic_writeln("No action since {!r} usage pattern is not supported".format(line))
 
 
     def sqlmetaconf():

@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from sparkmagic.kernels.thriftkernelmagics import ThriftKernelMagics
+from sparkmagic.thriftmagics.magics import ThriftKernelMagics
 import re
 
 class UserCodeParser(object):
