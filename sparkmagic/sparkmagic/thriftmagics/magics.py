@@ -15,6 +15,9 @@ from sparkmagic.utils.thriftlogger import ThriftLog
 import sparkmagic.utils.configuration as conf
 from sparkmagic.thriftclient.thriftexceptions import ThriftConfigurationError
 
+from sparkmagic.thriftclient.thriftcontroller import ThriftConnection
+from sparkmagic.thriftclient.variableinputcontroller import VaribleInputController
+
 @magics_class
 class ThriftKernelMagics(ThriftMagicBase):
     def __init__(self, shell):
@@ -92,8 +95,20 @@ class ThriftKernelMagics(ThriftMagicBase):
         """
 
         # Show a widget with values to user for inputting the different configurations
-        if line.strip() == sqlconfig.__name__:
-            pass
+        if line.strip() == '':
+            if self.thriftcontroller.connection:
+                field_dict = self.thriftcontroller.connection._asdict()
+            else:
+                fields = ThriftConnection._fields()
+                field_dict = {f:'' for f in fields}
+
+            varinput = VaribleInputController(self._try_set_configuration, as_dict=True, delete_widget_on_update=True)
+            # Add a new line with label and default value for each field
+            for k, v in field_dict.items():
+                varinput.addvariable(VaribleInputController.DefaultVar(k, repr(v)))
+
+            varinput.display()
+            return
 
 
         # Print connection details to screen
@@ -110,7 +125,7 @@ class ThriftKernelMagics(ThriftMagicBase):
                 self.thriftcontroller.reset_defaults()
             except ThriftConfigurationError as tce:
                 self.magic_send_error("Could not restore to default settings")
-                self.magic_send_error(str(tce))
+                self.magic_send_error(tce.message)
             else:
                 self.magic_writeln("Restored to default settings:\n{}".format(self.thriftcontroller.connection))
             return
@@ -163,16 +178,18 @@ class ThriftKernelMagics(ThriftMagicBase):
             # Strip away all spaces, newlines and tabs
             settings = {key.strip(): val.strip() for key,val in settings_list}
             self.logger.debug("New settings {}".format(settings))
-            try:
-                self.thriftcontroller.set_conf(settings)
-            except ThriftConfigurationError as tce:
-                self.magic_send_error(str(tce))
-                self.magic_send_error("Connection not updated")
-            else:
-                self.magic_writeln("Thrift connection updated, current connection is:\n{}".format(self.thriftcontroller.connection))
+            self._try_set_configuration(settings)
         else:
             self.magic_writeln("No action since {!r} usage pattern is not supported".format(line))
 
+    def _try_set_configuration(self, settings):
+        try:
+            self.thriftcontroller.set_conf(settings)
+        except ThriftConfigurationError as tce:
+            self.magic_send_error(tce.message)
+            self.magic_send_error("Connection not updated")
+        else:
+            self.magic_writeln("Thrift connection updated, current connection is:\n{}".format(self.thriftcontroller.connection))
 
     def sqlmetaconf():
         """
@@ -190,7 +207,7 @@ class ThriftKernelMagics(ThriftMagicBase):
             self.thriftcontroller.connect()
         except ThriftConfigurationError as tce:
             self.magic_send_error("Failed connecting to thriftserver")
-            self.magic_send_error(str(tce))
+            self.magic_send_error(tce.message)
         else:
             self.magic_writeln("Connected to thriftserver")
 
@@ -206,7 +223,7 @@ class ThriftKernelMagics(ThriftMagicBase):
             self.thriftcontroller.reset()
         except ThriftConfigurationError as tce:
             self.magic_send_error("Failed resetting connection")
-            self.magic_send_error(str(tce))
+            self.magic_send_error(tce.message)
         else:
             self.magic_writeln("Thrift connection reset")
 
@@ -228,11 +245,11 @@ class ThriftKernelMagics(ThriftMagicBase):
         pass
 
     def magic_send_error(self, msg):
-        self.logger.error(msg)
+        self.logger.error('Jupyter UI: '.format(msg))
         self.ipython_display.send_error(msg)
 
     def magic_writeln(self, msg):
-        self.logger.info(msg)
+        self.logger.info('Jupyter UI: '.format(msg))
         self.ipython_display.writeln(msg)
 
 
