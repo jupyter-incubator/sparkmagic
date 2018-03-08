@@ -170,6 +170,9 @@ class ThriftKernelMagics(ThriftMagicBase):
                 self.magic_send_error(tce.message)
             else:
                 self.magic_writeln("Restored to default settings:\n{}".format(self.thriftcontroller.connection))
+
+                # Make sure upcoming queries use the new configuration
+                self._sqlrefresh()
             return
 
 
