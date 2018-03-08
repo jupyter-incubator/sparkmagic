@@ -80,8 +80,7 @@ class VaribleInputController(ClosableWidget):
     def display_all(self):
         if self.container_box is None:
             self._create_container_box()
-        from IPython import get_ipython
-        get_ipython().display(self.container_box)
+        display(self.container_box)
 
 class VariableInputControllerError(Exception):
     pass
