@@ -17,6 +17,10 @@ from sparkmagic.thriftclient.thriftexceptions import ThriftConfigurationError
 
 from sparkmagic.thriftclient.thriftcontroller import ThriftConnection
 from sparkmagic.thriftclient.variableinputcontroller import VaribleInputController
+from sparkmagic.thriftclient.thriftutils import DefaultVar
+from sparkmagic.thriftclient.sqlquery import SqlQueries
+
+from IPython import get_ipython
 
 @magics_class
 class ThriftKernelMagics(ThriftMagicBase):
@@ -24,6 +28,23 @@ class ThriftKernelMagics(ThriftMagicBase):
         self.logger = ThriftLog(self.__class__, conf.logging_config_debug())
         super(ThriftKernelMagics, self).__init__(shell)
         self.logger.debug("Initialized '{}'".format(self.__class__))
+
+
+    def help():
+        help = """
+            Setting variables in queries can be done in three ways
+            1) hive-style.
+                `set hivevar:key=value;`
+                `${key}`
+            2) local-namespace.
+                ```%local
+                key=value```
+                `%(key)s`
+            3) templating.
+                `$<key=value>`
+                note that key cannot contain '=' signes
+
+        """
 
     @magic_arguments()
     @cell_magic
@@ -56,9 +77,30 @@ class ThriftKernelMagics(ThriftMagicBase):
                 self.magic_writeln('Could not find {!r} in user variables'.format(cell))
                 self.magic_writeln('Attempting to execute {!r} as a query...'.format(cell))
 
+        # Check for templating right away, if so, create widget and return
+        queries = SqlQueries(cell)
+        queries.parse_templatevars()
+        if queries.has_templatevars():
+            varinput = VaribleInputController(self._runsql_callback(queries), delete_widget_on_update=True)
+            # Add a new line with label and default value for each field
+            for var in queries.get_defaultvars():
+                varinput.addvariable(var)
+
+            varinput.display_all()
+            return
+
+        # Run the query
         return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
                                      args.output, args.logs, args.quiet, coerce)
 
+
+    # Wrapper for getting template replacement callback query
+    def _runsql_callback(self, queries):
+        def _runsql_callback_fun(namedvars):
+            queries.replace_templatevars(namedvars)
+            # Run in kernal to activate auto-viz functionality for now
+            return get_ipython().kernel.do_execute(queries.post_template_queries(), False)
+        return _runsql_callback_fun
 
     @magic_arguments()
     @cell_magic
@@ -105,9 +147,9 @@ class ThriftKernelMagics(ThriftMagicBase):
             varinput = VaribleInputController(self._try_set_configuration, as_dict=True, delete_widget_on_update=True)
             # Add a new line with label and default value for each field
             for k, v in field_dict.items():
-                varinput.addvariable(VaribleInputController.DefaultVar(k, repr(v)))
+                varinput.addvariable(DefaultVar(k, repr(v)))
 
-            varinput.display()
+            varinput.display_all()
             return
 
 
@@ -191,6 +233,9 @@ class ThriftKernelMagics(ThriftMagicBase):
         else:
             self.magic_writeln("Thrift connection updated, current connection is:\n{}".format(self.thriftcontroller.connection))
 
+        # Make sure upcoming queries use the new configuration
+        self._sqlrefresh()
+
     def sqlmetaconf():
         """
                 metastore_host: <host>
@@ -225,7 +270,7 @@ class ThriftKernelMagics(ThriftMagicBase):
             self.magic_send_error("Failed resetting connection")
             self.magic_send_error(tce.message)
         else:
-            self.magic_writeln("Thrift connection reset")
+            self.magic_writeln("Thrift connection refreshed")
 
     @magic_arguments()
     @cell_magic
@@ -245,11 +290,11 @@ class ThriftKernelMagics(ThriftMagicBase):
         pass
 
     def magic_send_error(self, msg):
-        self.logger.error('Jupyter UI: '.format(msg))
+        self.logger.error('Jupyter UI: {}'.format(msg))
         self.ipython_display.send_error(msg)
 
     def magic_writeln(self, msg):
-        self.logger.info('Jupyter UI: '.format(msg))
+        self.logger.info('Jupyter UI: {}'.format(msg))
         self.ipython_display.writeln(msg)
 
 

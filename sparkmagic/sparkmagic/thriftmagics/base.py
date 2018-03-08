@@ -65,6 +65,7 @@ class ThriftMagicBase(Magics):
     @time_and_write()
     def execute_sqlquery(self, cell, samplemethod, maxrows, samplefraction,
                          output_var, log_var, quiet, coerce):
+
         # TODO: if async, thread and return
         # Output handlers and logs for query
         # Should be handled outside for all logs using the execution count id
@@ -132,27 +133,29 @@ class ThriftMagicBase(Magics):
     def _execute_sqlquery(self, cell, samplemethod, maxrows, samplefraction,
                          output_var, quiet, coerce, user_variables, writeln, querylogs):
 
-        # Execute each subquery and eliminate empty list entries
 
         queries = SqlQueries(cell)
+        # Do not use pyhives 'parameter' arguement since it quotes every parameter
         queries.applyargs(samplemethod, maxrows, samplefraction)
 
+        # Run and parse each subquery
         for query_i, query in enumerate(queries):
             t_query = time()
-            # Do not use pyhives 'pramater' arguement since it quotes every parameter
+            # Parse each line and eliminate empty list entries
+            # While True is used to catch non fatal KeyErrors
             while True:
                 try:
                     query.parse(user_variables)
                 except KeyError as ke:
-                    err = "Could not find variable: '{}'".format(ke.message)
-                    err += "\nCurrent user variables:\n{{{}}}".format('\n'.join('{} = {!r}'.format(*item) for item in user_variables.items()))
+                    err = "Could not find variable '{}'. Query requires manual input.".format(ke.message)
                     writeln(err)
-
                     # Python 2/3 compatability
                     try:
                         input = raw_input
                     except NameError:
                         pass
+
+                    # Ask for user input
                     self.shell.user_ns[str(ke.message)] = input("{}: ".format(ke.message))
                     user_variables = SqlQueries.user_variables(self.shell)
                     continue

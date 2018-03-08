@@ -5,9 +5,11 @@ from sparkmagic.utils.thriftlogger import ThriftLog
 from sparkmagic.kernels.wrapperkernel.kernelbase import KernelBase
 from sparkmagic.thriftclient.tabcompleter import Completer
 import sparkmagic.utils.configuration as conf
+from sparkmagic.thriftclient.closablewidget import ClosableWidget
 
 class ThriftKernelBase(KernelBase):
     def __init__(self, implementation, implementation_version, language, language_version, language_info, user_code_parser=None, **kwargs):
+        self.logger = ThriftLog(self.__class__, conf.logging_config_debug())
         magics_lib = "sparkmagic.thriftmagics.magics"
         super(ThriftKernelBase, self).__init__(
                 implementation,
@@ -25,8 +27,12 @@ class ThriftKernelBase(KernelBase):
 
     # TODO: To remove dead links at restart and shutdown
     def do_shutdown(self, restart):
+        self.logger.info('Shutting down with restart={}'.format(restart))
         if conf.use_auto_viz():
             pass
+        for w in ClosableWidget.close_widgets:
+            self.logger.info('Closing widget...')
+            w.close()
         return self._do_shutdown_ipykernel(restart)
 
     def do_complete(self, code, pos):

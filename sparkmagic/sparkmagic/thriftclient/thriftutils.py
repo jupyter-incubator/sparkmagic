@@ -5,6 +5,10 @@ from time import time
 from sparkmagic.thriftclient.thriftexceptions import ThriftConfigurationError
 from hdijupyterutils.filesystemreaderwriter import FileSystemReaderWriter
 
+from collections import namedtuple
+
+DefaultVar = namedtuple('DefaultVar', ['varible', 'default'])
+NamedVar = namedtuple('NamedVar', ['name', 'value'])
 
 def writeln(querylogs, ipython_display):
     def _writeln(*args, **kwargs):

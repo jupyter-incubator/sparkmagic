@@ -1,4 +1,8 @@
 import re
+from sparkmagic.thriftclient.thriftutils import DefaultVar
+from collections import namedtuple
+
+TemplateVar = namedtuple('TemplateVar', ['template', 'defaultvar'])
 
 class SqlQueries:
     @staticmethod
@@ -9,7 +13,49 @@ class SqlQueries:
 
     def __init__(self, queries):
         # Elimiate empty list entries and strip newlines (newlines can cause queries to silently not execute)
+        self._raw_querytext = queries
+        self._post_template_queries = None
         self.queries = [SqlQuery(q.strip()) for q in queries.split(';') if q]
+        self._templatevars = None
+
+
+    def post_template_queries(self):
+        return self._post_template_queries
+
+    def get_defaultvars(self):
+        return [var.defaultvar for var in self._templatevars]
+
+    def parse_templatevars(self):
+        templatestr = re.findall(r'\$<([^>]+)>', self._raw_querytext)
+        templatevars = []
+
+        for template in templatestr:
+            # Spearte key and default with = sign
+            vs = template.split("=", 1)
+            if len(vs) == 1:
+                templatevars.append(TemplateVar(template, DefaultVar(vs[0], '')))
+            else:
+                templatevars.append(TemplateVar(template, DefaultVar(*vs)))
+
+        self._templatevars = templatevars
+
+
+    def replace_templatevars(self, namedvars):
+        """
+            Creates an internal text representation of the queries with template vars filled in
+            Assumes that namedvars are inputted in the same order as templates should be replaced
+        """
+        if len(namedvars) != len(self._templatevars):
+            raise ThriftSQLException("Replace templatevars need as many template variables as input variables")
+        parsed_query = self._raw_querytext
+        for tvar, nvar in zip(self._templatevars, namedvars):
+            parsed_query = re.sub(r'\$<{}>'.format(tvar.template), nvar.value, parsed_query, 1)
+
+        self._post_template_queries = parsed_query
+
+
+    def has_templatevars(self):
+        return bool(self._templatevars)
 
     def applyargs(self, samplemethod, maxrows, samplefraction):
         if samplefraction:
@@ -37,6 +83,9 @@ class SqlQueries:
 
     def __len__(self):
         return len(self.queries)
+
+class ThriftSQLException(Exception):
+    pass
 
 class SqlQuery:
     def __init__(self, query):
