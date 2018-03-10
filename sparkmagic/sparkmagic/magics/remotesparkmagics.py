@@ -1,4 +1,4 @@
-﻿"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
+"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
 Provides the %spark magic."""
 
 # Copyright (c) 2015  aggftw@gmail.com
