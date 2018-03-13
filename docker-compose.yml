@@ -15,10 +15,8 @@ services:
       dockerfile: Dockerfile.jupyter
       args:
         dev_mode: "true"
-    volumes:
-      - type: bind
-        source: "./examples"
-        target: "/home/jovyan/work"
+    links:
+      - spark
     ports:
       - "8888:8888"
 
