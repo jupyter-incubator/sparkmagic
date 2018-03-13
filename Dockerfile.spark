@@ -1,4 +1,5 @@
-FROM gettyimages/spark:2.1.0-hadoop-2.7
+# https://hub.docker.com/r/gettyimages/spark/tags/
+FROM gettyimages/spark:2.1.1-hadoop-2.7
 
 RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
     git \
@@ -20,7 +21,7 @@ ENV PYSPARK3_PYTHON python3.4
 
 RUN mkdir -p /apps/build && \
     cd /apps/build && \
-	git clone https://github.com/cloudera/livy.git && \
+	git clone https://github.com/apache/incubator-livy.git livy && \
 	cd $LIVY_BUILD_PATH && \
   git checkout v0.3.0 && \
     mvn -DskipTests -Dspark.version=$SPARK_VERSION clean package && \
