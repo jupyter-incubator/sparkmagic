@@ -11,11 +11,6 @@ class VaribleInputController(ClosableWidget):
     TEXT_WIDTH = 500
     LABEL_WIDTH = ROW_WIDTH - TEXT_WIDTH
     HEIGHT = 30
-    px = lambda x: '{}px'.format(x)
-
-    layout_row = Layout(width=px(ROW_WIDTH), max_width=px(ROW_WIDTH), height=px(HEIGHT), max_height=px(HEIGHT),border='solid')
-    layout_text = Layout(width=px(TEXT_WIDTH), max_width=px(TEXT_WIDTH), height=px(HEIGHT), max_height=px(HEIGHT),border='solid')
-    layout_label = Layout(width=px(LABEL_WIDTH), max_width=px(LABEL_WIDTH), height=px(HEIGHT), max_height=px(HEIGHT),border='solid')
 
     _TextLabel = namedtuple('TextLabel', ['text_widget', 'label_widget'])
 
@@ -32,6 +27,12 @@ class VaribleInputController(ClosableWidget):
         self._as_dict = as_dict
         self._delete_widget_on_update = delete_widget_on_update
         self.callback = callback
+
+        px = lambda x: '{}px'.format(x)
+        self.layout_row = Layout(width=px(self.ROW_WIDTH), max_width=px(self.ROW_WIDTH), height=px(self.HEIGHT), max_height=px(self.HEIGHT))
+        self.layout_text = Layout(width=px(self.TEXT_WIDTH), max_width=px(self.TEXT_WIDTH), height=px(self.HEIGHT), max_height=px(self.HEIGHT))
+        self.layout_label = Layout(width=px(self.LABEL_WIDTH), max_width=px(self.LABEL_WIDTH), height=px(self.HEIGHT), max_height=px(self.HEIGHT))
+
 
     # Useful when we need to pass object into callback
     # Must be set before adding variables
@@ -64,7 +65,7 @@ class VaribleInputController(ClosableWidget):
             raise VariableInputControllerError("Must set callback function before adding variables")
         wid_label = widgets.Label(defaultvar.varible, layout=self.layout_label)
         wid_text = widgets.Text(placeholder=defaultvar.default, continuous_update=True, layout=self.layout_text)
-        box_row = widgets.VBox(children=(wid_label, wid_text), layout=self.layout_row)
+        box_row = widgets.HBox(children=(wid_label, wid_text), layout=self.layout_row)
 
         if not self._as_dict:
             wid_text.on_submit(self._pressed_enter)
