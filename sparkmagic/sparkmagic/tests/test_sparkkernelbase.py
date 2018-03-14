@@ -17,7 +17,7 @@ class TestSparkKernel(SparkKernelBase):
     def __init__(self):
         kwargs = {"testing": True}
         super(TestSparkKernel, self).__init__(None, None, None, None, None, LANG_PYTHON, user_code_parser,
-                                                                                                    **kwargs)
+                                              **kwargs)
 
 
 def _setup():
