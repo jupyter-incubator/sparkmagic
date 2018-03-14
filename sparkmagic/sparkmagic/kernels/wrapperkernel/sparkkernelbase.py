@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
-from kernelbase import KernelBase
+from . kernelbase import KernelBase
 
 class SparkKernelBase(KernelBase):
     def __init__(self, implementation, implementation_version, language, language_version, language_info,

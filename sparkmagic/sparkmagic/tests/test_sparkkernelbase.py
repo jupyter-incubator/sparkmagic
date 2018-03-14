@@ -17,7 +17,7 @@ class TestSparkKernel(SparkKernelBase):
     def __init__(self):
         kwargs = {"testing": True}
         super(TestSparkKernel, self).__init__(None, None, None, None, None, LANG_PYTHON, user_code_parser,
-                                              **kwargs)
+                                                                                                    **kwargs)
 
 
 def _setup():
@@ -133,9 +133,9 @@ def test_change_language():
 
 @with_setup(_setup, _teardown)
 def test_load_magics():
-    kernel._load_magics_extension()
+    kernel._load_magics_extension("sparkmagic.kernels.kernelmagics")
 
-    assert call("%load_ext sparkmagic.kernels", True, False, None, False) in execute_cell_mock.mock_calls
+    assert call("%load_ext sparkmagic.kernels.kernelmagics", True, False, None, False) in execute_cell_mock.mock_calls
 
 
 @with_setup(_setup, _teardown)
@@ -143,4 +143,3 @@ def test_delete_session():
     kernel._delete_session()
 
     assert call("%%_do_not_call_delete_session\n ", True, False) in execute_cell_mock.mock_calls
-
