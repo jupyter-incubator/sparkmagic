@@ -1,4 +1,4 @@
-version: "3"
+version: "3.2"
 services:
   spark:
     image: jupyter/sparkmagic-livy
@@ -15,7 +15,15 @@ services:
       dockerfile: Dockerfile.jupyter
       args:
         dev_mode: "true"
-    links:
-      - spark
+    volumes:
+      - type: bind
+        source: "./examples"
+        target: "/home/jovyan/work"
     ports:
       - "8888:8888"
+
+# Remove link usage since it is obsolete. We will use this shared network
+# for inter-container communication.
+networks:
+  altisparkmagic_default:
+    driver: bridge
