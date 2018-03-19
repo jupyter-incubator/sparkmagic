@@ -67,12 +67,16 @@ class ThriftKernelMagics(ThriftMagicBase):
 
         coerce = get_coerce_value(args.coerce)
 
+        if not cell:
+            self.magic_writeln('No sql query provided')
+            return
+
         # If just typing one word -> assume it is meant as a local variable and try to return that
         if len(cell.split()) == 1:
             try:
                 uservar = self.shell.user_ns[cell]
                 self.magic_writeln(str(uservar))
-                return None
+                return
             except KeyError as ke:
                 self.magic_writeln('Could not find {!r} in user variables'.format(cell))
                 self.magic_writeln('Attempting to execute {!r} as a query...'.format(cell))
@@ -209,11 +213,12 @@ class ThriftKernelMagics(ThriftMagicBase):
             for ms in newsettings.split('\n'):
                 mss = ms.strip()
                 # Kewords set with hive syntax 'set k=v' or regular k:v
-                if mss and mss.lower().startswith("set"):
-                    key, val = ms.strip().split('=',1)
+                set_match = re.match(r'set[\t ]+(.*=.*)', mss.lower())
+                if mss and set_match:
+                    key, val = set_match.groups(0)[0].strip().split('=',1)
                     # Users shouldn't, but if they do use hivevar or hiveconf, remove it
-                    stripped_key = re.sub(r'hivevar:|hiveconf:','','set hiveconff:k=v')
-                    settings_list.append(key, val)
+                    stripped_key = re.sub(r'hivevar:|hiveconf:','',key)
+                    settings_list.append([stripped_key, val])
                 elif mss:
                     settings_list.append(ms.strip().split(':',1))
                 if settings_list and len(settings_list[-1]) != 2:
