@@ -1,5 +1,13 @@
 version: "3.2"
 services:
+  test:
+    image: jupyter/integrationtest
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    links:
+      - spark
+      - jupyter
   spark:
     image: jupyter/sparkmagic-livy
     build:
@@ -23,7 +31,8 @@ services:
       - "8888:8888"
 
 # Remove link usage since it is obsolete. We will use this shared network
-# for inter-container communication.
-networks:
-  altisparkmagic_default:
-    driver: bridge
+# for inter-container communication. The below did not work for Sarah on her
+# Mac so she has commented the below out.
+#networks:
+#  altisparkmagic_default:
+#    driver: bridge
