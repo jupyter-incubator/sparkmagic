@@ -49,4 +49,5 @@ RUN if [ "$dev_mode" = "true" ]; then \
       cd remote_hivemetastore && pip install . && cd ../ ; \
     else pip install sparkmagic ; fi
 
-CMD nosetests hdijupyterutils autovizwidget sparkmagic
+COPY test-scripts/inttest.sh inttest.sh
+CMD ./inttest.sh

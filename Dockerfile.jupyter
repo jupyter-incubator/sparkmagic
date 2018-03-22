@@ -66,8 +66,8 @@ USER root
 #RUN rm -rf hdijupyterutils/ autovizwidget/ sparkmagic/ remote_hivemetastore/
 
 #CMD ["start-notebook.sh", "--NotebookApp.iopub_data_rate_limit=1000000000"]
-COPY inttest.sh inttest.sh
-CMD ./inttest.sh
+COPY test-scripts/jupyter_start.sh jupyter_start.sh
+CMD ./jupyter_start.sh
 
 USER $NB_UID
 

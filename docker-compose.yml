@@ -8,6 +8,8 @@ services:
     links:
       - spark
       - jupyter
+    volumes:
+      - .:/home/joyvan 
   spark:
     image: jupyter/sparkmagic-livy
     build:
