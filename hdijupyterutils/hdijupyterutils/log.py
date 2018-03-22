@@ -11,7 +11,7 @@ class Log(object):
     """Logger for magics. A small wrapper class around the configured logger described in the configuration file"""
     def __init__(self, logger_name, logging_config, caller_name):
         logging.config.dictConfig(logging_config)
-        
+
         assert caller_name is not None
         self._caller_name = caller_name
         self.logger_name = logger_name
@@ -22,6 +22,9 @@ class Log(object):
 
     def error(self, message):
         self.logger.error(self._transform_log_message(message))
+
+    def warn(self, message):
+        self.logger.warn(self._transform_log_message(message))
 
     def info(self, message):
         self.logger.info(self._transform_log_message(message))
@@ -56,4 +59,4 @@ def logging_config():
                 u"propagate": 0
             }
         }
-    }    
+    }

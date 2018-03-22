@@ -1,5 +1,15 @@
-version: "3"
+version: "3.2"
 services:
+  test:
+    image: jupyter/integrationtest
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    links:
+      - spark
+      - jupyter
+    volumes:
+      - .:/home/joyvan 
   spark:
     image: jupyter/sparkmagic-livy
     build:
@@ -14,8 +24,17 @@ services:
       context: .
       dockerfile: Dockerfile.jupyter
       args:
-        dev_mode: "false"
-    links:
-      - spark
+        dev_mode: "true"
+    volumes:
+      - type: bind
+        source: "./examples"
+        target: "/home/jovyan/work"
     ports:
       - "8888:8888"
+
+# Remove link usage since it is obsolete. We will use this shared network
+# for inter-container communication. The below did not work for Sarah on her
+# Mac so she has commented the below out.
+#networks:
+#  altisparkmagic_default:
+#    driver: bridge

@@ -63,3 +63,9 @@ target/
 MANIFEST
 .vscode/*
 !.vscode/tasks.json
+
+# Mac
+.DS_STORE
+
+# Vim temp
+*.swp

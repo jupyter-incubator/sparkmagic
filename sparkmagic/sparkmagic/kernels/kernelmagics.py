@@ -48,7 +48,7 @@ class KernelMagics(SparkMagicBase):
     def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
-        
+
         self.session_name = u"session_name"
         self.session_started = False
 
@@ -243,7 +243,7 @@ class KernelMagics(SparkMagicBase):
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring_or_throw(self.sql, line)
-            
+
             coerce = get_coerce_value(args.coerce)
 
             return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
@@ -406,7 +406,6 @@ class KernelMagics(SparkMagicBase):
         if cell.strip():
             raise BadUserDataException(u"Cell body for %%{} magic must be empty; got '{}' instead"
                                        .format(magic_name, cell.strip()))
-
 
 def load_ipython_extension(ip):
     ip.register_magics(KernelMagics)

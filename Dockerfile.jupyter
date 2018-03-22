@@ -1,33 +1,59 @@
-FROM jupyter/base-notebook:ae885c0a6226
+# https://hub.docker.com/r/jupyter/base-notebook/tags/
+FROM jupyter/base-notebook:92fe05d1e7e5
 
-ARG dev_mode=false
+# Switch between public module versus local developed modules
+# This should always be true for testing unless this module is published publically
+ARG dev_mode=true
 
 USER root
+
+# Reference: https://github.com/jupyter/docker-stacks/blob/master/base-notebook/Dockerfile
+# Security fix. conda is installed under /opt/conda
+ENV CONDA_DIR=/opt/conda \
+    SHELL=/bin/bash \
+    NB_USER=jovyan \
+    NB_UID=1000 \
+    NB_GID=100 \
+    LC_ALL=en_US.UTF-8 \
+    LANG=en_US.UTF-8 \
+    LANGUAGE=en_US.UTF-8
+ENV PATH=$CONDA_DIR/bin:$PATH \
+    HOME=/home/$NB_USER
+
+ADD fix-permissions /usr/local/bin/fix-permissions
+RUN chmod 755 /usr/local/bin/fix-permissions
 
 # This is needed because requests-kerberos fails to install on debian due to missing linux headers
 RUN conda install requests-kerberos -y
 
-USER $NB_USER
+# Security fix, don't use NB_USER here
+USER $NB_UID
+
+# Setup work directory for backward-compatibility
+RUN mkdir -p /home/$NB_USER/work && \
+    fix-permissions /home/$NB_USER
 
 RUN pip install --upgrade pip
 RUN pip install --upgrade --ignore-installed setuptools
 
-COPY examples /home/jovyan/work
+COPY examples /home/$NB_USER/work
 
-# Install sparkmagic - if DEV_MODE is set, use the one in the host directory.
+# Install sparkmagic - if dev_mode is set, use the one in the host directory.
 # Otherwise, just install from pip.
 COPY hdijupyterutils hdijupyterutils/
 COPY autovizwidget autovizwidget/
 COPY sparkmagic sparkmagic/
+COPY remote_hivemetastore remote_hivemetastore/
 RUN if [ "$dev_mode" = "true" ]; then \
       cd hdijupyterutils && pip install . && cd ../ && \
       cd autovizwidget && pip install . && cd ../ && \
-      cd sparkmagic && pip install . && cd ../ ; \
+      cd sparkmagic && pip install . && cd ../ && \
+      cd remote_hivemetastore && pip install . && cd ../ ; \
     else pip install sparkmagic ; fi
 
 RUN mkdir /home/$NB_USER/.sparkmagic
-COPY sparkmagic/example_config.json /home/$NB_USER/.sparkmagic/config.json
-RUN sed -i 's/localhost/spark/g' /home/$NB_USER/.sparkmagic/config.json
+#COPY sparkmagic/example_config.json /home/$NB_USER/.sparkmagic/config.json
+#RUN sed -i 's/localhost/spark/g' /home/$NB_USER/.sparkmagic/config.json
 RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension
 RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/sparkkernel
 RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/pysparkkernel
@@ -36,10 +62,12 @@ RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cu
 RUN jupyter serverextension enable --py sparkmagic
 
 USER root
-RUN chown $NB_USER /home/$NB_USER/.sparkmagic/config.json
-RUN rm -rf hdijupyterutils/ autovizwidget/ sparkmagic/
+#RUN chown $NB_USER /home/$NB_USER/.sparkmagic/config.json
+#RUN rm -rf hdijupyterutils/ autovizwidget/ sparkmagic/ remote_hivemetastore/
 
-CMD ["start-notebook.sh", "--NotebookApp.iopub_data_rate_limit=1000000000"]
+#CMD ["start-notebook.sh", "--NotebookApp.iopub_data_rate_limit=1000000000"]
+COPY test-scripts/jupyter_start.sh jupyter_start.sh
+CMD ./jupyter_start.sh
 
-USER $NB_USER
+USER $NB_UID
 

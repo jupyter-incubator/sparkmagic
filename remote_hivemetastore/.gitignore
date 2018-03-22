@@ -1,0 +1,4 @@
+*.tmp
+.pyc
+metastore_db
+*.class

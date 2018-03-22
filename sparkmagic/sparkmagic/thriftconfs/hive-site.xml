@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+    <property>
+      <name>hive.metastore.sasl.enabled</name>
+      <value>false</value>
+    </property>
+    <property>
+      <name>hive.server2.authentication</name>
+      <value>NONE</value>
+    </property>
+    <property>
+      <name>hive.server2.enable.doAs</name>
+      <value>true</value>
+    </property>
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://localhost:9083</value>
+    </property>
+    <property>
+        <name>hive.metastore.try.direct.sql</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>/hive</value>
+    </property>
+    <property>
+        <name>hive.metastore.client.socket.timeout</name>
+        <value>600</value>
+    </property>
+</configuration>

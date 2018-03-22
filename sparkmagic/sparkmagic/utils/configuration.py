@@ -1,7 +1,10 @@
 # Distributed under the terms of the Modified BSD License.
 import copy
 import sys
+import os
 import base64
+from os.path import join
+
 from hdijupyterutils.constants import EVENTS_HANDLER_CLASS_NAME, LOGGING_CONFIG_CLASS_NAME
 from hdijupyterutils.utils import join_paths
 from hdijupyterutils.configuration import override as _override
@@ -10,7 +13,8 @@ from hdijupyterutils.configuration import with_override
 
 from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
     LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
-    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3, CONFIGURABLE_RETRY
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, \
+    SESSION_KIND_PYSPARK3, CONFIGURABLE_RETRY, THRIFT_CONFS, THRIFT_LOGGER_NAME
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 import sparkmagic.utils.constants as constants
 
@@ -18,7 +22,7 @@ import sparkmagic.utils.constants as constants
 d = {}
 path = join_paths(HOME_PATH, CONFIG_FILE)
 
-    
+
 def override(config, value):
     _override(d, path, config, value)
 
@@ -48,13 +52,13 @@ def get_livy_kind(language):
 def get_auth_value(username, password):
     if username == '' and password == '':
         return constants.NO_AUTH
-    
+
     return constants.AUTH_BASIC
 
 
 # Configs
 
- 
+
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
@@ -69,8 +73,8 @@ def session_configs():
 @_with_override
 def kernel_python_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
-    
-    
+
+
 def base64_kernel_python_credentials():
     return _credentials_override(kernel_python_credentials)
 
@@ -90,7 +94,7 @@ def kernel_scala_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
 
 
-def base64_kernel_scala_credentials():        
+def base64_kernel_scala_credentials():
     return _credentials_override(kernel_scala_credentials)
 
 @_with_override
@@ -124,10 +128,45 @@ def logging_config():
                 u"handlers": [u"magicsHandler"],
                 u"level": u"DEBUG",
                 u"propagate": 0
+            },
+            THRIFT_LOGGER_NAME: {
+                u"handlers": [u"magicsHandler"],
+                u"level": u"DEBUG",
+                u"propagate": 0
             }
         }
     }
 
+@_with_override
+def logging_config_debug():
+    return {
+        u"version": 1,
+        u"formatters": {
+            u"magicsFormatter": {
+                u"format": u"%(asctime)s\t%(levelname)s\t%(message)s",
+                u"datefmt": u""
+            }
+        },
+        u"handlers": {
+            u"magicsHandler": {
+                u"class": LOGGING_CONFIG_CLASS_NAME,
+                u"formatter": u"magicsFormatter",
+                u"filename": os.path.expanduser(HOME_PATH + "/lastlog.log")
+            }
+        },
+        u"loggers": {
+            MAGICS_LOGGER_NAME: {
+                u"handlers": [u"magicsHandler"],
+                u"level": u"DEBUG",
+                u"propagate": 0
+            },
+            THRIFT_LOGGER_NAME: {
+                u"handlers": [u"magicsHandler"],
+                u"level": u"DEBUG",
+                u"propagate": 0
+            }
+        }
+    }
 
 @_with_override
 def events_handler_class():
@@ -150,9 +189,10 @@ def fatal_error_suggestion():
 \t{}.
 
 Some things to try:
-a) Make sure Spark has enough available resources for Jupyter to create a Spark context.
-b) Contact your Jupyter administrator to make sure the Spark magics library is configured correctly.
-c) Restart the kernel."""
+a) Restart the kernel.
+b) Make sure all libraries are installed (and you are in the right environment if using conda)
+c) Contact your Jupyter administrator to make sure the magics library is configured correctly.
+"""
 
 
 @_with_override
@@ -198,7 +238,7 @@ def pyspark_dataframe_encoding():
 @_with_override
 def heartbeat_refresh_seconds():
     return 30
-    
+
 
 @_with_override
 def heartbeat_retry_seconds():
@@ -236,6 +276,46 @@ def configurable_retry_policy_max_retries():
     # Plus 15 seconds more wanted, that's 3 more 5 second retries.
     return 8
 
+
+## Thrift related ##
+@_with_override
+def local_thrift_hivetez_conf():
+    return join(THRIFT_CONFS, "hiverc")
+
+@_with_override
+def metastore_timeout():
+    return 5
+
+@_with_override
+def alti_hive_xml():
+    return "/etc/hive/hive-site.xml"
+
+@_with_override
+def local_hive_xml():
+    return join(THRIFT_CONFS, "hive-site.xml")
+
+@_with_override
+def alti_cluster_info_env():
+    return "/etc/profile.d/cluster-info-env.sh"
+
+@_with_override
+def local_cluster_info_env():
+    return join(THRIFT_CONFS, "cluster-info-env.sh")
+
+@_with_override
+def thrift_hive_port():
+    return 10000
+
+@_with_override
+def thrift_spark_port():
+    return 28150
+
+@_with_override
+def hive_user():
+    return os.getenv('USER')
+
+
+## Credentials ##
 
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
