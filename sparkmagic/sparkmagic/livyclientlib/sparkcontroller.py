@@ -44,7 +44,7 @@ class SparkController(object):
         sessions = http_client.get_sessions()[u"sessions"]
         session_list = [self._livy_session(http_client, {constants.LIVY_KIND_PARAM: s[constants.LIVY_KIND_PARAM]},
                                            self.ipython_display, s[u"id"])
-                        for s in sessions]
+                        for s in sessions if s[constants.LIVY_KIND_PARAM] in constants.SESSION_KINDS_SUPPORTED]
         for s in session_list:
             s.refresh_status_and_info()
         return session_list
