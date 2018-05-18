@@ -3,7 +3,7 @@
 
 from plotly.graph_objs import Pie, Figure, Data
 from plotly.offline import iplot
-from pandas.core.groupby import DataError
+from pandas.core.base import DataError
 
 import autovizwidget.utils.configuration as conf
 from .graphbase import GraphBase
