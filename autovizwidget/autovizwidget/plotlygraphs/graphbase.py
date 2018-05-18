@@ -3,7 +3,10 @@
 
 from plotly.graph_objs import Figure, Data, Layout
 from plotly.offline import iplot
-from pandas.core.base import DataError
+try:
+    from pandas.core.base import DataError
+except:
+    from pandas.core.groupby import DataError
 
 from ..widget.encoding import Encoding
 from ..widget.invalidencodingerror import InvalidEncodingError
