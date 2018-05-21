@@ -5,6 +5,8 @@ if [ $# -ne 1 ] ; then
  echo "Usage: $0 version"
  echo "Example: $0 0.12.5"
  echo ""
+ exit 1
+fi
 
 name="sparkmagic-${1}.tar.gz"
 rm -f "$name"
