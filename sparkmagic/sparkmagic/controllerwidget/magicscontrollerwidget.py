@@ -36,12 +36,22 @@ class MagicsControllerWidget(AbstractMenuWidget):
                 authentication = endpoint_config.get("auth", None)
                 if authentication is None:
                     authentication = conf.get_auth_value(user, passwd)
-
+                try:
+                    krb_mutual_auth = endpoint_config['krb_mutual_auth']
+                except KeyError:
+                    krb_mutual_auth = None
+                try:
+                    krb_host_override = endpoint_config['krb_host_override']
+                except KeyError:
+                    kerberos_mutual_authentication = None
+                
                 default_endpoints.add(Endpoint(
                     username=user,
                     password=passwd,
                     auth=authentication,
                     url=endpoint_config["url"],
+                    krb_mutual_auth = krb_mutual_auth,
+                    krb_host_override = krb_host_override,
                     implicitly_added=True))
 
         return default_endpoints
