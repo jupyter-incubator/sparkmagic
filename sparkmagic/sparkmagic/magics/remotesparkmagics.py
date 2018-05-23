@@ -55,6 +55,8 @@ class RemoteSparkMagics(SparkMagicBase):
     @argument("-a", "--user", type=str, default="", help="Username for HTTP access to Livy endpoint")
     @argument("-p", "--password", type=str, default="", help="Password for HTTP access to Livy endpoint")
     @argument("-t", "--auth", type=str, default=None, help="Auth type for HTTP access to Livy endpoint. [Kerberos, None, Basic Auth]")
+    @argument("-x", "--krb_mutual_auth", type=str, default=None, help="Kerberos mutual authentication [required, optional, disabled]")
+    @argument("-y", "--krb_host_override", type=str, default=None, help="Kerberos hostname override")
     @argument("-l", "--language", type=str, default=None,
               help="Language for Livy session; one of {}".format(', '.join([LANG_PYTHON, LANG_SCALA, LANG_R])))
     @argument("command", type=str, default=[""], nargs="*", help="Commands to execute.")
@@ -120,7 +122,7 @@ class RemoteSparkMagics(SparkMagicBase):
         # info
         if subcommand == "info":
             if args.url is not None:
-                endpoint = Endpoint(args.url, args.auth, args.user, args.password)
+                endpoint = Endpoint(args.url, args.auth, args.user, args.password, krb_mutual_auth=args.krb_mutual_auth, krb_host_override=args.krb_host_override)
                 info_sessions = self.spark_controller.get_all_sessions_endpoint_info(endpoint)
                 self._print_endpoint_info(info_sessions)
             else:
@@ -136,7 +138,7 @@ class RemoteSparkMagics(SparkMagicBase):
 
             name = args.session
             language = args.language
-            endpoint = Endpoint(args.url, args.auth, args.user, args.password)
+            endpoint = Endpoint(args.url, args.auth, args.user, args.password, krb_mutual_auth=args.krb_mutual_auth, krb_host_override=args.krb_host_override)
             skip = args.skip
 
             properties = conf.get_session_properties(language)
@@ -150,7 +152,7 @@ class RemoteSparkMagics(SparkMagicBase):
                 if args.id is None:
                     self.ipython_display.send_error("Must provide --id or -i option to delete session at endpoint from URL")
                     return
-                endpoint = Endpoint(args.url, args.auth, args.user, args.password)
+                endpoint = Endpoint(args.url, args.auth, args.user, args.password, krb_mutual_auth=args.krb_mutual_auth, krb_host_override=args.krb_host_override)
                 session_id = args.id
                 self.spark_controller.delete_session_by_id(endpoint, session_id)
             else:
@@ -158,7 +160,7 @@ class RemoteSparkMagics(SparkMagicBase):
         # cleanup
         elif subcommand == "cleanup":
             if args.url is not None:
-                endpoint = Endpoint(args.url, args.auth, args.user, args.password)
+                endpoint = Endpoint(args.url, args.auth, args.user, args.password, krb_mutual_auth=args.krb_mutual_auth, krb_host_override=args.krb_host_override)
                 self.spark_controller.cleanup_endpoint(endpoint)
             else:
                 self.spark_controller.cleanup()

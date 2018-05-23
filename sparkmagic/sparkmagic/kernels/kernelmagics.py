@@ -362,8 +362,8 @@ class KernelMagics(SparkMagicBase):
     @argument("-p", "--password", type=str, help="Password to use.")
     @argument("-s", "--server", type=str, help="Url of server to use.")
     @argument("-t", "--auth", type=str, help="Auth type for authentication")
-    @argument("-m", "--krb_mutual_auth", type=str, help="Mutual auth Kerberos (required, optional, disabled)")
-    @argument("-h", "--krb_host_override", type=str, help="Kerberos Hostname override")
+    @argument("-x", "--krb_mutual_auth", type=str, help="Mutual auth Kerberos (required, optional, disabled)")
+    @argument("-y", "--krb_host_override", type=str, help="Kerberos Hostname override")
     @_event
     def _do_not_call_change_endpoint(self, line, cell="", local_ns=None):
         args = parse_argstring_or_throw(self._do_not_call_change_endpoint, line)
