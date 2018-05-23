@@ -38,16 +38,30 @@ class AddEndpointWidget(AbstractMenuWidget):
                      constants.NO_AUTH: constants.NO_AUTH},
             description=u"Auth type:"
         )
-
+        
+        self.auth_krb_mutual = self.ipywidget_factory.get_dropdown(
+            options={constants.AUTH_KERBEROS_MUTUAL_REQ: constants.AUTH_KERBEROS_MUTUAL_REQ, constants.AUTH_KERBEROS_MUTUAL_OPT: constants.AUTH_KERBEROS_MUTUAL_OPT,
+                     constants.AUTH_KERBEROS_MUTUAL_DIS: constants.AUTH_KERBEROS_MUTUAL_DIS},
+            description=u"Mutual auth:"
+        )
+        self.auth_krb_hostname = self.ipywidget_factory.get_text(
+            description='Hostname override:',
+            value='kerberos.example.com',
+            width=widget_width
+        )
         # Submit widget
         self.submit_widget = self.ipywidget_factory.get_submit_button(
             description='Add endpoint'
         )
 
         self.auth.on_trait_change(self._show_correct_endpoint_fields)
+        self.auth_krb_mutual.on_trait_change(self._show_correct_endpoint_fields)
 
         self.children = [self.ipywidget_factory.get_html(value="<br/>", width=widget_width),
-                         self.address_widget, self.auth, self.user_widget, self.password_widget,
+                         self.address_widget, 
+                         self.auth, 
+                         self.user_widget, self.password_widget,
+                         self.auth_krb_mutual, self.auth_krb_hostname,
                          self.ipywidget_factory.get_html(value="<br/>", width=widget_width), self.submit_widget]
 
         for child in self.children:
@@ -56,7 +70,7 @@ class AddEndpointWidget(AbstractMenuWidget):
         self._show_correct_endpoint_fields()
 
     def run(self):
-        endpoint = Endpoint(self.address_widget.value, self.auth.value, self.user_widget.value, self.password_widget.value)
+        endpoint = Endpoint(self.address_widget.value, self.auth.value, self.user_widget.value, self.password_widget.value, krb_mutual_auth=self.auth_krb_mutual.value, krb_host_override=self.auth_krb_hostname.value)
         self.endpoints[self.address_widget.value] = endpoint
         self.ipython_display.writeln("Added endpoint {}".format(self.address_widget.value))
 
@@ -65,10 +79,19 @@ class AddEndpointWidget(AbstractMenuWidget):
         self.refresh_method()
 
     def _show_correct_endpoint_fields(self):
-        if self.auth.value == constants.NO_AUTH or self.auth.value == constants.AUTH_KERBEROS:
+        if self.auth.value == constants.NO_AUTH:
             self.user_widget.layout.display = 'none'
             self.password_widget.layout.display = 'none'
+            self.auth_krb_mutual.layout.display = 'none'
+            self.auth_krb_hostname.layout.display = 'none'
+        elif self.auth.value == constants.AUTH_KERBEROS:
+            self.user_widget.layout.display = 'none'
+            self.password_widget.layout.display = 'none'
+            self.auth_krb_mutual.layout.display = 'flex'
+            self.auth_krb_hostname.layout.display = 'flex'
         else:
             self.user_widget.layout.display = 'flex'
             self.password_widget.layout.display = 'flex'
+            self.auth_krb_mutual.layout.display = 'none'
+            self.auth_krb_hostname.layout.display = 'none'
 
