@@ -362,6 +362,8 @@ class KernelMagics(SparkMagicBase):
     @argument("-p", "--password", type=str, help="Password to use.")
     @argument("-s", "--server", type=str, help="Url of server to use.")
     @argument("-t", "--auth", type=str, help="Auth type for authentication")
+    @argument("-m", "--krb_mutual_auth", type=str, help="Mutual auth Kerberos (required, optional, disabled)")
+    @argument("-h", "--krb_host_override", type=str, help="Kerberos Hostname override")
     @_event
     def _do_not_call_change_endpoint(self, line, cell="", local_ns=None):
         args = parse_argstring_or_throw(self._do_not_call_change_endpoint, line)
@@ -369,17 +371,38 @@ class KernelMagics(SparkMagicBase):
         password = args.password
         server = args.server
         auth = args.auth
-
+        mutualauth = args.krb_mutual_auth
+        kerberoshostname = args.krb_host_override
         if self.session_started:
             error = u"Cannot change the endpoint if a session has been started."
             raise BadUserDataException(error)
 
-        self.endpoint = Endpoint(server, auth, username, password)
+        self.endpoint = Endpoint(server,
+                                    auth,
+                                    username,
+                                    password,
+                                    krb_mutual_auth=mutualauth,
+                                    krb_host_override=kerberoshostname
+        )
 
     def refresh_configuration(self):
         credentials = getattr(conf, 'base64_kernel_' + self.language + '_credentials')()
         (username, password, auth, url) = (credentials['username'], credentials['password'], credentials['auth'], credentials['url'])
-        self.endpoint = Endpoint(url, auth, username, password)
+        try:
+            mutualauth = credentials['krb_mutual_auth']
+        except KeyError:
+            mutualauth = None
+        try:
+            kerberoshostname = credentials['krb_host_override']
+        except KeyError:
+            kerberoshostname = None      
+        self.endpoint = Endpoint(url,
+                                    auth,
+                                    username,
+                                    password,
+                                    krb_mutual_auth=mutualauth,
+                                    krb_host_override=kerberoshostname
+        )
 
     def get_session_settings(self, line, force):
         line = line.strip()
