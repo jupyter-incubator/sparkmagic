@@ -3,7 +3,7 @@
 import json
 from time import sleep
 import requests
-from requests_kerberos import HTTPKerberosAuth, REQUIRED
+from requests_kerberos import HTTPKerberosAuth, REQUIRED, OPTIONAL, DISABLED
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
@@ -20,8 +20,18 @@ class ReliableHttpClient(object):
         self._endpoint = endpoint
         self._headers = headers
         self._retry_policy = retry_policy
+
         if self._endpoint.auth == constants.AUTH_KERBEROS:
-            self._auth = HTTPKerberosAuth(mutual_authentication=REQUIRED)
+            if self._endpoint.krb_mutual_auth == constants.AUTH_KERBEROS_MUTUAL_REQ:
+                mutual_auth = REQUIRED
+            elif self._endpoint.krb_mutual_auth == constants.AUTH_KERBEROS_MUTUAL_OPT:
+                mutual_auth = OPTIONAL
+            elif self._endpoint.krb_mutual_auth == constants.AUTH_KERBEROS_MUTUAL_DIS:
+                mutual_auth = DISABLED
+            else:
+                mutual_auth = REQUIRED
+            hostname_override = self._endpoint.krb_host_override
+            self._auth = HTTPKerberosAuth(mutual_authentication=mutual_auth, hostname_override=hostname_override)
         elif self._endpoint.auth == constants.AUTH_BASIC:
             self._auth = (self._endpoint.username, self._endpoint.password)
         elif self._endpoint.auth != constants.NO_AUTH:
