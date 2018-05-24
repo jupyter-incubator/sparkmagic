@@ -4,8 +4,8 @@
     "password": "",
     "url": "http://localhost:8998",
     "auth": "None",
-    "krb_mutual_auth": "None",
-    "krb_host_override": "None"
+    "krb_mutual_auth": null,
+    "krb_host_override": null
   },
 
   "kernel_scala_credentials" : {
@@ -13,8 +13,8 @@
     "password": "",
     "url": "http://localhost:8998",
     "auth": "None",
-    "krb_mutual_auth": "None",
-    "krb_host_override": "None"
+    "krb_mutual_auth": null,
+    "krb_host_override": null
   },
   "kernel_r_credentials": {
     "username": "",

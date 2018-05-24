@@ -30,7 +30,10 @@ class ReliableHttpClient(object):
                 mutual_auth = DISABLED
             else:
                 mutual_auth = REQUIRED
-            hostname_override = self._endpoint.krb_host_override
+            if self._endpoint.krb_host_override == "":
+                hostname_override = None
+            else:
+                hostname_override = self._endpoint.krb_host_override
             self._auth = HTTPKerberosAuth(mutual_authentication=mutual_auth, hostname_override=hostname_override)
         elif self._endpoint.auth == constants.AUTH_BASIC:
             self._auth = (self._endpoint.username, self._endpoint.password)
