@@ -1,5 +1,5 @@
 from mock import MagicMock
-from nose.tools import assert_equals, assert_not_equals, raises, with_setup
+from nose.tools import assert_equals, assert_not_equals, assert_true, raises, with_setup
 import json
 
 import sparkmagic.utils.configuration as conf
@@ -78,3 +78,32 @@ def test_share_config_between_pyspark_and_pyspark3():
     kpc = { 'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L', 'auth': AUTH_BASIC }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     assert_equals(conf.base64_kernel_python3_credentials(), conf.base64_kernel_python_credentials())
+
+@with_setup(_setup)
+def test_configuration_override_livy_impersonation_false():
+    conf.override(conf.livy_user_impersonation.__name__, False)
+    assert_equals(conf.default_sesion_configs(), {})
+
+@with_setup(_setup)
+def test_configuration_override_livy_impersonation_true_with_auth():
+    conf.override(conf.livy_user_impersonation.__name__, True)
+    kpc = { 'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L', 'auth': AUTH_BASIC}
+    overrides = { conf.kernel_python_credentials.__name__: kpc,
+                  conf.kernel_python3_credentials.__name__: kpc,
+                  conf.kernel_r_credentials.__name__: kpc,
+                  conf.kernel_scala_credentials.__name__: kpc }
+    conf.override_all(overrides)
+    assert_true('proxyUser' not in conf.default_sesion_configs())
+
+@with_setup(_setup)
+def test_configuration_override_livy_impersonation_true_no_auth():
+    conf.override(conf.livy_user_impersonation.__name__, True)
+    kpc = { 'username': '', 'password': '', 'base64_password': '=', 'url': 'L', 'auth': NO_AUTH}
+    overrides = { conf.kernel_python_credentials.__name__: kpc,
+                  conf.kernel_python3_credentials.__name__: kpc,
+                  conf.kernel_r_credentials.__name__: kpc,
+                  conf.kernel_scala_credentials.__name__: kpc }
+    conf.override_all(overrides)
+    assert_true('proxyUser' in conf.default_sesion_configs())
+
+
