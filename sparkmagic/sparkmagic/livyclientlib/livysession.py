@@ -113,13 +113,17 @@ class LivySession(ObjectWithGuid):
     def _translate_to_livy_kind(self, properties, kind):
         # Livy does not support "pyspark3" as the kind from 0.4 onwards and only "pyspark" is valid.
         # That's why we are leveraging PYSPARK_PYTHON_PARAM here to specifyf different python versions.
+        sparkConfigs = {}
+        if constants.LIVY_CONF_PARAM in properties:
+            sparkConfigs = properties[constants.LIVY_CONF_PARAM]
+
         if kind == constants.SESSION_KIND_PYSPARK:
-            python_properties = {constants.PYSPARK_PYTHON_PARAM: constants.LANG_PYTHON}
-            properties[constants.LIVY_CONF_PARAM] = python_properties
+            sparkConfigs[constants.PYSPARK_PYTHON_PARAM] = conf.python2_executable_path()
         elif kind == constants.SESSION_KIND_PYSPARK3:
             properties[constants.LIVY_KIND_PARAM] = constants.SESSION_KIND_PYSPARK
-            python_properties = {constants.PYSPARK_PYTHON_PARAM: constants.LANG_PYTHON3}
-            properties[constants.LIVY_CONF_PARAM] = python_properties
+            sparkConfigs[constants.PYSPARK_PYTHON_PARAM] = conf.python3_executable_path()
+
+        properties[constants.LIVY_CONF_PARAM] = sparkConfigs
 
     def start(self):
         """Start the session against actual livy server."""

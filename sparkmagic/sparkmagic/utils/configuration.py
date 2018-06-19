@@ -236,6 +236,13 @@ def configurable_retry_policy_max_retries():
     # Plus 15 seconds more wanted, that's 3 more 5 second retries.
     return 8
 
+@_with_override
+def python2_executable_path():
+    return "python"
+
+@_with_override
+def python3_executable_path():
+    return "python3"
 
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
