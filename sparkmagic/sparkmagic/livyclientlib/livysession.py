@@ -113,6 +113,10 @@ class LivySession(ObjectWithGuid):
     def _translate_to_livy_kind(self, properties, kind):
         # Livy does not support "pyspark3" as the kind from 0.4 onwards and only "pyspark" is valid.
         # That's why we are leveraging PYSPARK_PYTHON_PARAM here to specifyf different python versions.
+
+        if kind != constants.SESSION_KIND_PYSPARK and kind != constants.SESSION_KIND_PYSPARK3:
+            return
+
         sparkConfigs = {}
         if constants.LIVY_CONF_PARAM in properties:
             sparkConfigs = properties[constants.LIVY_CONF_PARAM]
