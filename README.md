@@ -27,12 +27,12 @@ There are two ways to use sparkmagic. Head over to the [examples](examples) sect
 
 ### 1. Via the IPython kernel
 
-The sparkmagic library provides a %%spark magic that you can use to easily run code against a remote Spark cluster from a normal IPython notebook. See the [Spark Magics on IPython sample notebook](examples/Magics in IPython Kernel.ipynb)
+The sparkmagic library provides a %%spark magic that you can use to easily run code against a remote Spark cluster from a normal IPython notebook. See the [Spark Magics on IPython sample notebook](examples/Magics%20in%20IPython%20Kernel.ipynb)
 
 ### 2. Via the PySpark and Spark kernels
 
 The sparkmagic library also provides a set of Scala and Python kernels that allow you to automatically connect to a remote Spark cluster, run code and SQL queries, manage your Livy server and Spark job configuration, and generate automatic visualizations.
-See [Pyspark](examples/Pyspark Kernel.ipynb) and [Spark](examples/Spark Kernel.ipynb) sample notebooks.
+See [Pyspark](examples/Pyspark%20Kernel.ipynb) and [Spark](examples/Spark%20Kernel.ipynb) sample notebooks.
 
 ## Installation
 
