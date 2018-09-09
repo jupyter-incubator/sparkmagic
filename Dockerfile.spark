@@ -33,5 +33,5 @@ RUN mkdir -p /apps/build && \
 
 EXPOSE 8998
 
-CMD ["/apps/livy-server-0.3.0/bin/livy-server"]
+CMD /apps/livy-server-$LIVY_BUILD_VERSION/bin/livy-server
 
