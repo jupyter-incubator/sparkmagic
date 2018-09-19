@@ -1,5 +1,6 @@
 from mock import MagicMock, call
 from nose.tools import with_setup
+from ipywidgets import Widget
 import pandas as pd
 
 from ..widget.encodingwidget import EncodingWidget
@@ -26,6 +27,7 @@ def _setup():
     encoding = Encoding(chart_type="table", x="date", y="temp_diff")
 
     ipywidget_factory = MagicMock()
+    ipywidget_factory.get_vbox.return_value = MagicMock(spec=Widget)
 
     change_hook = MagicMock()
 
@@ -47,6 +49,7 @@ def test_encoding_with_all_none_doesnt_throw():
     encoding = Encoding()
 
     ipywidget_factory = MagicMock()
+    ipywidget_factory.get_vbox.return_value = MagicMock(spec=Widget)
 
     EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
