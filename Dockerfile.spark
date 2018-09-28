@@ -12,8 +12,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
 
 RUN pip install --upgrade setuptools
 
-ENV LIVY_BUILD_VERSION 0.3.0
-ENV LIVY_APP_PATH /apps/livy-server-$LIVY_BUILD_VERSION
+ENV LIVY_BUILD_VERSION 0.5.0-incubating
+ENV LIVY_APP_PATH /apps/livy-$LIVY_BUILD_VERSION-bin
 ENV LIVY_BUILD_PATH /apps/build/livy
 ENV PYSPARK_PYTHON python2.7
 ENV PYSPARK3_PYTHON python3.4
@@ -25,7 +25,7 @@ RUN mkdir -p /apps/build && \
   git checkout v$LIVY_BUILD_VERSION && \
     mvn -DskipTests -Dspark.version=$SPARK_VERSION clean package && \
     ls -al $LIVY_BUILD_PATH && ls -al $LIVY_BUILD_PATH/assembly && ls -al $LIVY_BUILD_PATH/assembly/target && \
-    unzip $LIVY_BUILD_PATH/assembly/target/livy-server-$LIVY_BUILD_VERSION.zip -d /apps && \
+    unzip $LIVY_BUILD_PATH/assembly/target/livy-${LIVY_BUILD_VERSION}-bin.zip -d /apps && \
     rm -rf $LIVY_BUILD_PATH && \
 	mkdir -p $LIVY_APP_PATH/upload && \
   mkdir -p $LIVY_APP_PATH/logs
@@ -33,5 +33,5 @@ RUN mkdir -p /apps/build && \
 
 EXPOSE 8998
 
-CMD /apps/livy-server-$LIVY_BUILD_VERSION/bin/livy-server
+CMD $LIVY_APP_PATH/bin/livy-server
 
