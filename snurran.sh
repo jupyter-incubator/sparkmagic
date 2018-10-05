@@ -10,7 +10,9 @@ fi
 
 name="sparkmagic-${1}.tar.gz"
 rm -f "$name"
-
+cd ..
 tar zcf "$name" sparkmagic 
+mv "$name" sparkmagic
+cd sparkmagic
 
 scp "$name" glassfish@snurran.sics.se:/var/www/hops
