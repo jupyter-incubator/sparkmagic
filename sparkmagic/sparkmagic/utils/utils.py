@@ -53,7 +53,7 @@ def records_to_dataframe(records_text, kind, coerce=None):
     if records_text in ['', '[]']:
         strings = []
     else:
-        strings = records_text.split('\n')
+        strings = records_text.strip().split('\n')
     try:
         data_array = [json.JSONDecoder(object_pairs_hook=OrderedDict).decode(s) for s in strings]
 
