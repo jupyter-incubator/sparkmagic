@@ -63,7 +63,7 @@ class Command(ObjectWithGuid):
 
                 if statement_output[u"status"] == u"ok":
                     data = statement_output[u"data"]
-                    if data.get(u"text/plain") is not None:
+                    if data.get(u"text/plain") is None:
                         png_encode = data.get("image/png")
                         if png_encode is None:
                             return (False,
