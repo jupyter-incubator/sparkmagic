@@ -106,26 +106,26 @@ sure to re-run `docker-compose build` before each test run.
 If you want a different stack image for jupyter, just uncommnent the proper lines in the docker-compose.yml file.
 
 	jupyter:
-    		image: jupyter/sparkmagic
-    		#image: darkice01/sparkmagic-minimal
-    		#image: darkice01/sparkmagic-scipy
-    		#image: darkice01/sparkmagic-r
-    		#image: darkice01/sparkmagic-tensorflow
-    		#image: darkice01/sparkmagic-datascience
-    		#image: darkice01/sparkmagic-pyspark
-    		#image: darkice01/sparkmagic-all
+		image: jupyter/sparkmagic
+		#image: darkice01/sparkmagic-minimal
+		#image: darkice01/sparkmagic-scipy
+		#image: darkice01/sparkmagic-r
+		#image: darkice01/sparkmagic-tensorflow
+		#image: darkice01/sparkmagic-datascience
+		#image: darkice01/sparkmagic-pyspark
+		#image: darkice01/sparkmagic-all
     		
 		build:
-      		context: .
+		context: .
       
 		dockerfile: Dockerfile.jupyter
-      		#dockerfile: Dockerfile.jupyter-minimal
-      		#dockerfile: Dockerfile.jupyter-scipy
-      		#dockerfile: Dockerfile.jupyter-r
-      		#dockerfile: Dockerfile.jupyter-tensorflow
-      		#dockerfile: Dockerfile.jupyter-datascience
-      		#dockerfile: Dockerfile.jupyter-pyspark
-      		#dockerfile: Dockerfile.jupyter-all
+		#dockerfile: Dockerfile.jupyter-minimal
+		#dockerfile: Dockerfile.jupyter-scipy
+		#dockerfile: Dockerfile.jupyter-r
+		#dockerfile: Dockerfile.jupyter-tensorflow
+		#dockerfile: Dockerfile.jupyter-datascience
+		#dockerfile: Dockerfile.jupyter-pyspark
+		#dockerfile: Dockerfile.jupyter-all
       		
 		args:
         		dev_mode: "false"
