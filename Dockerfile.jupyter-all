@@ -12,6 +12,9 @@ USER $NB_USER
 RUN pip install --upgrade pip
 RUN pip install --upgrade --ignore-installed setuptools
 
+#this is needed for the autovizwidget to work properly
+RUN pip install pandas --upgrade
+
 COPY examples /home/jovyan/work
 
 # Install sparkmagic - if DEV_MODE is set, use the one in the host directory.
