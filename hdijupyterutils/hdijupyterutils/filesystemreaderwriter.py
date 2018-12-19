@@ -1,6 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 import os
+import sys
 
 
 class FileSystemReaderWriter(object):
@@ -21,7 +22,10 @@ class FileSystemReaderWriter(object):
     def read_lines(self):
         if os.path.isfile(self.path):
             with open(self.path, "r") as f:
-                return f.readlines()
+                if sys.version_info[0] < 3:
+                    return [line.decode("UTF-8") for line in f.readlines()]
+                else:
+                    return f.readlines()
         else:
             return ""
 
