@@ -12,13 +12,15 @@ from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 class LivyReliableHttpClient(object):
     """A Livy-specific Http client which wraps the normal ReliableHttpClient. Propagates
     HttpClientExceptions up."""
+
     def __init__(self, http_client, endpoint):
         self.endpoint = endpoint
         self._http_client = http_client
+        self.languages = {}
 
     @staticmethod
     def from_endpoint(endpoint):
-        headers = {"Content-Type": "application/json" }
+        headers = {"Content-Type": "application/json"}
         headers.update(conf.custom_headers())
         retry_policy = LivyReliableHttpClient._get_retry_policy()
         return LivyReliableHttpClient(ReliableHttpClient(endpoint, headers, retry_policy), endpoint)
@@ -32,11 +34,18 @@ class LivyReliableHttpClient(object):
     def get_sessions(self):
         return self._http_client.get("/sessions", [200]).json()
 
-    def post_session(self, properties):
-        return self._http_client.post("/sessions", [201], properties).json()
+    def post_session(self, lang, properties):
+        result = self._http_client.post("/sessions", [201], properties).json()
+        if u'id' in result:
+            session_id = result[u'id']
+            self.languages[session_id] = lang
+        return result
 
     def get_session(self, session_id):
         return self._http_client.get(self._session_url(session_id), [200]).json()
+
+    def get_language(self, session_id):
+        return self.languages[session_id]
 
     def delete_session(self, session_id):
         self._http_client.delete(self._session_url(session_id), [200, 404])
@@ -62,10 +71,11 @@ class LivyReliableHttpClient(object):
     @staticmethod
     def _get_retry_policy():
         policy = conf.retry_policy()
-        
+
         if policy == LINEAR_RETRY:
             return LinearRetryPolicy(seconds_to_sleep=5, max_retries=5)
         elif policy == CONFIGURABLE_RETRY:
-            return ConfigurableRetryPolicy(retry_seconds_to_sleep_list=conf.retry_seconds_to_sleep_list(), max_retries=conf.configurable_retry_policy_max_retries())
+            return ConfigurableRetryPolicy(retry_seconds_to_sleep_list=conf.retry_seconds_to_sleep_list(),
+                                           max_retries=conf.configurable_retry_policy_max_retries())
         else:
             raise BadUserConfigurationException(u"Retry policy '{}' not supported".format(policy))

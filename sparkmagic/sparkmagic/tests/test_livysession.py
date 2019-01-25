@@ -81,7 +81,8 @@ class TestLivySession(object):
                         heartbeat_timeout=60):
         ipython_display = MagicMock()
         session = LivySession(self.http_client,
-                              {"kind": kind, "lang": lang},
+                              lang,
+                              {"kind": kind},
                               ipython_display,
                               session_id,
                               self.spark_events,
@@ -190,10 +191,11 @@ class TestLivySession(object):
         session.start()
 
         assert_equals(kind, session.kind)
+        assert_equals(constants.LANG_SCALA, session.lang)
         assert_equals("idle", session.status)
         assert_equals(0, session.id)
-        self.http_client.post_session.assert_called_with(
-            {"kind": "spark", "lang": "scala", "heartbeatTimeoutInSecond": 60})
+        self.http_client.post_session.assert_called_with("scala",
+            {"kind": "spark", "heartbeatTimeoutInSecond": 60})
 
     def test_start_r_starts_session(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -207,7 +209,7 @@ class TestLivySession(object):
         assert_equals(kind, session.kind)
         assert_equals("idle", session.status)
         assert_equals(0, session.id)
-        self.http_client.post_session.assert_called_with({"kind": "sparkr", "lang": "r",
+        self.http_client.post_session.assert_called_with("r", {"kind": "sparkr",
                                                           "heartbeatTimeoutInSecond": 60})
 
     def test_start_python_starts_session(self):
@@ -222,7 +224,7 @@ class TestLivySession(object):
         assert_equals(kind, session.kind)
         assert_equals("idle", session.status)
         assert_equals(0, session.id)
-        self.http_client.post_session.assert_called_with({"kind": "pyspark", "lang": "python",
+        self.http_client.post_session.assert_called_with("python", {"kind": "pyspark",
                                                           "heartbeatTimeoutInSecond": 60})
 
     def test_start_passes_in_all_properties(self):
@@ -232,13 +234,13 @@ class TestLivySession(object):
 
         kind = constants.SESSION_KIND_SPARK
         lang = constants.LANG_SCALA
-        properties = {"kind": kind, "lang": lang, "extra": 1}
+        properties = {"kind": kind, "extra": 1}
 
         ipython_display = MagicMock()
-        session = LivySession(self.http_client, properties, ipython_display)
+        session = LivySession(self.http_client, lang, properties, ipython_display)
         session.start()
 
-        self.http_client.post_session.assert_called_with(properties)
+        self.http_client.post_session.assert_called_with(lang, properties)
 
     def test_status_gets_latest_status(self):
         self.http_client.post_session.return_value = self.session_create_json

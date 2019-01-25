@@ -19,7 +19,7 @@ def _create_session(kind=SESSION_KIND_SPARK, lang=LANG_SCALA, session_id=-1,
     if spark_events is None:
         spark_events = MagicMock()
     ipython_display = MagicMock()
-    session = LivySession(http_client, {"kind": kind, "lang": lang, "heartbeatTimeoutInSecond": 60},
+    session = LivySession(http_client, lang, {"kind": kind, "heartbeatTimeoutInSecond": 60},
                           ipython_display, session_id, spark_events)
     return session
 
@@ -111,12 +111,13 @@ def test_execute_null_ouput():
 def test_execute_failure_wait_for_session_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
+    lang = LANG_SCALA
     http_client = MagicMock()
     http_client.post_session.return_value = tls.TestLivySession.session_create_json
     http_client.post_statement.return_value = tls.TestLivySession.post_statement_json
     http_client.get_session.return_value = tls.TestLivySession.ready_sessions_json
     http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
-    session = _create_session(kind=kind, http_client=http_client)
+    session = _create_session(lang=lang, kind=kind, http_client=http_client)
     session.start()
     session.wait_for_idle = MagicMock(side_effect=ValueError("yo"))
     command = Command("command", spark_events=spark_events)
@@ -137,9 +138,10 @@ def test_execute_failure_wait_for_session_emits_event():
 def test_execute_failure_post_statement_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
+    lang = LANG_SCALA
     http_client = MagicMock()
     http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
-    session = _create_session(kind=kind, http_client=http_client)
+    session = _create_session(lang=lang, kind=kind, http_client=http_client)
     session.wait_for_idle = MagicMock()
     session.start()
     session.wait_for_idle = MagicMock()

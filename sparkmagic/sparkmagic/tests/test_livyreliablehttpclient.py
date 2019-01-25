@@ -39,7 +39,8 @@ def test_post_session():
     http_client = MagicMock()
     livy_client = LivyReliableHttpClient(http_client, None)
     properties = {"adlfj":"sadflkjsdf", 1: [2,3,4,5]}
-    out = livy_client.post_session(properties)
+    lang = "alien_language"
+    out = livy_client.post_session(lang, properties)
     assert_equals(out, http_client.post.return_value.json.return_value)
     http_client.post.assert_called_once_with("/sessions", [201], properties)
 

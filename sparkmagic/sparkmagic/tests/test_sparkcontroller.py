@@ -44,15 +44,17 @@ def _teardown():
 def test_add_session():
     name = "name"
     properties = {"kind": "spark"}
+    lang = "scala"
     endpoint = Endpoint("http://location:port", NO_AUTH, "name", "word")
     session = MagicMock()
 
     controller._livy_session = MagicMock(return_value=session)
     controller._http_client = MagicMock(return_value=MagicMock())
 
-    controller.add_session(name, endpoint, False, properties)
+    controller.add_session(name, endpoint, False, lang, properties)
 
-    controller._livy_session.assert_called_once_with(controller._http_client.return_value, properties, ipython_display)
+    controller._livy_session.assert_called_once_with(controller._http_client.return_value, "scala",
+                                                     properties, ipython_display)
     controller.session_manager.add_session.assert_called_once_with(name, session)
     session.start.assert_called_once()
 
@@ -68,7 +70,7 @@ def test_add_session_skip():
     controller._http_client = MagicMock(return_value=client)
 
     client_manager.get_sessions_list.return_value = [name]
-    controller.add_session(name, language, connection_string, True)
+    controller.add_session(name, connection_string, True, language, {'kind': 'pyspark'})
 
     assert controller._livy_session.create_session.call_count == 0
     assert controller._http_client.build_client.call_count == 0
@@ -159,13 +161,14 @@ def test_cleanup_endpoint():
 def test_delete_session_by_id_existent_non_managed():
     http_client = MagicMock()
     http_client.get_session.return_value = json.loads('{"id":0,"state":"starting","kind":"spark","log":[]}')
+    http_client.get_language.return_value = "scala"
     controller._http_client = MagicMock(return_value=http_client)
     session = MagicMock()
     controller._livy_session = MagicMock(return_value=session)
 
     controller.delete_session_by_id("conn_str", 0)
 
-    controller._livy_session.assert_called_once_with(http_client, {"kind": "spark"}, ipython_display, 0)
+    controller._livy_session.assert_called_once_with(http_client, "scala", {"kind": "spark"}, ipython_display, 0)
     session.delete.assert_called_once_with()
 
 
@@ -254,7 +257,7 @@ def test_add_session_throws_when_session_start_fails():
     session.start = MagicMock(side_effect=e)
 
     try:
-        controller.add_session(name, endpoint, False, properties)
+        controller.add_session(name, endpoint, False, "scala", properties)
         assert False
     except ValueError as ex:
         assert str(ex) == str(e)

@@ -54,13 +54,14 @@ class _HeartbeatThread(threading.Thread):
 
 
 class LivySession(ObjectWithGuid):
-    def __init__(self, http_client, properties, ipython_display,
+    def __init__(self, http_client, lang, properties, ipython_display,
                  session_id=-1, spark_events=None,
                  heartbeat_timeout=0, heartbeat_thread=None):
         super(LivySession, self).__init__()
         assert constants.LIVY_KIND_PARAM in list(properties.keys())
         kind = properties[constants.LIVY_KIND_PARAM]
-        lang = properties[constants.LIVY_LANG_PARAM]
+        # lang = properties[constants.LIVY_LANG_PARAM]
+        lang = lang
 
         should_heartbeat = False
         if heartbeat_timeout > 0:
@@ -118,7 +119,7 @@ class LivySession(ObjectWithGuid):
         self._printed_resource_warning = False
 
         try:
-            r = self._http_client.post_session(self.properties)
+            r = self._http_client.post_session(self.lang, self.properties)
             self.id = r[u"id"]
             self.status = str(r[u"state"])
 

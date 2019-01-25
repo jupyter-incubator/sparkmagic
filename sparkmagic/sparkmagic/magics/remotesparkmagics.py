@@ -141,7 +141,7 @@ class RemoteSparkMagics(SparkMagicBase):
 
             properties = conf.get_session_properties(language)
 
-            self.spark_controller.add_session(name, endpoint, skip, properties)
+            self.spark_controller.add_session(name, endpoint, skip, language, properties)
         # delete
         elif subcommand == "delete":
             if args.session is not None:

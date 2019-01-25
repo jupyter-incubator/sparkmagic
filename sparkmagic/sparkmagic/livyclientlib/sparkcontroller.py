@@ -42,7 +42,9 @@ class SparkController(object):
     def get_all_sessions_endpoint(self, endpoint):
         http_client = self._http_client(endpoint)
         sessions = http_client.get_sessions()[u"sessions"]
-        session_list = [self._livy_session(http_client, {constants.LIVY_KIND_PARAM: s[constants.LIVY_KIND_PARAM]},
+        session_list = [self._livy_session(http_client,
+                                           http_client.get_language(s[u"id"]),
+                                           {constants.LIVY_KIND_PARAM: s[constants.LIVY_KIND_PARAM]},
                                            self.ipython_display, s[u"id"])
                         for s in sessions]
         for s in session_list:
@@ -65,23 +67,25 @@ class SparkController(object):
 
     def delete_session_by_id(self, endpoint, session_id):
         name = self.session_manager.get_session_name_by_id_endpoint(session_id, endpoint)
-        
+
         if name in self.session_manager.get_sessions_list():
             self.delete_session_by_name(name)
         else:
             http_client = self._http_client(endpoint)
             response = http_client.get_session(session_id)
             http_client = self._http_client(endpoint)
-            session = self._livy_session(http_client, {constants.LIVY_KIND_PARAM: response[constants.LIVY_KIND_PARAM]},
-                                        self.ipython_display, session_id)
+            lang = http_client.get_language(session_id)
+            session = self._livy_session(http_client, lang,
+                                         {constants.LIVY_KIND_PARAM: response[constants.LIVY_KIND_PARAM]},
+                                         self.ipython_display, session_id)
             session.delete()
 
-    def add_session(self, name, endpoint, skip_if_exists, properties):
+    def add_session(self, name, endpoint, skip_if_exists, lang, properties):
         if skip_if_exists and (name in self.session_manager.get_sessions_list()):
             self.logger.debug(u"Skipping {} because it already exists in list of sessions.".format(name))
             return
         http_client = self._http_client(endpoint)
-        session = self._livy_session(http_client, properties, self.ipython_display)
+        session = self._livy_session(http_client, lang, properties, self.ipython_display)
         self.session_manager.add_session(name, session)
         session.start()
 
@@ -105,9 +109,9 @@ class SparkController(object):
         return self.session_manager.sessions
 
     @staticmethod
-    def _livy_session(http_client, properties, ipython_display,
+    def _livy_session(http_client, lang, properties, ipython_display,
                       session_id=-1):
-        return LivySession(http_client, properties, ipython_display,
+        return LivySession(http_client, lang, properties, ipython_display,
                            session_id, heartbeat_timeout=conf.livy_server_heartbeat_timeout_seconds())
 
     @staticmethod

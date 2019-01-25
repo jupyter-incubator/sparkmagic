@@ -316,7 +316,7 @@ class KernelMagics(SparkMagicBase):
             self.session_started = True
 
             try:
-                self.spark_controller.add_session(self.session_name, self.endpoint, skip, properties)
+                self.spark_controller.add_session(self.session_name, self.endpoint, skip, self.language, properties)
             except Exception as e:
                 self.fatal_error = True
                 self.fatal_error_message = conf.fatal_error_suggestion().format(e)

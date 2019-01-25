@@ -55,7 +55,7 @@ class CreateSessionWidget(AbstractMenuWidget):
         properties = conf.get_session_properties(language)
 
         try:
-            self.spark_controller.add_session(alias, endpoint, skip, properties)
+            self.spark_controller.add_session(alias, endpoint, skip, language, properties)
         except ValueError as e:
             self.ipython_display.send_error("""Could not add session with
 name:
