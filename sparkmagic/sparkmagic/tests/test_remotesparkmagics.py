@@ -80,7 +80,7 @@ def test_add_sessions_command_parses():
     magic.spark(line)
 
     add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", AUTH_BASIC, "sdf", "w"),
-                                              False, {"kind": "pyspark"})
+                                              False, {"kind": "pyspark", "lang": "python"})
 
     # Skip and scala - upper case
     add_sessions_mock = MagicMock()
@@ -94,7 +94,7 @@ def test_add_sessions_command_parses():
     magic.spark(line)
 
     add_sessions_mock.assert_called_once_with("name", Endpoint("http://location:port", NO_AUTH),
-                                              True, {"kind": "spark"})
+                                              True, {"kind": "spark", "lang": "scala"})
 
 
 @with_setup(_setup, _teardown)
@@ -111,7 +111,7 @@ def test_add_sessions_command_exception():
     magic.spark(line)
 
     add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", AUTH_BASIC, "sdf", "w"),
-                                              False, {"kind": "pyspark"})
+                                              False, {"kind": "pyspark", "lang": "python"})
     ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(add_sessions_mock.side_effect))
 
@@ -133,7 +133,7 @@ def test_add_sessions_command_extra_properties():
     magic.spark(line)
 
     add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com", NO_AUTH),
-                                              False, {"kind": "spark", "extra": "yes"})
+                                              False, {"kind": "spark", "extra": "yes", "lang": "scala"})
     conf.override_all({})
 
 

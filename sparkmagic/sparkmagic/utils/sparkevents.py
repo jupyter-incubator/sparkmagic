@@ -45,8 +45,8 @@ class SparkEvents(Events):
 
         self.send_to_handler(kwargs_list)
 
-    def emit_session_creation_start_event(self, session_guid, language):
-        self._verify_language_ok(language)
+    def emit_session_creation_start_event(self, session_guid, kind):
+        self._verify_kind_ok(kind)
 
         event_name = constants.SESSION_CREATION_START_EVENT
         time_stamp = self.get_utc_date_time()
@@ -54,13 +54,13 @@ class SparkEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (constants.SESSION_GUID, session_guid),
-                       (constants.LIVY_KIND, language)]
+                       (constants.LIVY_KIND, kind)]
 
         self.send_to_handler(kwargs_list)
 
-    def emit_session_creation_end_event(self, session_guid, language, session_id, status,
+    def emit_session_creation_end_event(self, session_guid, kind, session_id, status,
                                         success, exception_type, exception_message):
-        self._verify_language_ok(language)
+        self._verify_kind_ok(kind)
 
         event_name = constants.SESSION_CREATION_END_EVENT
         time_stamp = self.get_utc_date_time()
@@ -68,7 +68,7 @@ class SparkEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (constants.SESSION_GUID, session_guid),
-                       (constants.LIVY_KIND, language),
+                       (constants.LIVY_KIND, kind),
                        (constants.SESSION_ID, session_id),
                        (constants.STATUS, status),
                        (constants.SUCCESS, success),
@@ -77,8 +77,8 @@ class SparkEvents(Events):
 
         self.send_to_handler(kwargs_list)
 
-    def emit_session_deletion_start_event(self, session_guid, language, session_id, status):
-        self._verify_language_ok(language)
+    def emit_session_deletion_start_event(self, session_guid, kind, session_id, status):
+        self._verify_kind_ok(kind)
 
         event_name = constants.SESSION_DELETION_START_EVENT
         time_stamp = self.get_utc_date_time()
@@ -86,15 +86,15 @@ class SparkEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (constants.SESSION_GUID, session_guid),
-                       (constants.LIVY_KIND, language),
+                       (constants.LIVY_KIND, kind),
                        (constants.SESSION_ID, session_id),
                        (constants.STATUS, status)]
 
         self.send_to_handler(kwargs_list)
 
-    def emit_session_deletion_end_event(self, session_guid, language, session_id, status,
+    def emit_session_deletion_end_event(self, session_guid, kind, session_id, status,
                                         success, exception_type, exception_message):
-        self._verify_language_ok(language)
+        self._verify_kind_ok(kind)
 
         event_name = constants.SESSION_DELETION_END_EVENT
         time_stamp = self.get_utc_date_time()
@@ -102,7 +102,7 @@ class SparkEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (constants.SESSION_GUID, session_guid),
-                       (constants.LIVY_KIND, language),
+                       (constants.LIVY_KIND, kind),
                        (constants.SESSION_ID, session_id),
                        (constants.STATUS, status),
                        (constants.SUCCESS, success),
@@ -111,8 +111,8 @@ class SparkEvents(Events):
 
         self.send_to_handler(kwargs_list)
 
-    def emit_statement_execution_start_event(self, session_guid, language, session_id, statement_guid):
-        self._verify_language_ok(language)
+    def emit_statement_execution_start_event(self, session_guid, kind, session_id, statement_guid):
+        self._verify_kind_ok(kind)
 
         event_name = constants.STATEMENT_EXECUTION_START_EVENT
         time_stamp = self.get_utc_date_time()
@@ -120,15 +120,15 @@ class SparkEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (constants.SESSION_GUID, session_guid),
-                       (constants.LIVY_KIND, language),
+                       (constants.LIVY_KIND, kind),
                        (constants.SESSION_ID, session_id),
                        (constants.STATEMENT_GUID, statement_guid)]
 
         self.send_to_handler(kwargs_list)
 
-    def emit_statement_execution_end_event(self, session_guid, language, session_id, statement_guid, statement_id,
+    def emit_statement_execution_end_event(self, session_guid, kind, session_id, statement_guid, statement_id,
                                            success, exception_type, exception_message):
-        self._verify_language_ok(language)
+        self._verify_kind_ok(kind)
 
         event_name = constants.STATEMENT_EXECUTION_END_EVENT
         time_stamp = self.get_utc_date_time()
@@ -136,7 +136,7 @@ class SparkEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (constants.SESSION_GUID, session_guid),
-                       (constants.LIVY_KIND, language),
+                       (constants.LIVY_KIND, kind),
                        (constants.SESSION_ID, session_id),
                        (constants.STATEMENT_GUID, statement_guid),
                        (constants.STATEMENT_ID, statement_id),
@@ -146,9 +146,9 @@ class SparkEvents(Events):
 
         self.send_to_handler(kwargs_list)
 
-    def emit_sql_execution_start_event(self, session_guid, language, session_id, sql_guid,
+    def emit_sql_execution_start_event(self, session_guid, kind, session_id, sql_guid,
                                        samplemethod, maxrows, samplefraction):
-        self._verify_language_ok(language)
+        self._verify_kind_ok(kind)
 
         event_name = constants.SQL_EXECUTION_START_EVENT
         time_stamp = self.get_utc_date_time()
@@ -156,7 +156,7 @@ class SparkEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (constants.SESSION_GUID, session_guid),
-                       (constants.LIVY_KIND, language),
+                       (constants.LIVY_KIND, kind),
                        (constants.SESSION_ID, session_id),
                        (constants.SQL_GUID, sql_guid),
                        (constants.SAMPLE_METHOD, samplemethod),
@@ -165,9 +165,9 @@ class SparkEvents(Events):
 
         self.send_to_handler(kwargs_list)
 
-    def emit_sql_execution_end_event(self, session_guid, language, session_id, sql_guid, statement_guid,
+    def emit_sql_execution_end_event(self, session_guid, kind, session_id, sql_guid, statement_guid,
                                      success, exception_type, exception_message):
-        self._verify_language_ok(language)
+        self._verify_kind_ok(kind)
 
         event_name = constants.SQL_EXECUTION_END_EVENT
         time_stamp = self.get_utc_date_time()
@@ -175,7 +175,7 @@ class SparkEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (constants.SESSION_GUID, session_guid),
-                       (constants.LIVY_KIND, language),
+                       (constants.LIVY_KIND, kind),
                        (constants.SESSION_ID, session_id),
                        (constants.SQL_GUID, sql_guid),
                        (constants.STATEMENT_GUID, statement_guid),
@@ -185,8 +185,8 @@ class SparkEvents(Events):
 
         self.send_to_handler(kwargs_list)
 
-    def emit_magic_execution_start_event(self, magic_name, language, magic_guid):
-        self._verify_language_ok(language)
+    def emit_magic_execution_start_event(self, magic_name, kind, magic_guid):
+        self._verify_kind_ok(kind)
         time_stamp = self.get_utc_date_time()
 
         event_name = constants.MAGIC_EXECUTION_START_EVENT
@@ -194,14 +194,14 @@ class SparkEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (constants.MAGIC_NAME, magic_name),
-                       (constants.LIVY_KIND, language),
+                       (constants.LIVY_KIND, kind),
                        (constants.MAGIC_GUID, magic_guid)]
 
         self.send_to_handler(kwargs_list)
 
-    def emit_magic_execution_end_event(self, magic_name, language, magic_guid,
+    def emit_magic_execution_end_event(self, magic_name, kinds, magic_guid,
                                        success, exception_type, exception_message):
-        self._verify_language_ok(language)
+        self._verify_kind_ok(kinds)
         time_stamp = self.get_utc_date_time()
 
         event_name = constants.MAGIC_EXECUTION_END_EVENT
@@ -209,7 +209,7 @@ class SparkEvents(Events):
         kwargs_list = [(EVENT_NAME, event_name),
                        (TIMESTAMP, time_stamp),
                        (constants.MAGIC_NAME, magic_name),
-                       (constants.LIVY_KIND, language),
+                       (constants.LIVY_KIND, kinds),
                        (constants.MAGIC_GUID, magic_guid),
                        (constants.SUCCESS, success),
                        (constants.EXCEPTION_TYPE, exception_type),
@@ -218,6 +218,6 @@ class SparkEvents(Events):
         self.send_to_handler(kwargs_list)
 
     @staticmethod
-    def _verify_language_ok(language):
-        assert language in constants.SESSION_KINDS_SUPPORTED
+    def _verify_kind_ok(kind):
+        assert kind in constants.SESSION_KINDS_SUPPORTED
 

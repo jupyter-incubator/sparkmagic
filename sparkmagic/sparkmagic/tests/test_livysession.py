@@ -4,7 +4,7 @@ from nose.tools import raises, assert_equals
 
 import sparkmagic.utils.constants as constants
 import sparkmagic.utils.configuration as conf
-from sparkmagic.livyclientlib.exceptions import LivyClientTimeoutException, LivyUnexpectedStatusException,\
+from sparkmagic.livyclientlib.exceptions import LivyClientTimeoutException, LivyUnexpectedStatusException, \
     BadUserDataException, SqlContextNotFoundException
 from sparkmagic.livyclientlib.livysession import LivySession
 
@@ -46,7 +46,7 @@ class TestLivySession(object):
     def __init__(self):
         self.http_client = None
         self.spark_events = None
-        
+
         self.get_statement_responses = []
         self.post_statement_responses = []
         self.get_session_responses = []
@@ -77,11 +77,11 @@ class TestLivySession(object):
         self.post_session_responses = self.post_session_responses[1:]
         return val
 
-    def _create_session(self, kind=constants.SESSION_KIND_SPARK, session_id=-1,
+    def _create_session(self, lang=constants.LANG_PYTHON, kind=constants.SESSION_KIND_SPARK, session_id=-1,
                         heartbeat_timeout=60):
         ipython_display = MagicMock()
         session = LivySession(self.http_client,
-                              {"kind": kind},
+                              {"kind": kind, "lang": lang},
                               ipython_display,
                               session_id,
                               self.spark_events,
@@ -109,7 +109,7 @@ class TestLivySession(object):
         assert session.id == session_id
         assert session._heartbeat_thread is None
         assert constants.LIVY_HEARTBEAT_TIMEOUT_PARAM not in list(session.properties.keys())
-        
+
     def test_constructor_starts_heartbeat_with_existing_session(self):
         conf.override_all({
             "heartbeat_refresh_seconds": 0.1
@@ -117,13 +117,13 @@ class TestLivySession(object):
         session_id = 1
         session = self._create_session(session_id=session_id)
         conf.override_all({})
-        
+
         assert session.id == session_id
         assert self.heartbeat_thread.daemon
         self.heartbeat_thread.start.assert_called_once_with()
         assert not session._heartbeat_thread is None
-        assert session.properties[constants.LIVY_HEARTBEAT_TIMEOUT_PARAM ] > 0
-        
+        assert session.properties[constants.LIVY_HEARTBEAT_TIMEOUT_PARAM] > 0
+
     def test_start_with_heartbeat(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
@@ -131,12 +131,12 @@ class TestLivySession(object):
 
         session = self._create_session()
         session.start()
-        
+
         assert self.heartbeat_thread.daemon
         self.heartbeat_thread.start.assert_called_once_with()
         assert not session._heartbeat_thread is None
-        assert session.properties[constants.LIVY_HEARTBEAT_TIMEOUT_PARAM ] > 0
-        
+        assert session.properties[constants.LIVY_HEARTBEAT_TIMEOUT_PARAM] > 0
+
     def test_start_with_heartbeat_calls_only_once(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
@@ -150,7 +150,7 @@ class TestLivySession(object):
         assert self.heartbeat_thread.daemon
         self.heartbeat_thread.start.assert_called_once_with()
         assert not session._heartbeat_thread is None
-        
+
     def test_delete_with_heartbeat(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
@@ -159,9 +159,9 @@ class TestLivySession(object):
         session = self._create_session()
         session.start()
         heartbeat_thread = session._heartbeat_thread
-        
+
         session.delete()
-        
+
         self.heartbeat_thread.stop.assert_called_once_with()
         assert session._heartbeat_thread is None
 
@@ -186,13 +186,14 @@ class TestLivySession(object):
         self.http_client.get_statement.return_value = self.ready_statement_json
 
         kind = constants.SESSION_KIND_SPARK
-        session = self._create_session(kind=kind)
+        session = self._create_session(kind=kind, lang=constants.LANG_SCALA)
         session.start()
 
         assert_equals(kind, session.kind)
         assert_equals("idle", session.status)
         assert_equals(0, session.id)
-        self.http_client.post_session.assert_called_with({"kind": "spark", "heartbeatTimeoutInSecond": 60})
+        self.http_client.post_session.assert_called_with(
+            {"kind": "spark", "lang": "scala", "heartbeatTimeoutInSecond": 60})
 
     def test_start_r_starts_session(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -200,13 +201,14 @@ class TestLivySession(object):
         self.http_client.get_statement.return_value = self.ready_statement_json
 
         kind = constants.SESSION_KIND_SPARKR
-        session = self._create_session(kind=kind)
+        session = self._create_session(kind=kind, lang=constants.LANG_R)
         session.start()
 
         assert_equals(kind, session.kind)
         assert_equals("idle", session.status)
         assert_equals(0, session.id)
-        self.http_client.post_session.assert_called_with({"kind": "sparkr", "heartbeatTimeoutInSecond": 60})
+        self.http_client.post_session.assert_called_with({"kind": "sparkr", "lang": "r",
+                                                          "heartbeatTimeoutInSecond": 60})
 
     def test_start_python_starts_session(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -214,13 +216,14 @@ class TestLivySession(object):
         self.http_client.get_statement.return_value = self.ready_statement_json
 
         kind = constants.SESSION_KIND_PYSPARK
-        session = self._create_session(kind=kind)
+        session = self._create_session(kind=kind, lang=constants.LANG_PYTHON)
         session.start()
 
         assert_equals(kind, session.kind)
         assert_equals("idle", session.status)
         assert_equals(0, session.id)
-        self.http_client.post_session.assert_called_with({"kind": "pyspark", "heartbeatTimeoutInSecond": 60})
+        self.http_client.post_session.assert_called_with({"kind": "pyspark", "lang": "python",
+                                                          "heartbeatTimeoutInSecond": 60})
 
     def test_start_passes_in_all_properties(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -228,7 +231,8 @@ class TestLivySession(object):
         self.http_client.get_statement.return_value = self.ready_statement_json
 
         kind = constants.SESSION_KIND_SPARK
-        properties = {"kind": kind, "extra": 1}
+        lang = constants.LANG_SCALA
+        properties = {"kind": kind, "lang": lang, "extra": 1}
 
         ipython_display = MagicMock()
         session = LivySession(self.http_client, properties, ipython_display)
@@ -384,7 +388,7 @@ class TestLivySession(object):
         self.http_client.get_session.return_value = self.ready_sessions_json
 
         kind = constants.SESSION_KIND_SPARK
-        session = self._create_session(kind=kind)
+        session = self._create_session(kind=kind, lang=constants.LANG_SCALA)
 
         try:
             session.start()
@@ -401,7 +405,7 @@ class TestLivySession(object):
         self.http_client.get_session.return_value = self.ready_sessions_json
 
         kind = constants.SESSION_KIND_SPARK
-        session = self._create_session(kind=kind)
+        session = self._create_session(kind=kind, lang=constants.LANG_SCALA)
         session.wait_for_idle = MagicMock(side_effect=ValueError)
 
         try:
@@ -492,7 +496,7 @@ class TestLivySession(object):
 
     def test_missing_app_info_get_driver_log_url(self):
         self._verify_get_driver_log_url_json(self.ready_sessions_json, None)
-        
+
     def _verify_get_app_id(self, mock_app_id, expected_app_id, expected_call_count):
         mock_field = ",\"appId\":" + mock_app_id if mock_app_id is not None else ""
         get_session_json = json.loads('{"id":0,"state":"idle","output":null%s,"log":""}' % mock_field)
@@ -551,10 +555,12 @@ class TestLivySession(object):
 
         html1 = session1.get_row_html(1)
 
-        assert_equals(html1, u"""<tr><td>1</td><td>app1234</td><td>spark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>\u2714</td></tr>""")
+        assert_equals(html1,
+                      u"""<tr><td>1</td><td>app1234</td><td>spark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>\u2714</td></tr>""")
 
         session_id2 = 3
         session2 = self._create_session(kind=constants.SESSION_KIND_PYSPARK,
+                                        lang=constants.LANG_PYTHON,
                                         session_id=session_id2)
         session2.get_app_id = MagicMock()
         session2.get_spark_ui_url = MagicMock()
@@ -566,11 +572,13 @@ class TestLivySession(object):
 
         html2 = session2.get_row_html(1)
 
-        assert_equals(html2, u"""<tr><td>3</td><td>app5069</td><td>pyspark</td><td>busy</td><td></td><td></td><td></td></tr>""")
+        assert_equals(html2,
+                      u"""<tr><td>3</td><td>app5069</td><td>pyspark</td><td>busy</td><td></td><td></td><td></td></tr>""")
 
     def test_link(self):
         url = u"https://microsoft.com"
-        assert_equals(LivySession.get_html_link(u'Link', url), u"""<a target="_blank" href="https://microsoft.com">Link</a>""")
+        assert_equals(LivySession.get_html_link(u'Link', url),
+                      u"""<a target="_blank" href="https://microsoft.com">Link</a>""")
 
         url = None
         assert_equals(LivySession.get_html_link(u'Link', url), u"")
@@ -581,7 +589,7 @@ class TestLivySession(object):
         self.http_client.get_statement.return_value = self.ready_statement_json
         session = self._create_session()
         session.start()
-        assert_equals(session.sql_context_variable_name,"spark")
+        assert_equals(session.sql_context_variable_name, "spark")
 
     def test_sql_context_available(self):
         self.http_client.post_session.return_value = self.session_create_json

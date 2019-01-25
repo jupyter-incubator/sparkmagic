@@ -2,7 +2,7 @@ from mock import MagicMock
 from nose.tools import assert_equals, with_setup
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.constants import SESSION_KIND_SPARK
+from sparkmagic.utils.constants import SESSION_KIND_SPARK, LANG_SCALA
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.livysession import LivySession
 from . import test_livysession as tls
@@ -10,16 +10,16 @@ from . import test_livysession as tls
 
 def _setup():
     conf.override_all({})
-    
 
-def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
+
+def _create_session(kind=SESSION_KIND_SPARK, lang=LANG_SCALA, session_id=-1,
                     http_client=None, spark_events=None):
     if http_client is None:
         http_client = MagicMock()
     if spark_events is None:
         spark_events = MagicMock()
     ipython_display = MagicMock()
-    session = LivySession(http_client, {"kind": kind, "heartbeatTimeoutInSecond": 60},
+    session = LivySession(http_client, {"kind": kind, "lang": lang, "heartbeatTimeoutInSecond": 60},
                           ipython_display, session_id, spark_events)
     return session
 
@@ -28,12 +28,13 @@ def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
 def test_execute():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
+    lang = LANG_SCALA
     http_client = MagicMock()
     http_client.post_session.return_value = tls.TestLivySession.session_create_json
     http_client.post_statement.return_value = tls.TestLivySession.post_statement_json
     http_client.get_session.return_value = tls.TestLivySession.ready_sessions_json
     http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
-    session = _create_session(kind=kind, http_client=http_client)
+    session = _create_session(kind=kind, lang=lang, http_client=http_client)
     session.start()
     command = Command("command", spark_events=spark_events)
 
@@ -44,21 +45,26 @@ def test_execute():
     assert result[0]
     assert_equals(tls.TestLivySession.pi_result, result[1])
     spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
-                                                                                        session.id, command.guid)
+                                                                              session.id, command.guid)
     spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
-                                                                                      session.id, command.guid,
-                                                                                      0, True, "", "")
+                                                                            session.id, command.guid,
+                                                                            0, True, "", "")
+
 
 @with_setup(_setup)
 def test_execute_waiting():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
+    lang = LANG_SCALA
     http_client = MagicMock()
     http_client.post_session.return_value = tls.TestLivySession.session_create_json
     http_client.post_statement.return_value = tls.TestLivySession.post_statement_json
     http_client.get_session.return_value = tls.TestLivySession.ready_sessions_json
-    http_client.get_statement.side_effect = [tls.TestLivySession.waiting_statement_json, tls.TestLivySession.waiting_statement_json, tls.TestLivySession.ready_statement_json, tls.TestLivySession.ready_statement_json]
-    session = _create_session(kind=kind, http_client=http_client)
+    http_client.get_statement.side_effect = [tls.TestLivySession.waiting_statement_json,
+                                             tls.TestLivySession.waiting_statement_json,
+                                             tls.TestLivySession.ready_statement_json,
+                                             tls.TestLivySession.ready_statement_json]
+    session = _create_session(kind=kind, lang=lang, http_client=http_client)
     session.start()
     command = Command("command", spark_events=spark_events)
 
@@ -69,10 +75,10 @@ def test_execute_waiting():
     assert result[0]
     assert_equals(tls.TestLivySession.pi_result, result[1])
     spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
-                                                                                        session.id, command.guid)
+                                                                              session.id, command.guid)
     spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
-                                                                                      session.id, command.guid,
-                                                                                      0, True, "", "")
+                                                                            session.id, command.guid,
+                                                                            0, True, "", "")
 
 
 @with_setup(_setup)
@@ -95,10 +101,10 @@ def test_execute_null_ouput():
     assert result[0]
     assert_equals(u"", result[1])
     spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
-                                                                                        session.id, command.guid)
+                                                                              session.id, command.guid)
     spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
-                                                                                      session.id, command.guid,
-                                                                                      0, True, "", "")
+                                                                            session.id, command.guid,
+                                                                            0, True, "", "")
 
 
 @with_setup(_setup)
@@ -120,10 +126,10 @@ def test_execute_failure_wait_for_session_emits_event():
         assert False
     except ValueError as e:
         spark_events.emit_statement_execution_start_event.assert_called_with(session.guid, session.kind,
-                                                                                  session.id, command.guid)
+                                                                             session.id, command.guid)
         spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, command.guid,
-                                                                                   -1, False, "ValueError", "yo")
+                                                                                session.id, command.guid,
+                                                                                -1, False, "ValueError", "yo")
         assert_equals(e, session.wait_for_idle.side_effect)
 
 
@@ -145,11 +151,11 @@ def test_execute_failure_post_statement_emits_event():
         assert False
     except KeyError as e:
         spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, command.guid)
+                                                                                  session.id, command.guid)
         spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, command.guid,
-                                                                                   -1, False, "KeyError",
-                                                                                   "Something bad happened here")
+                                                                                 session.id, command.guid,
+                                                                                 -1, False, "KeyError",
+                                                                                 "Something bad happened here")
         assert_equals(e, http_client.post_statement.side_effect)
 
 
@@ -157,10 +163,11 @@ def test_execute_failure_post_statement_emits_event():
 def test_execute_failure_get_statement_output_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
+    lang = LANG_SCALA
     http_client = MagicMock()
     http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
 
-    session = _create_session(kind=kind, http_client=http_client)
+    session = _create_session(kind=kind, lang=lang, http_client=http_client)
     session.wait_for_idle = MagicMock()
     session.start()
     session.wait_for_idle = MagicMock()
@@ -172,9 +179,9 @@ def test_execute_failure_get_statement_output_emits_event():
         assert False
     except AttributeError as e:
         spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, command.guid)
+                                                                                  session.id, command.guid)
         spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
-                                                                                   session.id, command.guid,
-                                                                                   -1, False, "AttributeError",
-                                                                                   "OHHHH")
+                                                                                 session.id, command.guid,
+                                                                                 -1, False, "AttributeError",
+                                                                                 "OHHHH")
         assert_equals(e, command._get_statement_output.side_effect)

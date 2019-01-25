@@ -11,7 +11,7 @@ from .exceptions import DataFrameParseException, BadUserDataException
 class SQLQuery(ObjectWithGuid):
     def __init__(self, query, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None, coerce=None):
         super(SQLQuery, self).__init__()
-        
+
         if samplemethod is None:
             samplemethod = conf.default_samplemethod()
         if maxrows is None:
@@ -74,7 +74,6 @@ class SQLQuery(ObjectWithGuid):
                                                             command_guid, True, "", "")
             return result
 
-
     def _pyspark_command(self, sql_context_variable_name, encode_result=True):
         command = u'{}.sql(u"""{} """).toJSON()'.format(sql_context_variable_name, self.query)
         if self.samplemethod == u'sample':
@@ -116,16 +115,17 @@ class SQLQuery(ObjectWithGuid):
         else:
             command = u'collect({})'.format(command)
         command = u'jsonlite:::toJSON({})'.format(command)
-        command = u'for ({} in ({})) {{cat({})}}'.format(constants.LONG_RANDOM_VARIABLE_NAME, command, constants.LONG_RANDOM_VARIABLE_NAME)
+        command = u'for ({} in ({})) {{cat({})}}'.format(constants.LONG_RANDOM_VARIABLE_NAME, command,
+                                                         constants.LONG_RANDOM_VARIABLE_NAME)
         return Command(command)
 
     # Used only for unit testing
     def __eq__(self, other):
         return self.query == other.query and \
-            self.samplemethod == other.samplemethod and \
-            self.maxrows == other.maxrows and \
-            self.samplefraction == other.samplefraction and \
-            self._coerce == other._coerce
+               self.samplemethod == other.samplemethod and \
+               self.maxrows == other.maxrows and \
+               self.samplefraction == other.samplefraction and \
+               self._coerce == other._coerce
 
     def __ne__(self, other):
         return not (self == other)

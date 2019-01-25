@@ -7,8 +7,10 @@ from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUser
 
 import ast
 
+
 class SparkStoreCommand(Command):
-    def __init__(self, output_var, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None, coerce=None):
+    def __init__(self, output_var, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None,
+                 coerce=None):
         super(SparkStoreCommand, self).__init__("", spark_events)
 
         if samplemethod is None:
@@ -34,10 +36,9 @@ class SparkStoreCommand(Command):
         self._spark_events = spark_events
         self._coerce = coerce
 
-
     def execute(self, session):
         try:
-            command = self.to_command(session.kind, self.output_var)
+            command = self.to_command(session.lang, session.kind, self.output_var)
             (success, records_text) = command.execute(session)
             if not success:
                 raise BadUserDataException(records_text)
@@ -47,19 +48,20 @@ class SparkStoreCommand(Command):
         else:
             return result
 
-
-    def to_command(self, kind, spark_context_variable_name):
+    def to_command(self, lang, kind, spark_context_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
-            return self._pyspark_command(spark_context_variable_name)
-        elif kind == constants.SESSION_KIND_PYSPARK3:
-            return self._pyspark_command(spark_context_variable_name, False)
+            if lang == constants.LANG_PYTHON:
+                return self._pyspark_command(spark_context_variable_name)
+            elif lang == constants.LANG_PYTHON3:
+                return self._pyspark_command(spark_context_variable_name, False)
+            else:
+                raise BadUserDataException(u"Kind '{}' with lang '{}' is not supported.".format(kind, lang))
         elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command(spark_context_variable_name)
         elif kind == constants.SESSION_KIND_SPARKR:
             return self._r_command(spark_context_variable_name)
         else:
             raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
-
 
     def _pyspark_command(self, spark_context_variable_name, encode_result=True):
         command = u'{}.toJSON()'.format(spark_context_variable_name)
@@ -80,7 +82,6 @@ class SparkStoreCommand(Command):
                                                     print_command)
         return Command(command)
 
-
     def _scala_command(self, spark_context_variable_name):
         command = u'{}.toJSON'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
@@ -90,7 +91,6 @@ class SparkStoreCommand(Command):
         else:
             command = u'{}.collect'.format(command)
         return Command(u'{}.foreach(println)'.format(command))
-
 
     def _r_command(self, spark_context_variable_name):
         command = spark_context_variable_name
@@ -107,16 +107,14 @@ class SparkStoreCommand(Command):
                                                          constants.LONG_RANDOM_VARIABLE_NAME)
         return Command(command)
 
-
-
     # Used only for unit testing
     def __eq__(self, other):
         return self.code == other.code and \
-            self.samplemethod == other.samplemethod and \
-            self.maxrows == other.maxrows and \
-            self.samplefraction == other.samplefraction and \
-            self.output_var == other.output_var and \
-            self._coerce == other._coerce
+               self.samplemethod == other.samplemethod and \
+               self.maxrows == other.maxrows and \
+               self.samplefraction == other.samplefraction and \
+               self.output_var == other.output_var and \
+               self._coerce == other._coerce
 
     def __ne__(self, other):
         return not (self == other)
