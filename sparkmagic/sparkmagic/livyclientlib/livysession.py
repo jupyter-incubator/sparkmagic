@@ -60,6 +60,7 @@ class LivySession(ObjectWithGuid):
         super(LivySession, self).__init__()
         assert constants.LIVY_KIND_PARAM in list(properties.keys())
         kind = properties[constants.LIVY_KIND_PARAM]
+        lang = properties[constants.LIVY_LANG_PARAM]
 
         should_heartbeat = False
         if heartbeat_timeout > 0:
@@ -96,6 +97,7 @@ class LivySession(ObjectWithGuid):
         self._printed_resource_warning = False
 
         self.kind = kind
+        self.lang = lang
         self.id = session_id
         self.session_info = u""
         

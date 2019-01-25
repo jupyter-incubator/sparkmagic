@@ -8,9 +8,9 @@ from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
 from hdijupyterutils.configuration import with_override
 
-from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
+from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_LANG_PARAM, LIVY_KIND_PARAM, \
     LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
-    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3, CONFIGURABLE_RETRY
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, CONFIGURABLE_RETRY
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 import sparkmagic.utils.constants as constants
 
@@ -38,7 +38,7 @@ def get_livy_kind(language):
     elif language == LANG_PYTHON:
         return SESSION_KIND_PYSPARK
     elif language == LANG_PYTHON3:
-        return SESSION_KIND_PYSPARK3
+        return SESSION_KIND_PYSPARK
     elif language == LANG_R:
         return SESSION_KIND_SPARKR
     else:
@@ -58,6 +58,7 @@ def get_auth_value(username, password):
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
+    properties[LIVY_LANG_PARAM] = language
     return properties
 
 

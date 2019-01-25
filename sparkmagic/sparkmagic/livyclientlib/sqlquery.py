@@ -35,11 +35,17 @@ class SQLQuery(ObjectWithGuid):
         self._spark_events = spark_events
         self._coerce = coerce
 
-    def to_command(self, kind, sql_context_variable_name):
+    def to_command(self, lang, kind, sql_context_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
-            return self._pyspark_command(sql_context_variable_name)
-        elif kind == constants.SESSION_KIND_PYSPARK3:
-            return self._pyspark_command(sql_context_variable_name, False)
+            if lang == constants.LANG_PYTHON:
+                return self._pyspark_command(sql_context_variable_name)
+            elif lang == constants.LANG_PYTHON3:
+                return self._pyspark_command(sql_context_variable_name, False)
+            else:
+                raise BadUserDataException(u"Kind '{}' with lang '{}' is not supported.".format(kind, lang))
+        # unreachable since livy 0.4+ the session is alwats pyspark regardless the version of python
+        # elif kind == constants.SESSION_KIND_PYSPARK3:
+        #     return self._pyspark_command(sql_context_variable_name, False)
         elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command(sql_context_variable_name)
         elif kind == constants.SESSION_KIND_SPARKR:
@@ -52,7 +58,7 @@ class SQLQuery(ObjectWithGuid):
                                                           self.samplemethod, self.maxrows, self.samplefraction)
         command_guid = ''
         try:
-            command = self.to_command(session.kind, session.sql_context_variable_name)
+            command = self.to_command(session.lang, session.kind, session.sql_context_variable_name)
             command_guid = command.guid
             (success, records_text) = command.execute(session)
             if not success:
