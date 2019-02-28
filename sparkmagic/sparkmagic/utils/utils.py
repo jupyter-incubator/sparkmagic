@@ -52,6 +52,10 @@ def coerce_pandas_df_to_numeric_datetime(df):
 def records_to_dataframe(records_text, kind, coerce=None):
     if records_text in ['', '[]']:
         strings = []
+    elif isinstance(records_text, list):
+        # Temporary workaround - once the old serialization is removed from the other kernels
+        # we can simplify this parsing step for everyone
+        strings = records_text
     else:
         strings = records_text.strip().split('\n')
     try:

@@ -5,7 +5,10 @@ from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUserDataException
 
-import ast
+import base64
+import json
+import pickle
+
 
 class SparkStoreCommand(Command):
     def __init__(self, output_var, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None, coerce=None):
@@ -38,11 +41,23 @@ class SparkStoreCommand(Command):
     def execute(self, session):
         try:
             command = self.to_command(session.kind, self.output_var)
-            (success, records_text) = command.execute(session)
+            (success, result_text) = command.execute(session)
             if not success:
-                raise BadUserDataException(records_text)
-            result = records_to_dataframe(records_text, session.kind, self._coerce)
-        except Exception as e:
+                raise BadUserDataException(result_text)
+
+            if session.kind in [constants.SESSION_KIND_PYSPARK, constants.SESSION_KIND_PYSPARK3]:
+                result_json = json.loads(result_text)
+                result_json["value"] = pickle.loads(base64.b64decode(result_json["value"]))
+
+                if result_json["type"] == "df":
+                    result = records_to_dataframe(result_json["value"], session.kind, self._coerce)
+                elif result_json["type"] in ["raw", "rdd"]:
+                    result = result_json["value"]
+                else:
+                    raise TypeError("Unexpected output variable type: %s" % result_json["type"])
+            else:
+                result = records_to_dataframe(result_text, session.kind, self._coerce)
+        except Exception:
             raise
         else:
             return result
@@ -52,7 +67,7 @@ class SparkStoreCommand(Command):
         if kind == constants.SESSION_KIND_PYSPARK:
             return self._pyspark_command(spark_context_variable_name)
         elif kind == constants.SESSION_KIND_PYSPARK3:
-            return self._pyspark_command(spark_context_variable_name, False)
+            return self._pyspark_command(spark_context_variable_name)
         elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command(spark_context_variable_name)
         elif kind == constants.SESSION_KIND_SPARKR:
@@ -61,7 +76,33 @@ class SparkStoreCommand(Command):
             raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
 
-    def _pyspark_command(self, spark_context_variable_name, encode_result=True):
+    def _pyspark_command(self, spark_context_variable_name):
+        command = u"""
+        import pyspark, pyspark.sql, pyspark.rdd
+        import base64
+        import json
+
+        if isinstance({spark_context_variable_name}, pyspark.sql.dataframe.DataFrame):
+            value = str(base64.b64encode({pyspark_command_dataframe}), 'utf-8')
+            type_ = "df"
+        elif isinstance({spark_context_variable_name}, pyspark.rdd.PipelinedRDD):
+            value = str(base64.b64encode({pyspark_command_rdd}), 'utf-8')
+            type_ = "rdd"
+        else:
+            value = str(base64.b64encode({pyspark_command_cloudpickle}), 'utf-8')
+            type_ = "raw"
+
+        print(json.dumps({{"type": type_, "value": value}}))
+        """.format(
+            spark_context_variable_name=spark_context_variable_name,
+            pyspark_command_dataframe=self._pyspark_command_dataframe(spark_context_variable_name),
+            pyspark_command_rdd=self._pyspark_command_rdd(spark_context_variable_name),
+            pyspark_command_cloudpickle=SparkStoreCommand._pyspark_command_cloudpickle(spark_context_variable_name)
+        )
+        return Command(command)
+
+
+    def _pyspark_command_dataframe(self, spark_context_variable_name):
         command = u'{}.toJSON()'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
@@ -69,16 +110,25 @@ class SparkStoreCommand(Command):
             command = u'{}.take({})'.format(command, self.maxrows)
         else:
             command = u'{}.collect()'.format(command)
-        # Unicode support has improved in Python 3 so we don't need to encode.
-        if encode_result:
-            print_command = '{}.encode("{}")'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                     conf.pyspark_dataframe_encoding())
+        command = u'pyspark.cloudpickle.dumps({})'.format(command)
+        return command
+
+
+    def _pyspark_command_rdd(self, spark_context_variable_name):
+        command = spark_context_variable_name
+        if self.samplemethod == u'sample':
+            command = u'{}.sample(False, {})'.format(command, self.samplefraction)
+        if self.maxrows >= 0:
+            command = u'{}.take({})'.format(command, self.maxrows)
         else:
-            print_command = constants.LONG_RANDOM_VARIABLE_NAME
-        command = u'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                    command,
-                                                    print_command)
-        return Command(command)
+            command = u'{}.collect()'.format(command)
+        command = u'pyspark.cloudpickle.dumps({})'.format(command)
+        return command
+
+
+    @staticmethod
+    def _pyspark_command_cloudpickle(spark_context_variable_name):
+        return u'pyspark.cloudpickle.dumps({})'.format(spark_context_variable_name)
 
 
     def _scala_command(self, spark_context_variable_name):
