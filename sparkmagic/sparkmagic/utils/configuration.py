@@ -237,6 +237,20 @@ def configurable_retry_policy_max_retries():
     return 8
 
 
+@_with_override
+def spark_statement_errors_are_fatal():
+    # If set to true, any spark statement errors will be considered
+    # fatal and will raise a SparkStatementException
+    return False
+
+
+@_with_override
+def shutdown_session_on_spark_statement_errors():
+    # If set to true, any spark statement errors will cause the Livy
+    # session to be cleaned up
+    return False
+
+
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.

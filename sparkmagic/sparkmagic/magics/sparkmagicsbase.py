@@ -19,6 +19,7 @@ from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
+from sparkmagic.livyclientlib.exceptions import SparkStatementException
 
 
 @magics_class
@@ -40,6 +41,12 @@ class SparkMagicBase(Magics):
     def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce):
         (success, out) = self.spark_controller.run_command(Command(cell), session_name)
         if not success:
+            if conf.spark_statement_errors_are_fatal():
+                if conf.shutdown_session_on_spark_statement_errors():
+                    self.spark_controller.cleanup()
+
+                raise SparkStatementException(out)
+
             self.ipython_display.send_error(out)
         else:
             self.ipython_display.write(out)
