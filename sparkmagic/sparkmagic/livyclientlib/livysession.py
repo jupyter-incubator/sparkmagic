@@ -33,17 +33,21 @@ class _HeartbeatThread(threading.Thread):
         self.livy_session = livy_session
         self.refresh_seconds = refresh_seconds
         self.retry_seconds = retry_seconds
+        if run_at_most is None:
+            # a billion iterations should be sufficient
+            run_at_most = int(1e9)
         self.run_at_most = run_at_most
 
     def run(self):
-        i = 0
+        loop_counter = 0
         if self.livy_session is None:
-            print(u"Will not start heartbeat thread because session is None")
+            print(u"Will not start heartbeat thread because self.livy_session is None")
             return
 
         self.livy_session.logger.info(u'Starting heartbeat for session {}'.format(self.livy_session.id))
 
-        while self.livy_session is not None:
+        while self.livy_session is not None and loop_counter < self.run_at_most:
+            loop_counter += 1
             try:
                 self.livy_session.refresh_status_and_info()
                 sleep(self.refresh_seconds)
@@ -55,11 +59,6 @@ class _HeartbeatThread(threading.Thread):
                 self.livy_session.logger.error(u'{}'.format(e))
                 sleep(self.retry_seconds)
 
-            if self.run_at_most is not None:
-                i += 1
-
-                if i >= self.run_at_most:
-                    return
 
     def stop(self):
         if self.livy_session is not None:
