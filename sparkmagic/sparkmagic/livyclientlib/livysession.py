@@ -48,16 +48,19 @@ class _HeartbeatThread(threading.Thread):
 
         while self.livy_session is not None and loop_counter < self.run_at_most:
             loop_counter += 1
+
             try:
+                sleep_time = self.refresh_seconds
                 self.livy_session.refresh_status_and_info()
-                sleep(self.refresh_seconds)
             except Exception as e:
+                sleep_time = self.retry_seconds
                 # The built-in python logger has exception handling built in. If you expose
                 # the "exception" function in the SparkLog class then you could just make this
                 # self.livy_session.logger.exception("some useful message") and it'll print
                 # out the stack trace too.
                 self.livy_session.logger.error(u'{}'.format(e))
-                sleep(self.retry_seconds)
+
+            sleep(sleep_time)
 
 
     def stop(self):
