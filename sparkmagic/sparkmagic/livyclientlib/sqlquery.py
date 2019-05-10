@@ -69,7 +69,7 @@ class SQLQuery(ObjectWithGuid):
             return result
 
 
-    def _pyspark_command(self, sql_context_variable_name, encode_result=True):
+    def _pyspark_command(self, sql_context_variable_name, encode_result=False):
         command = u'{}.sql(u"""{} """).toJSON()'.format(sql_context_variable_name, self.query)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
