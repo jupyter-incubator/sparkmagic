@@ -61,7 +61,7 @@ class SparkStoreCommand(Command):
             raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
 
-    def _pyspark_command(self, spark_context_variable_name, encode_result=True):
+    def _pyspark_command(self, spark_context_variable_name, encode_result=False):
         command = u'{}.toJSON()'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
