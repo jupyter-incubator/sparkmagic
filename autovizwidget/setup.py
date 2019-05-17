@@ -2,9 +2,9 @@ DESCRIPTION         = "AutoVizWidget: An Auto-Visualization library for pandas d
 NAME                = "autovizwidget"
 PACKAGES            = ['autovizwidget', 'autovizwidget/plotlygraphs', 'autovizwidget/widget', 'autovizwidget/utils']
 AUTHOR              = "Jupyter Development Team"
-AUTHOR_EMAIL        = "jupyter@googlegroups.org"
-URL                 = 'https://github.com/jupyter-incubator/sparkmagic/autovizwidget'
-DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/sparkmagic/autovizwidget'
+AUTHOR_EMAIL        = "julius@vonkohout.de"
+URL                 = 'https://github.com/juliusvonkohout/sparkmagic/autovizwidget'
+DOWNLOAD_URL        = 'https://github.com/juliusvonkohout/sparkmagic/autovizwidget'
 LICENSE             = 'BSD 3-clause'
 
 import io
