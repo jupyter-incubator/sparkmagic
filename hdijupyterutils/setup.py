@@ -2,9 +2,9 @@ DESCRIPTION         = "HdiJupyterUtils: Utils for Jupyter projects from HDInsigh
 NAME                = "hdijupyterutils"
 PACKAGES            = ['hdijupyterutils']
 AUTHOR              = "Jupyter Development Team"
-AUTHOR_EMAIL        = "jupyter@googlegroups.org"
-URL                 = 'https://github.com/jupyter-incubator/sparkmagic/hdijupyterutils'
-DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/sparkmagic/hdijupyterutils'
+AUTHOR_EMAIL        = "julius@vonkohout.de"
+URL                 = 'https://github.com/juliusvonkohout/sparkmagic/hdijupyterutils'
+DOWNLOAD_URL        = 'https://github.com/juliusvonkohout/sparkmagic/hdijupyterutils'
 LICENSE             = 'BSD 3-clause'
 
 import io
@@ -52,10 +52,9 @@ setup(name=NAME,
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4'],
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'],
       install_requires=[
           'ipython>=7.5.0,<8',
           'nose>=1.3.7',
