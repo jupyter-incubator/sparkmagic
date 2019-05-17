@@ -13,9 +13,9 @@ PACKAGES            = ['sparkmagic',
                        'sparkmagic/utils',
                        'sparkmagic/serverextension']
 AUTHOR              = "Jupyter Development Team"
-AUTHOR_EMAIL        = "jupyter@googlegroups.org"
-URL                 = 'https://github.com/jupyter-incubator/sparkmagic'
-DOWNLOAD_URL        = 'https://github.com/jupyter-incubator/sparkmagic'
+AUTHOR_EMAIL        = "julius@vonkohout.de
+URL                 = 'https://github.com/juliusvonkohout/sparkmagic'
+DOWNLOAD_URL        = 'https://github.com/juliusvonkohout/sparkmagic'
 LICENSE             = 'BSD 3-clause'
 
 import io
@@ -72,23 +72,21 @@ setup(name=NAME,
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4'],
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'],
       install_requires=[
-          'hdijupyterutils>=0.6',
-          'autovizwidget>=0.6',
-          'ipython>=4.0.2,<7',
-          'nose',
-          'mock',
-          'pandas>=0.17.1',
-          'numpy',
-          'requests',
-          'ipykernel>=4.2.2,<5',
-          'ipywidgets>5.0.0,<8.0',
-          'notebook>=4.2,<6.0',
-          'tornado>=4',
-          'requests_kerberos>=0.8.0'
+	'hdijupyterutils>=0.12.7',
+	'autovizwidget>=0.12.7',
+	'ipython>=7.5.0,<8',
+	'nose>=1.3.7',
+	'mock>=3.0.5',
+	'pandas==0.24.2',
+	'numpy>=1.16.3',
+	'requests>=2.22.0',
+	'ipykernel>=5.1.1,<6',
+	'ipywidgets>7.4.2,<8.0',
+	'notebook>=5.7.8,<6.0',
+	'tornado>=5.1.1,<6',
+	'requests_kerberos>=0.12.0'
       ])
 
