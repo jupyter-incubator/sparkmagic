@@ -1,19 +1,19 @@
 DESCRIPTION         = "SparkMagic: Spark execution via Livy"
-NAME                = "sparkmagic"
-PACKAGES            = ['sparkmagic',
-                       'sparkmagic/controllerwidget',
-                       'sparkmagic/kernels',
-                       'sparkmagic/livyclientlib',
-                       'sparkmagic/magics',
-                       'sparkmagic/kernels/pysparkkernel',
-                       'sparkmagic/kernels/pyspark3kernel',
-                       'sparkmagic/kernels/sparkkernel',
-                       'sparkmagic/kernels/sparkrkernel',
-                       'sparkmagic/kernels/wrapperkernel',
-                       'sparkmagic/utils',
-                       'sparkmagic/serverextension']
+NAME                = "sparkmagic3"
+PACKAGES            = ['sparkmagic3',
+                       'sparkmagic3/controllerwidget',
+                       'sparkmagic3/kernels',
+                       'sparkmagic3/livyclientlib',
+                       'sparkmagic3/magics',
+                       'sparkmagic3/kernels/pysparkkernel',
+                       'sparkmagic3/kernels/pyspark3kernel',
+                       'sparkmagic3/kernels/sparkkernel',
+                       'sparkmagic3/kernels/sparkrkernel',
+                       'sparkmagic3/kernels/wrapperkernel',
+                       'sparkmagic3/utils',
+                       'sparkmagic3/serverextension']
 AUTHOR              = "Jupyter Development Team"
-AUTHOR_EMAIL        = "julius@vonkohout.de
+AUTHOR_EMAIL        = "julius@vonkohout.de"
 URL                 = 'https://github.com/juliusvonkohout/sparkmagic'
 DOWNLOAD_URL        = 'https://github.com/juliusvonkohout/sparkmagic'
 LICENSE             = 'BSD 3-clause'
@@ -44,7 +44,7 @@ def version(path):
     raise RuntimeError("Unable to find version string.")
 
 
-VERSION = version('sparkmagic/__init__.py')
+VERSION = version('sparkmagic3/__init__.py')
 
 
 

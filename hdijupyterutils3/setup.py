@@ -1,10 +1,10 @@
-DESCRIPTION         = "AutoVizWidget: An Auto-Visualization library for pandas dataframes"
-NAME                = "autovizwidget"
-PACKAGES            = ['autovizwidget', 'autovizwidget/plotlygraphs', 'autovizwidget/widget', 'autovizwidget/utils']
+DESCRIPTION         = "HdiJupyterUtils3: Utils for Jupyter projects from HDInsight team"
+NAME                = "hdijupyterutils3"
+PACKAGES            = ['hdijupyterutils3']
 AUTHOR              = "Jupyter Development Team"
 AUTHOR_EMAIL        = "julius@vonkohout.de"
-URL                 = 'https://github.com/juliusvonkohout/sparkmagic/autovizwidget'
-DOWNLOAD_URL        = 'https://github.com/juliusvonkohout/sparkmagic/autovizwidget'
+URL                 = 'https://github.com/juliusvonkohout/sparkmagic/hdijupyterutils3'
+DOWNLOAD_URL        = 'https://github.com/juliusvonkohout/sparkmagic/hdijupyterutils3'
 LICENSE             = 'BSD 3-clause'
 
 import io
@@ -33,7 +33,7 @@ def version(path):
     raise RuntimeError("Unable to find version string.")
 
 
-VERSION = version('autovizwidget/__init__.py')
+VERSION = version('hdijupyterutils3/__init__.py')
 
 
 
@@ -52,12 +52,17 @@ setup(name=NAME,
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.6'],
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'],
       install_requires=[
-          'plotly>=3.9.0,<4.0',
-          'ipywidgets>7.4.2,<8.0',
-          'hdijupyterutils>=0.12.7',
-          'notebook>=5.7.8,<6.0',
-          'pandas>=0.24.*'
+          'ipython>=7.5.0,<8',
+          'nose>=1.3.7',
+          'mock>=3.0.5',
+          'ipywidgets>=7.4.2,<8',
+          'ipykernel>=5.1.1,<6',
+          'jupyter>=1,<2',
+          'pandas==0.24.2',
+          'numpy>=1.16.3',
+          'notebook>=5.7.8,<6'
       ])
+
