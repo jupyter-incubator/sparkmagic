@@ -1,10 +1,10 @@
 from nose.tools import with_setup, raises
 from mock import MagicMock
 
-from hdijupyterutils.events import Events
-from hdijupyterutils.utils import generate_uuid
-from hdijupyterutils.constants import INSTANCE_ID, TIMESTAMP
-from hdijupyterutils.utils import get_instance_id
+from hdijupyterutils3.events import Events
+from hdijupyterutils3.utils import generate_uuid
+from hdijupyterutils3.constants import INSTANCE_ID, TIMESTAMP
+from hdijupyterutils3.utils import get_instance_id
 
 
 def _setup():

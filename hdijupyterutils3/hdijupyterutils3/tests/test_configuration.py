@@ -2,7 +2,7 @@ from mock import MagicMock
 from nose.tools import assert_equals, assert_not_equals, raises, with_setup
 import json
 
-from hdijupyterutils.configuration import override, override_all, with_override
+from hdijupyterutils3.configuration import override, override_all, with_override
 
 
 # This is a sample implementation of how a module would use the config methods.

@@ -46,7 +46,7 @@ def logging_config():
             u"magicsHandler": {
                 u"class": LOGGING_CONFIG_CLASS_NAME,
                 u"formatter": u"magicsFormatter",
-                u"home_path": "~/.hdijupyterutils"
+                u"home_path": "~/.hdijupyterutils3.
             }
         },
         u"loggers": {

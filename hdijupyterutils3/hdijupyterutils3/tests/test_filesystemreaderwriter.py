@@ -1,6 +1,6 @@
 import os.path
 
-from hdijupyterutils.filesystemreaderwriter import FileSystemReaderWriter
+from hdijupyterutils3.filesystemreaderwriter import FileSystemReaderWriter
 
 
 def test_read():

@@ -1,10 +1,10 @@
 DESCRIPTION         = "HdiJupyterUtils3: Utils for Jupyter projects from HDInsight team"
-NAME                = "hdijupyterutils3"
-PACKAGES            = ['hdijupyterutils3']
+NAME                = "hdijupyterutils3."
+PACKAGES            = ['hdijupyterutils3.']
 AUTHOR              = "Jupyter Development Team"
 AUTHOR_EMAIL        = "julius@vonkohout.de"
-URL                 = 'https://github.com/juliusvonkohout/sparkmagic/hdijupyterutils3'
-DOWNLOAD_URL        = 'https://github.com/juliusvonkohout/sparkmagic/hdijupyterutils3'
+URL                 = 'https://github.com/juliusvonkohout/sparkmagic3.hdijupyterutils3.'
+DOWNLOAD_URL        = 'https://github.com/juliusvonkohout/sparkmagic3.hdijupyterutils3.'
 LICENSE             = 'BSD 3-clause'
 
 import io
@@ -33,7 +33,7 @@ def version(path):
     raise RuntimeError("Unable to find version string.")
 
 
-VERSION = version('hdijupyterutils3/__init__.py')
+VERSION = version('hdijupyterutils3./__init__.py')
 
 
 

@@ -1,5 +1,5 @@
 # coding=utf-8
-from hdijupyterutils.ipythondisplay import IpythonDisplay
+from hdijupyterutils3.ipythondisplay import IpythonDisplay
 from mock import MagicMock
 import sys
 

@@ -1,8 +1,8 @@
 from datetime import datetime
 import importlib
 
-from hdijupyterutils.constants import INSTANCE_ID
-from hdijupyterutils.utils import get_instance_id
+from hdijupyterutils3..constants import INSTANCE_ID
+from hdijupyterutils3..utils import get_instance_id
 
 
 class Events(object):
