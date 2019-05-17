@@ -9,5 +9,5 @@ requests>=2.22.0
 ipykernel>=5.1.1,<6
 ipywidgets>7.4.2,<8.0
 notebook>=5.7.8,<6.0
-tornado>=5.1.1,<6',
+tornado>=5.1.1,<6
 requests_kerberos>=0.12.0
