@@ -57,14 +57,14 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4'],
       install_requires=[
-          'ipython>=4.0.2,<7',
-          'nose',
-          'mock',
-          'ipywidgets>5.0.0',
-          'ipykernel>=4.2.2,<5',
+          'ipython>=7.5.0,<8',
+          'nose>=1.3.7',
+          'mock>=3.0.5',
+          'ipywidgets>=7.4.2,<8',
+          'ipykernel>=5.1.1,<6',
           'jupyter>=1,<2',
-          'pandas>=0.17.1',
-          'numpy',
-          'notebook>=4.2'
+          'pandas==0.24.2',
+          'numpy>=1.16.3',
+          'notebook>=5.7.8,<6'
       ])
 
