@@ -2,4 +2,4 @@ plotly>=3.9.0,<4.0
 ipywidgets>7.4.2,<8.0
 hdijupyterutils>=0.12.7
 notebook>=5.7.8,<6.0
-pandas>=0.22.*
+pandas>=0.24.*
