@@ -52,15 +52,12 @@ setup(name=NAME,
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4'],
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.6'],
       install_requires=[
-          'plotly>=1.10.0,<3.0',
-          'ipywidgets>5.0.0,<8.0',
-          'hdijupyterutils>=0.6',
-          'notebook>=4.2,<6.0',
-          'pandas>=0.20.1'
+          'plotly>=3.9.0,<4.0',
+          'ipywidgets>7.4.2,<8.0',
+          'hdijupyterutils>=0.12.7',
+          'notebook>=5.7.8,<6.0',
+          'pandas>=0.24.*'
       ])
-
