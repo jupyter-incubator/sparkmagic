@@ -180,6 +180,8 @@ class TestLivySession(object):
 
         assert session.is_final_status("dead")
         assert session.is_final_status("error")
+        assert session.is_final_status("success")
+        assert session.is_final_status("killed")
 
     def test_start_scala_starts_session(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -251,16 +253,21 @@ class TestLivySession(object):
         self.http_client.get_session.assert_called_with(0)
 
     def test_status_recovering(self):
-        """Ensure 'recovering' state is supported."""
+        """
+        Ensure 'recovering' state is supported: we go from recovering to idle.
+        """
         self.http_client.post_session.return_value = self.session_create_json
-        self.http_client.get_session.return_value = self.ready_sessions_json
+        def get_session(i, calls=[]):
+            if not calls:
+                calls.append(1)
+                return self.recovering_sessions_json
+            else:
+                return self.ready_sessions_json
+        self.http_client.get_session.side_effect = get_session
         self.http_client.get_statement.return_value = self.ready_statement_json
         session = self._create_session()
         session.start()
-
-        self.http_client.get_session.return_value = self.recovering_sessions_json
-        session.refresh_status_and_info()
-        assert_equals("recovering", session.status)
+        assert_equals("idle", session.status)
 
     def test_logs_gets_latest_logs(self):
         self.http_client.post_session.return_value = self.session_create_json
