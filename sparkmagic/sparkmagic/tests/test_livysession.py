@@ -31,6 +31,7 @@ class TestLivySession(object):
     resource_limit_json = json.loads('{"id":0,"state":"starting","kind":"spark","log":['
                                      '"Queue\'s AM resource limit exceeded."]}')
     ready_sessions_json = json.loads('{"id":0,"state":"idle","kind":"spark","log":[""]}')
+    recovering_sessions_json = json.loads('{"id":0,"state":"recovering","kind":"spark","log":[""]}')
     error_sessions_json = json.loads('{"id":0,"state":"error","kind":"spark","log":[""]}')
     busy_sessions_json = json.loads('{"id":0,"state":"busy","kind":"spark","log":[""]}')
     post_statement_json = json.loads('{"id":0,"state":"running","output":null}')
@@ -248,6 +249,18 @@ class TestLivySession(object):
 
         assert_equals("idle", state)
         self.http_client.get_session.assert_called_with(0)
+
+    def test_status_recovering(self):
+        """Ensure 'recovering' state is supported."""
+        self.http_client.post_session.return_value = self.session_create_json
+        self.http_client.get_session.return_value = self.ready_sessions_json
+        self.http_client.get_statement.return_value = self.ready_statement_json
+        session = self._create_session()
+        session.start()
+
+        self.http_client.get_session.return_value = self.recovering_sessions_json
+        session.refresh_status_and_info()
+        assert_equals("recovering", session.status)
 
     def test_logs_gets_latest_logs(self):
         self.http_client.post_session.return_value = self.session_create_json
