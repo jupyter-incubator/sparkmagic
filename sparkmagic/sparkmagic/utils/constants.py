@@ -58,7 +58,9 @@ LONG_RANDOM_VARIABLE_NAME = "yQeKOYBsFgLWWGWZJu3y"
 
 MAGICS_LOGGER_NAME = "magicsLogger"
 
-# Full list taken from https://livy.incubator.apache.org/docs/latest/rest-api.html:
+# The list here https://livy.incubator.apache.org/docs/latest/rest-api.html
+# appears incomplete; full list is in
+# https://github.com/apache/incubator-livy/blob/master/core/src/main/scala/org/apache/livy/sessions/SessionState.scala:
 IDLE_SESSION_STATUS = "idle"
 ERROR_SESSION_STATUS = "error"
 DEAD_SESSION_STATUS = "dead"
