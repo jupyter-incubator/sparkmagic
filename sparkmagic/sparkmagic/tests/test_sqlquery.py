@@ -223,16 +223,17 @@ def test_execute_sql_failure_emits_event():
 @with_setup(_setup, _teardown)
 def test_unicode_sql():
     query = u"SELECT 'è'"
+    longvar = LONG_RANDOM_VARIABLE_NAME
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
     assert_equals(sqlquery._pyspark_command("spark"),
-                  Command(u'for {} in spark.sql(u"""{} """).toJSON().take(120): print({}.encode("{}"))'\
-                          .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                  Command(u'import sys; for {} in spark.sql(u"""{} """).toJSON(use_unicode=False).take(120): print(str({}, \'utf-8\') if (sys.version_info.major == 3) else {})'\
+                          .format(longvar, query,
+                                  longvar, longvar)))
     assert_equals(sqlquery._scala_command("spark"),
                   Command(u'spark.sql("""{}""").toJSON.take(120).foreach(println)'.format(query)))
     assert_equals(sqlquery._r_command("spark"),
-                  Command(u'for ({} in (jsonlite:::toJSON(take(sql("{}"),120)))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, query, LONG_RANDOM_VARIABLE_NAME)))
+                  Command(u'for ({} in (jsonlite:::toJSON(take(sql("{}"),120)))) {{cat({})}}'.format(longvar, query, longvar)))
 
 @with_setup(_setup, _teardown)
 def test_pyspark_livy_sql_options_spark2():
@@ -240,7 +241,7 @@ def test_pyspark_livy_sql_options_spark2():
         sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
 
         assert_equals(sqlquery._pyspark_command("spark"),
-                      Command(u'for {} in spark.sql(u"""{} """).toJSON().take(120): print({}.encode("{}"))'\
+                      Command(u'import sys; for {} in spark.sql(u"""{} """).toJSON(use_unicode=False).take(120): print({}.encode("{}"))'\
                               .format(LONG_RANDOM_VARIABLE_NAME, query,
                                       LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
 
