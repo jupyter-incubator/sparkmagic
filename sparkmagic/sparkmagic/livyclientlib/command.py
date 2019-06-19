@@ -18,6 +18,9 @@ class Command(ObjectWithGuid):
             spark_events = SparkEvents()
         self._spark_events = spark_events
 
+    def __repr__(self):
+        return "Command({}, ...)".format(repr(self.code))
+
     def __eq__(self, other):
         return self.code == other.code
 
