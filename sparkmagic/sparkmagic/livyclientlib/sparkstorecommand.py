@@ -51,8 +51,6 @@ class SparkStoreCommand(Command):
     def to_command(self, kind, spark_context_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
             return self._pyspark_command(spark_context_variable_name)
-        elif kind == constants.SESSION_KIND_PYSPARK3:
-            return self._pyspark_command(spark_context_variable_name, False)
         elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command(spark_context_variable_name)
         elif kind == constants.SESSION_KIND_SPARKR:
@@ -62,22 +60,22 @@ class SparkStoreCommand(Command):
 
 
     def _pyspark_command(self, spark_context_variable_name, encode_result=True):
-        command = u'{}.toJSON()'.format(spark_context_variable_name)
+        # use_unicode=False means the result will be UTF-8-encoded bytes:
+        command = u'{}.toJSON(use_unicode=False)'.format(spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
             command = u'{}.take({})'.format(command, self.maxrows)
         else:
             command = u'{}.collect()'.format(command)
-        # Unicode support has improved in Python 3 so we don't need to encode.
-        if encode_result:
-            print_command = '{}.encode("{}")'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                     conf.pyspark_dataframe_encoding())
-        else:
-            print_command = constants.LONG_RANDOM_VARIABLE_NAME
-        command = u'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                    command,
-                                                    print_command)
+        print_command = "str({}, 'utf-8') if (sys.version_info.major == 3) else {}".format(
+            constants.LONG_RANDOM_VARIABLE_NAME,
+            constants.LONG_RANDOM_VARIABLE_NAME
+        )
+        command = u'import sys; for {} in {}: print({})'.format(
+            constants.LONG_RANDOM_VARIABLE_NAME,
+            command,
+            print_command)
         return Command(command)
 
 
