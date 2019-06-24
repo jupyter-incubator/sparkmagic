@@ -1,9 +1,11 @@
-from mock import MagicMock, call
+import asyncio
+
+import ipykernel
+from mock import MagicMock, call, patch
 from nose.tools import with_setup
 
-from sparkmagic.utils.constants import LANG_PYTHON
 from sparkmagic.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
-
+from sparkmagic.utils.constants import LANG_PYTHON
 
 kernel = None
 execute_cell_mock = None
@@ -144,3 +146,13 @@ def test_delete_session():
 
     assert call("%%_do_not_call_delete_session\n ", True, False) in execute_cell_mock.mock_calls
 
+@patch.object(ipykernel.ipkernel.IPythonKernel, 'do_execute')
+@with_setup(_teardown)
+def test_execute_cell_for_user(mock_ipy_execute):
+    mock_ipy_execute_result = asyncio.Future()
+    mock_ipy_execute_result.set_result({'status': 'OK'})
+    mock_ipy_execute.return_value = mock_ipy_execute_result
+
+    actual_result = TestSparkKernel()._execute_cell_for_user(code='Foo', silent=True)
+
+    assert {'status': 'OK'} == actual_result
