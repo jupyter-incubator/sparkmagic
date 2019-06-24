@@ -19,6 +19,11 @@ COPY examples /home/jovyan/work
 COPY hdijupyterutils hdijupyterutils/
 COPY autovizwidget autovizwidget/
 COPY sparkmagic sparkmagic/
+
+USER root
+RUN chown -R $NB_USER .
+
+USER $NB_USER
 RUN if [ "$dev_mode" = "true" ]; then \
       cd hdijupyterutils && pip install . && cd ../ && \
       cd autovizwidget && pip install . && cd ../ && \

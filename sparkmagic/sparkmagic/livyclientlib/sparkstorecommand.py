@@ -59,20 +59,20 @@ class SparkStoreCommand(Command):
             raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
 
-    def _pyspark_command(self, spark_context_variable_name, encode_result=True):
-        # use_unicode=False means the result will be UTF-8-encoded bytes:
-        command = u'{}.toJSON(use_unicode=False)'.format(spark_context_variable_name)
+    def _pyspark_command(self, spark_context_variable_name):
+        # use_unicode=False means the result will be UTF-8-encoded bytes, so we
+        # set it to False for Python 2.
+        command = u'{}.toJSON(use_unicode=(sys.version_info.major > 2))'.format(
+            spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
             command = u'{}.take({})'.format(command, self.maxrows)
         else:
             command = u'{}.collect()'.format(command)
-        print_command = "str({}, 'utf-8') if (sys.version_info.major == 3) else {}".format(
-            constants.LONG_RANDOM_VARIABLE_NAME,
-            constants.LONG_RANDOM_VARIABLE_NAME
-        )
-        command = u'import sys; for {} in {}: print({})'.format(
+        # Unicode support has improved in Python 3 so we don't need to encode.
+        print_command = constants.LONG_RANDOM_VARIABLE_NAME
+        command = u'import sys\nfor {} in {}: print({})'.format(
             constants.LONG_RANDOM_VARIABLE_NAME,
             command,
             print_command)

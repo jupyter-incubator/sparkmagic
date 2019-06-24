@@ -9,7 +9,7 @@ from hdijupyterutils.configuration import override_all as _override_all
 from hdijupyterutils.configuration import with_override
 
 from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
-    LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
+    LANG_SCALA, LANG_PYTHON, LANG_R, \
     SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, CONFIGURABLE_RETRY
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 import sparkmagic.utils.constants as constants
@@ -36,8 +36,6 @@ def get_livy_kind(language):
     if language == LANG_SCALA:
         return SESSION_KIND_SPARK
     elif language == LANG_PYTHON:
-        return SESSION_KIND_PYSPARK
-    elif language == LANG_PYTHON3:
         return SESSION_KIND_PYSPARK
     elif language == LANG_R:
         return SESSION_KIND_SPARKR

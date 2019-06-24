@@ -68,8 +68,9 @@ class SQLQuery(ObjectWithGuid):
 
 
     def _pyspark_command(self, sql_context_variable_name):
-        # use_unicode=False means the result will be UTF-8-encoded bytes:
-        command = u'{}.sql(u"""{} """).toJSON(use_unicode=False)'.format(
+        # use_unicode=False means the result will be UTF-8-encoded bytes, so we
+        # set it to False for Python 2.
+        command = u'{}.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2))'.format(
             sql_context_variable_name, self.query)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
@@ -77,11 +78,8 @@ class SQLQuery(ObjectWithGuid):
             command = u'{}.take({})'.format(command, self.maxrows)
         else:
             command = u'{}.collect()'.format(command)
-        print_command = "str({}, 'utf-8') if (sys.version_info.major == 3) else {}".format(
-            constants.LONG_RANDOM_VARIABLE_NAME,
-            constants.LONG_RANDOM_VARIABLE_NAME
-        )
-        command = u'import sys; for {} in {}: print({})'.format(
+        print_command = constants.LONG_RANDOM_VARIABLE_NAME
+        command = u'import sys\nfor {} in {}: print({})'.format(
             constants.LONG_RANDOM_VARIABLE_NAME,
             command,
             print_command)
