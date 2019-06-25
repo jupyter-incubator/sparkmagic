@@ -1,5 +1,6 @@
 import textwrap
 
+from IPython.display import display
 from ipywidgets.widgets import FloatProgress, Layout
 
 from hdijupyterutils.guid import ObjectWithGuid
