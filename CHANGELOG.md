@@ -5,3 +5,5 @@
 ### Bug fixes:
 
 * Updated code to work with Livy 0.5 and later, where Python 3 support is not a different kind of session. Thanks to Gianmario Spacagna for contributing some of the code.
+* Work with somewhat newer versions of the Jupyter notebook. Thanks to 
+Jaipreet Singh for the patch.
