@@ -85,9 +85,9 @@ setup(name=NAME,
           'pandas>=0.17.1',
           'numpy',
           'requests',
-          'ipykernel>=5.1.0,<6.0',
+          'ipykernel',  # Python 2 will automatically get 4.10
           'ipywidgets>5.0.0,<8.0',
-          'notebook>=4.2,<6.0',
+          'notebook>=4.2',
           'tornado>=4',
           'requests_kerberos>=0.8.0'
       ])
