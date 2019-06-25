@@ -1,5 +1,11 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
+try:
+    from asyncio import Future
+except ImportError:
+    class Future(object):
+        """A class nothing will use."""
+
 import requests
 from ipykernel.ipkernel import IPythonKernel
 from hdijupyterutils.ipythondisplay import IpythonDisplay
@@ -107,7 +113,10 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
         return reply_content
 
     def _execute_cell_for_user(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
-        return super(SparkKernelBase, self).do_execute(code, silent, store_history, user_expressions, allow_stdin).result()
+        result = super(SparkKernelBase, self).do_execute(code, silent, store_history, user_expressions, allow_stdin)
+        if isinstance(result, Future):
+            result = result.result()
+        return result
 
     def _do_shutdown_ipykernel(self, restart):
         return super(SparkKernelBase, self).do_shutdown(restart)

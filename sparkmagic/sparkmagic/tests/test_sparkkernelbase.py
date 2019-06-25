@@ -1,5 +1,3 @@
-import asyncio
-
 import ipykernel
 from mock import MagicMock, call, patch
 from nose.tools import with_setup
@@ -148,10 +146,26 @@ def test_delete_session():
 
 @patch.object(ipykernel.ipkernel.IPythonKernel, 'do_execute')
 @with_setup(_teardown)
-def test_execute_cell_for_user(mock_ipy_execute):
+def test_execute_cell_for_user_ipykernel5(mock_ipy_execute):
+    import sys
+    if sys.version_info.major == 2:
+        from unittest import SkipTest
+        raise SkipTest("Python 3 only")
+    else:
+        import asyncio
     mock_ipy_execute_result = asyncio.Future()
     mock_ipy_execute_result.set_result({'status': 'OK'})
     mock_ipy_execute.return_value = mock_ipy_execute_result
+
+    actual_result = TestSparkKernel()._execute_cell_for_user(code='Foo', silent=True)
+
+    assert {'status': 'OK'} == actual_result
+
+
+@patch.object(ipykernel.ipkernel.IPythonKernel, 'do_execute')
+@with_setup(_teardown)
+def test_execute_cell_for_user_ipykernel4(mock_ipy_execute):
+    mock_ipy_execute.return_value = {'status': 'OK'}
 
     actual_result = TestSparkKernel()._execute_cell_for_user(code='Foo', silent=True)
 
