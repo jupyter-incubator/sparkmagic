@@ -57,10 +57,10 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4'],
       install_requires=[
-          'plotly>=1.10.0,<3.0',
-          'ipywidgets>5.0.0,<8.0',
+          'plotly>=3.9.0,<4.0',
+          'ipywidgets>=7.4.2,<8.0',
           'hdijupyterutils>=0.6',
-          'notebook>=4.2,<6.0',
-          'pandas>=0.20.1'
+          'notebook>=5.7.8,<6.0',
+          'pandas>=0.24.*'
       ])
 
