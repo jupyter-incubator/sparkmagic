@@ -79,16 +79,16 @@ setup(name=NAME,
       install_requires=[
           'hdijupyterutils>=0.6',
           'autovizwidget>=0.6',
-          'ipython>=4.0.2,<7',
-          'nose',
-          'mock',
-          'pandas>=0.17.1',
-          'numpy',
-          'requests',
-          'ipykernel>=4.2.2,<5',
-          'ipywidgets>5.0.0,<8.0',
-          'notebook>=4.2,<6.0',
-          'tornado>=4',
-          'requests_kerberos>=0.8.0'
+          'ipython>=7.5.0,<8',
+	  'nose>=1.3.7',
+	  'mock>=3.0.5',
+	  'pandas==0.24.2',
+	  'numpy>=1.16.3',
+	  'requests>=2.21.0',
+	  'ipykernel>=5.1.1,<6',
+	  'ipywidgets>=7.4.2,<8.0',
+	  'notebook>=5.7.8,<6.0',
+	  'tornado>=5.1.1,<6',
+	  'requests_kerberos>=0.12.0'
       ])
 
