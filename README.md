@@ -16,7 +16,7 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 * Run Spark code in multiple languages against any remote Spark cluster through Livy
 * Automatic SparkContext (`sc`) and HiveContext (`sqlContext`) creation
 * Easily execute SparkSQL queries with the `%%sql` magic
-* Automatic visualization of SQL queries in the PySpark, PySpark3, Spark and SparkR kernels; use an easy visual interface to interactively construct visualizations, no code required
+* Automatic visualization of SQL queries in the PySpark, Spark and SparkR kernels; use an easy visual interface to interactively construct visualizations, no code required
 * Easy access to Spark application information and logs (`%%info` magic)
 * Ability to capture the output of SQL queries as Pandas dataframes to interact with other Python libraries (e.g. matplotlib)
 * Authenticate to Livy via Basic Access authentication or via Kerberos
@@ -48,7 +48,6 @@ See [Pyspark](examples/Pyspark%20Kernel.ipynb) and [Spark](examples/Spark%20Kern
 
         jupyter-kernelspec install sparkmagic/kernels/sparkkernel
         jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
-        jupyter-kernelspec install sparkmagic/kernels/pyspark3kernel
         jupyter-kernelspec install sparkmagic/kernels/sparkrkernel
         
 4. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
