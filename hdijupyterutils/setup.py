@@ -57,7 +57,7 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4'],
       install_requires=[
-          'ipython>=7.5.0,<8',
+          'ipython>=5.8.0,<8',
           'nose>=1.3.7',
           'mock>=3.0.5',
           'ipywidgets>=7.4.2,<8',
