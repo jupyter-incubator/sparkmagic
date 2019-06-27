@@ -3,7 +3,7 @@
 import json
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.constants import LANG_SCALA, LANG_PYTHON, LANG_PYTHON3
+from sparkmagic.utils.constants import LANG_SCALA, LANG_PYTHON
 from sparkmagic.controllerwidget.abstractmenuwidget import AbstractMenuWidget
 
 
@@ -22,7 +22,7 @@ class CreateSessionWidget(AbstractMenuWidget):
         )
         self.lang_widget = self.ipywidget_factory.get_toggle_buttons(
             description='Language:',
-            options=[LANG_SCALA, LANG_PYTHON, LANG_PYTHON3],
+            options=[LANG_SCALA, LANG_PYTHON],
         )
         self.properties = self.ipywidget_factory.get_text(
             description='Properties:',

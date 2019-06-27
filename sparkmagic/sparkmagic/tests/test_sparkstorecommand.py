@@ -34,15 +34,6 @@ def test_to_command_pyspark():
 
 
 @with_setup(_setup, _teardown)
-def test_to_command_pyspark3():
-    variable_name = "var_name"
-    sparkcommand = SparkStoreCommand(variable_name)
-    sparkcommand._pyspark_command = MagicMock(return_value=MagicMock())
-    sparkcommand.to_command("pyspark3", variable_name)
-    sparkcommand._pyspark_command.assert_called_with(variable_name, False)
-
-
-@with_setup(_setup, _teardown)
 def test_to_command_scala():
     variable_name = "var_name"
     sparkcommand = SparkStoreCommand(variable_name)
@@ -100,45 +91,45 @@ def test_pyspark_livy_sampling_options():
 
     sparkcommand = SparkStoreCommand(variable_name, samplemethod='take', maxrows=120)
     assert_equals(sparkcommand._pyspark_command(variable_name),
-                  Command(u'for {} in {}.toJSON().take(120): print({}.encode("{}"))'\
+                  Command(u'import sys\nfor {} in {}.toJSON(use_unicode=(sys.version_info.major > 2)).take(120): print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
     sparkcommand = SparkStoreCommand(variable_name, samplemethod='take', maxrows=-1)
     assert_equals(sparkcommand._pyspark_command(variable_name),
-                  Command(u'for {} in {}.toJSON().collect(): print({}.encode("{}"))'\
+                  Command(u'import sys\nfor {} in {}.toJSON(use_unicode=(sys.version_info.major > 2)).collect(): print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
     sparkcommand = SparkStoreCommand(variable_name, samplemethod='sample', samplefraction=0.25, maxrows=-1)
     assert_equals(sparkcommand._pyspark_command(variable_name),
-                  Command(u'for {} in {}.toJSON().sample(False, 0.25).collect(): '
-                          u'print({}.encode("{}"))'\
+                  Command(u'import sys\nfor {} in {}.toJSON(use_unicode=(sys.version_info.major > 2)).sample(False, 0.25).collect(): '
+                          u'print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
     sparkcommand = SparkStoreCommand(variable_name, samplemethod='sample', samplefraction=0.33, maxrows=3234)
     assert_equals(sparkcommand._pyspark_command(variable_name),
-                  Command(u'for {} in {}.toJSON().sample(False, 0.33).take(3234): '
-                          u'print({}.encode("{}"))'\
+                  Command(u'import sys\nfor {} in {}.toJSON(use_unicode=(sys.version_info.major > 2)).sample(False, 0.33).take(3234): '
+                          u'print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
     sparkcommand = SparkStoreCommand(variable_name, samplemethod='sample', samplefraction=0.33, maxrows=3234)
-    assert_equals(sparkcommand._pyspark_command(variable_name, False),
-                  Command(u'for {} in {}.toJSON().sample(False, 0.33).take(3234): '
+    assert_equals(sparkcommand._pyspark_command(variable_name),
+                  Command(u'import sys\nfor {} in {}.toJSON(use_unicode=(sys.version_info.major > 2)).sample(False, 0.33).take(3234): '
                           u'print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, variable_name, LONG_RANDOM_VARIABLE_NAME)))
 
     sparkcommand = SparkStoreCommand(variable_name, samplemethod=None, maxrows=100)
     assert_equals(sparkcommand._pyspark_command(variable_name),
-                  Command(u'for {} in {}.toJSON().take(100): print({}.encode("{}"))'\
+                  Command(u'import sys\nfor {} in {}.toJSON(use_unicode=(sys.version_info.major > 2)).take(100): print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
     sparkcommand = SparkStoreCommand(variable_name, samplemethod=None, maxrows=100)
-    assert_equals(sparkcommand._pyspark_command(variable_name, False),
-                  Command(u'for {} in {}.toJSON().take(100): print({})'\
+    assert_equals(sparkcommand._pyspark_command(variable_name),
+                  Command(u'import sys\nfor {} in {}.toJSON(use_unicode=(sys.version_info.major > 2)).take(100): print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
                                   LONG_RANDOM_VARIABLE_NAME)))
 
@@ -217,9 +208,9 @@ def test_unicode():
 
     sparkcommand = SparkStoreCommand(variable_name, samplemethod='take', maxrows=120)
     assert_equals(sparkcommand._pyspark_command(variable_name),
-                  Command(u'for {} in {}.toJSON().take(120): print({}.encode("{}"))'\
+                  Command(u'import sys\nfor {} in {}.toJSON(use_unicode=(sys.version_info.major > 2)).take(120): print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, variable_name,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME)))
     assert_equals(sparkcommand._scala_command(variable_name),
                   Command(u'{}.toJSON.take(120).foreach(println)'.format(variable_name)))
 

@@ -29,15 +29,6 @@ def test_to_command_pyspark():
 
 
 @with_setup(_setup, _teardown)
-def test_to_command_pyspark3():
-    variable_name = "var_name"
-    sqlquery = SQLQuery("Query")
-    sqlquery._pyspark_command = MagicMock(return_value=MagicMock())
-    sqlquery.to_command("pyspark3", variable_name)
-    sqlquery._pyspark_command.assert_called_with(variable_name, False)
-
-
-@with_setup(_setup, _teardown)
 def test_sqlquery_initializes():
     query = "HERE IS MY SQL QUERY SELECT * FROM CREATE DROP TABLE"
     samplemethod = "take"
@@ -80,33 +71,33 @@ def test_pyspark_livy_sql_options():
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
     assert_equals(sqlquery._pyspark_command("sqlContext"),
-                  Command(u'for {} in sqlContext.sql(u"""{} """).toJSON().take(120): print({}.encode("{}"))'\
+                  Command(u'import sys\nfor {} in sqlContext.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2)).take(120): print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
     assert_equals(sqlquery._pyspark_command("sqlContext"),
-                  Command(u'for {} in sqlContext.sql(u"""{} """).toJSON().collect(): print({}.encode("{}"))'\
+                  Command(u'import sys\nfor {} in sqlContext.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2)).collect(): print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
     assert_equals(sqlquery._pyspark_command("sqlContext"),
-                  Command(u'for {} in sqlContext.sql(u"""{} """).toJSON().sample(False, 0.25).collect(): '
-                          u'print({}.encode("{}"))'\
+                  Command(u'import sys\nfor {} in sqlContext.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2)).sample(False, 0.25).collect(): '
+                          u'print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
     assert_equals(sqlquery._pyspark_command("sqlContext"),
-                  Command(u'for {} in sqlContext.sql(u"""{} """).toJSON().sample(False, 0.33).take(3234): '
-                          u'print({}.encode("{}"))'\
+                  Command(u'import sys\nfor {} in sqlContext.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2)).sample(False, 0.33).take(3234): '
+                          u'print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                  LONG_RANDOM_VARIABLE_NAME)))
 
     sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
-    assert_equals(sqlquery._pyspark_command("spark", False),
-                  Command(u'for {} in spark.sql(u"""{} """).toJSON().sample(False, 0.33).take(3234): '
+    assert_equals(sqlquery._pyspark_command("spark"),
+                  Command(u'import sys\nfor {} in spark.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2)).sample(False, 0.33).take(3234): '
                           u'print({})'\
                           .format(LONG_RANDOM_VARIABLE_NAME, query, LONG_RANDOM_VARIABLE_NAME)))
 
@@ -223,16 +214,17 @@ def test_execute_sql_failure_emits_event():
 @with_setup(_setup, _teardown)
 def test_unicode_sql():
     query = u"SELECT 'è'"
+    longvar = LONG_RANDOM_VARIABLE_NAME
 
     sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
     assert_equals(sqlquery._pyspark_command("spark"),
-                  Command(u'for {} in spark.sql(u"""{} """).toJSON().take(120): print({}.encode("{}"))'\
-                          .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                  LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                  Command(u'import sys\nfor {} in spark.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2)).take(120): print({})'\
+                          .format(longvar, query,
+                                  longvar)))
     assert_equals(sqlquery._scala_command("spark"),
                   Command(u'spark.sql("""{}""").toJSON.take(120).foreach(println)'.format(query)))
     assert_equals(sqlquery._r_command("spark"),
-                  Command(u'for ({} in (jsonlite:::toJSON(take(sql("{}"),120)))) {{cat({})}}'.format(LONG_RANDOM_VARIABLE_NAME, query, LONG_RANDOM_VARIABLE_NAME)))
+                  Command(u'for ({} in (jsonlite:::toJSON(take(sql("{}"),120)))) {{cat({})}}'.format(longvar, query, longvar)))
 
 @with_setup(_setup, _teardown)
 def test_pyspark_livy_sql_options_spark2():
@@ -240,29 +232,29 @@ def test_pyspark_livy_sql_options_spark2():
         sqlquery = SQLQuery(query, samplemethod='take', maxrows=120)
 
         assert_equals(sqlquery._pyspark_command("spark"),
-                      Command(u'for {} in spark.sql(u"""{} """).toJSON().take(120): print({}.encode("{}"))'\
+                      Command(u'import sys\nfor {} in spark.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2)).take(120): print({})'\
                               .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                      LONG_RANDOM_VARIABLE_NAME)))
 
         sqlquery = SQLQuery(query, samplemethod='take', maxrows=-1)
         assert_equals(sqlquery._pyspark_command("spark"),
-                      Command(u'for {} in spark.sql(u"""{} """).toJSON().collect(): print({}.encode("{}"))'\
+                      Command(u'import sys\nfor {} in spark.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2)).collect(): print({})'\
                               .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                      LONG_RANDOM_VARIABLE_NAME)))
 
         sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.25, maxrows=-1)
         assert_equals(sqlquery._pyspark_command("spark"),
-                      Command(u'for {} in spark.sql(u"""{} """).toJSON().sample(False, 0.25).collect(): '
-                              u'print({}.encode("{}"))'\
+                      Command(u'import sys\nfor {} in spark.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2)).sample(False, 0.25).collect(): '
+                              u'print({})'\
                               .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                      LONG_RANDOM_VARIABLE_NAME)))
 
         sqlquery = SQLQuery(query, samplemethod='sample', samplefraction=0.33, maxrows=3234)
         assert_equals(sqlquery._pyspark_command("spark"),
-                      Command(u'for {} in spark.sql(u"""{} """).toJSON().sample(False, 0.33).take(3234): '
-                              u'print({}.encode("{}"))'\
+                      Command(u'import sys\nfor {} in spark.sql(u"""{} """).toJSON(use_unicode=(sys.version_info.major > 2)).sample(False, 0.33).take(3234): '
+                              u'print({})'\
                               .format(LONG_RANDOM_VARIABLE_NAME, query,
-                                      LONG_RANDOM_VARIABLE_NAME, conf.pyspark_dataframe_encoding())))
+                                      LONG_RANDOM_VARIABLE_NAME)))
 
 @with_setup(_setup, _teardown)
 def test_scala_livy_sql_options_spark2():
