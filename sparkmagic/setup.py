@@ -79,7 +79,7 @@ setup(name=NAME,
       install_requires=[
           'hdijupyterutils>=0.6',
           'autovizwidget>=0.6',
-          'ipython>=7.5.0,<8',
+          'ipython>=5.8.0,<8',
 	  'nose>=1.3.7',
 	  'mock>=3.0.5',
 	  'pandas==0.24.2',
