@@ -4,6 +4,6 @@ mock>=3.0.5,<4
 ipywidgets>=7.4.2,<8
 ipykernel>=4.10.0,<6
 jupyter>=1.0.0,<2
-pandas==0.24.*
+pandas>=0.24.*
 numpy>=1.16.3
 notebook>=5.7.8,<6
