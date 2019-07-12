@@ -75,15 +75,15 @@ setup(name=NAME,
       install_requires=[
           'hdijupyterutils>=0.6',
           'autovizwidget>=0.6',
-          'ipython>=4.0.2,<7',
+          'ipython>=4.0.2',
           'nose',
           'mock',
           'pandas>=0.17.1',
           'numpy',
           'requests',
-          'ipykernel>=4.2.2,<5',
-          'ipywidgets>5.0.0,<8.0',
-          'notebook>=4.2,<6.0',
+          'ipykernel',  # Python 2 will automatically get 4.10
+          'ipywidgets>5.0.0',
+          'notebook>=4.2',
           'tornado>=4',
           'requests_kerberos>=0.8.0'
       ])
