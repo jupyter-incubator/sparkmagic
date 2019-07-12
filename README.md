@@ -9,6 +9,8 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 
 ![Automatic visualization](screenshots/autoviz.png)
 
+![Server-side visualization](screenshots/matplotlib.png)
+
 ![Help](screenshots/help.png)
 
 ## Features
