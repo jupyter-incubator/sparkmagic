@@ -1,7 +1,6 @@
 from sparkmagic.utils.constants import LANG_PYTHON, LANG_SCALA, LANG_R
 from sparkmagic.kernels.sparkkernel.sparkkernel import SparkKernel
 from sparkmagic.kernels.pysparkkernel.pysparkkernel import PySparkKernel
-from sparkmagic.kernels.pyspark3kernel.pyspark3kernel import PySpark3Kernel
 from sparkmagic.kernels.sparkrkernel.sparkrkernel import SparkRKernel
 
 
@@ -9,12 +8,6 @@ class TestPyparkKernel(PySparkKernel):
     def __init__(self):
         kwargs = {"testing": True}
         super(TestPyparkKernel, self).__init__(**kwargs)
-
-
-class TestPypark3Kernel(PySpark3Kernel):
-    def __init__(self):
-        kwargs = {"testing": True}
-        super(TestPypark3Kernel, self).__init__(**kwargs)
 
 
 class TestSparkKernel(SparkKernel):
