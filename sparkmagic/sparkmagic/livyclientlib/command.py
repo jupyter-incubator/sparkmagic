@@ -1,4 +1,7 @@
 import textwrap
+import base64
+
+from IPython.display import Image
 
 from hdijupyterutils.guid import ObjectWithGuid
 
@@ -66,14 +69,10 @@ class Command(ObjectWithGuid):
 
                 if statement_output[u"status"] == u"ok":
                     data = statement_output[u"data"]
-                    if data.get(u"text/plain") is None:
-                        png_encode = data.get("image/png")
-                        if png_encode is None:
-                            return (False,
-                                    data['evalue'] + u"\n" + u"".join(statement_output[u"traceback"]))
-                        else:
-                            return (True,
-                                    png_encode)
+                    png_encoded = data.get("image/png")
+                    if png_encoded:
+                        image = Image(base64.b64decode(png_encoded))
+                        return (True, image)
                     else:
                         return (True,
                                 statement_output[u"data"][u"text/plain"])
