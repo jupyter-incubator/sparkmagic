@@ -376,6 +376,11 @@ class KernelMagics(SparkMagicBase):
 
         self.endpoint = Endpoint(server, auth, username, password)
 
+    @line_magic
+    def matplot(self, line, cell="", local_ns=None):
+        session = self.spark_controller.get_session_by_name_or_default(self.session_name)
+        session.matplot(line)
+
     def refresh_configuration(self):
         credentials = getattr(conf, 'base64_kernel_' + self.language + '_credentials')()
         (username, password, auth, url) = (credentials['username'], credentials['password'], credentials['auth'], credentials['url'])

@@ -65,7 +65,18 @@ class Command(ObjectWithGuid):
                     return (True, u"")
 
                 if statement_output[u"status"] == u"ok":
-                    return (True, statement_output[u"data"][u"text/plain"])
+                    data = statement_output[u"data"]
+                    if data.get(u"text/plain") is None:
+                        png_encode = data.get("image/png")
+                        if png_encode is None:
+                            return (False,
+                                    data['evalue'] + u"\n" + u"".join(statement_output[u"traceback"]))
+                        else:
+                            return (True,
+                                    png_encode)
+                    else:
+                        return (True,
+                                statement_output[u"data"][u"text/plain"])
                 elif statement_output[u"status"] == u"error":
                     return (False,
                            statement_output[u"evalue"] + u"\n" + u"".join(statement_output[u"traceback"]))

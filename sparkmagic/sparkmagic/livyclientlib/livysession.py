@@ -319,6 +319,17 @@ class LivySession(ObjectWithGuid):
             u"" if current_session_id is None or current_session_id != self.id else u"\u2714"
         )
 
+    def matplot(self,code):
+        command = Command("%matplot " + code)
+        (success, out) = command.execute(self)
+        if success:
+            from IPython.display import Image
+            import base64
+            image = Image(base64.b64decode(out))
+            self.ipython_display.display(image)
+        else:
+            self.ipython_display.send_error(out)
+
     @staticmethod
     def get_html_link(text, url):
         if url is not None:
