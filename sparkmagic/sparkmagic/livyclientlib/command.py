@@ -1,6 +1,5 @@
 import textwrap
 
-from IPython.display import display
 from ipywidgets.widgets import FloatProgress, Layout
 
 from hdijupyterutils.guid import ObjectWithGuid
@@ -57,7 +56,7 @@ class Command(ObjectWithGuid):
                                      orientation='horizontal',
                                      layout=Layout(width='50%', height='25px')
                                      )
-        display(progress)
+        session.ipython_display.display(progress)
 
         
         while True:
