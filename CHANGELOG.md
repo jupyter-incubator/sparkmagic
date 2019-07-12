@@ -4,7 +4,11 @@
 
 ### Bug fixes
 
-* Work with somewhat newer versions of the Jupyter notebook. Thanks to Jaipreet Singh for the patch, Eric Dill for testing, and G-Research for sponsoring Itamar Turner-Trauring's time.
+* Work correctly with newer versions of the Jupyter notebook. Thanks to Jaipreet Singh for the patch, Eric Dill for testing, and G-Research for sponsoring Itamar Turner-Trauring's time.
+
+### Other changes
+
+* Switch to Plotly 3.
 
 ## 0.12.8
 
