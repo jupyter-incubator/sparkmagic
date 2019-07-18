@@ -7,6 +7,8 @@ Provides the %spark magic."""
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
+from six import string_types
+
 from IPython.core.magic import Magics, magics_class
 from hdijupyterutils.ipythondisplay import IpythonDisplay
 
@@ -42,7 +44,10 @@ class SparkMagicBase(Magics):
         if not success:
             self.ipython_display.send_error(out)
         else:
-            self.ipython_display.write(out)
+            if isinstance(out, string_types):
+                self.ipython_display.write(out)
+            else:
+                self.ipython_display.display(out)
             if output_var is not None:
                 spark_store_command = self._spark_store_command(output_var, samplemethod, maxrows, samplefraction, coerce)
                 df = self.spark_controller.run_command(spark_store_command, session_name)

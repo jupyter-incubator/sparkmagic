@@ -2,6 +2,10 @@
 
 ## 0.12.9 (unreleased)
 
+### Features
+
+* Support server-side rendering of images, so you don't have to ship all the data to the client to do visualization—see the `%matplot` usage in the example notebook. Thanks to wangqiaoshi for the patch.
+
 ### Bug fixes
 
 * Work correctly with newer versions of the Jupyter notebook. Thanks to Jaipreet Singh for the patch, Eric Dill for testing, and G-Research for sponsoring Itamar Turner-Trauring's time.

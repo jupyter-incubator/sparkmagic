@@ -44,6 +44,8 @@ RUN cd /apps/build && \
 	mkdir -p $LIVY_APP_PATH/upload && \
   mkdir -p $LIVY_APP_PATH/logs
 
+RUN pip install matplotlib
+RUN pip install pandas
 
 EXPOSE 8998
 

@@ -1,5 +1,8 @@
+from base64 import b64encode
 from mock import MagicMock
 from nose.tools import assert_equals, with_setup
+
+from IPython.display import Image
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.constants import SESSION_KIND_SPARK
@@ -48,6 +51,14 @@ def test_execute():
     spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
                                                                                       session.id, command.guid,
                                                                                       0, True, "", "")
+
+    # Now try with PNG result:
+    http_client.get_statement.return_value = {"id":0,"state":"available","output":{"status":"ok", "execution_count":0,"data":{"text/plain":"", "image/png": b64encode(b"hello")}}}
+    result = command.execute(session)
+    assert result[0]
+    assert isinstance(result[1], Image)
+    assert result[1].data == b"hello"
+
 
 @with_setup(_setup)
 def test_execute_waiting():
