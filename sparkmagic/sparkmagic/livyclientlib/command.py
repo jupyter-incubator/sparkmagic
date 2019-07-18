@@ -3,6 +3,8 @@ import base64
 
 from IPython.display import Image
 
+from ipywidgets.widgets import FloatProgress, Layout
+
 from hdijupyterutils.guid import ObjectWithGuid
 
 import sparkmagic.utils.configuration as conf
@@ -51,6 +53,17 @@ class Command(ObjectWithGuid):
 
     def _get_statement_output(self, session, statement_id):
         retries = 1
+        progress = FloatProgress(value=0.0,
+                                     min=0,
+                                     max=1.0,
+                                     step=0.01,
+                                     description='Progress:',
+                                     bar_style='info',
+                                     orientation='horizontal',
+                                     layout=Layout(width='50%', height='25px')
+                                     )
+        session.ipython_display.display(progress)
+
         
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
@@ -59,10 +72,12 @@ class Command(ObjectWithGuid):
             self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
 
             if status not in FINAL_STATEMENT_STATUS:
+                progress.value = statement.get('progress', 0.0)
                 session.sleep(retries)
                 retries += 1
             else:                
                 statement_output = statement[u"output"]
+                progress.close()
 
                 if statement_output is None:
                     return (True, u"")
