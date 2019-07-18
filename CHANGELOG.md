@@ -5,6 +5,7 @@
 ### Features
 
 * Support server-side rendering of images, so you don't have to ship all the data to the client to do visualization—see the `%matplot` usage in the example notebook. Thanks to wangqiaoshi for the patch.
+* Progress bar for long running queries. Thanks to @juliusvonkohout.
 
 ### Bug fixes
 
