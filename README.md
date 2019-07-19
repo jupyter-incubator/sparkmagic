@@ -9,6 +9,8 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 
 ![Automatic visualization](screenshots/autoviz.png)
 
+![Server-side visualization](screenshots/matplotlib.png)
+
 ![Help](screenshots/help.png)
 
 ## Features
@@ -16,7 +18,7 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 * Run Spark code in multiple languages against any remote Spark cluster through Livy
 * Automatic SparkContext (`sc`) and HiveContext (`sqlContext`) creation
 * Easily execute SparkSQL queries with the `%%sql` magic
-* Automatic visualization of SQL queries in the PySpark, PySpark3, Spark and SparkR kernels; use an easy visual interface to interactively construct visualizations, no code required
+* Automatic visualization of SQL queries in the PySpark, Spark and SparkR kernels; use an easy visual interface to interactively construct visualizations, no code required
 * Easy access to Spark application information and logs (`%%info` magic)
 * Ability to capture the output of SQL queries as Pandas dataframes to interact with other Python libraries (e.g. matplotlib)
 * Authenticate to Livy via Basic Access authentication or via Kerberos
@@ -43,20 +45,23 @@ See [Pyspark](examples/Pyspark%20Kernel.ipynb) and [Spark](examples/Spark%20Kern
 2. Make sure that ipywidgets is properly installed by running
 
         jupyter nbextension enable --py --sys-prefix widgetsnbextension 
-        
-3. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
+ 
+3. If you're using JupyterLab, you'll need to run another command:
+
+        jupyter labextension install @jupyter-widgets/jupyterlab-manager
+
+4. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
 
         jupyter-kernelspec install sparkmagic/kernels/sparkkernel
         jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
-        jupyter-kernelspec install sparkmagic/kernels/pyspark3kernel
         jupyter-kernelspec install sparkmagic/kernels/sparkrkernel
         
-4. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
+5. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
 
-5. (Optional) Enable the server extension so that clusters can be programatically changed:
+6. (Optional) Enable the server extension so that clusters can be programatically changed:
 
         jupyter serverextension enable --py sparkmagic
-        
+
 ## Authentication Methods
 
 Sparkmagic supports:
