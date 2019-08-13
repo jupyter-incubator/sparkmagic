@@ -1,0 +1,25 @@
+version: "2.3"
+services:
+  spark:
+    image: jupyter/sparkmagic-livy-gpu
+    runtime: nvidia
+    environment:
+      - "NVIDIA_VISIBLE_DEVICES=0"
+    build:
+      context: .
+      dockerfile: Dockerfile.sparkgpu
+    hostname: spark
+    ports:
+      - "8998:8998"
+  jupyter:
+    image: jupyter/sparkmagic
+    runtime: nvidia
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+      args:
+        dev_mode: "false"
+    links:
+      - spark
+    ports:
+      - "8888:8888"

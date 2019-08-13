@@ -106,6 +106,17 @@ re-build the container. This will cause the container to install your
 local version of autovizwidget, hdijupyterutils, and sparkmagic. Make
 sure to re-run `docker-compose build` before each test run.
 
+## NVIDIA docker
+
+The included `nvidia-docker-compose.yml` file will let you run same sparkmagic stack but enable [SparkGPU](https://github.com/rapidsai/spark-examples) functionality, you can modify `NVIDIA_VISIBLE_DEVICES` to designate which GPU in your system to use. Also you need to copy `nvidia-docker-compose.yml` to `docker-compose.yml`.
+
+     cp docker-compose.yml docker-compose.yml.backup
+     cp nvidia-docker-compose.yml docker-compose.yml
+     docker-compose build
+     docker-compose up
+
+`SparkGPU Kernel.ipynb` inside `work` directory will provide the example to run mortgage data through SparkGPU. The rest is the same as docker instruction. 
+
 ## Server extension API
 
 ### `/reconnectsparkmagic`:

@@ -1,0 +1,63 @@
+FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
+
+ENV DEBIAN_FRONTEND=noninteractive 
+RUN ln -fs /usr/share/zoneinfo/America/los_angeles /etc/localtime
+
+RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
+    curl wget \
+    git \
+    openjdk-8-jdk \
+    maven \
+    python2.7 python2.7-setuptools python-pip python-dev \
+    python3 python3-setuptools python3-pip python3-dev \
+    r-base \
+    r-base-core && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN dpkg-reconfigure --frontend noninteractive tzdata
+
+RUN pip install py4j
+RUN pip install --upgrade setuptools
+
+ENV PYTHONHASHSEED 0
+ENV PYTHONIOENCODING UTF-8
+# ENV PIP_DISABLE_PIP_VERSION_CHECK 1
+
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+RUN export PATH=$PATH:$JAVA_HOME/bin
+ENV SPARK_BUILD_VERSION 2.4.0
+ENV SPARK_HOME /apps/spark-$SPARK_BUILD_VERSION
+ENV SPARK_BUILD_PATH /apps/build/spark
+RUN mkdir -p /apps/build && \
+  cd /apps/build && \
+  git clone https://github.com/apache/spark.git spark && \
+  cd $SPARK_BUILD_PATH && \
+  git checkout v$SPARK_BUILD_VERSION && \
+  dev/make-distribution.sh --name spark-$SPARK_BUILD_VERSION -Phive -Phive-thriftserver -Pyarn && \
+  cp -r /apps/build/spark/dist $SPARK_HOME && \
+  rm -rf $SPARK_BUILD_PATH
+
+ENV LIVY_BUILD_VERSION 0.6.0-incubating
+ENV LIVY_APP_PATH /apps/apache-livy-$LIVY_BUILD_VERSION-bin
+ENV LIVY_BUILD_PATH /apps/build/livy
+RUN cd /apps/build && \
+	git clone https://github.com/apache/incubator-livy.git livy && \
+	cd $LIVY_BUILD_PATH && \
+  git checkout v$LIVY_BUILD_VERSION-rc2 && \
+    mvn -DskipTests -Dspark.version=$SPARK_BUILD_VERSION clean package && \
+    ls -al $LIVY_BUILD_PATH && ls -al $LIVY_BUILD_PATH/assembly && ls -al $LIVY_BUILD_PATH/assembly/target && \
+    unzip $LIVY_BUILD_PATH/assembly/target/apache-livy-${LIVY_BUILD_VERSION}-bin.zip -d /apps && \
+    rm -rf $LIVY_BUILD_PATH && \
+	mkdir -p $LIVY_APP_PATH/upload && \
+  mkdir -p $LIVY_APP_PATH/logs
+
+RUN apt-get update && apt-get install -y python-matplotlib python-pandas
+# RUN pip install matplotlib
+# RUN pip install pandas
+RUN cd /root && wget https://rapidsai-data.s3.us-east-2.amazonaws.com/spark/mortgage.zip && unzip mortgage.zip
+
+ENV LD_LIBRARY_PATH /usr/local/cuda-10.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+ENV PATH /usr/local/cuda-10.0/bin${PATH:+:${PATH}}
+EXPOSE 8998
+
+CMD $LIVY_APP_PATH/bin/livy-server
