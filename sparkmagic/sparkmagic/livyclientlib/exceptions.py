@@ -32,6 +32,8 @@ class DataFrameParseException(LivyClientLibException):
 class LivyUnexpectedStatusException(LivyClientLibException):
     """An exception that will be shown if some unexpected error happens on the Livy side."""
 
+class LivyUnexpectedMIMETypeException(LivyClientLibException):
+    """An exception that will be shown if Livy returns an unexpected MIME type."""
 
 class SessionManagementException(LivyClientLibException):
     """An exception that is thrown by the Session Manager when it is a

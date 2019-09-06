@@ -5,6 +5,7 @@ from nose.tools import assert_equals, with_setup
 from IPython.display import Image
 
 import sparkmagic.utils.configuration as conf
+from sparkmagic.utils.constants import MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
 from sparkmagic.utils.constants import SESSION_KIND_SPARK
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.livysession import LivySession
@@ -46,6 +47,7 @@ def test_execute():
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
     assert_equals(tls.TestLivySession.pi_result, result[1])
+    assert_equals(MIMETYPE_TEXT_PLAIN, result[2])
     spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                         session.id, command.guid)
     spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
@@ -58,6 +60,14 @@ def test_execute():
     assert result[0]
     assert isinstance(result[1], Image)
     assert result[1].data == b"hello"
+    assert_equals(MIMETYPE_IMAGE_PNG, result[2])
+
+    # Now try with HTML result:
+    http_client.get_statement.return_value = {"id":0,"state":"available","output":{"status":"ok", "execution_count":0,"data":{"text/html":"<p>out</p>"}}}
+    result = command.execute(session)
+    assert result[0]
+    assert_equals(u"<p>out</p>", result[1])
+    assert_equals(MIMETYPE_TEXT_HTML, result[2])
 
 
 @with_setup(_setup)
@@ -79,6 +89,7 @@ def test_execute_waiting():
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
     assert_equals(tls.TestLivySession.pi_result, result[1])
+    assert_equals(MIMETYPE_TEXT_PLAIN, result[2])
     spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                         session.id, command.guid)
     spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,
@@ -105,6 +116,7 @@ def test_execute_null_ouput():
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
     assert_equals(u"", result[1])
+    assert_equals(MIMETYPE_TEXT_PLAIN, result[2])
     spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
                                                                                         session.id, command.guid)
     spark_events.emit_statement_execution_end_event.assert_called_once_with(session.guid, session.kind,

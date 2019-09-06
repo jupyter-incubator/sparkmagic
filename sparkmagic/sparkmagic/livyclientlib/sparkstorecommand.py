@@ -38,7 +38,7 @@ class SparkStoreCommand(Command):
     def execute(self, session):
         try:
             command = self.to_command(session.kind, self.output_var)
-            (success, records_text) = command.execute(session)
+            (success, records_text, mimetype) = command.execute(session)
             if not success:
                 raise BadUserDataException(records_text)
             result = records_to_dataframe(records_text, session.kind, self._coerce)

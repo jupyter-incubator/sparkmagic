@@ -435,7 +435,7 @@ def test_get_session_settings():
 def test_spark():
     line = ""
     cell = "some spark code"
-    spark_controller.run_command = MagicMock(return_value=(True, line))
+    spark_controller.run_command = MagicMock(return_value=(True, line, constants.MIMETYPE_TEXT_PLAIN))
 
     magic.spark(line, cell)
 
@@ -460,7 +460,7 @@ def test_spark_with_argument():
 def test_spark_error():
     line = ""
     cell = "some spark code"
-    spark_controller.run_command = MagicMock(return_value=(False, line))
+    spark_controller.run_command = MagicMock(return_value=(False, line, constants.MIMETYPE_TEXT_PLAIN))
 
     magic.spark(line, cell)
 
@@ -511,7 +511,7 @@ def test_spark_expected_exception():
 def test_spark_unexpected_exception_in_storing():
     line = "-o var_name"
     cell = "some spark code"
-    side_effect = [(True,'ok'), Exception('oups')]
+    side_effect = [(True,'ok',constants.MIMETYPE_TEXT_PLAIN), Exception('oups')]
     spark_controller.run_command = MagicMock(side_effect=side_effect)
 
     magic.spark(line, cell)
@@ -525,7 +525,7 @@ def test_spark_unexpected_exception_in_storing():
 def test_spark_expected_exception_in_storing():
     line = "-o var_name"
     cell = "some spark code"
-    side_effect = [(True,'ok'), SessionManagementException('oups')]
+    side_effect = [(True,'ok',constants.MIMETYPE_TEXT_PLAIN), SessionManagementException('oups')]
     spark_controller.run_command = MagicMock(side_effect=side_effect)
 
     magic.spark(line, cell)

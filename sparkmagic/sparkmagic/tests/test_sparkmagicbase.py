@@ -4,7 +4,7 @@ from nose.tools import with_setup, assert_equals, assert_raises
 
 from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils.constants import LANGS_SUPPORTED, SESSION_KIND_PYSPARK, SESSION_KIND_SPARK, \
-    IDLE_SESSION_STATUS, BUSY_SESSION_STATUS
+    IDLE_SESSION_STATUS, BUSY_SESSION_STATUS, MIMETYPE_TEXT_PLAIN
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
 from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUserDataException
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
@@ -139,12 +139,12 @@ def test_print_empty_endpoint_info():
 def test_spark_execution_without_output_var():
     output_var = None
     
-    magic.spark_controller.run_command.return_value = (True,'out')
+    magic.spark_controller.run_command.return_value = (True,'out',MIMETYPE_TEXT_PLAIN)
     magic.execute_spark("", output_var, None, None, None, session, None)
     magic.ipython_display.write.assert_called_once_with('out')
     assert not magic.spark_controller._spark_store_command.called
 
-    magic.spark_controller.run_command.return_value = (False,'out')
+    magic.spark_controller.run_command.return_value = (False,'out',MIMETYPE_TEXT_PLAIN)
     magic.execute_spark("", output_var, None, None, None, session, None)
     magic.ipython_display.send_error.assert_called_once_with('out')
     assert not magic.spark_controller._spark_store_command.called
@@ -156,14 +156,14 @@ def test_spark_execution_with_output_var():
     output_var = "var_name"
     df = 'df'
 
-    magic.spark_controller.run_command.side_effect = [(True,'out'), df]
+    magic.spark_controller.run_command.side_effect = [(True,'out',MIMETYPE_TEXT_PLAIN), df]
     magic.execute_spark("", output_var, None, None, None, session, True)
     magic.ipython_display.write.assert_called_once_with('out')
     magic._spark_store_command.assert_called_once_with(output_var, None, None, None, True)
     assert shell.user_ns[output_var] == df
 
     magic.spark_controller.run_command.side_effect = None
-    magic.spark_controller.run_command.return_value = (False,'out')
+    magic.spark_controller.run_command.return_value = (False,'out',MIMETYPE_TEXT_PLAIN)
     magic.execute_spark("", output_var, None, None, None, session, True)
     magic.ipython_display.send_error.assert_called_once_with('out')
 
@@ -176,7 +176,7 @@ def test_spark_exception_with_output_var():
     output_var = "var_name"
     df = 'df'
 
-    magic.spark_controller.run_command.side_effect = [(True,'out'), exception]
+    magic.spark_controller.run_command.side_effect = [(True,'out',MIMETYPE_TEXT_PLAIN), exception]
     assert_raises(BadUserDataException, magic.execute_spark,"", output_var, None, None, None, session, True)
     magic.ipython_display.write.assert_called_once_with('out')
     magic._spark_store_command.assert_called_once_with(output_var, None, None, None, True)

@@ -380,7 +380,7 @@ class KernelMagics(SparkMagicBase):
     def matplot(self, line, cell="", local_ns=None):
         session = self.spark_controller.get_session_by_name_or_default(self.session_name)
         command = Command("%matplot " + line)
-        (success, out) = command.execute(session)
+        (success, out, mimetype) = command.execute(session)
         if success:
             session.ipython_display.display(out)
         else:

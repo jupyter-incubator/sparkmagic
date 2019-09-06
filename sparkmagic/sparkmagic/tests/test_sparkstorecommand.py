@@ -5,6 +5,7 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 import sparkmagic.utils.configuration as conf
+from sparkmagic.utils.constants import MIMETYPE_TEXT_PLAIN
 from sparkmagic.utils.constants import LONG_RANDOM_VARIABLE_NAME
 from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
 from sparkmagic.livyclientlib.command import Command
@@ -193,7 +194,7 @@ def test_execute_code():
     sparkcommand.to_command = MagicMock(return_value=MagicMock())
     result = """{"z":100, "nullv":null, "y":50}
 {"z":25, "nullv":null, "y":10}"""
-    sparkcommand.to_command.return_value.execute = MagicMock(return_value=(True, result))
+    sparkcommand.to_command.return_value.execute = MagicMock(return_value=(True, result, MIMETYPE_TEXT_PLAIN))
     session = MagicMock()
     session.kind = "pyspark"
     result = sparkcommand.execute(session)
