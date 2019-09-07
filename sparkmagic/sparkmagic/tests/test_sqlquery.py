@@ -178,7 +178,7 @@ def test_execute_sql_no_results():
     result1 = ""
     result_data = pd.DataFrame([])
     session = MagicMock()
-    sqlquery.to_command.return_value.execute.return_value = (True, result1, constants.MIMETYPE_TEXT_PLAIN)
+    sqlquery.to_command.return_value.execute.return_value = (True, result1, MIMETYPE_TEXT_PLAIN)
     session.kind = "spark"
     result = sqlquery.execute(session)
     assert_frame_equal(result, result_data)

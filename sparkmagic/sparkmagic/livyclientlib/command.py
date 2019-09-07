@@ -12,7 +12,7 @@ from sparkmagic.utils.constants import MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, M
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS
-from .exceptions import LivyUnexpectedStatusException, LivyUnexpectedMIMETypeException
+from .exceptions import LivyUnexpectedStatusException
 
 
 class Command(ObjectWithGuid):
@@ -87,14 +87,10 @@ class Command(ObjectWithGuid):
                     if MIMETYPE_IMAGE_PNG in data:
                         image = Image(base64.b64decode(data[MIMETYPE_IMAGE_PNG]))
                         return (True, image, MIMETYPE_IMAGE_PNG)
-                    elif MIMETYPE_TEXT_PLAIN in data:
-                        return (True, data[MIMETYPE_TEXT_PLAIN], MIMETYPE_TEXT_PLAIN)
                     elif MIMETYPE_TEXT_HTML in data:
                         return (True, data[MIMETYPE_TEXT_HTML], MIMETYPE_TEXT_HTML)
                     else:
-                        raise LivyUnexpectedMIMETypeException(u"Unknown MIME type from Livy: '{}'"
-                                                              .format(data))
-
+                        return (True, data[MIMETYPE_TEXT_PLAIN], MIMETYPE_TEXT_PLAIN)
                 elif statement_output[u"status"] == u"error":
                     return (False,
                            statement_output[u"evalue"] + u"\n" + u"".join(statement_output[u"traceback"]),
