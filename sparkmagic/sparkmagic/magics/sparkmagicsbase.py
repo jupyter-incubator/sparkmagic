@@ -45,10 +45,11 @@ class SparkMagicBase(Magics):
         if not success:
             self.ipython_display.send_error(out)
         else:
-            if mimetype == MIMETYPE_TEXT_PLAIN:
-                self.ipython_display.write(out)
-            elif mimetype == MIMETYPE_TEXT_HTML:
-                self.ipython_display.html(out)
+            if isinstance(out, string_types):
+                if mimetype == MIMETYPE_TEXT_HTML:
+                    self.ipython_display.html(out)
+                else:
+                    self.ipython_display.write(out)
             else:
                 self.ipython_display.display(out)
             if output_var is not None:
