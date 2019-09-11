@@ -5,8 +5,7 @@ from nose.tools import assert_equals, with_setup
 from IPython.display import Image
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.constants import MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
-from sparkmagic.utils.constants import SESSION_KIND_SPARK
+from sparkmagic.utils.constants import SESSION_KIND_SPARK, MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.livysession import LivySession
 from . import test_livysession as tls
