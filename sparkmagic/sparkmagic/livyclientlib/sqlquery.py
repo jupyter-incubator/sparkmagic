@@ -52,7 +52,7 @@ class SQLQuery(ObjectWithGuid):
         try:
             command = self.to_command(session.kind, session.sql_context_variable_name)
             command_guid = command.guid
-            (success, records_text) = command.execute(session)
+            (success, records_text, mimetype) = command.execute(session)
             if not success:
                 raise BadUserDataException(records_text)
             result = records_to_dataframe(records_text, session.kind, self._coerce)

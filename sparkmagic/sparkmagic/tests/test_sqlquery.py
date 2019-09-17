@@ -5,7 +5,7 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.constants import LONG_RANDOM_VARIABLE_NAME
+from sparkmagic.utils.constants import LONG_RANDOM_VARIABLE_NAME, MIMETYPE_TEXT_PLAIN
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
@@ -150,7 +150,7 @@ def test_execute_sql():
     sqlquery.to_command = MagicMock(return_value=MagicMock())
     result = """{"z":100, "nullv":null, "y":50}
 {"z":25, "nullv":null, "y":10}"""
-    sqlquery.to_command.return_value.execute = MagicMock(return_value=(True, result))
+    sqlquery.to_command.return_value.execute = MagicMock(return_value=(True, result, MIMETYPE_TEXT_PLAIN))
     result_data = pd.DataFrame([{'z': 100, "nullv": None, 'y': 50}, {'z':25, "nullv":None, 'y':10}], columns=['z', "nullv", 'y'])
     session = MagicMock()
     session.kind = "pyspark"
@@ -177,7 +177,7 @@ def test_execute_sql_no_results():
     result1 = ""
     result_data = pd.DataFrame([])
     session = MagicMock()
-    sqlquery.to_command.return_value.execute.return_value = (True, result1)
+    sqlquery.to_command.return_value.execute.return_value = (True, result1, MIMETYPE_TEXT_PLAIN)
     session.kind = "spark"
     result = sqlquery.execute(session)
     assert_frame_equal(result, result_data)
