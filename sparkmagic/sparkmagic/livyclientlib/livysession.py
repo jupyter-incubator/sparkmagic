@@ -154,14 +154,14 @@ class LivySession(ObjectWithGuid):
             self.ipython_display.html(html)
 
             command = Command("spark")
-            (success, out) = command.execute(self)
+            (success, out, mimetype) = command.execute(self)
 
             if success:
                 self.ipython_display.writeln(u"SparkSession available as 'spark'.")
                 self.sql_context_variable_name = "spark"
             else:
                 command = Command("sqlContext")
-                (success, out) = command.execute(self)
+                (success, out, mimetype) = command.execute(self)
                 if success:
                     self.ipython_display.writeln(u"SparkContext available as 'sc'.")
                     if ("hive" in out.lower()):

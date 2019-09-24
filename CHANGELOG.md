@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.0
+
+### Features
+
+* Added two configuration options that make it easier to run Sparkmagic notebooks with Papermill. Thanks to Michael Diolosa for the patch.
+* Support `text/html` messages from the Livy server; currently Livy/Spark itself don't really do this, but some experimental tools can benefit from this. Thanks to Steve Suh.
+
 ## 0.12.9
 
 ### Features

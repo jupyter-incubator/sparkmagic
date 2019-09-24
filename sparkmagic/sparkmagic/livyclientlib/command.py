@@ -10,7 +10,8 @@ from hdijupyterutils.guid import ObjectWithGuid
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
-from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS
+from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS, \
+    MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
 from .exceptions import LivyUnexpectedStatusException
 
 
@@ -64,7 +65,6 @@ class Command(ObjectWithGuid):
                                      )
         session.ipython_display.display(progress)
 
-        
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
             status = statement[u"state"].lower()
@@ -75,25 +75,26 @@ class Command(ObjectWithGuid):
                 progress.value = statement.get('progress', 0.0)
                 session.sleep(retries)
                 retries += 1
-            else:                
+            else:
                 statement_output = statement[u"output"]
                 progress.close()
 
                 if statement_output is None:
-                    return (True, u"")
+                    return (True, u"", MIMETYPE_TEXT_PLAIN)
 
                 if statement_output[u"status"] == u"ok":
                     data = statement_output[u"data"]
-                    png_encoded = data.get("image/png")
-                    if png_encoded:
-                        image = Image(base64.b64decode(png_encoded))
-                        return (True, image)
+                    if MIMETYPE_IMAGE_PNG in data:
+                        image = Image(base64.b64decode(data[MIMETYPE_IMAGE_PNG]))
+                        return (True, image, MIMETYPE_IMAGE_PNG)
+                    elif MIMETYPE_TEXT_HTML in data:
+                        return (True, data[MIMETYPE_TEXT_HTML], MIMETYPE_TEXT_HTML)
                     else:
-                        return (True,
-                                statement_output[u"data"][u"text/plain"])
+                        return (True, data[MIMETYPE_TEXT_PLAIN], MIMETYPE_TEXT_PLAIN)
                 elif statement_output[u"status"] == u"error":
                     return (False,
-                           statement_output[u"evalue"] + u"\n" + u"".join(statement_output[u"traceback"]))
+                           statement_output[u"evalue"] + u"\n" + u"".join(statement_output[u"traceback"]),
+                           MIMETYPE_TEXT_PLAIN)
                 else:
                     raise LivyUnexpectedStatusException(u"Unknown output status from Livy: '{}'"
                                                         .format(statement_output[u"status"]))
