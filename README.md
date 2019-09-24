@@ -74,6 +74,17 @@ Kerberos support is implemented via the [requests-kerberos](https://github.com/r
 
 Currently, sparkmagic does not support passing a kerberos principal/token, but we welcome pull requests.
 
+## Papermill
+
+If you want Papermill rendering to stop on a Spark error, edit the `~/.sparkmagic/config.json` with the following settings:
+
+```json
+{
+    "spark_statement_errors_are_fatal": True,
+    "shutdown_session_on_spark_statement_errors": True
+}
+```
+
 ## Docker
 
 The included `docker-compose.yml` file will let you spin up a full
