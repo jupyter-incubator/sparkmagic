@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.1
+
+### Other changes
+
+* Fixed silly mistake in the tests.
+
 ## 0.13.0
 
 ### Features

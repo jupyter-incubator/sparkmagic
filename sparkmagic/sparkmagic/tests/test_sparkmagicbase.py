@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 import sparkmagic.utils.configuration as conf
 from mock import MagicMock
 from nose.tools import with_setup, assert_equals, assert_raises
@@ -193,7 +193,7 @@ def test_spark_statement_exception():
     magic._spark_store_command = MagicMock(return_value=mockSparkCommand)
     exception = BadUserDataException("Ka-boom!")
 
-    magic.spark_controller.run_command.side_effect = [(False, 'out'), exception]
+    magic.spark_controller.run_command.side_effect = [(False, 'out', "text/plain"), exception]
     assert_raises(SparkStatementException, magic.execute_spark,"", None, None, None, None, session, True)
     magic.spark_controller.cleanup.assert_not_called()
 
@@ -208,6 +208,6 @@ def test_spark_statement_exception_shutdowns_livy_session():
     magic._spark_store_command = MagicMock(return_value=mockSparkCommand)
     exception = BadUserDataException("Ka-boom!")
 
-    magic.spark_controller.run_command.side_effect = [(False, 'out'), exception]
+    magic.spark_controller.run_command.side_effect = [(False, 'out', "text/plain"), exception]
     assert_raises(SparkStatementException, magic.execute_spark,"", None, None, None, None, session, True)
     magic.spark_controller.cleanup.assert_called_once()
