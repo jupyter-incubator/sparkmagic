@@ -51,6 +51,10 @@ class BadUserDataException(LivyClientLibException):
 class SqlContextNotFoundException(LivyClientLibException):
     """Exception that is thrown when the SQL context is not found."""
 
+
+class SparkStatementException(LivyClientLibException):
+    """Exception that is thrown when an error occurs while parsing or executing Spark statements."""
+
 # == DECORATORS FOR EXCEPTION HANDLING ==
 EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, SqlContextNotFoundException,
                        HttpClientException, LivyClientTimeoutException, SessionManagementException]
