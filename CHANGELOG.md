@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.0 (UNRELEASED)
+
+### Bug fixes
+
+* Enabled heartbeat by default, so long-running tasks don't time out. Thanks to John Pugliesi for the bug report.
+
 ## 0.13.1
 
 ### Other changes
