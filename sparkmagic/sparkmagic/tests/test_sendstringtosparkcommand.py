@@ -61,7 +61,7 @@ def test_should_create_a_valid_python_expression():
     output_variable_name = "output"
     sparkcommand = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
     assert_equals(sparkcommand._pyspark_command(input_variable_name, input_variable_value, output_variable_name),
-                  Command(u'{} = \"\"\"{}\"\"\"'.format(output_variable_name, input_variable_value)))
+                  Command(u'{} = {}'.format(output_variable_name, repr(input_variable_value))))
 
 def test_should_create_a_valid_r_expression():
     input_variable_name = "input"

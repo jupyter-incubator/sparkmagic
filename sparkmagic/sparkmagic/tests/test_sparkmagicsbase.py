@@ -168,7 +168,7 @@ def test_send_to_spark_should_print_error_when_str_command_failed():
     output_value = "error"
     max_rows = 25000
     magic.shell.user_ns[input_variable_name] = input_variable_value
-    magic.spark_controller.run_command.return_value = (False, output_value)
+    magic.spark_controller.run_command.return_value = (False, output_value, "text/plain")
 
     magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, max_rows, None)
 
@@ -184,7 +184,7 @@ def test_send_to_spark_should_print_error_when_df_command_failed():
     output_value = "error"
     max_rows = 25000
     magic.shell.user_ns[input_variable_name] = input_variable_value
-    magic.spark_controller.run_command.return_value = (False, output_value)
+    magic.spark_controller.run_command.return_value = (False, output_value, "text/plain")
 
     magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, max_rows, None)
 
@@ -199,7 +199,7 @@ def test_send_to_spark_should_name_the_output_variable_the_same_as_input_name_wh
     output_variable_name = None
     max_rows = 25000
     magic.shell.user_ns[input_variable_name] = input_variable_value
-    magic.spark_controller.run_command.return_value = (True, output_value)
+    magic.spark_controller.run_command.return_value = (True, output_value, "text/plain")
     expected_message = u'Successfully passed \'{}\' as \'{}\' to Spark kernel'.format(input_variable_name, input_variable_name)
 
     magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, max_rows, None)
@@ -215,7 +215,7 @@ def test_send_to_spark_should_write_successfully_when_everything_is_correct():
     max_rows = 25000
     var_type = "str"
     magic.shell.user_ns[input_variable_name] = input_variable_value
-    magic.spark_controller.run_command.return_value = (True, output_value)
+    magic.spark_controller.run_command.return_value = (True, output_value, "text/plain")
     expected_message = u'Successfully passed \'{}\' as \'{}\' to Spark kernel'.format(input_variable_name, output_variable_name)
 
     magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, max_rows, None)

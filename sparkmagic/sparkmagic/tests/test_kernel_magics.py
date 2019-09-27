@@ -459,7 +459,7 @@ def test_send_to_spark_ok():
     line = "-i input -n name -t str"
     cell = ""
     magic.shell.user_ns["input"] = None
-    spark_controller.run_command = MagicMock(return_value=(True, line))
+    spark_controller.run_command = MagicMock(return_value=(True, line, "text/plain"))
 
     magic.send_to_spark(line, cell)
 
