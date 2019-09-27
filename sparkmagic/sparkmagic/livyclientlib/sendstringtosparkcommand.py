@@ -14,7 +14,7 @@ class SendStringToSparkCommand(SendToSparkCommand):
 
     def _pyspark_command(self, input_variable_name, input_variable_value, output_variable_name):
         self._assert_input_is_string_type(input_variable_name, input_variable_value)
-        pyspark_code = u'{} = \"\"\"{}\"\"\"'.format(output_variable_name, input_variable_value)
+        pyspark_code = u'{} = {}'.format(output_variable_name, repr(input_variable_value))
         return Command(pyspark_code)
 
     def _r_command(self, input_variable_name, input_variable_value, output_variable_name):
