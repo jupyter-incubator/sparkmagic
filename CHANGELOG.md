@@ -5,6 +5,7 @@
 ### Bug fixes
 
 * Enabled heartbeat by default, so long-running tasks don't time out. Thanks to John Pugliesi for the bug report.
+* The PySpark kernel uses Python 3 lexer, instead of Python 2. Python 2 support is going away in the near future.
 
 ## 0.13.1
 
