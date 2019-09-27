@@ -12,7 +12,7 @@ class SendStringToSparkCommand(SendToSparkCommand):
         scala_code = u'var {} = """{}"""'.format(output_variable_name, input_variable_value)
         return Command(scala_code)
 
-    def _pyspark_command(self, input_variable_name, input_variable_value, output_variable_name, python2):
+    def _pyspark_command(self, input_variable_name, input_variable_value, output_variable_name):
         self._assert_input_is_string_type(input_variable_name, input_variable_value)
         pyspark_code = u'{} = \"\"\"{}\"\"\"'.format(output_variable_name, input_variable_value)
         return Command(pyspark_code)

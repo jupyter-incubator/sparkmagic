@@ -36,17 +36,7 @@ def test_send_to_python():
     sparkcommand = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, maxrows)
     sparkcommand._pyspark_command = MagicMock(return_value=MagicMock())
     sparkcommand.to_command(constants.SESSION_KIND_PYSPARK, input_variable_name, input_variable_value, output_variable_name)
-    sparkcommand._pyspark_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name, python2=True)
-
-def test_send_to_python3():
-    input_variable_name = 'input'
-    input_variable_value = pd.DataFrame({'A': [1], 'B' : [2]})
-    output_variable_name = 'output'
-    maxrows = 1
-    sparkcommand = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, maxrows)
-    sparkcommand._pyspark_command = MagicMock(return_value=MagicMock())
-    sparkcommand.to_command(constants.SESSION_KIND_PYSPARK3, input_variable_name, input_variable_value, output_variable_name)
-    sparkcommand._pyspark_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name, python2=False)
+    sparkcommand._pyspark_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name)
 
 def test_should_create_a_valid_scala_expression():
     input_variable_name = "input"
@@ -86,13 +76,7 @@ def test_should_create_a_valid_python3_expression():
     output_variable_name = "output"
     pandas_df_jsonized = u'''[{"A":1,"B":2}]'''
 
-    expected_python3_code = u'''
-        import json
-        
-        def json_loads_byteified(json_text):
-            return json.loads(json_text)
-            
-    '''
+    expected_python3_code = SendPandasDfToSparkCommand._python_decode
 
     expected_python3_code += u'''
         json_array = json_loads_byteified('{}')
@@ -100,7 +84,7 @@ def test_should_create_a_valid_python3_expression():
         {} = spark.read.json(rdd_json_array)'''.format(pandas_df_jsonized, output_variable_name)
 
     sparkcommand = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, 1)
-    assert_equals(sparkcommand._pyspark_command(input_variable_name, input_variable_value, output_variable_name, python2=False),
+    assert_equals(sparkcommand._pyspark_command(input_variable_name, input_variable_value, output_variable_name),
                   Command(expected_python3_code))
 
 def test_should_create_a_valid_python2_expression():
@@ -109,28 +93,7 @@ def test_should_create_a_valid_python2_expression():
     output_variable_name = "output"
     pandas_df_jsonized = u'''[{"A":1,"B":2}]'''
 
-    expected_python2_code = u'''
-        import json
-
-        def json_loads_byteified(json_text):
-            return _byteify(
-                json.loads(json_text, object_hook=_byteify),
-                ignore_dicts=True
-            )
-        
-        def _byteify(data, ignore_dicts = False):
-            if isinstance(data, unicode):
-                return data.encode('utf-8')
-            if isinstance(data, list):
-                return [ _byteify(item, ignore_dicts=True) for item in data ]
-            if isinstance(data, dict) and not ignore_dicts:
-                return {
-                    _byteify(key, ignore_dicts=True): _byteify(value, ignore_dicts=True)
-                    for key, value in data.iteritems()
-                }
-            return data
-            
-    '''
+    expected_python2_code = SendPandasDfToSparkCommand._python_decode
 
     expected_python2_code += u'''
         json_array = json_loads_byteified('{}')
@@ -138,7 +101,7 @@ def test_should_create_a_valid_python2_expression():
         {} = spark.read.json(rdd_json_array)'''.format(pandas_df_jsonized, output_variable_name)
 
     sparkcommand = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, 1)
-    assert_equals(sparkcommand._pyspark_command(input_variable_name, input_variable_value, output_variable_name, python2=True),
+    assert_equals(sparkcommand._pyspark_command(input_variable_name, input_variable_value, output_variable_name),
                   Command(expected_python2_code))
 
 def test_should_properly_limit_pandas_dataframe():

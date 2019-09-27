@@ -12,15 +12,20 @@ import pandas as pd
 class SendPandasDfToSparkCommand(SendToSparkCommand):
 
     # convert unicode to utf8 or pyspark will mark data as corrupted(and deserialize incorrectly)
-    _python_2_decode = u'''
+    _python_decode = u'''
+        import sys
         import json
 
-        def json_loads_byteified(json_text):
-            return _byteify(
-                json.loads(json_text, object_hook=_byteify),
-                ignore_dicts=True
-            )
-        
+        if sys.version_info.major == 2:
+            def json_loads_byteified(json_text):
+                return _byteify(
+                    json.loads(json_text, object_hook=_byteify),
+                    ignore_dicts=True
+                )
+        else:
+            def json_loads_byteified(json_text):
+                return json.loads(json_text)
+
         def _byteify(data, ignore_dicts = False):
             if isinstance(data, unicode):
                 return data.encode('utf-8')
@@ -32,16 +37,6 @@ class SendPandasDfToSparkCommand(SendToSparkCommand):
                     for key, value in data.iteritems()
                 }
             return data
-            
-    '''
-
-    # just an alias
-    _python_3_decode = u'''
-        import json
-        
-        def json_loads_byteified(json_text):
-            return json.loads(json_text)
-            
     '''
 
     def __init__(self, input_variable_name, input_variable_value, output_variable_name, max_rows):
@@ -58,13 +53,10 @@ class SendPandasDfToSparkCommand(SendToSparkCommand):
 
         return Command(scala_code)
 
-    def _pyspark_command(self, input_variable_name, pandas_df, output_variable_name, python2):
+    def _pyspark_command(self, input_variable_name, pandas_df, output_variable_name):
         self._assert_input_is_pandas_dataframe(input_variable_name, pandas_df)
 
-        if python2:
-            pyspark_code = self._python_2_decode
-        else:
-            pyspark_code = self._python_3_decode
+        pyspark_code = self._python_decode
 
         pandas_json = self._get_dataframe_as_json(pandas_df)
 

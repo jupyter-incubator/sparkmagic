@@ -31,16 +31,7 @@ def test_send_to_pyspark():
     sparkcommand = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
     sparkcommand._pyspark_command = MagicMock(return_value=MagicMock())
     sparkcommand.to_command(constants.SESSION_KIND_PYSPARK, input_variable_name, input_variable_value, output_variable_name)
-    sparkcommand._pyspark_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name, python2=True)
-
-def test_send_to_pyspark3():
-    input_variable_name = "input"
-    input_variable_value = "value"
-    output_variable_name = "output"
-    sparkcommand = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
-    sparkcommand._pyspark_command = MagicMock(return_value=MagicMock())
-    sparkcommand.to_command(constants.SESSION_KIND_PYSPARK3, input_variable_name, input_variable_value, output_variable_name)
-    sparkcommand._pyspark_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name, python2=False)
+    sparkcommand._pyspark_command.assert_called_with(input_variable_name, input_variable_value, output_variable_name)
 
 def test_to_command_invalid():
     input_variable_name = "input"
@@ -69,7 +60,7 @@ def test_should_create_a_valid_python_expression():
     input_variable_value = "value"
     output_variable_name = "output"
     sparkcommand = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
-    assert_equals(sparkcommand._pyspark_command(input_variable_name, input_variable_value, output_variable_name, False),
+    assert_equals(sparkcommand._pyspark_command(input_variable_name, input_variable_value, output_variable_name),
                   Command(u'{} = \"\"\"{}\"\"\"'.format(output_variable_name, input_variable_value)))
 
 def test_should_create_a_valid_r_expression():
