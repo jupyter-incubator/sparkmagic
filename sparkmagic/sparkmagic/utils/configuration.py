@@ -255,7 +255,9 @@ def _credentials_override(f):
     If 'base64_password' is not set, it will fallback to 'password' in config.
     """
     credentials = f()
-    base64_decoded_credentials = {k: credentials.get(k) for k in ('username', 'password', 'url', 'auth')}
+    base64_decoded_credentials = {k: credentials.get(k) for k in (
+        'username', 'password', 'url', 'auth', 'ssl_client_cert', 'ssl_client_key', 'ssl_verify'
+    )}
     base64_password = credentials.get('base64_password')
     if base64_password is not None:
         try:

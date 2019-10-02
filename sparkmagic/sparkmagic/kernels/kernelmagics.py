@@ -18,7 +18,7 @@ from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import LANGS_SUPPORTED
 from sparkmagic.livyclientlib.command import Command
-from sparkmagic.livyclientlib.endpoint import Endpoint
+from sparkmagic.livyclientlib.endpoint import Endpoint, SSLInfo
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
 from sparkmagic.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
     BadUserDataException
@@ -389,7 +389,12 @@ class KernelMagics(SparkMagicBase):
     def refresh_configuration(self):
         credentials = getattr(conf, 'base64_kernel_' + self.language + '_credentials')()
         (username, password, auth, url) = (credentials['username'], credentials['password'], credentials['auth'], credentials['url'])
-        self.endpoint = Endpoint(url, auth, username, password)
+        (ssl_client_cert, ssl_client_key, ssl_verify) = (credentials.get('ssl_client_cert'), credentials.get('ssl_client_key'), credentials.get('ssl_verify'),)
+        if ssl_client_cert is None:
+            ssl_info = None
+        else:
+            ssl_info = SSLInfo(ssl_client_cert, ssl_client_key, ssl_verify)
+        self.endpoint = Endpoint(url, auth, username, password, ssl_info=ssl_info)
 
     def get_session_settings(self, line, force):
         line = line.strip()
