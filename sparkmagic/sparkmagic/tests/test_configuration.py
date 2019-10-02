@@ -28,7 +28,10 @@ def test_configuration_auth_missing_basic_auth():
     kpc = { 'username': 'U', 'password': 'P', 'url': 'L'}
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    assert_equals(conf.base64_kernel_python_credentials(), { 'username': 'U', 'password': 'P', 'url': 'L', 'auth': AUTH_BASIC })
+    assert_equals(conf.base64_kernel_python_credentials(), { 
+        'username': 'U', 'password': 'P', 'url': 'L', 'auth': AUTH_BASIC,
+        'ssl_client_cert': None, 'ssl_client_key': None, 'ssl_verify': None
+    })
 
 
 @with_setup(_setup)
