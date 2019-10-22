@@ -249,6 +249,12 @@ def shutdown_session_on_spark_statement_errors():
     return False
 
 
+@_with_override
+def all_errors_are_fatal():
+    # If set to true, any error will be considered fatal and be raised
+    return False
+
+
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.
