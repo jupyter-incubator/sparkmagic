@@ -1,4 +1,5 @@
 from hdijupyterutils.guid import ObjectWithGuid
+from hdijupyterutils.ipythondisplay import IpythonDisplay
 
 from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime, records_to_dataframe
 import sparkmagic.utils.configuration as conf
@@ -25,6 +26,7 @@ class SQLQuery(ObjectWithGuid):
             raise BadUserDataException(u'maxrows (-n) must be an integer')
         if not 0.0 <= samplefraction <= 1.0:
             raise BadUserDataException(u'samplefraction (-r) must be a float between 0.0 and 1.0')
+        self.ipython_display = IpythonDisplay()
 
         self.query = query
         self.samplemethod = samplemethod
@@ -56,8 +58,6 @@ class SQLQuery(ObjectWithGuid):
             (success, records_text, mimetype) = command.execute(session)
             if not success:
                 if conf.spark_statement_errors_are_fatal():
-                    if conf.shutdown_session_on_spark_statement_errors():
-                        self.spark_controller.cleanup()
                     raise SparkStatementException(records_text)
                 self.ipython_display.send_error(records_text)
             else:
