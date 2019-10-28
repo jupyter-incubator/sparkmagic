@@ -1,6 +1,6 @@
 import traceback
 from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, INTERNAL_ERROR_MSG
-import sparkmagic.utils.configuration as conf
+from sparkmagic.utils import configuration as conf
 
 
 # == EXCEPTIONS ==
