@@ -81,7 +81,8 @@ If you want Papermill rendering to stop on a Spark error, edit the `~/.sparkmagi
 ```json
 {
     "spark_statement_errors_are_fatal": true,
-    "shutdown_session_on_spark_statement_errors": true
+    "shutdown_session_on_spark_statement_errors": true,
+    "all_errors_are_fatal": true
 }
 ```
 
