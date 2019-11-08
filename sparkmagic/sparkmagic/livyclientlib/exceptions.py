@@ -1,6 +1,5 @@
 import traceback
 from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, INTERNAL_ERROR_MSG
-from sparkmagic.utils import configuration as conf
 
 
 # == EXCEPTIONS ==
@@ -65,6 +64,7 @@ def handle_expected_exceptions(f):
     @handle_expected_exceptions
     def fn(self, ...):
         etc..."""
+    from sparkmagic.utils import configuration as conf
     exceptions_to_handle = tuple(EXPECTED_EXCEPTIONS)
 
     # Notice that we're NOT handling e.DataFrameParseException here. That's because DataFrameParseException
@@ -96,6 +96,7 @@ def wrap_unexpected_exceptions(f, execute_if_error=None):
     @wrap_unexpected_exceptions
     def fn(self, ...):
         ..etc """
+    from sparkmagic.utils import configuration as conf
     def handle_exception(self, e):
         self.logger.error(u"ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(e, traceback.format_exc()))
         self.ipython_display.send_error(INTERNAL_ERROR_MSG.format(e))
