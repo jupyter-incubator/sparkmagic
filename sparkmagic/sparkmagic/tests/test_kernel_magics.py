@@ -2,12 +2,12 @@ from mock import MagicMock
 from nose.tools import with_setup, raises, assert_equals, assert_is
 from IPython.core.magic import magics_class
 
-import sparkmagic.utils.constants as constants
 import sparkmagic.utils.configuration as conf
+import sparkmagic.utils.constants as constants
 from sparkmagic.kernels.kernelmagics import KernelMagics
 from sparkmagic.livyclientlib.exceptions import LivyClientTimeoutException, BadUserDataException,\
     LivyUnexpectedStatusException, SessionManagementException,\
-    HttpClientException, DataFrameParseException, SqlContextNotFoundException
+    HttpClientException, DataFrameParseException, SqlContextNotFoundException, SparkStatementException
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.utils.constants import NO_AUTH, AUTH_BASIC
@@ -501,7 +501,7 @@ def test_spark_error():
 
     magic.spark(line, cell)
 
-    ipython_display.send_error.assert_called_once_with(line)
+    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG.format(line))
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
     spark_controller.run_command.assert_called_once_with(Command(cell), None)
@@ -543,6 +543,22 @@ def test_spark_expected_exception():
     spark_controller.run_command.assert_called_once_with(Command(cell), None)
     ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG
                                                        .format(spark_controller.run_command.side_effect))
+
+
+@with_setup(_setup, _teardown)
+@raises(SparkStatementException)
+def test_spark_fatal_spark_statement_exception():
+    conf.override_all({
+        "all_errors_are_fatal": True,
+    })
+
+    line = ""
+    cell = "some spark code"
+
+    spark_controller.run_command = MagicMock(side_effect=SparkStatementException('Oh no!'))
+
+    magic.spark(line, cell)
+
 
 @with_setup(_setup, _teardown)
 def test_spark_unexpected_exception_in_storing():
