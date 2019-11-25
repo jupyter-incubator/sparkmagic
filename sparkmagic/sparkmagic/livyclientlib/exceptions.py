@@ -22,7 +22,6 @@ class HttpClientException(LivyClientLibException):
 class LivyClientTimeoutException(LivyClientLibException):
     """An exception for timeouts while interacting with Livy."""
 
-
 class DataFrameParseException(LivyClientLibException):
     """An internal error which suggests a bad implementation of dataframe parsing from JSON --
     if we get a JSON parsing error when parsing the results from the Livy server, this exception
@@ -46,7 +45,7 @@ class BadUserConfigurationException(LivyClientLibException):
 class BadUserDataException(LivyClientLibException):
     """An exception that is thrown when data provided by the user is invalid
     in some way."""
-    
+
 
 class SqlContextNotFoundException(LivyClientLibException):
     """Exception that is thrown when the SQL context is not found."""
@@ -56,9 +55,7 @@ class SparkStatementException(LivyClientLibException):
     """Exception that is thrown when an error occurs while parsing or executing Spark statements."""
 
 # == DECORATORS FOR EXCEPTION HANDLING ==
-EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, SqlContextNotFoundException,
-                       HttpClientException, LivyClientTimeoutException, SessionManagementException]
-
+EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, SqlContextNotFoundException, HttpClientException, LivyClientTimeoutException, SessionManagementException, SparkStatementException]
 
 def handle_expected_exceptions(f):
     """A decorator that handles expected exceptions. Self can be any object with
@@ -67,6 +64,7 @@ def handle_expected_exceptions(f):
     @handle_expected_exceptions
     def fn(self, ...):
         etc..."""
+    from sparkmagic.utils import configuration as conf
     exceptions_to_handle = tuple(EXPECTED_EXCEPTIONS)
 
     # Notice that we're NOT handling e.DataFrameParseException here. That's because DataFrameParseException
@@ -75,6 +73,9 @@ def handle_expected_exceptions(f):
         try:
             out = f(self, *args, **kwargs)
         except exceptions_to_handle as err:
+            if conf.all_errors_are_fatal():
+                raise err
+
             # Do not log! as some messages may contain private client information
             self.ipython_display.send_error(EXPECTED_ERROR_MSG.format(err))
             return None
@@ -95,13 +96,19 @@ def wrap_unexpected_exceptions(f, execute_if_error=None):
     @wrap_unexpected_exceptions
     def fn(self, ...):
         ..etc """
+    from sparkmagic.utils import configuration as conf
+    def handle_exception(self, e):
+        self.logger.error(u"ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(e, traceback.format_exc()))
+        self.ipython_display.send_error(INTERNAL_ERROR_MSG.format(e))
+        return None if execute_if_error is None else execute_if_error()
+
     def wrapped(self, *args, **kwargs):
         try:
             out = f(self, *args, **kwargs)
-        except Exception as e:
-            self.logger.error(u"ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(e, traceback.format_exc()))
-            self.ipython_display.send_error(INTERNAL_ERROR_MSG.format(e))
-            return None if execute_if_error is None else execute_if_error()
+        except Exception as err:
+            if conf.all_errors_are_fatal():
+                raise err
+            return handle_exception(self, err)
         else:
             return out
     wrapped.__name__ = f.__name__
