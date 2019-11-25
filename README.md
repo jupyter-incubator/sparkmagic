@@ -21,6 +21,7 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 * Automatic visualization of SQL queries in the PySpark, Spark and SparkR kernels; use an easy visual interface to interactively construct visualizations, no code required
 * Easy access to Spark application information and logs (`%%info` magic)
 * Ability to capture the output of SQL queries as Pandas dataframes to interact with other Python libraries (e.g. matplotlib)
+* Send local files or dataframes to a remote cluster (e.g. sending pretrained local ML model straight to the Spark cluster)
 * Authenticate to Livy via Basic Access authentication or via Kerberos
 
 ## Examples
@@ -35,6 +36,10 @@ The sparkmagic library provides a %%spark magic that you can use to easily run c
 
 The sparkmagic library also provides a set of Scala and Python kernels that allow you to automatically connect to a remote Spark cluster, run code and SQL queries, manage your Livy server and Spark job configuration, and generate automatic visualizations.
 See [Pyspark](examples/Pyspark%20Kernel.ipynb) and [Spark](examples/Spark%20Kernel.ipynb) sample notebooks.
+
+### 3. Sending data to Spark%20Kernel
+
+See the [sending data to Spark notebook](examples/Send local data to Spark.ipynb).
 
 ## Installation
 
