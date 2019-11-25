@@ -185,10 +185,6 @@ def test_spark_exception_with_output_var():
 
 @with_setup(_setup, _teardown)
 def test_spark_statement_exception():
-    conf.override_all({
-        "spark_statement_errors_are_fatal": True
-    })
-
     mockSparkCommand = MagicMock()
     magic._spark_store_command = MagicMock(return_value=mockSparkCommand)
     exception = BadUserDataException("Ka-boom!")
@@ -200,7 +196,6 @@ def test_spark_statement_exception():
 @with_setup(_setup, _teardown)
 def test_spark_statement_exception_shutdowns_livy_session():
     conf.override_all({
-        "spark_statement_errors_are_fatal": True,
         "shutdown_session_on_spark_statement_errors": True
     })
 

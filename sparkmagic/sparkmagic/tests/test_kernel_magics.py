@@ -512,7 +512,6 @@ def test_spark_expected_exception():
 @raises(SparkStatementException)
 def test_spark_fatal_spark_statement_exception():
     conf.override_all({
-        "spark_statement_errors_are_fatal": True,
         "all_errors_are_fatal": True,
     })
 

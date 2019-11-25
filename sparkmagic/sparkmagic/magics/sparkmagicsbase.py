@@ -43,13 +43,10 @@ class SparkMagicBase(Magics):
     def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce):
         (success, out, mimetype) = self.spark_controller.run_command(Command(cell), session_name)
         if not success:
-            if conf.spark_statement_errors_are_fatal():
-                if conf.shutdown_session_on_spark_statement_errors():
-                    self.spark_controller.cleanup()
+            if conf.shutdown_session_on_spark_statement_errors():
+                self.spark_controller.cleanup()
 
-                raise SparkStatementException(out)
-
-            self.ipython_display.send_error(out)
+            raise SparkStatementException(out)
         else:
             if isinstance(out, string_types):
                 if mimetype == MIMETYPE_TEXT_HTML:
