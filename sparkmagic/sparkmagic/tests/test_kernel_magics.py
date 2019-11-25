@@ -464,7 +464,7 @@ def test_spark_error():
 
     magic.spark(line, cell)
 
-    ipython_display.send_error.assert_called_once_with(line)
+    ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG.format(line))
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
     spark_controller.run_command.assert_called_once_with(Command(cell), None)
