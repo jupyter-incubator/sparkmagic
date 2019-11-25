@@ -5,7 +5,7 @@ from nose.tools import with_setup, assert_equals, assert_raises, raises
 
 from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils.constants import LANGS_SUPPORTED, SESSION_KIND_PYSPARK, SESSION_KIND_SPARK, \
-    IDLE_SESSION_STATUS, BUSY_SESSION_STATUS, MIMETYPE_TEXT_PLAIN
+    IDLE_SESSION_STATUS, BUSY_SESSION_STATUS, MIMETYPE_TEXT_PLAIN, EXPECTED_ERROR_MSG
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
 from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUserDataException, SparkStatementException
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
@@ -20,6 +20,7 @@ def _setup():
     session = MagicMock()
     magic.spark_controller = MagicMock()
     magic.ipython_display = MagicMock()
+    conf.override_all({})
 
 def _teardown():
     pass
@@ -233,8 +234,7 @@ def test_spark_execution_without_output_var():
     assert not magic.spark_controller._spark_store_command.called
 
     magic.spark_controller.run_command.return_value = (False,'out',MIMETYPE_TEXT_PLAIN)
-    magic.execute_spark("", output_var, None, None, None, session, None)
-    magic.ipython_display.send_error.assert_called_once_with('out')
+    assert_raises(SparkStatementException, magic.execute_spark,"", output_var, None, None, None, session, True)
     assert not magic.spark_controller._spark_store_command.called
 
 @with_setup(_setup, _teardown)
@@ -252,8 +252,7 @@ def test_spark_execution_with_output_var():
 
     magic.spark_controller.run_command.side_effect = None
     magic.spark_controller.run_command.return_value = (False,'out',MIMETYPE_TEXT_PLAIN)
-    magic.execute_spark("", output_var, None, None, None, session, True)
-    magic.ipython_display.send_error.assert_called_once_with('out')
+    assert_raises(SparkStatementException, magic.execute_spark,"", output_var, None, None, None, session, True)
 
 
 @with_setup(_setup, _teardown)
@@ -272,10 +271,6 @@ def test_spark_exception_with_output_var():
 
 @with_setup(_setup, _teardown)
 def test_spark_statement_exception():
-    conf.override_all({
-        "spark_statement_errors_are_fatal": True
-    })
-
     mockSparkCommand = MagicMock()
     magic._spark_store_command = MagicMock(return_value=mockSparkCommand)
     exception = BadUserDataException("Ka-boom!")
@@ -287,7 +282,6 @@ def test_spark_statement_exception():
 @with_setup(_setup, _teardown)
 def test_spark_statement_exception_shutdowns_livy_session():
     conf.override_all({
-        "spark_statement_errors_are_fatal": True,
         "shutdown_session_on_spark_statement_errors": True
     })
 
