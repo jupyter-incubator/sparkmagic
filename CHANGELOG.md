@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.14.0 (UNRELEASED)
+## 0.14.0
 
 ### Bug fixes
 
