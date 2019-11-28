@@ -1,20 +1,22 @@
-﻿from mock import MagicMock, PropertyMock
+﻿import atexit
+from mock import MagicMock, PropertyMock
 from nose.tools import raises, assert_equals
 
+import sparkmagic.utils.configuration as conf
 from sparkmagic.livyclientlib.exceptions import SessionManagementException
 from sparkmagic.livyclientlib.sessionmanager import SessionManager
 
 
 @raises(SessionManagementException)
 def test_get_client_throws_when_client_not_exists():
-    manager = SessionManager()
+    manager = get_session_manager()
 
     manager.get_session("name")
 
 
 def test_get_client():
     client = MagicMock()
-    manager = SessionManager()
+    manager = get_session_manager()
 
     manager.add_session("name", client)
 
@@ -24,7 +26,7 @@ def test_get_client():
 @raises(SessionManagementException)
 def test_delete_client():
     client = MagicMock()
-    manager = SessionManager()
+    manager = get_session_manager()
 
     manager.add_session("name", client)
     manager.delete_client("name")
@@ -34,7 +36,7 @@ def test_delete_client():
 
 @raises(SessionManagementException)
 def test_delete_client_throws_when_client_not_exists():
-    manager = SessionManager()
+    manager = get_session_manager()
 
     manager.delete_client("name")
 
@@ -42,7 +44,7 @@ def test_delete_client_throws_when_client_not_exists():
 @raises(SessionManagementException)
 def test_add_client_throws_when_client_exists():
     client = MagicMock()
-    manager = SessionManager()
+    manager = get_session_manager()
 
     manager.add_session("name", client)
     manager.add_session("name", client)
@@ -50,7 +52,7 @@ def test_add_client_throws_when_client_exists():
 
 def test_client_names_returned():
     client = MagicMock()
-    manager = SessionManager()
+    manager = get_session_manager()
 
     manager.add_session("name0", client)
     manager.add_session("name1", client)
@@ -60,7 +62,7 @@ def test_client_names_returned():
 
 def test_get_any_client():
     client = MagicMock()
-    manager = SessionManager()
+    manager = get_session_manager()
 
     manager.add_session("name", client)
 
@@ -69,7 +71,7 @@ def test_get_any_client():
 
 @raises(SessionManagementException)
 def test_get_any_client_raises_exception_with_no_client():
-    manager = SessionManager()
+    manager = get_session_manager()
 
     manager.get_any_session()
 
@@ -77,7 +79,7 @@ def test_get_any_client_raises_exception_with_no_client():
 @raises(SessionManagementException)
 def test_get_any_client_raises_exception_with_two_clients():
     client = MagicMock()
-    manager = SessionManager()
+    manager = get_session_manager()
     manager.add_session("name0", client)
     manager.add_session("name1", client)
 
@@ -87,7 +89,7 @@ def test_get_any_client_raises_exception_with_two_clients():
 def test_clean_up():
     client0 = MagicMock()
     client1 = MagicMock()
-    manager = SessionManager()
+    manager = get_session_manager()
     manager.add_session("name0", client0)
     manager.add_session("name1", client1)
 
@@ -97,8 +99,23 @@ def test_clean_up():
     client1.delete.assert_called_once_with()
 
 
+def test_cleanup_all_sessions_on_exit():
+    conf.override(conf.cleanup_all_sessions_on_exit.__name__, True)
+    client0 = MagicMock()
+    client1 = MagicMock()
+    manager = get_session_manager()
+    manager.add_session("name0", client0)
+    manager.add_session("name1", client1)
+
+    atexit._run_exitfuncs()
+
+    client0.delete.assert_called_once_with()
+    client1.delete.assert_called_once_with()
+    manager.ipython_display.writeln.assert_called_once_with(u"Cleaning up livy sessions on exit is enabled")
+
+
 def test_get_session_id_for_client():
-    manager = SessionManager()
+    manager = get_session_manager()
     manager.get_sessions_list = MagicMock(return_value=["name"])
     manager._sessions["name"] = MagicMock()
 
@@ -108,7 +125,7 @@ def test_get_session_id_for_client():
 
 
 def test_get_session_name_by_id_endpoint():
-    manager = SessionManager()
+    manager = get_session_manager()
     id_to_search = "0"
     endpoint_to_search = "endpoint"
     name_to_search = "name"
@@ -126,9 +143,14 @@ def test_get_session_name_by_id_endpoint():
 
 
 def test_get_session_id_for_client_not_there():
-    manager = SessionManager()
+    manager = get_session_manager()
     manager.get_sessions_list = MagicMock(return_value=[])
 
     id = manager.get_session_id_for_client("name")
 
     assert id is None
+
+
+def get_session_manager():
+    ipython_display = MagicMock()
+    return SessionManager(ipython_display)

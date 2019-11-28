@@ -1,5 +1,6 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
+import atexit
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.livyclientlib.exceptions import SessionManagementException
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
@@ -7,10 +8,13 @@ import sparkmagic.utils.configuration as conf
 
 
 class SessionManager(object):
-    def __init__(self):
+    def __init__(self, ipython_display):
         self.logger = SparkLog(u"SessionManager")
+        self.ipython_display = ipython_display
 
         self._sessions = dict()
+
+        self._register_cleanup_on_exit()
 
     @property
     def sessions(self):
@@ -71,3 +75,16 @@ class SessionManager(object):
         else:
             raise SessionManagementException(u"Could not find '{}' session in list of saved sessions. Possible sessions are {}"
                                              .format(name, self.get_sessions_list()))
+
+    def _register_cleanup_on_exit(self):
+        """
+        Stop the livy sessions before python process exits for any reason (if enabled in conf)
+        """
+        if conf.cleanup_all_sessions_on_exit():
+            def cleanup_spark_sessions():
+                try:
+                    self.clean_up_all()
+                except Exception:
+                    pass
+            atexit.register(cleanup_spark_sessions)
+            self.ipython_display.writeln(u"Cleaning up livy sessions on exit is enabled")
