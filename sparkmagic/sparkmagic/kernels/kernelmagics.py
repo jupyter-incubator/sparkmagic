@@ -248,7 +248,6 @@ class KernelMagics(SparkMagicBase):
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
                                                              "of this name in user's local context.")
-    @argument("-s", "--session", type=str, default=None, help="The name of the Livy session to use.")
     @argument("-l", "--language", type=str, default=None,
               help="Language for command; one of {}".format(', '.join([LANG_PYTHON, LANG_SCALA, LANG_R])))
     @argument("-m", "--samplemethod", type=str, default=None, help="Sample method for dataframe: either take or sample")
@@ -265,7 +264,7 @@ class KernelMagics(SparkMagicBase):
 
             coerce = get_coerce_value(args.coerce)
 
-            self.execute_spark(cell, args.language, args.output, args.samplemethod, args.maxrows, args.samplefraction, args.session, coerce)
+            self.execute_spark(cell, args.language, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
         else:
             return
 
