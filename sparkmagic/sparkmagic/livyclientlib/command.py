@@ -12,13 +12,15 @@ from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS, \
     MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
-from .exceptions import LivyUnexpectedStatusException
+from .exceptions import LivyUnexpectedStatusException, \
+    BadUserConfigurationException
 
 
 class Command(ObjectWithGuid):
-    def __init__(self, code, spark_events=None):
+    def __init__(self, code, spark_events=None, language=None):
         super(Command, self).__init__()
         self.code = textwrap.dedent(code)
+        self.language = language
         self.logger = SparkLog(u"Command")
         if spark_events is None:
             spark_events = SparkEvents()
@@ -38,7 +40,11 @@ class Command(ObjectWithGuid):
         statement_id = -1
         try:
             session.wait_for_idle()
-            data = {u"code": self.code}
+            try:
+                codekind = conf.get_livy_kind(self.language)
+            except BadUserConfigurationException as e:
+                codekind = session.kind
+            data = {u"code": self.code, u"kind": codekind}
             response = session.http_client.post_statement(session.id, data)
             statement_id = response[u'id']
             output = self._get_statement_output(session, statement_id)
