@@ -229,12 +229,12 @@ def test_spark_execution_without_output_var():
     output_var = None
     
     magic.spark_controller.run_command.return_value = (True,'out',MIMETYPE_TEXT_PLAIN)
-    magic.execute_spark("", output_var, None, None, None, session, None)
+    magic.execute_spark("", None, output_var, None, None, None, session, None)
     magic.ipython_display.write.assert_called_once_with('out')
     assert not magic.spark_controller._spark_store_command.called
 
     magic.spark_controller.run_command.return_value = (False,'out',MIMETYPE_TEXT_PLAIN)
-    assert_raises(SparkStatementException, magic.execute_spark,"", output_var, None, None, None, session, True)
+    assert_raises(SparkStatementException, magic.execute_spark,"", None, output_var, None, None, None, session, True)
     assert not magic.spark_controller._spark_store_command.called
 
 @with_setup(_setup, _teardown)
@@ -245,14 +245,14 @@ def test_spark_execution_with_output_var():
     df = 'df'
 
     magic.spark_controller.run_command.side_effect = [(True,'out',MIMETYPE_TEXT_PLAIN), df]
-    magic.execute_spark("", output_var, None, None, None, session, True)
+    magic.execute_spark("", None, output_var, None, None, None, session, True)
     magic.ipython_display.write.assert_called_once_with('out')
     magic._spark_store_command.assert_called_once_with(output_var, None, None, None, True)
     assert shell.user_ns[output_var] == df
 
     magic.spark_controller.run_command.side_effect = None
     magic.spark_controller.run_command.return_value = (False,'out',MIMETYPE_TEXT_PLAIN)
-    assert_raises(SparkStatementException, magic.execute_spark,"", output_var, None, None, None, session, True)
+    assert_raises(SparkStatementException, magic.execute_spark,"", None, output_var, None, None, None, session, True)
 
 
 @with_setup(_setup, _teardown)
@@ -264,7 +264,7 @@ def test_spark_exception_with_output_var():
     df = 'df'
 
     magic.spark_controller.run_command.side_effect = [(True,'out',MIMETYPE_TEXT_PLAIN), exception]
-    assert_raises(BadUserDataException, magic.execute_spark,"", output_var, None, None, None, session, True)
+    assert_raises(BadUserDataException, magic.execute_spark,"", None, output_var, None, None, None, session, True)
     magic.ipython_display.write.assert_called_once_with('out')
     magic._spark_store_command.assert_called_once_with(output_var, None, None, None, True)
     assert shell.user_ns == {}
@@ -276,7 +276,7 @@ def test_spark_statement_exception():
     exception = BadUserDataException("Ka-boom!")
 
     magic.spark_controller.run_command.side_effect = [(False, 'out', "text/plain"), exception]
-    assert_raises(SparkStatementException, magic.execute_spark,"", None, None, None, None, session, True)
+    assert_raises(SparkStatementException, magic.execute_spark,"", None, None, None, None, None, session, True)
     magic.spark_controller.cleanup.assert_not_called()
 
 @with_setup(_setup, _teardown)
@@ -290,5 +290,5 @@ def test_spark_statement_exception_shutdowns_livy_session():
     exception = BadUserDataException("Ka-boom!")
 
     magic.spark_controller.run_command.side_effect = [(False, 'out', "text/plain"), exception]
-    assert_raises(SparkStatementException, magic.execute_spark,"", None, None, None, None, session, True)
+    assert_raises(SparkStatementException, magic.execute_spark,"", None, None, None, None, None, session, True)
     magic.spark_controller.cleanup.assert_called_once()
