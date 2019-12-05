@@ -262,7 +262,7 @@ class KernelMagics(SparkMagicBase):
 
             coerce = get_coerce_value(args.coerce)
 
-            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
+            self.execute_spark(cell, None, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
         else:
             return
 
