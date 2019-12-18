@@ -114,6 +114,24 @@ def test_cleanup_all_sessions_on_exit():
     manager.ipython_display.writeln.assert_called_once_with(u"Cleaning up livy sessions on exit is enabled")
 
 
+def test_cleanup_all_sessions_on_exit_fails():
+    """
+    Cleanup on exit is best effort only. When cleanup fails, exception is caught and error is logged.
+    """
+    conf.override(conf.cleanup_all_sessions_on_exit.__name__, True)
+    client0 = MagicMock()
+    client1 = MagicMock()
+    client0.delete.side_effect = Exception('Mocked exception for client1.delete')
+    manager = get_session_manager()
+    manager.add_session("name0", client0)
+    manager.add_session("name1", client1)
+
+    atexit._run_exitfuncs()
+
+    client0.delete.assert_called_once_with()
+    client1.delete.assert_not_called()
+
+
 def test_get_session_id_for_client():
     manager = get_session_manager()
     manager.get_sessions_list = MagicMock(return_value=["name"])

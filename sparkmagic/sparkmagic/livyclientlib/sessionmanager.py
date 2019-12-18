@@ -84,7 +84,8 @@ class SessionManager(object):
             def cleanup_spark_sessions():
                 try:
                     self.clean_up_all()
-                except Exception:
+                except Exception as e:
+                    self.logger.error(u"Error cleaning up sessions on exit: {}".format(e))
                     pass
             atexit.register(cleanup_spark_sessions)
             self.ipython_display.writeln(u"Cleaning up livy sessions on exit is enabled")
