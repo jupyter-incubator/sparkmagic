@@ -1,6 +1,8 @@
 ﻿# Distributed under the terms of the Modified BSD License.
 import threading
 from time import sleep, time
+import ipykernel
+import os
 
 from hdijupyterutils.guid import ObjectWithGuid
 
@@ -134,6 +136,11 @@ class LivySession(ObjectWithGuid):
         self._printed_resource_warning = False
 
         try:
+            connection_file = os.path.basename(ipykernel.get_connection_file())
+            kernel_id = connection_file.split('-', 1)[1].split('.')[0]
+            self.properties['conf']['spark.yarn.appMasterEnv.HOPSWORKS_KERNEL_ID'] = kernel_id
+            self.properties['conf']['spark.executorEnv.HOPSWORKS_KERNEL_ID'] = kernel_id
+
             r = self._http_client.post_session(self.properties)
             self.id = r[u"id"]
             self.status = str(r[u"state"])
@@ -313,10 +320,9 @@ class LivySession(ObjectWithGuid):
             self._heartbeat_thread = None
 
     def get_row_html(self, current_session_id):
-        return u"""<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td><td>{6}</td></tr>""".format(
+        return u"""<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>""".format(
             self.id, self.get_app_id(), self.kind, self.status,
-            self.get_html_link(u'Link', self.get_spark_ui_url()), self.get_html_link(u'Link', self.get_driver_log_url()),
-            u"" if current_session_id is None or current_session_id != self.id else u"\u2714"
+            self.get_html_link(u'Link', self.get_spark_ui_url()), self.get_html_link(u'Link', self.get_driver_log_url())
         )
 
     @staticmethod
