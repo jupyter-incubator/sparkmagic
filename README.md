@@ -90,6 +90,35 @@ If you want Papermill rendering to stop on a Spark error, edit the `~/.sparkmagi
 }
 ```
 
+If you want any registered livy sessions to be cleaned up on exit regardless of whether the process exits gracefully or not, you can set:
+ 
+```json
+{
+    "cleanup_all_sessions_on_exit": true,
+    "all_errors_are_fatal": true
+}
+```
+
+### Conf overrides in code
+
+In addition to the conf at `~/.sparkmagic/config.json`, sparkmagic conf can be overridden programmatically in a notebook.
+
+For example:
+```python
+import sparkmagic.utils.configuration as conf
+conf.override('cleanup_all_sessions_on_exit', True)
+```
+
+Same thing, but referencing the conf member: 
+
+```python
+conf.override(conf.cleanup_all_sessions_on_exit.__name__, True)
+```
+
+NOTE: override for `cleanup_all_sessions_on_exit` must be set _before_ initializing sparkmagic ie. before this:
+
+    %load_ext sparkmagic.magics
+
 ## Docker
 
 The included `docker-compose.yml` file will let you spin up a full

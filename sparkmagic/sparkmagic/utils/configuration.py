@@ -248,6 +248,12 @@ def all_errors_are_fatal():
     return False
 
 
+@_with_override
+def cleanup_all_sessions_on_exit():
+    # If set to true, all registered livy sessions will be attempted to be cleaned up before exiting
+    return False
+
+
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.
