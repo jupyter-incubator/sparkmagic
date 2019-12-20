@@ -1,5 +1,11 @@
 # Changelog
 
+## NEXT RELEASE
+
+### Features
+
+* Add user to %%info output @tprelle
+
 ## 0.17.1
 
 ### Bug fixes
