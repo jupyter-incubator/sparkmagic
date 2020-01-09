@@ -10,6 +10,10 @@ from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 
 
 class SparkController(object):
+    # this is to reuse the already created http clients
+    # since the reliablehttpclient uses requests session
+    _http_clients = {}
+
     def __init__(self, ipython_display):
         self.logger = SparkLog(u"SparkController")
         self.ipython_display = ipython_display
@@ -110,6 +114,7 @@ class SparkController(object):
         return LivySession(http_client, properties, ipython_display,
                            session_id, heartbeat_timeout=conf.livy_server_heartbeat_timeout_seconds())
 
-    @staticmethod
-    def _http_client(endpoint):
-        return LivyReliableHttpClient.from_endpoint(endpoint)
+    def _http_client(self, endpoint):
+        if endpoint not in self._http_clients[endpoint]:
+            self._http_clients[endpoint] = LivyReliableHttpClient.from_endpoint(endpoint)
+        return self._http_clients[endpoint]
