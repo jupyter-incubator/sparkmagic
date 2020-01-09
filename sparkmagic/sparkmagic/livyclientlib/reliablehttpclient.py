@@ -26,6 +26,7 @@ class ReliableHttpClient(object):
             self._auth = (self._endpoint.username, self._endpoint.password)
         elif self._endpoint.auth != constants.NO_AUTH:
             raise BadUserConfigurationException(u"Unsupported auth %s" %self._endpoint.auth)
+        self._session = requests.Session()
 
         self.logger = SparkLog(u"ReliableHttpClient")
 
@@ -43,15 +44,15 @@ class ReliableHttpClient(object):
 
     def get(self, relative_url, accepted_status_codes):
         """Sends a get request. Returns a response."""
-        return self._send_request(relative_url, accepted_status_codes, requests.get)
+        return self._send_request(relative_url, accepted_status_codes, self._session.get)
 
     def post(self, relative_url, accepted_status_codes, data):
         """Sends a post request. Returns a response."""
-        return self._send_request(relative_url, accepted_status_codes, requests.post, data)
+        return self._send_request(relative_url, accepted_status_codes, self._session.post, data)
 
     def delete(self, relative_url, accepted_status_codes):
         """Sends a delete request. Returns a response."""
-        return self._send_request(relative_url, accepted_status_codes, requests.delete)
+        return self._send_request(relative_url, accepted_status_codes, self._session.delete)
 
     def _send_request(self, relative_url, accepted_status_codes, function, data=None):
         return self._send_request_helper(self.compose_url(relative_url), accepted_status_codes, function, data, 0)
