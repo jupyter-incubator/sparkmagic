@@ -79,6 +79,28 @@ Kerberos support is implemented via the [requests-kerberos](https://github.com/r
 
 Currently, sparkmagic does not support passing a kerberos principal/token, but we welcome pull requests.
 
+### Kerberos Configuration
+
+By default the `HTTPKerberosAuth` constructor provided by the `requests-kerberos` package will use the following configuration
+```python
+HTTPKerberosAuth(mutual_authentication=REQUIRED)
+```
+but this will not be right configuration for every context, so it is able to pass custom arguments for this constructor using the following configuration on the `~/.sparkmagic/config.json`
+```json
+{
+    "kerberos_auth_configuration": {
+        "mutual_authentication": 1,
+        "service": "HTTP",
+        "delegate": false,
+        "force_preemptive": false,
+        "principal": "principal",
+        "hostname_override": "hostname_override",
+        "sanitize_mutual_error_response": true,
+        "send_cbt": true
+    }
+}
+```
+
 ## Papermill
 
 If you want Papermill rendering to stop on a Spark error, edit the `~/.sparkmagic/config.json` with the following settings:
