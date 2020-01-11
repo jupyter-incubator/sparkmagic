@@ -1,37 +1,52 @@
-FROM gettyimages/spark:2.1.0-hadoop-2.7
+FROM debian:stretch
 
 RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
+    curl \
     git \
-    openjdk-7-jdk \
+    openjdk-8-jdk \
     maven \
-    python2.7 \
-    python3.4 \
+    python2.7 python2.7-setuptools \
+    python3 python3-setuptools \
     r-base \
     r-base-core && \
     rm -rf /var/lib/apt/lists/*
 
+RUN easy_install3 pip py4j
 RUN pip install --upgrade setuptools
 
-ENV LIVY_BUILD_VERSION livy-server-0.3.0
-ENV LIVY_APP_PATH /apps/$LIVY_BUILD_VERSION
-ENV LIVY_BUILD_PATH /apps/build/livy
-ENV PYSPARK_PYTHON python2.7
-ENV PYSPARK3_PYTHON python3.4
+ENV PYTHONHASHSEED 0
+ENV PYTHONIOENCODING UTF-8
+ENV PIP_DISABLE_PIP_VERSION_CHECK 1
 
+ENV SPARK_BUILD_VERSION 2.3.3
+ENV SPARK_HOME /apps/spark-$SPARK_BUILD_VERSION
+ENV SPARK_BUILD_PATH /apps/build/spark
 RUN mkdir -p /apps/build && \
-    cd /apps/build && \
-	git clone https://github.com/cloudera/livy.git && \
+  cd /apps/build && \
+  git clone https://github.com/apache/spark.git spark && \
+  cd $SPARK_BUILD_PATH && \
+  git checkout v$SPARK_BUILD_VERSION && \
+  dev/make-distribution.sh --name spark-$SPARK_BUILD_VERSION -Phive -Phive-thriftserver -Pyarn && \
+  cp -r /apps/build/spark/dist $SPARK_HOME && \
+  rm -rf $SPARK_BUILD_PATH
+
+ENV LIVY_BUILD_VERSION 0.6.0-incubating
+ENV LIVY_APP_PATH /apps/apache-livy-$LIVY_BUILD_VERSION-bin
+ENV LIVY_BUILD_PATH /apps/build/livy
+RUN cd /apps/build && \
+	git clone https://github.com/apache/incubator-livy.git livy && \
 	cd $LIVY_BUILD_PATH && \
-  git checkout v0.3.0 && \
-    mvn -DskipTests -Dspark.version=$SPARK_VERSION clean package && \
+  git checkout v$LIVY_BUILD_VERSION-rc2 && \
+    mvn -DskipTests -Dspark.version=$SPARK_BUILD_VERSION clean package && \
     ls -al $LIVY_BUILD_PATH && ls -al $LIVY_BUILD_PATH/assembly && ls -al $LIVY_BUILD_PATH/assembly/target && \
-    unzip $LIVY_BUILD_PATH/assembly/target/$LIVY_BUILD_VERSION.zip -d /apps && \
+    unzip $LIVY_BUILD_PATH/assembly/target/apache-livy-${LIVY_BUILD_VERSION}-bin.zip -d /apps && \
     rm -rf $LIVY_BUILD_PATH && \
 	mkdir -p $LIVY_APP_PATH/upload && \
   mkdir -p $LIVY_APP_PATH/logs
 
+RUN pip install matplotlib
+RUN pip install pandas
 
 EXPOSE 8998
 
-CMD ["/apps/livy-server-0.3.0/bin/livy-server"]
-
+CMD $LIVY_APP_PATH/bin/livy-server

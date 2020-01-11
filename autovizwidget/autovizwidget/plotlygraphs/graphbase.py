@@ -1,7 +1,7 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from plotly.graph_objs import Figure, Data, Layout
+from plotly.graph_objs import Figure, Layout
 from plotly.offline import iplot
 try:
     from pandas.core.base import DataError
@@ -34,7 +34,7 @@ class GraphBase(object):
 
         with output:
             try:
-                fig = Figure(data=Data(data), layout=layout)
+                fig = Figure(data=data, layout=layout)
                 iplot(fig, show_link=False)
             except TypeError:
                 print("\n\n\nPlease select another set of X and Y axis, because the type of the current axis do\n"

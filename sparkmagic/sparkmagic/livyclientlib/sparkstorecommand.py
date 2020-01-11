@@ -1,9 +1,12 @@
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 from sparkmagic.utils.utils import records_to_dataframe
 import sparkmagic.utils.configuration as conf
-import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUserDataException
+import sparkmagic.utils.constants as constants
 
 import ast
 
@@ -38,7 +41,7 @@ class SparkStoreCommand(Command):
     def execute(self, session):
         try:
             command = self.to_command(session.kind, self.output_var)
-            (success, records_text) = command.execute(session)
+            (success, records_text, mimetype) = command.execute(session)
             if not success:
                 raise BadUserDataException(records_text)
             result = records_to_dataframe(records_text, session.kind, self._coerce)
@@ -51,8 +54,6 @@ class SparkStoreCommand(Command):
     def to_command(self, kind, spark_context_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
             return self._pyspark_command(spark_context_variable_name)
-        elif kind == constants.SESSION_KIND_PYSPARK3:
-            return self._pyspark_command(spark_context_variable_name, False)
         elif kind == constants.SESSION_KIND_SPARK:
             return self._scala_command(spark_context_variable_name)
         elif kind == constants.SESSION_KIND_SPARKR:
@@ -61,8 +62,11 @@ class SparkStoreCommand(Command):
             raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
 
 
-    def _pyspark_command(self, spark_context_variable_name, encode_result=True):
-        command = u'{}.toJSON()'.format(spark_context_variable_name)
+    def _pyspark_command(self, spark_context_variable_name):
+        # use_unicode=False means the result will be UTF-8-encoded bytes, so we
+        # set it to False for Python 2.
+        command = u'{}.toJSON(use_unicode=(sys.version_info.major > 2))'.format(
+            spark_context_variable_name)
         if self.samplemethod == u'sample':
             command = u'{}.sample(False, {})'.format(command, self.samplefraction)
         if self.maxrows >= 0:
@@ -70,14 +74,11 @@ class SparkStoreCommand(Command):
         else:
             command = u'{}.collect()'.format(command)
         # Unicode support has improved in Python 3 so we don't need to encode.
-        if encode_result:
-            print_command = '{}.encode("{}")'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                     conf.pyspark_dataframe_encoding())
-        else:
-            print_command = constants.LONG_RANDOM_VARIABLE_NAME
-        command = u'for {} in {}: print({})'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                    command,
-                                                    print_command)
+        print_command = constants.LONG_RANDOM_VARIABLE_NAME
+        command = u'import sys\nfor {} in {}: print({})'.format(
+            constants.LONG_RANDOM_VARIABLE_NAME,
+            command,
+            print_command)
         return Command(command)
 
 
@@ -106,7 +107,6 @@ class SparkStoreCommand(Command):
                                                          command,
                                                          constants.LONG_RANDOM_VARIABLE_NAME)
         return Command(command)
-
 
 
     # Used only for unit testing

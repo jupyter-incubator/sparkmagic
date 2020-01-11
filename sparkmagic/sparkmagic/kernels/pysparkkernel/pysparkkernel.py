@@ -13,8 +13,8 @@ class PySparkKernel(SparkKernelBase):
         language_info = {
             'name': 'pyspark',
             'mimetype': 'text/x-python',
-            'codemirror_mode': {'name': 'python', 'version': 2},
-            'pygments_lexer': 'python2'
+            'codemirror_mode': {'name': 'python', 'version': 3},
+            'pygments_lexer': 'python3'
         }
 
         session_language = LANG_PYTHON

@@ -9,8 +9,8 @@ from hdijupyterutils.configuration import override_all as _override_all
 from hdijupyterutils.configuration import with_override
 
 from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
-    LANG_SCALA, LANG_PYTHON, LANG_PYTHON3, LANG_R, \
-    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, SESSION_KIND_PYSPARK3, CONFIGURABLE_RETRY
+    LANG_SCALA, LANG_PYTHON, LANG_R, \
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, CONFIGURABLE_RETRY
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 import sparkmagic.utils.constants as constants
 
@@ -37,8 +37,6 @@ def get_livy_kind(language):
         return SESSION_KIND_SPARK
     elif language == LANG_PYTHON:
         return SESSION_KIND_PYSPARK
-    elif language == LANG_PYTHON3:
-        return SESSION_KIND_PYSPARK3
     elif language == LANG_R:
         return SESSION_KIND_SPARKR
     else:
@@ -207,7 +205,7 @@ def heartbeat_retry_seconds():
 
 @_with_override
 def livy_server_heartbeat_timeout_seconds():
-    return 0
+    return 60
 
 
 @_with_override
@@ -235,6 +233,25 @@ def configurable_retry_policy_max_retries():
     # Sum of default values is ~10 seconds.
     # Plus 15 seconds more wanted, that's 3 more 5 second retries.
     return 8
+
+
+@_with_override
+def shutdown_session_on_spark_statement_errors():
+    # If set to true, any spark statement errors will cause the Livy
+    # session to be cleaned up
+    return False
+
+
+@_with_override
+def all_errors_are_fatal():
+    # If set to true, any error will be considered fatal and be raised
+    return False
+
+
+@_with_override
+def cleanup_all_sessions_on_exit():
+    # If set to true, all registered livy sessions will be attempted to be cleaned up before exiting
+    return False
 
 
 def _credentials_override(f):
