@@ -115,6 +115,6 @@ class SparkController(object):
                            session_id, heartbeat_timeout=conf.livy_server_heartbeat_timeout_seconds())
 
     def _http_client(self, endpoint):
-        if endpoint not in self._http_clients[endpoint]:
+        if endpoint not in self._http_clients:
             self._http_clients[endpoint] = LivyReliableHttpClient.from_endpoint(endpoint)
         return self._http_clients[endpoint]
