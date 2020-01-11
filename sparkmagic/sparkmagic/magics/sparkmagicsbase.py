@@ -16,7 +16,7 @@ import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.utils import get_sessions_info_html
-from sparkmagic.utils.constants import MIMETYPE_TEXT_HTML 
+from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN, DEFAULT_SESSION_NAME
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
@@ -51,7 +51,7 @@ class SparkMagicBase(Magics):
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
-    def do_send_to_spark(self, cell, input_variable_name, var_type, output_variable_name, max_rows, session_name):
+    def do_send_to_spark(self, cell, input_variable_name, var_type, output_variable_name, max_rows, session_name=DEFAULT_SESSION_NAME):
         try:
             input_variable_value = self.shell.user_ns[input_variable_name]
         except KeyError:
@@ -80,7 +80,7 @@ class SparkMagicBase(Magics):
             self.ipython_display.write(u'Successfully passed \'{}\' as \'{}\' to Spark'
                                        u' kernel'.format(input_variable_name, output_variable_name))
 
-    def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce, output_handler=None):
+    def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name=DEFAULT_SESSION_NAME, coerce=False, output_handler=None):
         output_handler = output_handler or SparkOutputHandler(
                                           html=self.ipython_display.html,
                                           text=self.ipython_display.write,
