@@ -16,7 +16,7 @@ from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils import constants
 from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
 from sparkmagic.utils.sparkevents import SparkEvents
-from sparkmagic.utils.constants import LANGS_SUPPORTED
+from sparkmagic.utils.constants import LANGS_SUPPORTED, DEFAULT_SESSION_NAME
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
@@ -49,7 +49,7 @@ class KernelMagics(SparkMagicBase):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
 
-        self.session_name = u"session_name"
+        self.session_name = DEFAULT_SESSION_NAME
         self.session_started = False
 
         # In order to set these following 3 properties, call %%_do_not_call_change_language -l language
