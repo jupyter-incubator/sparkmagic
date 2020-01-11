@@ -291,4 +291,4 @@ def test_spark_statement_exception_shutdowns_livy_session():
 
     magic.spark_controller.run_command.side_effect = [(False, 'out', "text/plain"), exception]
     assert_raises(SparkStatementException, magic.execute_spark,"", None, None, None, None, session, True)
-    magic.spark_controller.cleanup.assert_called_once()
+    magic.spark_controller.delete_session_by_name.assert_called_once()
