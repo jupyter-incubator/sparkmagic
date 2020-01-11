@@ -81,7 +81,7 @@ class SparkMagicBase(Magics):
         (success, out, mimetype) = self.spark_controller.run_command(Command(cell), session_name)
         if not success:
             if conf.shutdown_session_on_spark_statement_errors():
-                self.spark_controller.cleanup()
+                self.spark_controller.delete_session_by_name(session_name)
 
             raise SparkStatementException(out)
         else:
