@@ -6,7 +6,9 @@ from hdijupyterutils.constants import EVENTS_HANDLER_CLASS_NAME, LOGGING_CONFIG_
 from hdijupyterutils.utils import join_paths
 from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
+from hdijupyterutils.configuration import merge_required_session_configs as _merge_required
 from hdijupyterutils.configuration import with_override
+from hdijupyterutils.constants import REQUIRED_SESSION_CONFIGS
 
 from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
     LANG_SCALA, LANG_PYTHON, LANG_R, \
@@ -22,9 +24,13 @@ from requests_kerberos import REQUIRED
 d = {}
 path = join_paths(HOME_PATH, CONFIG_FILE)
 
-    
+
 def override(config, value):
     _override(d, path, config, value)
+
+
+def merge_required_session_configs():
+    _merge_required(d, path)
 
 
 def override_all(obj):
@@ -65,7 +71,9 @@ def authenticators():
 # Configs
 
 def get_session_properties(language):
-    properties = copy.deepcopy(session_configs())
+    config = {'session_configs': copy.deepcopy(session_configs())}
+    _merge_required(config, path)
+    properties = config['session_configs']
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
     return properties
 
@@ -99,7 +107,7 @@ def kernel_scala_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': NO_AUTH}
 
 
-def base64_kernel_scala_credentials():        
+def base64_kernel_scala_credentials():
     return _credentials_override(kernel_scala_credentials)
 
 @_with_override

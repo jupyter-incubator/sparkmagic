@@ -58,8 +58,10 @@ setup(name=NAME,
       install_requires=[
           'plotly>=3',
           'ipywidgets>5.0.0',
-          'hdijupyterutils>=0.6',
+          'hdijupyterutils',
           'notebook>=4.2',
           'pandas>=0.20.1'
+      ],
+      dependency_links=[
+      'git+ssh://git@github.com/viaduct-ai/sparkmagic.git@ae2bbeb9b2ec90b32dbe3bcdff0b40f75edab0c6#egg=hdijupyterutils&subdirectory=hdijupyterutils'
       ])
-

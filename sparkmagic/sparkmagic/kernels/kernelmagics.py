@@ -146,7 +146,7 @@ class KernelMagics(SparkMagicBase):
     <br/>
     Parameters:
       <ul>
-        <li>-i VAR_NAME: Local Pandas DataFrame(or String) of name VAR_NAME will be available in the %%spark context as a 
+        <li>-i VAR_NAME: Local Pandas DataFrame(or String) of name VAR_NAME will be available in the %%spark context as a
           Spark dataframe(or String) with the same name.</li>
         <li>-t TYPE: Specifies the type of variable passed as -i. Available options are:
          `str` for string and `df` for Pandas DataFrame. Optional, defaults to `str`.</li>
@@ -181,7 +181,7 @@ class KernelMagics(SparkMagicBase):
     @needs_local_scope
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
-    def send_to_spark(self, line, cell=u"", local_ns=None):
+    def send_to_spark(self, line, cell=u"", local_ns=None, session_name='default'):
         self._assure_cell_body_is_empty(KernelMagics.send_to_spark.__name__, cell)
         args = parse_argstring_or_throw(self.send_to_spark, line)
 
@@ -189,7 +189,7 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException("-i param not provided.")
 
         if self._do_not_call_start_session(""):
-            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, args.maxrows, None)
+            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, args.maxrows, session_name)
         else:
             return
 
@@ -246,9 +246,11 @@ class KernelMagics(SparkMagicBase):
             else:
                 self._do_not_call_delete_session(u"")
                 self._override_session_settings(dictionary)
+                self._merge_required_session_configs()
                 self._do_not_call_start_session(u"")
         else:
             self._override_session_settings(dictionary)
+            self._merge_required_session_configs()
         self.info(u"")
 
     @magic_arguments()
@@ -272,7 +274,7 @@ class KernelMagics(SparkMagicBase):
 
         coerce = get_coerce_value(args.coerce)
 
-        self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
+        self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, self.session_name, coerce)
 
     @cell_magic
     @needs_local_scope
@@ -293,8 +295,7 @@ class KernelMagics(SparkMagicBase):
                         text=pretty_output_handler,
                         default=self.ipython_display.display)
                         
-        self.execute_spark(cell, None, None, None, None, None, None, output_handler=so)
-
+        self.execute_spark(cell, None, None, None, None, session_name=self.session_name, coerce=False, output_handler=so)
 
     @magic_arguments()
     @cell_magic
@@ -319,7 +320,7 @@ class KernelMagics(SparkMagicBase):
         coerce = get_coerce_value(args.coerce)
 
         return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                     None, args.output, args.quiet, coerce)
+                                         self.session_name, args.output, args.quiet, coerce)
 
     @magic_arguments()
     @cell_magic
@@ -484,6 +485,10 @@ class KernelMagics(SparkMagicBase):
     @staticmethod
     def _override_session_settings(settings):
         conf.override(conf.session_configs.__name__, settings)
+
+    @staticmethod
+    def _merge_required_session_configs():
+        conf.merge_required_session_configs()
 
     @staticmethod
     def _generate_uuid():

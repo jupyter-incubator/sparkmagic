@@ -21,6 +21,7 @@ LICENSE             = 'BSD 3-clause'
 import io
 import os
 import re
+import pathlib
 
 from distutils.core import setup
 
@@ -48,6 +49,9 @@ VERSION = version('sparkmagic/__init__.py')
 
 
 
+hdijupyterutils_path = (pathlib.Path(__file__).parent.parent / "hdijupyterutils").resolve()
+autovizwidget_path = (pathlib.Path(__file__).parent.parent / "autovizwidget").resolve()
+
 setup(name=NAME,
       version=VERSION,
       description=DESCRIPTION,
@@ -74,8 +78,6 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7'],
       install_requires=[
-          'hdijupyterutils>=0.6',
-          'autovizwidget>=0.6',
           'ipython>=4.0.2',
           'nose',
           'mock',
@@ -86,6 +88,7 @@ setup(name=NAME,
           'ipywidgets>5.0.0',
           'notebook>=4.2',
           'tornado>=4',
-          'requests_kerberos>=0.8.0'
+          'requests_kerberos>=0.8.0',
+          'hdijupyterutils@https://github.com/viaduct-ai/sparkmagic/archive/5689cae59f557eda2c3c0a57a3abb19b00d07c9e.zip#subdirectory=hdijupyterutils',
+          'autovizwidget>=0.6',
       ])
-
