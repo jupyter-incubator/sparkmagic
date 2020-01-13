@@ -143,7 +143,7 @@ class KernelMagics(SparkMagicBase):
     <br/>
     Parameters:
       <ul>
-        <li>-i VAR_NAME: Local Pandas DataFrame(or String) of name VAR_NAME will be available in the %%spark context as a 
+        <li>-i VAR_NAME: Local Pandas DataFrame(or String) of name VAR_NAME will be available in the %%spark context as a
           Spark dataframe(or String) with the same name.</li>
         <li>-t TYPE: Specifies the type of variable passed as -i. Available options are:
          `str` for string and `df` for Pandas DataFrame. Optional, defaults to `str`.</li>
@@ -287,7 +287,7 @@ class KernelMagics(SparkMagicBase):
             coerce = get_coerce_value(args.coerce)
 
             return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                         None, args.output, args.quiet, coerce)
+                                         self.session_name, args.output, args.quiet, coerce)
         else:
             return
 
@@ -362,6 +362,10 @@ class KernelMagics(SparkMagicBase):
                 self.fatal_error_message = conf.fatal_error_suggestion().format(e)
                 self.logger.error(u"Error creating session: {}".format(e))
                 self.ipython_display.send_error(self.fatal_error_message)
+
+                if conf.all_errors_are_fatal():
+                    raise e
+
                 return False
 
         return self.session_started
