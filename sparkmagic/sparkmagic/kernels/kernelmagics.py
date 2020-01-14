@@ -362,6 +362,10 @@ class KernelMagics(SparkMagicBase):
                 self.fatal_error_message = conf.fatal_error_suggestion().format(e)
                 self.logger.error(u"Error creating session: {}".format(e))
                 self.ipython_display.send_error(self.fatal_error_message)
+
+                if conf.all_errors_are_fatal():
+                    raise e
+
                 return False
 
         return self.session_started
