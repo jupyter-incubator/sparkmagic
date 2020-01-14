@@ -69,7 +69,7 @@ class SparkController(object):
 
     def delete_session_by_id(self, endpoint, session_id):
         name = self.session_manager.get_session_name_by_id_endpoint(session_id, endpoint)
-        
+
         if name in self.session_manager.get_sessions_list():
             self.delete_session_by_name(name)
         else:
@@ -102,7 +102,6 @@ class SparkController(object):
         if client_name is None:
             return self.session_manager.get_any_session()
         else:
-            client_name = client_name.lower()
             return self.session_manager.get_session(client_name)
 
     def get_managed_clients(self):
