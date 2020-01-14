@@ -19,6 +19,11 @@ COPY examples /home/jovyan/work
 COPY hdijupyterutils hdijupyterutils/
 COPY autovizwidget autovizwidget/
 COPY sparkmagic sparkmagic/
+
+USER root
+RUN chown -R $NB_USER .
+
+USER $NB_USER
 RUN if [ "$dev_mode" = "true" ]; then \
       cd hdijupyterutils && pip install . && cd ../ && \
       cd autovizwidget && pip install . && cd ../ && \
@@ -31,7 +36,6 @@ RUN sed -i 's/localhost/spark/g' /home/$NB_USER/.sparkmagic/config.json
 RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension
 RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/sparkkernel
 RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/pysparkkernel
-RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/pyspark3kernel
 RUN jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/sparkrkernel
 RUN jupyter serverextension enable --py sparkmagic
 

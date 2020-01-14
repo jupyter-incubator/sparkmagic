@@ -1,10 +1,13 @@
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
-from plotly.graph_objs import Pie, Figure, Data
+from plotly.graph_objs import Pie, Figure
 from plotly.offline import iplot
-from pandas.core.groupby import DataError
-
+try:
+    from pandas.core.base import DataError
+except:
+    from pandas.core.groupby import DataError
+    
 import autovizwidget.utils.configuration as conf
 from .graphbase import GraphBase
 
@@ -45,7 +48,7 @@ class PieGraph(GraphBase):
             else:
                 data = [Pie(values=values, labels=labels)]
 
-                fig = Figure(data=Data(data))
+                fig = Figure(data=data)
                 iplot(fig, show_link=False)
 
     @staticmethod
