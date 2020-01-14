@@ -93,6 +93,19 @@ def test_start_session_times_out():
     assert magic.session_started
     assert_equals(ipython_display.send_error.call_count, 1)
 
+@with_setup(_setup, _teardown)
+@raises(LivyClientTimeoutException)
+def test_start_session_times_out_all_errors_are_fatal():
+    conf.override_all({
+        "all_errors_are_fatal": True
+    })
+
+    line = ""
+    spark_controller.add_session = MagicMock(side_effect=LivyClientTimeoutException)
+    assert not magic.session_started
+
+    ret = magic._do_not_call_start_session(line)
+
 
 @with_setup(_setup, _teardown)
 def test_delete_session():
