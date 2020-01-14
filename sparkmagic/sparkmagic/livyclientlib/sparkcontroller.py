@@ -13,7 +13,7 @@ class SparkController(object):
     def __init__(self, ipython_display):
         self.logger = SparkLog(u"SparkController")
         self.ipython_display = ipython_display
-        self.session_manager = SessionManager()
+        self.session_manager = SessionManager(ipython_display)
 
     def get_app_id(self, client_name=None):
         session_to_use = self.get_session_by_name_or_default(client_name)

@@ -246,7 +246,7 @@ def test_run_cell_command_writes_to_err():
 
     run_cell_method.assert_called_once_with(Command(cell), name)
     assert result is None
-    ipython_display.send_error.assert_called_once_with(result_value)
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG.format(result_value))
 
 
 @with_setup(_setup, _teardown)

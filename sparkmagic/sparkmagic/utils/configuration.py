@@ -236,16 +236,21 @@ def configurable_retry_policy_max_retries():
 
 
 @_with_override
-def spark_statement_errors_are_fatal():
-    # If set to true, any spark statement errors will be considered
-    # fatal and will raise a SparkStatementException
+def shutdown_session_on_spark_statement_errors():
+    # If set to true, any spark statement errors will cause the Livy
+    # session to be cleaned up
     return False
 
 
 @_with_override
-def shutdown_session_on_spark_statement_errors():
-    # If set to true, any spark statement errors will cause the Livy
-    # session to be cleaned up
+def all_errors_are_fatal():
+    # If set to true, any error will be considered fatal and be raised
+    return False
+
+
+@_with_override
+def cleanup_all_sessions_on_exit():
+    # If set to true, all registered livy sessions will be attempted to be cleaned up before exiting
     return False
 
 

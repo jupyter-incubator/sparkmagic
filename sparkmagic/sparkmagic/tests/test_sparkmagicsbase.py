@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import sparkmagic.utils.configuration as conf
 from mock import MagicMock
-from nose.tools import with_setup, assert_equals, assert_raises
+from nose.tools import with_setup, assert_equals, assert_raises, raises
 
 from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils.constants import LANGS_SUPPORTED, SESSION_KIND_PYSPARK, SESSION_KIND_SPARK, \
-    IDLE_SESSION_STATUS, BUSY_SESSION_STATUS, MIMETYPE_TEXT_PLAIN
+    IDLE_SESSION_STATUS, BUSY_SESSION_STATUS, MIMETYPE_TEXT_PLAIN, EXPECTED_ERROR_MSG
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
 from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUserDataException, SparkStatementException
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
@@ -20,6 +20,7 @@ def _setup():
     session = MagicMock()
     magic.spark_controller = MagicMock()
     magic.ipython_display = MagicMock()
+    conf.override_all({})
 
 def _teardown():
     pass
@@ -137,6 +138,93 @@ def test_print_empty_endpoint_info():
 
 
 @with_setup(_setup, _teardown)
+@raises(BadUserDataException)
+def test_send_to_spark_should_raise_when_variable_value_is_none():
+    input_variable_name = "x_in"
+    output_variable_name = "x_out"
+    var_type = "str"
+    max_rows = 25000
+    magic.shell.user_ns[input_variable_name] = None
+
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, max_rows, None)
+
+@with_setup(_setup, _teardown)
+@raises(BadUserDataException)
+def test_send_to_spark_should_raise_when_type_is_incorrect():
+    input_variable_name = "x_in"
+    input_variable_value = "x_value"
+    output_variable_name = "x_out"
+    var_type = "incorrect"
+    max_rows = 25000
+    magic.shell.user_ns[input_variable_name] = input_variable_value
+
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, max_rows, None)
+
+@with_setup(_setup, _teardown)
+def test_send_to_spark_should_print_error_when_str_command_failed():
+    input_variable_name = "x_in"
+    input_variable_value = "x_value"
+    output_variable_name = "x_out"
+    var_type = "STR"
+    output_value = "error"
+    max_rows = 25000
+    magic.shell.user_ns[input_variable_name] = input_variable_value
+    magic.spark_controller.run_command.return_value = (False, output_value, "text/plain")
+
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, max_rows, None)
+
+    magic.ipython_display.send_error.assert_called_once_with(output_value)
+    assert not magic.ipython_display.write.called
+
+@with_setup(_setup, _teardown)
+def test_send_to_spark_should_print_error_when_df_command_failed():
+    input_variable_name = "x_in"
+    input_variable_value = "x_value"
+    output_variable_name = "x_out"
+    var_type = "df"
+    output_value = "error"
+    max_rows = 25000
+    magic.shell.user_ns[input_variable_name] = input_variable_value
+    magic.spark_controller.run_command.return_value = (False, output_value, "text/plain")
+
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, max_rows, None)
+
+    magic.ipython_display.send_error.assert_called_once_with(output_value)
+    assert not magic.ipython_display.write.called
+
+@with_setup(_setup, _teardown)
+def test_send_to_spark_should_name_the_output_variable_the_same_as_input_name_when_custom_name_not_provided():
+    input_variable_name = "x_in"
+    input_variable_value = output_value = "x_value"
+    var_type = "str"
+    output_variable_name = None
+    max_rows = 25000
+    magic.shell.user_ns[input_variable_name] = input_variable_value
+    magic.spark_controller.run_command.return_value = (True, output_value, "text/plain")
+    expected_message = u'Successfully passed \'{}\' as \'{}\' to Spark kernel'.format(input_variable_name, input_variable_name)
+
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, max_rows, None)
+
+    magic.ipython_display.write.assert_called_once_with(expected_message)
+    assert not magic.ipython_display.send_error.called
+
+@with_setup(_setup, _teardown)
+def test_send_to_spark_should_write_successfully_when_everything_is_correct():
+    input_variable_name = "x_in"
+    input_variable_value = output_value = "x_value"
+    output_variable_name = "x_out"
+    max_rows = 25000
+    var_type = "str"
+    magic.shell.user_ns[input_variable_name] = input_variable_value
+    magic.spark_controller.run_command.return_value = (True, output_value, "text/plain")
+    expected_message = u'Successfully passed \'{}\' as \'{}\' to Spark kernel'.format(input_variable_name, output_variable_name)
+
+    magic.do_send_to_spark("", input_variable_name, var_type, output_variable_name, max_rows, None)
+
+    magic.ipython_display.write.assert_called_once_with(expected_message)
+    assert not magic.ipython_display.send_error.called
+
+@with_setup(_setup, _teardown)
 def test_spark_execution_without_output_var():
     output_var = None
     
@@ -146,8 +234,7 @@ def test_spark_execution_without_output_var():
     assert not magic.spark_controller._spark_store_command.called
 
     magic.spark_controller.run_command.return_value = (False,'out',MIMETYPE_TEXT_PLAIN)
-    magic.execute_spark("", output_var, None, None, None, session, None)
-    magic.ipython_display.send_error.assert_called_once_with('out')
+    assert_raises(SparkStatementException, magic.execute_spark,"", output_var, None, None, None, session, True)
     assert not magic.spark_controller._spark_store_command.called
 
 @with_setup(_setup, _teardown)
@@ -165,8 +252,7 @@ def test_spark_execution_with_output_var():
 
     magic.spark_controller.run_command.side_effect = None
     magic.spark_controller.run_command.return_value = (False,'out',MIMETYPE_TEXT_PLAIN)
-    magic.execute_spark("", output_var, None, None, None, session, True)
-    magic.ipython_display.send_error.assert_called_once_with('out')
+    assert_raises(SparkStatementException, magic.execute_spark,"", output_var, None, None, None, session, True)
 
 
 @with_setup(_setup, _teardown)
@@ -185,10 +271,6 @@ def test_spark_exception_with_output_var():
 
 @with_setup(_setup, _teardown)
 def test_spark_statement_exception():
-    conf.override_all({
-        "spark_statement_errors_are_fatal": True
-    })
-
     mockSparkCommand = MagicMock()
     magic._spark_store_command = MagicMock(return_value=mockSparkCommand)
     exception = BadUserDataException("Ka-boom!")
@@ -200,7 +282,6 @@ def test_spark_statement_exception():
 @with_setup(_setup, _teardown)
 def test_spark_statement_exception_shutdowns_livy_session():
     conf.override_all({
-        "spark_statement_errors_are_fatal": True,
         "shutdown_session_on_spark_statement_errors": True
     })
 

@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 """Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
 Provides the %spark magic."""
@@ -22,10 +22,18 @@ from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
 from sparkmagic.livyclientlib.exceptions import SparkStatementException
+from sparkmagic.livyclientlib.sendpandasdftosparkcommand import SendPandasDfToSparkCommand
+from sparkmagic.livyclientlib.sendstringtosparkcommand import SendStringToSparkCommand
+from sparkmagic.livyclientlib.exceptions import BadUserDataException
 
 
 @magics_class
 class SparkMagicBase(Magics):
+
+    _STRING_VAR_TYPE = 'str'
+    _PANDAS_DATAFRAME_VAR_TYPE = 'df'
+    _ALLOWED_LOCAL_TO_SPARK_TYPES = [_STRING_VAR_TYPE, _PANDAS_DATAFRAME_VAR_TYPE]
+
     def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(SparkMagicBase, self).__init__(shell)
@@ -34,22 +42,48 @@ class SparkMagicBase(Magics):
         self.ipython_display = IpythonDisplay()
         self.spark_controller = SparkController(self.ipython_display)
 
-        self.logger.debug("Initialized spark magics.")
+        self.logger.debug(u'Initialized spark magics.')
 
         if spark_events is None:
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
+    def do_send_to_spark(self, cell, input_variable_name, var_type, output_variable_name, max_rows, session_name):
+        try:
+            input_variable_value = self.shell.user_ns[input_variable_name]
+        except KeyError:
+            raise BadUserDataException(u'Variable named {} not found.'.format(input_variable_name))
+        if input_variable_value is None:
+            raise BadUserDataException(u'Value of {} is None!'.format(input_variable_name))
+
+        if not output_variable_name:
+            output_variable_name = input_variable_name
+
+        if not max_rows:
+            max_rows = conf.default_maxrows()
+
+        input_variable_type = var_type.lower()
+        if input_variable_type == self._STRING_VAR_TYPE:
+            command = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
+        elif input_variable_type == self._PANDAS_DATAFRAME_VAR_TYPE:
+            command = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, max_rows)
+        else:
+            raise BadUserDataException(u'Invalid or incorrect -t type. Available are: [{}]'.format(u','.join(self._ALLOWED_LOCAL_TO_SPARK_TYPES)))
+
+        (success, result, mime_type) = self.spark_controller.run_command(command, None)
+        if not success:
+            self.ipython_display.send_error(result)
+        else:
+            self.ipython_display.write(u'Successfully passed \'{}\' as \'{}\' to Spark'
+                                       u' kernel'.format(input_variable_name, output_variable_name))
+
     def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce):
         (success, out, mimetype) = self.spark_controller.run_command(Command(cell), session_name)
         if not success:
-            if conf.spark_statement_errors_are_fatal():
-                if conf.shutdown_session_on_spark_statement_errors():
-                    self.spark_controller.cleanup()
+            if conf.shutdown_session_on_spark_statement_errors():
+                self.spark_controller.cleanup()
 
-                raise SparkStatementException(out)
-
-            self.ipython_display.send_error(out)
+            raise SparkStatementException(out)
         else:
             if isinstance(out, string_types):
                 if mimetype == MIMETYPE_TEXT_HTML:
