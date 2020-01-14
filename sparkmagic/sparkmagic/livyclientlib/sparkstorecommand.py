@@ -1,9 +1,12 @@
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 from sparkmagic.utils.utils import records_to_dataframe
 import sparkmagic.utils.configuration as conf
-import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUserDataException
+import sparkmagic.utils.constants as constants
 
 import ast
 
@@ -104,7 +107,6 @@ class SparkStoreCommand(Command):
                                                          command,
                                                          constants.LONG_RANDOM_VARIABLE_NAME)
         return Command(command)
-
 
 
     # Used only for unit testing
