@@ -78,3 +78,13 @@ def test_share_config_between_pyspark_and_pyspark3():
     kpc = { 'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L', 'auth': AUTH_BASIC }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     assert_equals(conf.base64_kernel_python3_credentials(), conf.base64_kernel_python_credentials())
+
+@with_setup(_setup)
+def test_custom_certfiles_path():
+    overrides = { }
+    conf.override_all(overrides)
+    assert_equals(conf.custom_certfiles_path(), None)
+    cert = "test.pem"
+    overrides = { conf.custom_certfiles_path.__name__: cert }
+    conf.override_all(overrides)
+    assert_equals(conf.custom_certfiles_path(), cert)

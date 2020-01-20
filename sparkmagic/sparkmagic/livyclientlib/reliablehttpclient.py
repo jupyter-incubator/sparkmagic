@@ -33,6 +33,8 @@ class ReliableHttpClient(object):
         if not self.verify_ssl:
             self.logger.debug(u"ATTENTION: Will ignore SSL errors. This might render you vulnerable to attacks.")
             requests.packages.urllib3.disable_warnings()
+        else:
+            self._set_custom_certfiles_path()
 
     def get_headers(self):
         return self._headers
@@ -94,3 +96,8 @@ class ReliableHttpClient(object):
                     raise HttpClientException(u"Invalid status code '{}' from {} with error payload: {}"
                                               .format(status, url, text))
             return r
+
+    def _set_custom_certfiles_path(self):
+        if conf.custom_certfiles_path is not None:
+            self.logger.debug(u"Using a custom SSL certificate")
+            self.verify_ssl = conf.custom_certfiles_path
