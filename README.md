@@ -77,7 +77,27 @@ Sparkmagic supports:
 
 Kerberos support is implemented via the [requests-kerberos](https://github.com/requests/requests-kerberos) package. Sparkmagic expects a kerberos ticket to be available in the system. Requests-kerberos will pick up the kerberos ticket from a cache file. For the ticket to be available, the user needs to have run [kinit](https://web.mit.edu/kerberos/krb5-1.12/doc/user/user_commands/kinit.html) to create the kerberos ticket.
 
-Currently, sparkmagic does not support passing a kerberos principal/token, but we welcome pull requests.
+### Kerberos Configuration
+
+By default the `HTTPKerberosAuth` constructor provided by the `requests-kerberos` package will use the following configuration
+```python
+HTTPKerberosAuth(mutual_authentication=REQUIRED)
+```
+but this will not be right configuration for every context, so it is able to pass custom arguments for this constructor using the following configuration on the `~/.sparkmagic/config.json`
+```json
+{
+    "kerberos_auth_configuration": {
+        "mutual_authentication": 1,
+        "service": "HTTP",
+        "delegate": false,
+        "force_preemptive": false,
+        "principal": "principal",
+        "hostname_override": "hostname_override",
+        "sanitize_mutual_error_response": true,
+        "send_cbt": true
+    }
+}
+```
 
 ## Papermill
 
