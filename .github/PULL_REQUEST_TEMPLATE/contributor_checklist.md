@@ -2,7 +2,7 @@
 <!-- FILL IN -->
 
 ### Checklist
-- [ ] Wrote description of my changes above
+- [ ] Wrote description of my changes above in the `CHANGELOG.md` file
 - [ ] Added or modified unit tests to reflect my changes
 - [ ] Manually tested with a notebook
-- [ ] If adding a feature, there is an example notebook and/or documentation in the `README`
+- [ ] If adding a feature, there is an example notebook and/or documentation in the `README.md` file
