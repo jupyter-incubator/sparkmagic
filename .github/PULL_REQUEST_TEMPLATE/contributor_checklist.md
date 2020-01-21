@@ -2,7 +2,7 @@
 <!-- FILL IN -->
 
 ### Checklist
-- [ ] Wrote description of my changes above 
+- [ ] Wrote a description of my changes above 
 - [ ] Added a bullet point for my changes to the top of the `CHANGELOG.md` file
 - [ ] Added or modified unit tests to reflect my changes
 - [ ] Manually tested with a notebook
