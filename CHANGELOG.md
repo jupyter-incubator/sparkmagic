@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.15.0
+
+### Features
+* `cleanup_all_sessions_on_exit` configuration to cleanup all registered livy sessions regardless of whether the process exits gracefully. Thanks Juho Autio, @juhoautio
+* Add configuration options to for the default `HTTPKerberosAuth` constructor. Thanks Pedro Gonçalves Rossi Rodrigues, @PedroRossi
+
+
+### Bug fixes
+
+* Respect the `all_errors_are_fatal` flag and raise an exception if the session fails to start. Thanks Devin Stein, @devstein
+* Use `requests.Session` to avoid negotiating Kerberos tickets in every request. Thanks Pedro Gonçalves Rossi Rodrigues, @PedroRossi
+
+
+
 ## 0.14.0
 
 ### Bug fixes
