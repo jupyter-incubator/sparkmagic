@@ -77,7 +77,27 @@ Sparkmagic supports:
 
 Kerberos support is implemented via the [requests-kerberos](https://github.com/requests/requests-kerberos) package. Sparkmagic expects a kerberos ticket to be available in the system. Requests-kerberos will pick up the kerberos ticket from a cache file. For the ticket to be available, the user needs to have run [kinit](https://web.mit.edu/kerberos/krb5-1.12/doc/user/user_commands/kinit.html) to create the kerberos ticket.
 
-Currently, sparkmagic does not support passing a kerberos principal/token, but we welcome pull requests.
+### Kerberos Configuration
+
+By default the `HTTPKerberosAuth` constructor provided by the `requests-kerberos` package will use the following configuration
+```python
+HTTPKerberosAuth(mutual_authentication=REQUIRED)
+```
+but this will not be right configuration for every context, so it is able to pass custom arguments for this constructor using the following configuration on the `~/.sparkmagic/config.json`
+```json
+{
+    "kerberos_auth_configuration": {
+        "mutual_authentication": 1,
+        "service": "HTTP",
+        "delegate": false,
+        "force_preemptive": false,
+        "principal": "principal",
+        "hostname_override": "hostname_override",
+        "sanitize_mutual_error_response": true,
+        "send_cbt": true
+    }
+}
+```
 
 ## Papermill
 
@@ -89,6 +109,35 @@ If you want Papermill rendering to stop on a Spark error, edit the `~/.sparkmagi
     "all_errors_are_fatal": true
 }
 ```
+
+If you want any registered livy sessions to be cleaned up on exit regardless of whether the process exits gracefully or not, you can set:
+ 
+```json
+{
+    "cleanup_all_sessions_on_exit": true,
+    "all_errors_are_fatal": true
+}
+```
+
+### Conf overrides in code
+
+In addition to the conf at `~/.sparkmagic/config.json`, sparkmagic conf can be overridden programmatically in a notebook.
+
+For example:
+```python
+import sparkmagic.utils.configuration as conf
+conf.override('cleanup_all_sessions_on_exit', True)
+```
+
+Same thing, but referencing the conf member: 
+
+```python
+conf.override(conf.cleanup_all_sessions_on_exit.__name__, True)
+```
+
+NOTE: override for `cleanup_all_sessions_on_exit` must be set _before_ initializing sparkmagic ie. before this:
+
+    %load_ext sparkmagic.magics
 
 ## Docker
 

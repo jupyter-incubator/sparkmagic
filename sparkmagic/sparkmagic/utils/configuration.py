@@ -14,6 +14,8 @@ from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PAR
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 import sparkmagic.utils.constants as constants
 
+from requests_kerberos import REQUIRED
+
 
 d = {}
 path = join_paths(HOME_PATH, CONFIG_FILE)
@@ -246,6 +248,19 @@ def shutdown_session_on_spark_statement_errors():
 def all_errors_are_fatal():
     # If set to true, any error will be considered fatal and be raised
     return False
+
+
+@_with_override
+def cleanup_all_sessions_on_exit():
+    # If set to true, all registered livy sessions will be attempted to be cleaned up before exiting
+    return False
+
+
+@_with_override
+def kerberos_auth_configuration():
+    return {
+        "mutual_authentication": REQUIRED
+    }
 
 
 def _credentials_override(f):

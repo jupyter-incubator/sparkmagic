@@ -10,10 +10,14 @@ from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 
 
 class SparkController(object):
+
     def __init__(self, ipython_display):
         self.logger = SparkLog(u"SparkController")
         self.ipython_display = ipython_display
-        self.session_manager = SessionManager()
+        self.session_manager = SessionManager(ipython_display)
+        # this is to reuse the already created http clients
+        # since the reliablehttpclient uses requests session
+        self._http_clients = {}
 
     def get_app_id(self, client_name=None):
         session_to_use = self.get_session_by_name_or_default(client_name)
@@ -65,7 +69,7 @@ class SparkController(object):
 
     def delete_session_by_id(self, endpoint, session_id):
         name = self.session_manager.get_session_name_by_id_endpoint(session_id, endpoint)
-        
+
         if name in self.session_manager.get_sessions_list():
             self.delete_session_by_name(name)
         else:
@@ -98,7 +102,6 @@ class SparkController(object):
         if client_name is None:
             return self.session_manager.get_any_session()
         else:
-            client_name = client_name.lower()
             return self.session_manager.get_session(client_name)
 
     def get_managed_clients(self):
@@ -110,6 +113,7 @@ class SparkController(object):
         return LivySession(http_client, properties, ipython_display,
                            session_id, heartbeat_timeout=conf.livy_server_heartbeat_timeout_seconds())
 
-    @staticmethod
-    def _http_client(endpoint):
-        return LivyReliableHttpClient.from_endpoint(endpoint)
+    def _http_client(self, endpoint):
+        if endpoint not in self._http_clients:
+            self._http_clients[endpoint] = LivyReliableHttpClient.from_endpoint(endpoint)
+        return self._http_clients[endpoint]
