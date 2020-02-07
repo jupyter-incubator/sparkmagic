@@ -39,7 +39,7 @@ See [Pyspark](examples/Pyspark%20Kernel.ipynb) and [Spark](examples/Spark%20Kern
 
 ### 3. Sending local data to Spark Kernel
 
-See the [Sending Local Data to a Spark notebook](examples/Send%20local%20data%20to%20Spark.ipynb).
+See the [Sending Local Data to Spark notebook](examples/Send%20local%20data%20to%20Spark.ipynb).
 
 ## Installation
 
