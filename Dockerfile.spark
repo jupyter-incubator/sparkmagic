@@ -12,7 +12,11 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
     rm -rf /var/lib/apt/lists/*
 
 RUN easy_install3 pip py4j
-RUN pip install --upgrade setuptools
+RUN pip install --upgrade setuptools && \
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python get-pip.py --user && \
+    rm get-pip.py && \
+    python -m pip install --upgrade setuptools
 
 ENV PYTHONHASHSEED 0
 ENV PYTHONIOENCODING UTF-8
@@ -36,10 +40,6 @@ ENV LIVY_BUILD_PATH /apps/build/livy
 RUN cd /apps/build && \
 	git clone https://github.com/apache/incubator-livy.git livy && \
 	cd $LIVY_BUILD_PATH && \
-  curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-  python get-pip.py --user && \
-  rm get-pip.py && \
-  python -m pip install --upgrade setuptools && \
   git checkout v$LIVY_BUILD_VERSION-rc2 && \
     mvn -DskipTests -Dspark.version=$SPARK_BUILD_VERSION clean package && \
     ls -al $LIVY_BUILD_PATH && ls -al $LIVY_BUILD_PATH/assembly && ls -al $LIVY_BUILD_PATH/assembly/target && \
