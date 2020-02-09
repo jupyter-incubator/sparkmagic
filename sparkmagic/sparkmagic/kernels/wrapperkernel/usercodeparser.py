@@ -11,7 +11,8 @@ class UserCodeParser(object):
     #    some_input
     _magics_with_no_cell_body = [i.__name__ for i in [KernelMagics.info, KernelMagics.logs, KernelMagics.cleanup,
                                                       KernelMagics.delete, KernelMagics.help, KernelMagics.spark,
-                                                      KernelMagics.send_to_spark]]
+                                                      KernelMagics.send_to_spark,
+                                                      KernelMagics.cancel]]
 
     def get_code_to_run(self, code):
         try:

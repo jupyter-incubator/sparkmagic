@@ -53,6 +53,10 @@ class SparkController(object):
         sessions = self.get_all_sessions_endpoint(endpoint)
         return [str(s) for s in sessions]
 
+    def get_all_statements_in_session(self, endpoint, session_id):
+        http_client = self._http_client(endpoint)
+        return http_client.get_statements(session_id)
+
     def cleanup(self):
         self.session_manager.clean_up_all()
 
@@ -75,6 +79,17 @@ class SparkController(object):
             session = self._livy_session(http_client, {constants.LIVY_KIND_PARAM: response[constants.LIVY_KIND_PARAM]},
                                         self.ipython_display, session_id)
             session.delete()
+    
+    def cancel_session_by_id(self, endpoint, session_id):
+        statements = self.get_all_statements_in_session(endpoint,session_id)["statements"]
+        for s in statements:
+            state = s[u"state"]
+            if state in [u"waiting", u"running"]:
+                self.cancel_statement_in_session(endpoint, session_id, s[u"id"])
+
+    def cancel_statement_in_session(self, endpoint, session_id, statement_id):
+       http_client = self._http_client(endpoint)
+       http_client.cancel_statement(session_id, statement_id)
 
     def add_session(self, name, endpoint, skip_if_exists, properties):
         if skip_if_exists and (name in self.session_manager.get_sessions_list()):

@@ -338,6 +338,30 @@ class KernelMagics(SparkMagicBase):
         else:
             self.ipython_display.send_error(u"Include the -f parameter if you understand that all statements executed "
                                             u"in this session will be lost.")
+                                            
+    @magic_arguments()
+    @cell_magic
+    @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @argument("-s", "--session", type=int, help="Which session to cancel.")
+    @argument("-t", "--statement", type=int, help="Which statement to cancel.")
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
+    @_event
+    def cancel(self, line, cell="", local_ns=None):
+        self._assure_cell_body_is_empty(KernelMagics.cancel.__name__, cell)
+        args = parse_argstring_or_throw(self.cancel, line)
+
+        if args.session is None:
+            self.ipython_display.send_error(u'You must provide a session ID (-s argument).')
+            return
+
+        if args.force:
+            if args.statement is not None:
+                self.spark_controller.cancel_statement_in_session(self.endpoint, args.session, args.statement)
+            else:
+                self.spark_controller.cancel_session_by_id(self.endpoint, args.session)
+        else:
+            self.ipython_display.send_error(u"Include the -f parameter if you understand that statements in execution and waiting for execution will be interrupted")
 
     @cell_magic
     def _do_not_call_start_session(self, line, cell="", local_ns=None):
