@@ -63,7 +63,7 @@ class Command(ObjectWithGuid):
                                      orientation='horizontal',
                                      layout=Layout(width='50%', height='25px')
                                      )
-        session.ipython_display.display(progress)
+        #session.ipython_display.display(progress)
 
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
