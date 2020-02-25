@@ -137,9 +137,10 @@ class LivySession(ObjectWithGuid):
 
         try:
             connection_file = os.path.basename(ipykernel.get_connection_file())
-            kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-            self.properties['conf']['spark.yarn.appMasterEnv.HOPSWORKS_KERNEL_ID'] = kernel_id
-            self.properties['conf']['spark.executorEnv.HOPSWORKS_KERNEL_ID'] = kernel_id
+            if 'kernel' in connection_file:
+                kernel_id = connection_file.split('-', 1)[1].split('.')[0]
+                self.properties['conf']['spark.yarn.appMasterEnv.HOPSWORKS_KERNEL_ID'] = kernel_id
+                self.properties['conf']['spark.executorEnv.HOPSWORKS_KERNEL_ID'] = kernel_id
 
             r = self._http_client.post_session(self.properties)
             self.id = r[u"id"]
