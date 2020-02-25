@@ -1,3 +1,5 @@
 {"argv":["python","-m","sparkmagic.kernels.sparkkernel.sparkkernel", "-f", "{connection_file}"],
- "display_name":"Spark"
+ "display_name":"Spark",
+ "language":"scala",
+ "pygments_lexer":"scala"
 }
