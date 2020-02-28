@@ -138,7 +138,7 @@ class KernelMagics(SparkMagicBase):
   </tr>
   <tr>
     <td>send_to_spark</td>
-    <td>%%send_to_spark -o variable -t str -n var</td>
+    <td>%%send_to_spark -i variable -t str -n var</td>
     <td>Sends a variable from local output to spark cluster.
     <br/>
     Parameters:
