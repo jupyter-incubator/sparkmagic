@@ -3,6 +3,7 @@
 ### Bug fixes
 
 * Fix ContextualVersionConflict in Dockerfile.spark. Thanks Linan Zheng, @LinanZheng
+* Fix Info Subcommand in RemoteSparkMagic. Thanks Linan Zheng, @LinanZheng
 
 ## 0.15.0
 
