@@ -50,7 +50,7 @@ def test_info_endpoint_command_parses():
 
     magic.spark(command)
 
-    print_info_mock.assert_called_once_with(url="http://microsoft.com", id="1234")
+    print_info_mock.assert_called_once_with(None,1234)
 
 
 @with_setup(_setup, _teardown)
