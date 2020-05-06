@@ -18,6 +18,8 @@ class LivyClientLibException(Exception):
 class HttpClientException(LivyClientLibException):
     """An exception thrown by the HTTP client when it fails to make a request."""
 
+class SparkCommandFailedException(LivyClientLibException):
+    """An exception thrown by the HTTP client when 400 status is returned to display error message."""
 
 class LivyClientTimeoutException(LivyClientLibException):
     """An exception for timeouts while interacting with Livy."""
@@ -55,7 +57,7 @@ class SparkStatementException(LivyClientLibException):
     """Exception that is thrown when an error occurs while parsing or executing Spark statements."""
 
 # == DECORATORS FOR EXCEPTION HANDLING ==
-EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, SqlContextNotFoundException, HttpClientException, LivyClientTimeoutException, SessionManagementException, SparkStatementException]
+EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, SqlContextNotFoundException, HttpClientException, SparkCommandFailedException, LivyClientTimeoutException, SessionManagementException, SparkStatementException]
 
 def handle_expected_exceptions(f):
     """A decorator that handles expected exceptions. Self can be any object with

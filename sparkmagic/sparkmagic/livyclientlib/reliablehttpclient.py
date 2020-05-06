@@ -11,6 +11,7 @@ from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 import sparkmagic.utils.constants as constants
 from sparkmagic.livyclientlib.exceptions import HttpClientException
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
+from sparkmagic.livyclientlib.exceptions import SparkCommandFailedException
 
 
 class ReliableHttpClient(object):
@@ -92,6 +93,9 @@ class ReliableHttpClient(object):
                 if error:
                     raise HttpClientException(u"Error sending http request and maximum retry encountered.")
                 else:
-                    raise HttpClientException(u"Invalid status code '{}' from {} with error payload: {}"
-                                              .format(status, url, text))
+                    if status == 400:
+                        raise SparkCommandFailedException('Spark command failed! This is often the result of code using more memory on the Spark Driver than what was configured. Please try increasing the Spark Driver memory in the configuration.')
+                    else:
+                        raise HttpClientException(u"Invalid status code '{}' from {} with error payload: {}"
+                                                  .format(status, url, text))
             return r
