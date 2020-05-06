@@ -186,6 +186,9 @@ class LivySession(ObjectWithGuid):
         else:
             self._spark_events.emit_session_creation_end_event(self.guid, self.kind, self.id, self.status, True, "", "")
 
+    def get_proxy_url(self):
+        return "/hopsworks-api/yarnui/"
+
     def get_app_id(self):
         if self._app_id is None:
             self._app_id = self._http_client.get_session(self.id).get("appId")
@@ -199,7 +202,7 @@ class LivySession(ObjectWithGuid):
         return self.get_app_info().get(member_name)
 
     def get_driver_log_url(self):
-        return self.get_app_info_member("driverLogUrl")
+        return self.get_proxy_url() + self.get_app_info_member("driverLogUrl")
 
     def get_logs(self):
         log_array = self._http_client.get_all_session_logs(self.id)[u'log']
@@ -207,7 +210,7 @@ class LivySession(ObjectWithGuid):
         return self._logs
 
     def get_spark_ui_url(self):
-        return self.get_app_info_member("sparkUiUrl")
+        return self.get_proxy_url() + self.get_app_info_member("sparkUiUrl")
 
     @property
     def http_client(self):
