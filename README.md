@@ -53,7 +53,7 @@ See the [Sending Local Data to Spark notebook](examples/Send%20local%20data%20to
  
 3. If you're using JupyterLab, you'll need to run another command:
 
-        jupyter labextension install @jupyter-widgets/jupyterlab-manager
+        jupyter labextension install "@jupyter-widgets/jupyterlab-manager"
 
 4. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
 
