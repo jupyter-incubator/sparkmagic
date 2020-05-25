@@ -4,13 +4,14 @@
 from mock import patch, PropertyMock, MagicMock
 from nose.tools import raises, assert_equals, with_setup, assert_is_not_none, assert_false, assert_true
 import requests
-from requests_kerberos.kerberos_ import HTTPKerberosAuth
+from requests_kerberos.kerberos_ import HTTPKerberosAuth, REQUIRED, OPTIONAL
 
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.exceptions import HttpClientException
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 from sparkmagic.livyclientlib.linearretrypolicy import LinearRetryPolicy
 from sparkmagic.livyclientlib.reliablehttpclient import ReliableHttpClient
+import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
 
 retry_policy = None
@@ -56,7 +57,7 @@ def test_compose_url():
 
 @with_setup(_setup, _teardown)
 def test_get():
-    with patch('requests.get') as patched_get:
+    with patch('requests.Session.get') as patched_get:
         type(patched_get.return_value).status_code = 200
 
         client = ReliableHttpClient(endpoint, {}, retry_policy)
@@ -69,7 +70,7 @@ def test_get():
 @raises(HttpClientException)
 @with_setup(_setup, _teardown)
 def test_get_throws():
-    with patch('requests.get') as patched_get:
+    with patch('requests.Session.get') as patched_get:
         type(patched_get.return_value).status_code = 500
 
         client = ReliableHttpClient(endpoint, {}, retry_policy)
@@ -84,7 +85,7 @@ def test_get_will_retry():
     retry_policy.should_retry.return_value = True
     retry_policy.seconds_to_sleep.return_value = 0.01
 
-    with patch('requests.get') as patched_get:
+    with patch('requests.Session.get') as patched_get:
         # When we call assert_equals in this unit test, the side_effect is executed.
         # So, the last status_code should be repeated.
         sequential_values = [500, 200, 200]
@@ -102,7 +103,7 @@ def test_get_will_retry():
 
 @with_setup(_setup, _teardown)
 def test_post():
-    with patch('requests.post') as patched_post:
+    with patch('requests.Session.post') as patched_post:
         type(patched_post.return_value).status_code = 200
 
         client = ReliableHttpClient(endpoint, {}, retry_policy)
@@ -115,7 +116,7 @@ def test_post():
 @raises(HttpClientException)
 @with_setup(_setup, _teardown)
 def test_post_throws():
-    with patch('requests.post') as patched_post:
+    with patch('requests.Session.post') as patched_post:
         type(patched_post.return_value).status_code = 500
 
         client = ReliableHttpClient(endpoint, {}, retry_policy)
@@ -130,7 +131,7 @@ def test_post_will_retry():
     retry_policy.should_retry.return_value = True
     retry_policy.seconds_to_sleep.return_value = 0.01
 
-    with patch('requests.post') as patched_post:
+    with patch('requests.Session.post') as patched_post:
         # When we call assert_equals in this unit test, the side_effect is executed.
         # So, the last status_code should be repeated.
         sequential_values = [500, 200, 200]
@@ -148,7 +149,7 @@ def test_post_will_retry():
 
 @with_setup(_setup, _teardown)
 def test_delete():
-    with patch('requests.delete') as patched_delete:
+    with patch('requests.Session.delete') as patched_delete:
         type(patched_delete.return_value).status_code = 200
 
         client = ReliableHttpClient(endpoint, {}, retry_policy)
@@ -161,7 +162,7 @@ def test_delete():
 @raises(HttpClientException)
 @with_setup(_setup, _teardown)
 def test_delete_throws():
-    with patch('requests.delete') as patched_delete:
+    with patch('requests.Session.delete') as patched_delete:
         type(patched_delete.return_value).status_code = 500
 
         client = ReliableHttpClient(endpoint, {}, retry_policy)
@@ -176,7 +177,7 @@ def test_delete_will_retry():
     retry_policy.should_retry.return_value = True
     retry_policy.seconds_to_sleep.return_value = 0.01
 
-    with patch('requests.delete') as patched_delete:
+    with patch('requests.Session.delete') as patched_delete:
         # When we call assert_equals in this unit test, the side_effect is executed.
         # So, the last status_code should be repeated.
         sequential_values = [500, 200, 200]
@@ -199,7 +200,7 @@ def test_will_retry_error_no():
     retry_policy.should_retry.return_value = False
     retry_policy.seconds_to_sleep.return_value = 0.01
 
-    with patch('requests.get') as patched_get:
+    with patch('requests.Session.get') as patched_get:
         patched_get.side_effect = requests.exceptions.ConnectionError()
         client = ReliableHttpClient(endpoint, {}, retry_policy)
 
@@ -232,3 +233,23 @@ def test_kerberos_auth_check_auth():
     client = ReliableHttpClient(endpoint, {}, retry_policy)
     assert_is_not_none(client._auth)
     assert isinstance(client._auth, HTTPKerberosAuth)
+    assert hasattr(client._auth, 'mutual_authentication')
+    assert_equals(client._auth.mutual_authentication, REQUIRED)
+
+
+@with_setup(_setup, _teardown)
+def test_kerberos_auth_custom_configuration():
+    custom_kerberos_conf = {
+        "mutual_authentication": OPTIONAL,
+        "force_preemptive": True
+    }
+    overrides = { conf.kerberos_auth_configuration.__name__: custom_kerberos_conf }
+    conf.override_all(overrides)
+    endpoint = Endpoint("http://url.com", constants.AUTH_KERBEROS, "username", "password")
+    client = ReliableHttpClient(endpoint, {}, retry_policy)
+    assert_is_not_none(client._auth)
+    assert isinstance(client._auth, HTTPKerberosAuth)
+    assert hasattr(client._auth, 'mutual_authentication')
+    assert_equals(client._auth.mutual_authentication, OPTIONAL)
+    assert hasattr(client._auth, 'force_preemptive')
+    assert_equals(client._auth.force_preemptive, True)

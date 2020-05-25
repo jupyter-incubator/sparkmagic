@@ -9,6 +9,8 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 
 ![Automatic visualization](screenshots/autoviz.png)
 
+![Server-side visualization](screenshots/matplotlib.png)
+
 ![Help](screenshots/help.png)
 
 ## Features
@@ -16,9 +18,10 @@ The Sparkmagic project includes a set of magics for interactively running Spark 
 * Run Spark code in multiple languages against any remote Spark cluster through Livy
 * Automatic SparkContext (`sc`) and HiveContext (`sqlContext`) creation
 * Easily execute SparkSQL queries with the `%%sql` magic
-* Automatic visualization of SQL queries in the PySpark, PySpark3, Spark and SparkR kernels; use an easy visual interface to interactively construct visualizations, no code required
+* Automatic visualization of SQL queries in the PySpark, Spark and SparkR kernels; use an easy visual interface to interactively construct visualizations, no code required
 * Easy access to Spark application information and logs (`%%info` magic)
 * Ability to capture the output of SQL queries as Pandas dataframes to interact with other Python libraries (e.g. matplotlib)
+* Send local files or dataframes to a remote cluster (e.g. sending pretrained local ML model straight to the Spark cluster)
 * Authenticate to Livy via Basic Access authentication or via Kerberos
 
 ## Examples
@@ -34,6 +37,10 @@ The sparkmagic library provides a %%spark magic that you can use to easily run c
 The sparkmagic library also provides a set of Scala and Python kernels that allow you to automatically connect to a remote Spark cluster, run code and SQL queries, manage your Livy server and Spark job configuration, and generate automatic visualizations.
 See [Pyspark](examples/Pyspark%20Kernel.ipynb) and [Spark](examples/Spark%20Kernel.ipynb) sample notebooks.
 
+### 3. Sending local data to Spark Kernel
+
+See the [Sending Local Data to Spark notebook](examples/Send%20local%20data%20to%20Spark.ipynb).
+
 ## Installation
 
 1. Install the library
@@ -43,20 +50,23 @@ See [Pyspark](examples/Pyspark%20Kernel.ipynb) and [Spark](examples/Spark%20Kern
 2. Make sure that ipywidgets is properly installed by running
 
         jupyter nbextension enable --py --sys-prefix widgetsnbextension 
-        
-3. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
+ 
+3. If you're using JupyterLab, you'll need to run another command:
+
+        jupyter labextension install "@jupyter-widgets/jupyterlab-manager"
+
+4. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
 
         jupyter-kernelspec install sparkmagic/kernels/sparkkernel
         jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
-        jupyter-kernelspec install sparkmagic/kernels/pyspark3kernel
         jupyter-kernelspec install sparkmagic/kernels/sparkrkernel
         
-4. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
+5. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
 
-5. (Optional) Enable the server extension so that clusters can be programatically changed:
+6. (Optional) Enable the server extension so that clusters can be programatically changed:
 
         jupyter serverextension enable --py sparkmagic
-        
+
 ## Authentication Methods
 
 Sparkmagic supports:
@@ -67,7 +77,67 @@ Sparkmagic supports:
 
 Kerberos support is implemented via the [requests-kerberos](https://github.com/requests/requests-kerberos) package. Sparkmagic expects a kerberos ticket to be available in the system. Requests-kerberos will pick up the kerberos ticket from a cache file. For the ticket to be available, the user needs to have run [kinit](https://web.mit.edu/kerberos/krb5-1.12/doc/user/user_commands/kinit.html) to create the kerberos ticket.
 
-Currently, sparkmagic does not support passing a kerberos principal/token, but we welcome pull requests.
+### Kerberos Configuration
+
+By default the `HTTPKerberosAuth` constructor provided by the `requests-kerberos` package will use the following configuration
+```python
+HTTPKerberosAuth(mutual_authentication=REQUIRED)
+```
+but this will not be right configuration for every context, so it is able to pass custom arguments for this constructor using the following configuration on the `~/.sparkmagic/config.json`
+```json
+{
+    "kerberos_auth_configuration": {
+        "mutual_authentication": 1,
+        "service": "HTTP",
+        "delegate": false,
+        "force_preemptive": false,
+        "principal": "principal",
+        "hostname_override": "hostname_override",
+        "sanitize_mutual_error_response": true,
+        "send_cbt": true
+    }
+}
+```
+
+## Papermill
+
+If you want Papermill rendering to stop on a Spark error, edit the `~/.sparkmagic/config.json` with the following settings:
+
+```json
+{
+    "shutdown_session_on_spark_statement_errors": true,
+    "all_errors_are_fatal": true
+}
+```
+
+If you want any registered livy sessions to be cleaned up on exit regardless of whether the process exits gracefully or not, you can set:
+ 
+```json
+{
+    "cleanup_all_sessions_on_exit": true,
+    "all_errors_are_fatal": true
+}
+```
+
+### Conf overrides in code
+
+In addition to the conf at `~/.sparkmagic/config.json`, sparkmagic conf can be overridden programmatically in a notebook.
+
+For example:
+```python
+import sparkmagic.utils.configuration as conf
+conf.override('cleanup_all_sessions_on_exit', True)
+```
+
+Same thing, but referencing the conf member: 
+
+```python
+conf.override(conf.cleanup_all_sessions_on_exit.__name__, True)
+```
+
+NOTE: override for `cleanup_all_sessions_on_exit` must be set _before_ initializing sparkmagic ie. before this:
+
+    %load_ext sparkmagic.magics
 
 ## Docker
 
