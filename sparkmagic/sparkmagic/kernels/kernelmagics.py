@@ -48,7 +48,7 @@ class KernelMagics(SparkMagicBase):
     def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
-        
+
         self.session_name = u"session_name"
         self.session_started = False
 
@@ -136,6 +136,22 @@ class KernelMagics(SparkMagicBase):
     <td>%%local<br/>a = 1</td>
     <td>All the code in subsequent lines will be executed locally. Code must be valid Python code.</td>
   </tr>
+  <tr>
+    <td>send_to_spark</td>
+    <td>%%send_to_spark -i variable -t str -n var</td>
+    <td>Sends a variable from local output to spark cluster.
+    <br/>
+    Parameters:
+      <ul>
+        <li>-i VAR_NAME: Local Pandas DataFrame(or String) of name VAR_NAME will be available in the %%spark context as a 
+          Spark dataframe(or String) with the same name.</li>
+        <li>-t TYPE: Specifies the type of variable passed as -i. Available options are:
+         `str` for string and `df` for Pandas DataFrame. Optional, defaults to `str`.</li>
+        <li>-n NAME: Custom name of variable passed as -i. Optional, defaults to -i variable name.</li>
+        <li>-m MAXROWS: Maximum amount of Pandas rows that will be sent to Spark. Defaults to 2500.</li>
+      </ul>
+    </td>
+  </tr>
 </table>
 """
         self.ipython_display.html(help_html)
@@ -144,6 +160,30 @@ class KernelMagics(SparkMagicBase):
     def local(self, line, cell=u"", local_ns=None):
         # This should not be reachable thanks to UserCodeParser. Registering it here so that it auto-completes with tab.
         raise NotImplementedError(u"UserCodeParser should have prevented code execution from reaching here.")
+
+    @magic_arguments()
+    @argument("-i", "--input", type=str, default=None, help="If present, indicated variable will be stored in variable"
+                                                             " in Spark's context.")
+    @argument("-t", "--vartype", type=str, default='str', help="Optionally specify the type of input variable. "
+                                                               "Available: 'str' - string(default) or 'df' - Pandas DataFrame")
+    @argument("-n", "--varname", type=str, default=None, help="Optionally specify the custom name for the input variable.")
+    @argument("-m", "--maxrows", type=int, default=2500, help="Maximum number of rows that will be pulled back "
+                                                              "from the local dataframe")
+    @cell_magic
+    @needs_local_scope
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
+    def send_to_spark(self, line, cell=u"", local_ns=None):
+        self._assure_cell_body_is_empty(KernelMagics.send_to_spark.__name__, cell)
+        args = parse_argstring_or_throw(self.send_to_spark, line)
+
+        if not args.input:
+            raise BadUserDataException("-i param not provided.")
+
+        if self._do_not_call_start_session(""):
+            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, args.maxrows, None)
+        else:
+            return
 
     @magic_arguments()
     @cell_magic
@@ -243,7 +283,7 @@ class KernelMagics(SparkMagicBase):
     def sql(self, line, cell="", local_ns=None):
         if self._do_not_call_start_session(""):
             args = parse_argstring_or_throw(self.sql, line)
-            
+
             coerce = get_coerce_value(args.coerce)
 
             return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
@@ -322,6 +362,10 @@ class KernelMagics(SparkMagicBase):
                 self.fatal_error_message = conf.fatal_error_suggestion().format(e)
                 self.logger.error(u"Error creating session: {}".format(e))
                 self.ipython_display.send_error(self.fatal_error_message)
+
+                if conf.all_errors_are_fatal():
+                    raise e
+
                 return False
 
         return self.session_started
@@ -375,6 +419,16 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException(error)
 
         self.endpoint = Endpoint(server, auth, username, password)
+
+    @line_magic
+    def matplot(self, line, cell="", local_ns=None):
+        session = self.spark_controller.get_session_by_name_or_default(self.session_name)
+        command = Command("%matplot " + line)
+        (success, out, mimetype) = command.execute(session)
+        if success:
+            session.ipython_display.display(out)
+        else:
+            session.ipython_display.send_error(out)
 
     def refresh_configuration(self):
         credentials = getattr(conf, 'base64_kernel_' + self.language + '_credentials')()

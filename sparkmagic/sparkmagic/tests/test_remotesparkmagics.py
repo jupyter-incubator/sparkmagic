@@ -2,7 +2,7 @@ from mock import MagicMock
 from nose.tools import with_setup
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, AUTH_BASIC, NO_AUTH
+from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, AUTH_BASIC, NO_AUTH, MIMETYPE_TEXT_PLAIN
 from sparkmagic.magics.remotesparkmagics import RemoteSparkMagics
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
@@ -45,12 +45,12 @@ def test_info_command_parses():
 def test_info_endpoint_command_parses():
     print_info_mock = MagicMock()
     magic._print_endpoint_info = print_info_mock
-    command = "info -u http://microsoft.com"
+    command = "info -u http://microsoft.com -i 1234"
     spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=None)
 
     magic.spark(command)
 
-    print_info_mock.assert_called_once_with(None)
+    print_info_mock.assert_called_once_with(None,1234)
 
 
 @with_setup(_setup, _teardown)
@@ -215,7 +215,7 @@ def test_bad_command_writes_error():
 def test_run_cell_command_parses():
     run_cell_method = MagicMock()
     result_value = ""
-    run_cell_method.return_value = (True, result_value)
+    run_cell_method.return_value = (True, result_value, MIMETYPE_TEXT_PLAIN)
     spark_controller.run_command = run_cell_method
 
     command = "-s"
@@ -234,7 +234,7 @@ def test_run_cell_command_parses():
 def test_run_cell_command_writes_to_err():
     run_cell_method = MagicMock()
     result_value = ""
-    run_cell_method.return_value = (False, result_value)
+    run_cell_method.return_value = (False, result_value, MIMETYPE_TEXT_PLAIN)
     spark_controller.run_command = run_cell_method
 
     command = "-s"
@@ -246,7 +246,7 @@ def test_run_cell_command_writes_to_err():
 
     run_cell_method.assert_called_once_with(Command(cell), name)
     assert result is None
-    ipython_display.send_error.assert_called_once_with(result_value)
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG.format(result_value))
 
 
 @with_setup(_setup, _teardown)
@@ -373,7 +373,7 @@ def test_run_spark_with_store_command_parses():
 @with_setup(_setup, _teardown)
 def test_run_spark_with_store_correct_calls():
     run_cell_method = MagicMock()
-    run_cell_method.return_value = (True, "")
+    run_cell_method.return_value = (True, "", MIMETYPE_TEXT_PLAIN)
     spark_controller.run_command = run_cell_method
 
     command = "-s"
@@ -422,7 +422,7 @@ def test_run_spark_command_exception():
 def test_run_spark_command_exception_while_storing():
     run_cell_method = MagicMock()
     exception = LivyUnexpectedStatusException('WOW')
-    run_cell_method.side_effect = [(True, ""), exception]
+    run_cell_method.side_effect = [(True, "", MIMETYPE_TEXT_PLAIN), exception]
     spark_controller.run_command = run_cell_method
 
     command = "-s"
@@ -449,7 +449,7 @@ def test_run_spark_command_exception_while_storing():
 @with_setup(_setup, _teardown)
 def test_run_sql_command_parses():
     run_cell_method = MagicMock()
-    run_cell_method.return_value = (True, "")
+    run_cell_method.return_value = (True, "", MIMETYPE_TEXT_PLAIN)
     spark_controller.run_sqlquery = run_cell_method
 
     command = "-s"
@@ -492,7 +492,7 @@ def test_run_sql_command_exception():
 @with_setup(_setup, _teardown)
 def test_run_sql_command_knows_how_to_be_quiet():
     run_cell_method = MagicMock()
-    run_cell_method.return_value = (True, "")
+    run_cell_method.return_value = (True, "", MIMETYPE_TEXT_PLAIN)
     spark_controller.run_sqlquery = run_cell_method
 
     command = "-s"
