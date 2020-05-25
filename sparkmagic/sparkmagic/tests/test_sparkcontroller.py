@@ -132,8 +132,9 @@ def test_get_client_keys():
 @with_setup(_setup, _teardown)
 def test_get_all_sessions():
     http_client = MagicMock()
-    http_client.get_sessions.return_value = json.loads('{"from":0,"total":2,"sessions":[{"id":0,"state":"idle","kind":'
+    http_client.get_sessions.return_value = json.loads('{"from":0,"total":3,"sessions":[{"id":0,"state":"idle","kind":'
                                                        '"spark","log":[""]}, {"id":1,"state":"busy","kind":"spark","log"'
+                                                       ':[""]},{"id":2,"state":"busy","kind":"sql","log"'
                                                        ':[""]}]}')
     controller._http_client = MagicMock(return_value=http_client)
     controller._livy_session = MagicMock()
