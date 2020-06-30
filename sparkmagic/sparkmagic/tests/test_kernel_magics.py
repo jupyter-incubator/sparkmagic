@@ -64,7 +64,8 @@ def test_start_session():
     assert ret
     assert magic.session_started
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK,
+                                                          "name": "livy-session-anonymous"})
 
     # Call a second time
     ret = magic._do_not_call_start_session(line)
@@ -183,7 +184,7 @@ def test_change_endpoint_session_started():
     magic.session_started = True
 
     magic._do_not_call_change_endpoint(line)
-    
+
 
 @with_setup(_setup, _teardown)
 def test_info():
@@ -385,7 +386,8 @@ def test_configure():
     assert_equals(conf.session_configs(), {"extra": "yes"})
     spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                         {"kind": constants.SESSION_KIND_PYSPARK, "extra": "yes"})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK, "extra": "yes",
+                                                          "name": "livy-session-anonymous"})
     magic.info.assert_called_once_with("")
 
 
@@ -441,7 +443,8 @@ def test_spark():
 
     ipython_display.write.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK,
+                                                          "name": "livy-session-anonymous"})
     spark_controller.run_command.assert_called_once_with(Command(cell), None)
 
 
@@ -466,7 +469,8 @@ def test_spark_error():
 
     ipython_display.send_error.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK,
+                                                          "name": "livy-session-anonymous"})
     spark_controller.run_command.assert_called_once_with(Command(cell), None)
 
 
@@ -564,7 +568,8 @@ def test_sql_without_output():
     magic.sql(line, cell)
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK,
+                                                          "name": "livy-session-anonymous"})
     magic.execute_sqlquery.assert_called_once_with(cell, None, None, None, None, None, False, None)
 
 
@@ -577,7 +582,8 @@ def test_sql_with_output():
     magic.sql(line, cell)
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK,
+                                                          "name": "livy-session-anonymous"})
     magic.execute_sqlquery.assert_called_once_with(cell, None, None, None, None, "my_var", False, None)
 
 
@@ -627,7 +633,8 @@ def test_sql_quiet():
     ret = magic.sql(line, cell)
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK,
+                                                          "name": "livy-session-anonymous"})
     magic.execute_sqlquery.assert_called_once_with(cell, None, None, None, None, "Output", True, None)
 
 
@@ -640,7 +647,8 @@ def test_sql_sample_options():
     ret = magic.sql(line, cell)
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK,
+                                                          "name": "livy-session-anonymous"})
     magic.execute_sqlquery.assert_called_once_with(cell, "sample", 142, 0.3, None, None, True, True)
 
 
@@ -653,7 +661,8 @@ def test_sql_false_coerce():
     ret = magic.sql(line, cell)
 
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+                                                         {"kind": constants.SESSION_KIND_PYSPARK,
+                                                          "name": "livy-session-anonymous"})
     magic.execute_sqlquery.assert_called_once_with(cell, "sample", 142, 0.3, None, None, True, False)
 
 
@@ -860,7 +869,8 @@ def test_start_session_displays_fatal_error_when_session_throws():
     magic._do_not_call_start_session("Test Line")
 
     magic.spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
-                                                               {"kind": constants.SESSION_KIND_SPARK})
+                                                               {"kind": constants.SESSION_KIND_SPARK,
+                                                                "name": "livy-session-anonymous"})
     assert magic.fatal_error
     assert magic.fatal_error_message == conf.fatal_error_suggestion().format(str(e))
 

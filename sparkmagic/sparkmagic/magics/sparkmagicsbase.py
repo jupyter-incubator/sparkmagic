@@ -12,7 +12,6 @@ from six import string_types
 from IPython.core.magic import Magics, magics_class
 from hdijupyterutils.ipythondisplay import IpythonDisplay
 
-import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.utils import get_sessions_info_html
@@ -73,7 +72,7 @@ class SparkMagicBase(Magics):
 
     @staticmethod
     def _sqlquery(cell, samplemethod, maxrows, samplefraction, coerce):
-        return SQLQuery(cell, samplemethod, maxrows, samplefraction, coerce=coerce)
+        return SQLQuery(cell, samplemethod, maxrows, samplefraction,  coerce=coerce)
 
     def _print_endpoint_info(self, info_sessions, current_session_id):
         if info_sessions:

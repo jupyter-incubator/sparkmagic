@@ -12,6 +12,7 @@ from hdijupyterutils.ipythondisplay import IpythonDisplay
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
+from sparkmagic.utils.session_id import get_local_profile_name
 from sparkmagic.livyclientlib.exceptions import wrap_unexpected_exceptions
 from sparkmagic.kernels.wrapperkernel.usercodeparser import UserCodeParser
 
@@ -48,6 +49,7 @@ class SparkKernelBase(IPythonKernel):
             self._change_language()
             if conf.use_auto_viz():
                 self._register_auto_viz()
+            self._execute_local_profile()
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None, allow_stdin=False):
         def f(self):
@@ -58,8 +60,9 @@ class SparkKernelBase(IPythonKernel):
         return wrap_unexpected_exceptions(f, self._complete_cell)(self)
 
     def do_shutdown(self, restart):
-        # Cleanup
-        self._delete_session()
+        if conf.if_delete_session_when_existing():
+            # Cleanup
+            self._delete_session()
 
         return self._do_shutdown_ipykernel(restart)
 
@@ -82,13 +85,20 @@ class SparkKernelBase(IPythonKernel):
                            log_if_error="Failed to change language to {}.".format(self.session_language))
         self.logger.debug("Changed language.")
 
+    def _execute_local_profile(self):
+        import os
+        local_profile_name = get_local_profile_name()
+        if os.path.isfile(local_profile_name):
+            self.do_execute("%%local\n{}".format(open(local_profile_name).read()), True)
+            self.logger.debug("Executed local profile {}.".format(local_profile_name))
+
     def _register_auto_viz(self):
         from sparkmagic.utils.sparkevents import get_spark_events_handler
         import autovizwidget.utils.configuration as c
-        
+
         handler = get_spark_events_handler()
         c.override("events_handler", handler)
-        
+
         register_auto_viz_code = """from autovizwidget.widget.utils import display_dataframe
 ip = get_ipython()
 ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.frame', 'DataFrame', display_dataframe)"""

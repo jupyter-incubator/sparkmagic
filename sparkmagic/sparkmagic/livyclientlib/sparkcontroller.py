@@ -6,7 +6,7 @@ from sparkmagic.utils.sparklogger import SparkLog
 from .sessionmanager import SessionManager
 from .livyreliablehttpclient import LivyReliableHttpClient
 from .livysession import LivySession
-from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
+from sparkmagic.utils.session_id import get_username, SessionIdFileLock
 
 
 class SparkController(object):
@@ -44,7 +44,7 @@ class SparkController(object):
         sessions = http_client.get_sessions()[u"sessions"]
         session_list = [self._livy_session(http_client, {constants.LIVY_KIND_PARAM: s[constants.LIVY_KIND_PARAM]},
                                            self.ipython_display, s[u"id"])
-                        for s in sessions]
+                        for s in sessions if s[constants.LIVY_KIND_PARAM] in constants.SESSION_KINDS_SUPPORTED]
         for s in session_list:
             s.refresh_status_and_info()
         return session_list
@@ -65,7 +65,7 @@ class SparkController(object):
 
     def delete_session_by_id(self, endpoint, session_id):
         name = self.session_manager.get_session_name_by_id_endpoint(session_id, endpoint)
-        
+
         if name in self.session_manager.get_sessions_list():
             self.delete_session_by_name(name)
         else:
@@ -81,9 +81,17 @@ class SparkController(object):
             self.logger.debug(u"Skipping {} because it already exists in list of sessions.".format(name))
             return
         http_client = self._http_client(endpoint)
-        session = self._livy_session(http_client, properties, self.ipython_display)
-        self.session_manager.add_session(name, session)
-        session.start()
+        if conf.reuse_sessions():
+            self.ipython_display.writeln(u'You are {}'.format(get_username()))
+            with SessionIdFileLock() as lock:
+                session = self._livy_session(http_client, properties, self.ipython_display, session_id=lock.get_session_id())
+                self.session_manager.add_session(name, session)
+                session.start()
+                lock.update_session_id(session.id)
+        else:
+            session = self._livy_session(http_client, properties, self.ipython_display)
+            self.session_manager.add_session(name, session)
+            session.start()
 
     def get_session_id_for_client(self, name):
         return self.session_manager.get_session_id_for_client(name)

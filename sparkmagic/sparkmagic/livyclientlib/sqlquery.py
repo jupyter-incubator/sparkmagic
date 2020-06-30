@@ -11,7 +11,7 @@ from .exceptions import DataFrameParseException, BadUserDataException
 class SQLQuery(ObjectWithGuid):
     def __init__(self, query, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None, coerce=None):
         super(SQLQuery, self).__init__()
-        
+
         if samplemethod is None:
             samplemethod = conf.default_samplemethod()
         if maxrows is None:

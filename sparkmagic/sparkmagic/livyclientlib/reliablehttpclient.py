@@ -54,6 +54,7 @@ class ReliableHttpClient(object):
         return self._send_request(relative_url, accepted_status_codes, requests.delete)
 
     def _send_request(self, relative_url, accepted_status_codes, function, data=None):
+        self.logger.debug('_send_request {} to {}, data: {}'.format(function, relative_url, data))
         return self._send_request_helper(self.compose_url(relative_url), accepted_status_codes, function, data, 0)
 
     def _send_request_helper(self, url, accepted_status_codes, function, data, retry_count):

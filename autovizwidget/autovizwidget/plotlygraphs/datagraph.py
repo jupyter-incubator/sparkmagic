@@ -29,6 +29,11 @@ class DataGraph(object):
     table.dataframe.hideme tbody th {
         display: none;
     }
+
+    div.jp-OutputArea-output {
+        overflow-x:auto;
+        align-items:flex-start;
+    }
 </style>
 """)
             self.display.html(df.to_html(max_rows=max_rows, max_cols=max_cols,
