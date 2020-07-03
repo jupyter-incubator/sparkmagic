@@ -133,20 +133,27 @@ class LivySession(ObjectWithGuid):
     def start(self):
         """Start the session against actual livy server."""
         if conf.reuse_sessions():
-            dead = True
+            reuse = False
+            app_id = ''
             try:
                 # To see if the session works properly.
-                if self.get_app_state() not in ('dead', ''):
-                    dead = False
-                session_id = self.get_app_id()
+                if self.get_app_state() not in constants.FINAL_STATUS:
+                    reuse = True
+                    app_id = self.get_app_id()
+                else:
+                    try:
+                        # auto delete session
+                        self._http_client.delete_session(self.id)
+                    except:
+                        pass
             except HttpClientException:
                 self.ipython_display.writeln(u'Spark session already dead')
-            else:
-                if not dead and self.status not in (constants.NOT_STARTED_SESSION_STATUS, constants.ERROR_SESSION_STATUS, constants.DEAD_SESSION_STATUS):
-                    self.ipython_display.writeln(u'Using existing session {}... Have fun!'.format(session_id))
-                    self.set_session_context()
-                    self.execute_profile()
-                    return
+
+            if reuse:
+                self.ipython_display.writeln(u'Using existing session {}... Have fun!'.format(app_id))
+                self.set_session_context()
+                self.execute_profile()
+                return
 
         self._spark_events.emit_session_creation_start_event(self.guid, self.kind)
         self._printed_resource_warning = False
