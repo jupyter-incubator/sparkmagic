@@ -99,7 +99,7 @@ class ReconnectHandler(IPythonHandler):
         sessions = self.session_manager.list_sessions()
 
         kernel_id = None
-        for session in sessions:
+        for session in sessions.result():
             if session['notebook']['path'] == path:
                 session_id = session['id']
                 kernel_id = session['kernel']['id']
