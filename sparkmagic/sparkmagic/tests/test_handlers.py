@@ -69,6 +69,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         # Create mocked reconnect_handler
         ReconnectHandler.__bases__ = (SimpleObject,)
         self.reconnect_handler = ReconnectHandler()
+        self.reconnect_handler._get_list_sessions = self.session_list
         self.reconnect_handler.spark_events = self.spark_events
         self.reconnect_handler.session_manager = self.session_manager
         self.reconnect_handler.kernel_manager = self.kernel_manager
