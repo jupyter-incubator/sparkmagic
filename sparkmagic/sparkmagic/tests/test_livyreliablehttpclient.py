@@ -10,6 +10,7 @@ from sparkmagic.livyclientlib.configurableretrypolicy import ConfigurableRetryPo
 from sparkmagic.livyclientlib.linearretrypolicy import LinearRetryPolicy
 
 
+
 def test_post_statement():
     http_client = MagicMock()
     livy_client = LivyReliableHttpClient(http_client, None)
@@ -71,7 +72,7 @@ def test_custom_headers():
     custom_headers = {"header1": "value1"}
     overrides = { conf.custom_headers.__name__: custom_headers }
     conf.override_all(overrides)
-    endpoint = Endpoint("http://url.com", constants.NO_AUTH)
+    endpoint = Endpoint("http://url.com", None)
     client = LivyReliableHttpClient.from_endpoint(endpoint)
     headers = client.get_headers()
     assert_equals(len(headers), 2)

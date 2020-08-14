@@ -6,7 +6,6 @@ import sparkmagic.utils.configuration as conf
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 from sparkmagic.utils.constants import AUTH_BASIC, NO_AUTH
 
-
 def _setup():
     conf.override_all({})
     

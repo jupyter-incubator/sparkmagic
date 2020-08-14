@@ -68,16 +68,20 @@ See the [Sending Local Data to Spark notebook](examples/Send%20local%20data%20to
         jupyter serverextension enable --py sparkmagic
 
 ## Authentication Methods
-
-Sparkmagic supports:
-
-* No auth
+Sparkmagic supports: 
+* No auth 
 * Basic authentication
 * Kerberos
 
+The [Authenticator](sparkmagic/sparkmagic/auth/customauth.py) is the mechanism for authenticating to Livy. The base
+Authenticator used by itself supports no auth, but it can be subclassed to enable authentication via other methods. 
+Two such examples are the [Basic](sparkmagic/sparkmagic/auth/basic.py) and [Kerberos](sparkmagic/sparkmagic/auth/kerberos.py) Authenticators. 
+
+### Kerberos Authenticator
+
 Kerberos support is implemented via the [requests-kerberos](https://github.com/requests/requests-kerberos) package. Sparkmagic expects a kerberos ticket to be available in the system. Requests-kerberos will pick up the kerberos ticket from a cache file. For the ticket to be available, the user needs to have run [kinit](https://web.mit.edu/kerberos/krb5-1.12/doc/user/user_commands/kinit.html) to create the kerberos ticket.
 
-### Kerberos Configuration
+#### Kerberos Configuration
 
 By default the `HTTPKerberosAuth` constructor provided by the `requests-kerberos` package will use the following configuration
 ```python
@@ -97,7 +101,56 @@ but this will not be right configuration for every context, so it is able to pas
         "send_cbt": true
     }
 }
-```
+``` 
+
+### Custom Authenticators
+
+You can write custom Authenticator subclasses to enable authentication via other mechanisms. All Authenticator subclasses 
+should override the `Authenticator.__call__(request)` method that attaches HTTP Authentication to the given Request object. 
+
+Authenticator subclasses that add additional class attributes to be used for the authentication, such as the [Basic] (sparkmagic/sparkmagic/auth/basic.py) authenticator which adds `username` and `password` attributes, should override the `__hash__`, `__eq__`, `update_with_widget_values`, and `get_widgets` methods to work with these new attributes. This is necessary in order for the Authenticator to use these attributes in the authentication process.
+
+#### Using a Custom Authenticator with Sparkmagic
+
+If your repository layout is:  
+
+        .
+        ├── LICENSE
+        ├── README.md
+        ├── customauthenticator
+        │   ├── __init__.py 
+        │   ├── customauthenticator.py 
+        └── setup.py
+
+Then to pip install from this repository, run: `pip install git+https://git_repo_url/#egg=customauthenticator`
+
+After installing, you need to register the custom authenticator with Sparkmagic so it can be dynamically imported. This can be done in two different ways:
+1.  Edit the configuration file at [`~/.sparkmagic/config.json`](config.json) with the following settings: 
+
+       ```json
+       {
+           "authenticators": {
+               "Kerberos": "sparkmagic.auth.kerberos.Kerberos",
+               "None": "sparkmagic.auth.customauth.Authenticator",
+               "Basic_Access": "sparkmagic.auth.basic.Basic",
+               "Custom_Auth": "customauthenticator.customauthenticator.CustomAuthenticator"
+         }
+       }
+       ```
+
+       This adds your `CustomAuthenticator` class in `customauthenticator.py` to Sparkmagic. `Custom_Auth` is the authentication type that will be displayed in the `%manage_spark` widget's Auth type dropdown as well as the Auth type passed as an argument to the -t flag in the `%spark add session` magic.   
+
+2. Modify the `authenticators` method in [`sparkmagic/utils/configuration.py`](sparkmagic/sparkmagic/utils/configuration.py) to return your custom authenticator:
+
+      ```python
+      def authenticators():
+              return {
+                      u"Kerberos": u"sparkmagic.auth.kerberos.Kerberos",
+                      u"None": u"sparkmagic.auth.customauth.Authenticator",
+                      u"Basic_Access": u"sparkmagic.auth.basic.Basic", 
+                      u"Custom_Auth": u"customauthenticator.customauthenticator.CustomAuthenticator"
+              }
+      ```
 
 ## Papermill
 
