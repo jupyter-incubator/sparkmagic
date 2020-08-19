@@ -125,7 +125,7 @@ If your repository layout is:
 Then to pip install from this repository, run: `pip install git+https://git_repo_url/#egg=customauthenticator`
 
 After installing, you need to register the custom authenticator with Sparkmagic so it can be dynamically imported. This can be done in two different ways:
-1.  Edit the configuration file at [`~/.sparkmagic/config.json`](config.json) with the following settings: 
+1.  Edit the configuration file at [`~/.sparkmagic/config.json`](config.json) with the following settings:
 
        ```json
        {
