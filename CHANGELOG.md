@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.16.0
+
+### Bug fixes
+
+* Fix ContextualVersionConflict in Dockerfile.spark. Thanks Linan Zheng, @LinanZheng
+* Fix Info Subcommand in RemoteSparkMagic. Thanks Linan Zheng, @LinanZheng
+* Fix to ignore unsupported spark session types whilst fetching the session list. Thanks, Murat Burak Migdisoglu, @mmigdiso
+
 ## 0.15.0
 
 ### Features

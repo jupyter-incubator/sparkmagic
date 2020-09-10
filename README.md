@@ -37,9 +37,9 @@ The sparkmagic library provides a %%spark magic that you can use to easily run c
 The sparkmagic library also provides a set of Scala and Python kernels that allow you to automatically connect to a remote Spark cluster, run code and SQL queries, manage your Livy server and Spark job configuration, and generate automatic visualizations.
 See [Pyspark](examples/Pyspark%20Kernel.ipynb) and [Spark](examples/Spark%20Kernel.ipynb) sample notebooks.
 
-### 3. Sending data to Spark%20Kernel
+### 3. Sending local data to Spark Kernel
 
-See the [sending data to Spark notebook](examples/Send local data to Spark.ipynb).
+See the [Sending Local Data to Spark notebook](examples/Send%20local%20data%20to%20Spark.ipynb).
 
 ## Installation
 
@@ -53,7 +53,7 @@ See the [sending data to Spark notebook](examples/Send local data to Spark.ipynb
  
 3. If you're using JupyterLab, you'll need to run another command:
 
-        jupyter labextension install @jupyter-widgets/jupyterlab-manager
+        jupyter labextension install "@jupyter-widgets/jupyterlab-manager"
 
 4. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
 

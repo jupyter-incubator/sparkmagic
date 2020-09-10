@@ -119,10 +119,10 @@ class RemoteSparkMagics(SparkMagicBase):
 
         # info
         if subcommand == "info":
-            if args.url is not None:
+            if args.url is not None and args.id is not None:
                 endpoint = Endpoint(args.url, args.auth, args.user, args.password)
                 info_sessions = self.spark_controller.get_all_sessions_endpoint_info(endpoint)
-                self._print_endpoint_info(info_sessions)
+                self._print_endpoint_info(info_sessions, args.id)
             else:
                 self._print_local_info()
         # config

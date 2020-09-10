@@ -46,9 +46,10 @@ class SparkController(object):
     def get_all_sessions_endpoint(self, endpoint):
         http_client = self._http_client(endpoint)
         sessions = http_client.get_sessions()[u"sessions"]
+        supported_sessions = filter(lambda s: (s[constants.LIVY_KIND_PARAM] in constants.SESSION_KINDS_SUPPORTED), sessions)
         session_list = [self._livy_session(http_client, {constants.LIVY_KIND_PARAM: s[constants.LIVY_KIND_PARAM]},
                                            self.ipython_display, s[u"id"])
-                        for s in sessions]
+                        for s in supported_sessions]
         for s in session_list:
             s.refresh_status_and_info()
         return session_list
