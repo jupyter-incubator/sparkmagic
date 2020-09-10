@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.16.0
+
 ### Bug fixes
 
 * Fix ContextualVersionConflict in Dockerfile.spark. Thanks Linan Zheng, @LinanZheng
