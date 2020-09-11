@@ -100,7 +100,7 @@ class ReconnectHandler(IPythonHandler):
 
     @gen.coroutine
     def _get_kernel_manager(self, path, kernel_name):
-        sessions = self._get_list_sessions
+        sessions = self._get_list_sessions()
 
         kernel_id = None
         for session in sessions:

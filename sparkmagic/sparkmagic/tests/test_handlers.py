@@ -54,7 +54,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         self.kernel_manager.get_kernel = MagicMock(return_value=self.individual_kernel_manager)
 
         # Mock session manager
-        self.session_list = [self.create_session_dict(self.path, self.kernel_id)]
+        self.session_list = MagicMock(return_value=[self.create_session_dict(self.path, self.kernel_id)])
         self.session_manager = MagicMock()
         self.session_manager.list_sessions = MagicMock(return_value=self.session_list)
         self.session_manager.create_session = MagicMock(return_value=self.create_session_dict(self.path, self.kernel_id))
