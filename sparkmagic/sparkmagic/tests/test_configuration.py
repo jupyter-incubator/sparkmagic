@@ -20,7 +20,10 @@ def test_configuration_override_base64_password():
     assert_equals(conf.d, { conf.kernel_python_credentials.__name__: kpc,
                                      conf.livy_session_startup_timeout_seconds.__name__: 1 })
     assert_equals(conf.livy_session_startup_timeout_seconds(), 1)
-    assert_equals(conf.base64_kernel_python_credentials(), { 'username': 'U', 'password': 'password', 'url': 'L', 'auth': AUTH_BASIC })
+    assert_equals(conf.base64_kernel_python_credentials(), { 
+        'username': 'U', 'password': 'password', 'url': 'L', 'auth': AUTH_BASIC,
+        'ssl_client_cert': None, 'ssl_client_key': None, 'ssl_verify': None
+    })
 
 
 @with_setup(_setup)
@@ -28,7 +31,10 @@ def test_configuration_auth_missing_basic_auth():
     kpc = { 'username': 'U', 'password': 'P', 'url': 'L'}
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    assert_equals(conf.base64_kernel_python_credentials(), { 'username': 'U', 'password': 'P', 'url': 'L', 'auth': AUTH_BASIC })
+    assert_equals(conf.base64_kernel_python_credentials(), { 
+        'username': 'U', 'password': 'P', 'url': 'L', 'auth': AUTH_BASIC,
+        'ssl_client_cert': None, 'ssl_client_key': None, 'ssl_verify': None
+    })
 
 
 @with_setup(_setup)
@@ -36,12 +42,18 @@ def test_configuration_auth_missing_no_auth():
     kpc = { 'username': '', 'password': '', 'url': 'L'}
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    assert_equals(conf.base64_kernel_python_credentials(), { 'username': '', 'password': '', 'url': 'L', 'auth': NO_AUTH })
+    assert_equals(conf.base64_kernel_python_credentials(), { 
+        'username': '', 'password': '', 'url': 'L', 'auth': NO_AUTH,
+        'ssl_client_cert': None, 'ssl_client_key': None, 'ssl_verify': None
+    })
 
 
 @with_setup(_setup)
 def test_configuration_override_fallback_to_password():
-    kpc = { 'username': 'U', 'password': 'P', 'url': 'L', 'auth': NO_AUTH }
+    kpc = { 
+        'username': 'U', 'password': 'P', 'url': 'L', 'auth': NO_AUTH,
+        'ssl_client_cert': None, 'ssl_client_key': None, 'ssl_verify': None
+    }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
     conf.override(conf.livy_session_startup_timeout_seconds.__name__, 1)
@@ -60,7 +72,12 @@ def test_configuration_override_work_with_empty_password():
     assert_equals(conf.d, { conf.kernel_python_credentials.__name__: kpc,
                                      conf.livy_session_startup_timeout_seconds.__name__: 1 })
     assert_equals(conf.livy_session_startup_timeout_seconds(), 1)
-    assert_equals(conf.base64_kernel_python_credentials(),  { 'username': 'U', 'password': '', 'url': '', 'auth': AUTH_BASIC })
+    assert_equals(
+        conf.base64_kernel_python_credentials(),  { 
+            'username': 'U', 'password': '', 'url': '', 'auth': AUTH_BASIC, 
+            'ssl_client_cert': None, 'ssl_client_key': None, 'ssl_verify': None
+        }
+    )
 
 
 @raises(BadUserConfigurationException)

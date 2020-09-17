@@ -62,15 +62,37 @@ class ReliableHttpClient(object):
             try:
                 if self._endpoint.auth == constants.NO_AUTH:
                     if data is None:
-                        r = function(url, headers=self._headers, verify=self.verify_ssl)
+                        if self._endpoint.ssl_info is None:
+                            r = function(url, headers=self._headers, verify=self.verify_ssl)
+                        else:
+                            r = function(url, headers=self._headers, 
+                                        verify=self._endpoint.ssl_info.ssl_verify, 
+                                        cert=self._endpoint.ssl_info.cert)
                     else:
-                        r = function(url, headers=self._headers, data=json.dumps(data), verify=self.verify_ssl)
+                        if self._endpoint.ssl_info is None:
+                            r = function(url, headers=self._headers, data=json.dumps(data), verify=self.verify_ssl)
+                        else:
+                            r = function(url, headers=self._headers, data=json.dumps(data), 
+                                        verify=self._endpoint.ssl_info.ssl_verify, 
+                                        cert=self._endpoint.ssl_info.cert)
                 else:
                     if data is None:
-                        r = function(url, headers=self._headers, auth=self._auth, verify=self.verify_ssl)
+                        if self._endpoint.ssl_info is None:
+                            r = function(url, headers=self._headers, auth=self._auth, verify=self.verify_ssl)
+                        else:
+                            r = function(url, headers=self._headers, auth=self._auth, 
+                                        verify=self._endpoint.ssl_info.ssl_verify, 
+                                        cert=self._endpoint.ssl_info.cert)
                     else:
-                        r = function(url, headers=self._headers, auth=self._auth,
-                                     data=json.dumps(data), verify=self.verify_ssl)
+                        if self._endpoint.ssl_info is None:
+                            r = function(url, headers=self._headers, auth=self._auth,
+                                        data=json.dumps(data), verify=self.verify_ssl)
+                        else:
+                            r = function(url, headers=self._headers, auth=self._auth,
+                                        data=json.dumps(data), 
+                                        verify=self._endpoint.ssl_info.ssl_verify, 
+                                        cert=self._endpoint.ssl_info.cert)
+
             except requests.exceptions.RequestException as e:
                 error = True
                 r = None
