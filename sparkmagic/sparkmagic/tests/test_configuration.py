@@ -9,7 +9,7 @@ from sparkmagic.utils.constants import AUTH_BASIC, NO_AUTH
 
 def _setup():
     conf.override_all({})
-
+    
 
 @with_setup(_setup)
 def test_configuration_override_base64_password():
