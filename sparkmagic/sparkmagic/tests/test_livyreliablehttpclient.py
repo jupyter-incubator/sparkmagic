@@ -10,7 +10,6 @@ from sparkmagic.livyclientlib.configurableretrypolicy import ConfigurableRetryPo
 from sparkmagic.livyclientlib.linearretrypolicy import LinearRetryPolicy
 
 
-
 def test_post_statement():
     http_client = MagicMock()
     livy_client = LivyReliableHttpClient(http_client, None)
