@@ -45,12 +45,12 @@ def test_info_command_parses():
 def test_info_endpoint_command_parses():
     print_info_mock = MagicMock()
     magic._print_endpoint_info = print_info_mock
-    command = "info -u http://microsoft.com"
+    command = "info -u http://microsoft.com -i 1234"
     spark_controller.get_all_sessions_endpoint_info = MagicMock(return_value=None)
 
     magic.spark(command)
 
-    print_info_mock.assert_called_once_with(None)
+    print_info_mock.assert_called_once_with(None,1234)
 
 
 @with_setup(_setup, _teardown)

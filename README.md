@@ -37,9 +37,9 @@ The sparkmagic library provides a %%spark magic that you can use to easily run c
 The sparkmagic library also provides a set of Scala and Python kernels that allow you to automatically connect to a remote Spark cluster, run code and SQL queries, manage your Livy server and Spark job configuration, and generate automatic visualizations.
 See [Pyspark](examples/Pyspark%20Kernel.ipynb) and [Spark](examples/Spark%20Kernel.ipynb) sample notebooks.
 
-### 3. Sending data to Spark%20Kernel
+### 3. Sending local data to Spark Kernel
 
-See the [sending data to Spark notebook](examples/Send local data to Spark.ipynb).
+See the [Sending Local Data to Spark notebook](examples/Send%20local%20data%20to%20Spark.ipynb).
 
 ## Installation
 
@@ -53,7 +53,7 @@ See the [sending data to Spark notebook](examples/Send local data to Spark.ipynb
  
 3. If you're using JupyterLab, you'll need to run another command:
 
-        jupyter labextension install @jupyter-widgets/jupyterlab-manager
+        jupyter labextension install "@jupyter-widgets/jupyterlab-manager"
 
 4. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
 
@@ -77,7 +77,27 @@ Sparkmagic supports:
 
 Kerberos support is implemented via the [requests-kerberos](https://github.com/requests/requests-kerberos) package. Sparkmagic expects a kerberos ticket to be available in the system. Requests-kerberos will pick up the kerberos ticket from a cache file. For the ticket to be available, the user needs to have run [kinit](https://web.mit.edu/kerberos/krb5-1.12/doc/user/user_commands/kinit.html) to create the kerberos ticket.
 
-Currently, sparkmagic does not support passing a kerberos principal/token, but we welcome pull requests.
+### Kerberos Configuration
+
+By default the `HTTPKerberosAuth` constructor provided by the `requests-kerberos` package will use the following configuration
+```python
+HTTPKerberosAuth(mutual_authentication=REQUIRED)
+```
+but this will not be right configuration for every context, so it is able to pass custom arguments for this constructor using the following configuration on the `~/.sparkmagic/config.json`
+```json
+{
+    "kerberos_auth_configuration": {
+        "mutual_authentication": 1,
+        "service": "HTTP",
+        "delegate": false,
+        "force_preemptive": false,
+        "principal": "principal",
+        "hostname_override": "hostname_override",
+        "sanitize_mutual_error_response": true,
+        "send_cbt": true
+    }
+}
+```
 
 ## Papermill
 

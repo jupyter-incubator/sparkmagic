@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
     r-base-core && \
     rm -rf /var/lib/apt/lists/*
 
+# Install pip for Python3
 RUN easy_install3 pip py4j
 RUN pip install --upgrade setuptools
 
@@ -30,9 +31,19 @@ RUN mkdir -p /apps/build && \
   cp -r /apps/build/spark/dist $SPARK_HOME && \
   rm -rf $SPARK_BUILD_PATH
 
+# ----------
+# Build Livy
+# ----------
 ENV LIVY_BUILD_VERSION 0.6.0-incubating
 ENV LIVY_APP_PATH /apps/apache-livy-$LIVY_BUILD_VERSION-bin
 ENV LIVY_BUILD_PATH /apps/build/livy
+
+# Install setuptools for Python 2.7 for Livy
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python get-pip.py --user && \
+    rm get-pip.py && \
+    python -m pip install --upgrade setuptools
+
 RUN cd /apps/build && \
 	git clone https://github.com/apache/incubator-livy.git livy && \
 	cd $LIVY_BUILD_PATH && \

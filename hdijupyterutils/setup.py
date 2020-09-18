@@ -64,5 +64,7 @@ setup(name=NAME,
           'jupyter>=1',
           'pandas>=0.17.1',
           'numpy',
-          'notebook>=4.2'
+          'notebook>=4.2',
+          # Work around broken-on-Python-2 pyrsistent release:
+          "pyrsistent < 0.17 ; python_version < '3.0'",
       ])
