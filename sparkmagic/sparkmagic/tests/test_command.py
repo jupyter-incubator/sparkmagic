@@ -42,7 +42,7 @@ def test_execute():
 
     result = command.execute(session)
 
-    http_client.post_statement.assert_called_with(0, {"code": command.code})
+    http_client.post_statement.assert_called_with(0, {"code": command.code, "kind": kind})
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
     assert_equals(tls.TestLivySession.pi_result, result[1])
@@ -84,7 +84,7 @@ def test_execute_waiting():
 
     result = command.execute(session)
 
-    http_client.post_statement.assert_called_with(0, {"code": command.code})
+    http_client.post_statement.assert_called_with(0, {"code": command.code, "kind": kind})
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
     assert_equals(tls.TestLivySession.pi_result, result[1])
@@ -111,7 +111,7 @@ def test_execute_null_ouput():
 
     result = command.execute(session)
 
-    http_client.post_statement.assert_called_with(0, {"code": command.code})
+    http_client.post_statement.assert_called_with(0, {"code": command.code, "kind": kind})
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
     assert_equals(u"", result[1])

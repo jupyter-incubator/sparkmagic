@@ -169,7 +169,7 @@ class RemoteSparkMagics(SparkMagicBase):
         elif len(subcommand) == 0:
             coerce = get_coerce_value(args.coerce)
             if args.context == CONTEXT_NAME_SPARK:
-                return self.execute_spark(cell, args.output, args.samplemethod,
+                return self.execute_spark(cell, args.language, args.output, args.samplemethod,
                                           args.maxrows, args.samplefraction, args.session, coerce)
             elif args.context == CONTEXT_NAME_SQL:
                 return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,

@@ -16,7 +16,7 @@ from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils import constants
 from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
 from sparkmagic.utils.sparkevents import SparkEvents
-from sparkmagic.utils.constants import LANGS_SUPPORTED
+from sparkmagic.utils.constants import LANGS_SUPPORTED, LANG_PYTHON, LANG_R, LANG_SCALA
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
@@ -248,6 +248,8 @@ class KernelMagics(SparkMagicBase):
     @needs_local_scope
     @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
                                                              "of this name in user's local context.")
+    @argument("-l", "--language", type=str, default=None,
+              help="Language for command; one of {}".format(', '.join([LANG_PYTHON, LANG_SCALA, LANG_R])))
     @argument("-m", "--samplemethod", type=str, default=None, help="Sample method for dataframe: either take or sample")
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the dataframe on the server for storing")
@@ -262,7 +264,7 @@ class KernelMagics(SparkMagicBase):
 
             coerce = get_coerce_value(args.coerce)
 
-            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
+            self.execute_spark(cell, args.language, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
         else:
             return
 

@@ -77,8 +77,8 @@ class SparkMagicBase(Magics):
             self.ipython_display.write(u'Successfully passed \'{}\' as \'{}\' to Spark'
                                        u' kernel'.format(input_variable_name, output_variable_name))
 
-    def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce):
-        (success, out, mimetype) = self.spark_controller.run_command(Command(cell), session_name)
+    def execute_spark(self, cell, language, output_var, samplemethod, maxrows, samplefraction, session_name, coerce):
+        (success, out, mimetype) = self.spark_controller.run_command(Command(cell, language=language), session_name)
         if not success:
             if conf.shutdown_session_on_spark_statement_errors():
                 self.spark_controller.cleanup()

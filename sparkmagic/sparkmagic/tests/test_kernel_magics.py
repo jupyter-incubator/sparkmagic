@@ -608,7 +608,7 @@ def test_spark_sample_options():
     magic.execute_spark = MagicMock()
     ret = magic.spark(line, cell)
 
-    magic.execute_spark.assert_called_once_with(cell, "var_name", "sample", 142, 0.3, None, True)
+    magic.execute_spark.assert_called_once_with(cell, None, "var_name", "sample", 142, 0.3, None, True)
 
 
 @with_setup(_setup, _teardown)
@@ -618,7 +618,7 @@ def test_spark_false_coerce():
     magic.execute_spark = MagicMock()
     ret = magic.spark(line, cell)
 
-    magic.execute_spark.assert_called_once_with(cell, "var_name", "sample", 142, 0.3, None, False)
+    magic.execute_spark.assert_called_once_with(cell, None, "var_name", "sample", 142, 0.3, None, False)
 
 
 @with_setup(_setup, _teardown)
