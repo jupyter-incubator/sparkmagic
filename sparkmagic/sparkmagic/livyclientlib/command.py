@@ -42,6 +42,18 @@ class Command(ObjectWithGuid):
             response = session.http_client.post_statement(session.id, data)
             statement_id = response[u'id']
             output = self._get_statement_output(session, statement_id)
+        except KeyboardInterrupt as e:
+            output =  'Interrupted by user'
+            if statement_id >= 0:
+                response = session.http_client.cancel_statement(session.id, statement_id)
+                if 'msg' not in response or response['msg'] != 'canceled':
+                    output += ', but unable to cancel Livy statement'
+                else:
+                    session.wait_for_idle()
+            self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
+                                                                  self.guid, statement_id, False, e.__class__.__name__,
+                                                                  str(e))
+            return output
         except Exception as e:
             self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
                                                                   self.guid, statement_id, False, e.__class__.__name__,

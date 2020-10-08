@@ -47,6 +47,10 @@ class LivyReliableHttpClient(object):
     def get_headers(self):
         return self._http_client.get_headers()
 
+    def cancel_statement(self, session_id, statement_id):
+        return self._http_client.post("{}/cancel".format(self._statement_url(session_id, statement_id)), [200], {}).json()
+
+
     @staticmethod
     def _session_url(session_id):
         return "/sessions/{}".format(session_id)
@@ -62,7 +66,7 @@ class LivyReliableHttpClient(object):
     @staticmethod
     def _get_retry_policy():
         policy = conf.retry_policy()
-        
+
         if policy == LINEAR_RETRY:
             return LinearRetryPolicy(seconds_to_sleep=5, max_retries=5)
         elif policy == CONFIGURABLE_RETRY:
