@@ -12,7 +12,7 @@ from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS, \
     MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
-from .exceptions import LivyUnexpectedStatusException, SparkStatementException
+from .exceptions import LivyUnexpectedStatusException
 
 
 class Command(ObjectWithGuid):
@@ -53,7 +53,8 @@ class Command(ObjectWithGuid):
             self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
                                                                   self.guid, statement_id, False, e.__class__.__name__,
                                                                   str(e))
-            raise SparkStatementException(msg)
+            # This is ugly, but raising SparkStatementException or returning does not interrupt subsequent cells.
+            raise
         except Exception as e:
             self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
                                                                   self.guid, statement_id, False, e.__class__.__name__,
