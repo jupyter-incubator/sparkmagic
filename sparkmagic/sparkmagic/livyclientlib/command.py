@@ -12,7 +12,7 @@ from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS, \
     MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
-from .exceptions import LivyUnexpectedStatusException
+from .exceptions import LivyUnexpectedStatusException, SparkStatementException
 
 
 class Command(ObjectWithGuid):
@@ -43,17 +43,17 @@ class Command(ObjectWithGuid):
             statement_id = response[u'id']
             output = self._get_statement_output(session, statement_id)
         except KeyboardInterrupt as e:
-            ret_msg =  u'Interrupted by user'
+            msg =  u'Interrupted by user'
             if statement_id >= 0:
                 response = session.http_client.cancel_statement(session.id, statement_id)
                 if u'msg' not in response or response[u'msg'] != u'canceled':
-                    ret_msg += u', but Livy returns error'
+                    msg += u', but Livy returns error'
                 else:
                     session.wait_for_idle()
             self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
                                                                   self.guid, statement_id, False, e.__class__.__name__,
                                                                   str(e))
-            return (False, ret_msg, MIMETYPE_TEXT_PLAIN)
+            raise SparkStatementException(msg)
         except Exception as e:
             self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
                                                                   self.guid, statement_id, False, e.__class__.__name__,
