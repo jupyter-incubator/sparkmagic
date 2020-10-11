@@ -6,7 +6,6 @@ from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.exceptions import SessionManagementException, HttpClientException
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.constants import NO_AUTH
 
 
 client_manager = None
@@ -44,7 +43,7 @@ def _teardown():
 def test_add_session():
     name = "name"
     properties = {"kind": "spark"}
-    endpoint = Endpoint("http://location:port", NO_AUTH, "name", "word")
+    endpoint = Endpoint("http://location:port", None)
     session = MagicMock()
 
     controller._livy_session = MagicMock(return_value=session)
@@ -246,7 +245,7 @@ def test_get_spark_ui_url():
 def test_add_session_throws_when_session_start_fails():
     name = "name"
     properties = {"kind": "spark"}
-    endpoint = Endpoint("http://location:port", NO_AUTH, "name", "word")
+    endpoint = Endpoint("http://location:port", None)
     session = MagicMock()
 
     controller._livy_session = MagicMock(return_value=session)

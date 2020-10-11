@@ -10,11 +10,12 @@ from IPython.core.magic import magics_class
 from IPython.core.magic import needs_local_scope, cell_magic, line_magic
 from IPython.core.magic_arguments import argument, magic_arguments
 from hdijupyterutils.utils import generate_uuid
+import importlib
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils import constants
-from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value
+from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value, initialize_auth, Namespace
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import LANGS_SUPPORTED
 from sparkmagic.livyclientlib.command import Command
@@ -252,7 +253,7 @@ class KernelMagics(SparkMagicBase):
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the dataframe on the server for storing")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from dataframe")
-    @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
+    @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) " 
                                                                         "of the dataframe or not (pass False)")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
@@ -276,7 +277,7 @@ class KernelMagics(SparkMagicBase):
     @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
                                                                         "from the server for SQL queries")
     @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
-    @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
+    @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) " 
                                                                         "of the dataframe or not (pass False)")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
@@ -402,23 +403,18 @@ class KernelMagics(SparkMagicBase):
 
     @magic_arguments()
     @line_magic
-    @argument("-u", "--username", type=str, help="Username to use.")
+    @argument("-u", "--username", dest='user', type=str, help="Username to use.")
     @argument("-p", "--password", type=str, help="Password to use.")
-    @argument("-s", "--server", type=str, help="Url of server to use.")
+    @argument("-s", "--server", dest='url', type=str, help="Url of server to use.")
     @argument("-t", "--auth", type=str, help="Auth type for authentication")
     @_event
     def _do_not_call_change_endpoint(self, line, cell="", local_ns=None):
         args = parse_argstring_or_throw(self._do_not_call_change_endpoint, line)
-        username = args.username
-        password = args.password
-        server = args.server
-        auth = args.auth
-
         if self.session_started:
             error = u"Cannot change the endpoint if a session has been started."
             raise BadUserDataException(error)
-
-        self.endpoint = Endpoint(server, auth, username, password)
+        auth = initialize_auth(args=args)
+        self.endpoint = Endpoint(args.url, auth)
 
     @line_magic
     def matplot(self, line, cell="", local_ns=None):
@@ -433,7 +429,9 @@ class KernelMagics(SparkMagicBase):
     def refresh_configuration(self):
         credentials = getattr(conf, 'base64_kernel_' + self.language + '_credentials')()
         (username, password, auth, url) = (credentials['username'], credentials['password'], credentials['auth'], credentials['url'])
-        self.endpoint = Endpoint(url, auth, username, password)
+        args = Namespace(auth=auth, user=username, password=password)
+        auth_instance = initialize_auth(args)
+        self.endpoint = Endpoint(url, auth_instance)
 
     def get_session_settings(self, line, force):
         line = line.strip()
@@ -460,7 +458,6 @@ class KernelMagics(SparkMagicBase):
         if cell.strip():
             raise BadUserDataException(u"Cell body for %%{} magic must be empty; got '{}' instead"
                                        .format(magic_name, cell.strip()))
-
 
 def load_ipython_extension(ip):
     ip.register_magics(KernelMagics)
