@@ -1,19 +1,32 @@
+import sys
 from base64 import b64encode
-from mock import MagicMock
+from contextlib import contextmanager
+from mock import MagicMock, patch
 from nose.tools import assert_equals, with_setup
 
 from IPython.display import Image
 
+import sparkmagic.livyclientlib.exceptions
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.constants import SESSION_KIND_SPARK, MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
+from sparkmagic.utils.constants import SESSION_KIND_SPARK, MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, \
+    MIMETYPE_TEXT_PLAIN, COMMAND_INTERRUPTED_MSG
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.livysession import LivySession
+from sparkmagic.livyclientlib.exceptions import SparkStatementCancelledException
 from . import test_livysession as tls
+
+
+if sys.version_info[0] == 2:
+    from StringIO import StringIO
+elif sys.version_info[0] == 3:
+    from io import StringIO
+else:
+    assert False
 
 
 def _setup():
     conf.override_all({})
-    
+
 
 def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
                     http_client=None, spark_events=None):
@@ -25,6 +38,15 @@ def _create_session(kind=SESSION_KIND_SPARK, session_id=-1,
     session = LivySession(http_client, {"kind": kind, "heartbeatTimeoutInSecond": 60},
                           ipython_display, session_id, spark_events)
     return session
+
+
+@contextmanager
+def _capture_stderr():
+    try:
+        sys.stderr = StringIO()
+        yield sys.stderr
+    finally:
+        sys.stderr = sys.__stderr__
 
 
 @with_setup(_setup)
@@ -200,3 +222,52 @@ def test_execute_failure_get_statement_output_emits_event():
                                                                                    -1, False, "AttributeError",
                                                                                    "OHHHH")
         assert_equals(e, command._get_statement_output.side_effect)
+
+
+@with_setup(_setup)
+def test_execute_interrupted():
+    spark_events = MagicMock()
+    kind = SESSION_KIND_SPARK
+    http_client = MagicMock()
+    http_client.get_statement.return_value = tls.TestLivySession.ready_statement_json
+    session = _create_session(kind=kind, http_client=http_client)
+    session.wait_for_idle = MagicMock()
+    session.start()
+    session.wait_for_idle = MagicMock()
+    command = Command("command", spark_events=spark_events)
+
+    mock_ipython = MagicMock()
+    mock_get_ipython = lambda: mock_ipython
+    mock_ipython._showtraceback = mock_show_tb = MagicMock()
+    sparkmagic.livyclientlib.exceptions.get_ipython = mock_get_ipython
+    http_client.post_statement.side_effect = KeyboardInterrupt("")
+    try:
+        result = command.execute(session)
+        assert False
+    except KeyboardInterrupt as e:
+        spark_events.emit_statement_execution_start_event.assert_called_once_with(session.guid, session.kind,
+                                                                                   session.id, command.guid)
+        spark_events.emit_statement_execution_end_event._assert_called_once_with(session.guid, session.kind,
+                                                                                   session.id, command.guid,
+                                                                                   -1, False, "KeyboardInterrupt",
+                                                                                   "")
+        assert isinstance(e, SparkStatementCancelledException)
+        assert_equals(str(e), COMMAND_INTERRUPTED_MSG)
+
+        # Test patching _showtraceback()
+        assert mock_ipython._showtraceback is SparkStatementCancelledException._show_tb
+
+        with _capture_stderr() as stderr:
+            mock_ipython._showtraceback(KeyError, "Dummy KeyError", MagicMock())
+            mock_show_tb.assert_called_once()
+            assert not stderr.getvalue()
+
+        with _capture_stderr() as stderr:
+            mock_ipython._showtraceback(SparkStatementCancelledException, COMMAND_INTERRUPTED_MSG, MagicMock())
+            mock_show_tb.assert_called_once() # still once
+            assert_equals(stderr.getvalue().strip(),  COMMAND_INTERRUPTED_MSG)
+
+    except:
+        assert False
+    else:
+        assert False

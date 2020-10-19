@@ -50,7 +50,6 @@ class LivyReliableHttpClient(object):
     def cancel_statement(self, session_id, statement_id):
         return self._http_client.post("{}/cancel".format(self._statement_url(session_id, statement_id)), [200], {}).json()
 
-
     @staticmethod
     def _session_url(session_id):
         return "/sessions/{}".format(session_id)

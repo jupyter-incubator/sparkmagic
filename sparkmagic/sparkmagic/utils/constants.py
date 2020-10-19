@@ -93,6 +93,7 @@ EXPECTED_ERROR_MSG = "An error was encountered:\n{}"
 
 YARN_RESOURCE_LIMIT_MSG = "Queue's AM resource limit exceeded."
 RESOURCE_LIMIT_WARNING = "Warning: The Spark session does not have enough YARN resources to start. {}"
+COMMAND_INTERRUPTED_MSG = "Interrupted by user"
 
 LIVY_HEARTBEAT_TIMEOUT_PARAM = u"heartbeatTimeoutInSecond"
 LIVY_KIND_PARAM = u"kind"
