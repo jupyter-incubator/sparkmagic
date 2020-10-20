@@ -57,9 +57,9 @@ class SparkStatementException(LivyClientLibException):
     """Exception that is thrown when an error occurs while parsing or executing Spark statements."""
 
 
+# It has to be a KeyboardInterrupt to interrupt the notebook
 class SparkStatementCancelledException(KeyboardInterrupt):
-    """Exception that is thrown when a Spark statement is cancelled. I have to inherit from
-    KeyboardInterrupt to interrupt the notebook"""
+    """Exception that is thrown when a Spark statement is cancelled."""
 
     _orig_show_tb = None
 
