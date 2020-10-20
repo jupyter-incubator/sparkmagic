@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import traceback
 from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, INTERNAL_ERROR_MSG
@@ -57,7 +58,8 @@ class SparkStatementException(LivyClientLibException):
 
 
 class SparkStatementCancelledException(KeyboardInterrupt):
-    """Exception that is thrown when a Spark statement is cancelled."""
+    """Exception that is thrown when a Spark statement is cancelled. I have to inherit from
+    KeyboardInterrupt to interrupt the notebook"""
 
     _orig_show_tb = None
 
