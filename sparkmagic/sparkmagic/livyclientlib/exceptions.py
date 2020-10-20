@@ -64,11 +64,16 @@ class SparkStatementCancelledException(KeyboardInterrupt):
     _orig_show_tb = None
 
     def __init__(self, msg):
+        self.msg = msg
+
         # Patch _showtraceback() to avoid printing the traceback
         ipython = get_ipython()
         if SparkStatementCancelledException._orig_show_tb is None:
             SparkStatementCancelledException._orig_show_tb = ipython._showtraceback
         ipython._showtraceback = SparkStatementCancelledException._show_tb
+
+    def __str__(self):
+        return self.msg
 
     @staticmethod
     def _show_tb(exc_type, exc_val, tb):
