@@ -1,4 +1,3 @@
-import io
 import sys
 import traceback
 from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, INTERNAL_ERROR_MSG
