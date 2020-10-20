@@ -1,7 +1,7 @@
 import sys
 from base64 import b64encode
 from contextlib import contextmanager
-from mock import MagicMock, patch
+from mock import MagicMock
 from nose.tools import assert_equals, with_setup
 
 from IPython.display import Image
