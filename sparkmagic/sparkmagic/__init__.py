@@ -1,12 +1,11 @@
-__version__ = '0.16.0'
+__version__ = '0.17.0'
 
 from sparkmagic.serverextension.handlers import load_jupyter_server_extension
 
 
 def _jupyter_server_extension_paths():
-    return [{
-        "module": "sparkmagic"
-    }]
+    return [{"module": "sparkmagic"}]
+
 
 def _jupyter_nbextension_paths():
     return []
