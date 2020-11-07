@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.17.0
+
+### Features
+
+* Customizable Livy authentication methods [#662](https://github.com/jupyter-incubator/sparkmagic/pull/662). Thanks @alexismacaskilll 
+
+### Bug fixes
+
+* Fix Dockerfile.jupyter build  [#672](https://github.com/jupyter-incubator/sparkmagic/pull/672)
+
 ## 0.16.0
 
 ### Bug fixes
