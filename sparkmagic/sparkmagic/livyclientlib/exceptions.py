@@ -83,6 +83,10 @@ class SparkStatementCancelledException(KeyboardInterrupt):
             SparkStatementCancelledException._orig_show_tb(exc_type, exc_val, tb)
 
 
+class SparkStatementCancellationFailedException(KeyboardInterrupt):
+    """Exception that is thrown when a Spark statement is interrupted but fails to be cancelled in Livy."""
+
+
 # == DECORATORS FOR EXCEPTION HANDLING ==
 EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, SqlContextNotFoundException, HttpClientException, LivyClientTimeoutException, SessionManagementException, SparkStatementException]
 
