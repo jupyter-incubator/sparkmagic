@@ -8,6 +8,9 @@ from pandas.util.testing import assert_frame_equal
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 from sparkmagic.utils.utils import parse_argstring_or_throw, records_to_dataframe
 from sparkmagic.utils.constants import SESSION_KIND_PYSPARK
+from sparkmagic.utils.dataframe_parser import *
+
+import unittest
 
 
 def test_parse_argstring_or_throw():
@@ -60,3 +63,89 @@ def test_records_to_dataframe_missing_value_later():
     df = records_to_dataframe(result, SESSION_KIND_PYSPARK, True)
     expected = pd.DataFrame([{'z':25, "nullv":1, 'y':10}, {'z': 100, "nullv": None, 'y': 50}], columns=['z', "nullv", 'y'])
     assert_frame_equal(expected, df)
+
+
+class TestDataframeParsing(unittest.TestCase):
+    """
+    python /Users/gary.he/dev/sparkmagic/sparkmagic/sparkmagic/tests/test_utils.py TestDataframeParsing.test_dataframe_parsing
+
+    """
+    def test_dataframe_parsing(self):
+        
+        cell = """+---+------+
+| id|animal|
++---+------+
+|  1|   bat|
+|  2| mouse|
+|  3| horse|
++---+------+
+
+            Only showing the last 20 rows 
+        """
+        self.assertTrue(cell_contains_dataframe(cell))
+
+        cell = """
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   bat|
+                |  2| mouse|
+                |  3| horse|
+                +---+------+
+
+            Only showing the last 20 rows 
+        """
+        self.assertTrue(cell_contains_dataframe(cell), "Matches with leading whitespaces")
+
+
+        cell = """
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   bat|
+                |  2| mouse|
+                |  3| horse|
+                +---+------+
+
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   bat|
+                |  2| mouse|
+                |  3| horse|
+                +---+------+
+
+                """
+        self.assertTrue(cell_contains_dataframe(cell), "Cell contains multiple dataframes")
+
+        cell = """
+                    +---+------+
+                    | id|animal|
+                    +---+------+
+                    +---+------+
+                """
+        self.assertTrue(cell_contains_dataframe(cell), "Empty DF")
+
+        cell = """
+                    +---+
+                    | id|
+                    +---+
+                    +---+
+                """
+        self.assertTrue(cell_contains_dataframe(cell), "Single Column DF")
+
+        cell = """
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   bat|
+                |  2| mouse|
+                |  3| horse|
+                +---+----/-+
+
+                Only showing the last 20 rows 
+                """
+        self.assertFalse(cell_contains_dataframe(cell), "Footer contains a /")
+
+if __name__ == '__main__':
+    unittest.main()
