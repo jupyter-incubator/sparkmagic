@@ -10,9 +10,11 @@ from hdijupyterutils.configuration import with_override
 
 from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
     LANG_SCALA, LANG_PYTHON, LANG_R, \
-    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, CONFIGURABLE_RETRY
+    SESSION_KIND_SPARKR, SESSION_KIND_SPARK, SESSION_KIND_PYSPARK, CONFIGURABLE_RETRY, \
+    NO_AUTH, AUTH_BASIC
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
-import sparkmagic.utils.constants as constants
+#import sparkmagic.utils.constants as constants
+
 
 from requests_kerberos import REQUIRED
 
@@ -47,14 +49,21 @@ def get_livy_kind(language):
 
 def get_auth_value(username, password):
     if username == '' and password == '':
-        return constants.NO_AUTH
+        return NO_AUTH
+    return AUTH_BASIC
+
+
+@_with_override
+def authenticators():
+    return  {
+        u"Kerberos": u"sparkmagic.auth.kerberos.Kerberos",
+        u"None": u"sparkmagic.auth.customauth.Authenticator",
+        u"Basic_Access": u"sparkmagic.auth.basic.Basic"
+    }
+       
     
-    return constants.AUTH_BASIC
-
-
 # Configs
 
- 
 def get_session_properties(language):
     properties = copy.deepcopy(session_configs())
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
@@ -68,7 +77,7 @@ def session_configs():
 
 @_with_override
 def kernel_python_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': NO_AUTH}
     
     
 def base64_kernel_python_credentials():
@@ -87,7 +96,7 @@ def base64_kernel_python3_credentials():
 
 @_with_override
 def kernel_scala_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': NO_AUTH}
 
 
 def base64_kernel_scala_credentials():        
@@ -95,7 +104,7 @@ def base64_kernel_scala_credentials():
 
 @_with_override
 def kernel_r_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': constants.NO_AUTH}
+    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': NO_AUTH}
 
 
 def base64_kernel_r_credentials():
@@ -198,7 +207,7 @@ def pyspark_dataframe_encoding():
 @_with_override
 def heartbeat_refresh_seconds():
     return 30
-    
+
 
 @_with_override
 def heartbeat_retry_seconds():
