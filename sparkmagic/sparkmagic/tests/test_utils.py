@@ -68,8 +68,73 @@ def test_records_to_dataframe_missing_value_later():
 class TestDataframeParsing(unittest.TestCase):
     """
     python /Users/gary.he/dev/sparkmagic/sparkmagic/sparkmagic/tests/test_utils.py TestDataframeParsing.test_dataframe_parsing
+    from sparkmagic.utils import dataframe_parser, match_iter;print(dataframe_parser.dataframe_anywhere.pattern); d = dataframe_parser.dataframe_anywhere;c = dataframe_parser.cell;d.match(c).groupdict()
 
     """
+    def test__match_iter(self):
+        cell = ""
+        with self.assertRaises(StopIteration):
+            next(match_iter(cell))
+
+        cell = """
+          +---+------+
+          | id|animal|
+          +---+------+
+          |  1|   bat|
+          |  2| mouse|
+          |  3| horse|
+          +---+------+
+        """
+        self.assertCountEqual(list(match_iter(cell)), [(1, 161)])
+
+        cell = """
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   bat|
+                |  2| mouse|
+                |  3| horse|
+                +---+------+
+
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   cat|
+                |  2| louse|
+                |  3| morse|
+                +---+------+
+
+                """
+        self.assertCountEqual(list(match_iter(cell)), [(1, 203), (205, 407)], "Multiple DFs")
+
+        cell = """
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   bat|
+                |  2| mouse|
+                |  3| horse|
+                +---+------+
+                        
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   bat|
+                |  2| mouse|
+                |  3| horse|
+                +---+----/-+
+                        
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   cat|
+                |  2| couse|
+                |  3| corse|
+                +---+------+
+        """
+        self.assertCountEqual(list(match_iter(cell)), [(1, 203), (457, 659)], "DF in the middle is not valid")
+
+
     def test_dataframe_parsing(self):
         
         cell = """+---+------+
@@ -110,9 +175,9 @@ class TestDataframeParsing(unittest.TestCase):
                 +---+------+
                 | id|animal|
                 +---+------+
-                |  1|   bat|
-                |  2| mouse|
-                |  3| horse|
+                |  1|   cat|
+                |  2| couse|
+                |  3| corse|
                 +---+------+
 
                 """
