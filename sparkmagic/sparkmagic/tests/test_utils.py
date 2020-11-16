@@ -8,7 +8,8 @@ from pandas.util.testing import assert_frame_equal
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 from sparkmagic.utils.utils import parse_argstring_or_throw, records_to_dataframe
 from sparkmagic.utils.constants import SESSION_KIND_PYSPARK
-from sparkmagic.utils.dataframe_parser import *
+from sparkmagic.utils.dataframe_parser import DataframeComponents,
+ cell_contains_dataframe
 
 import unittest
 
@@ -71,69 +72,53 @@ class TestDataframeParsing(unittest.TestCase):
     from sparkmagic.utils import dataframe_parser, match_iter;print(dataframe_parser.dataframe_anywhere.pattern); d = dataframe_parser.dataframe_anywhere;c = dataframe_parser.cell;d.match(c).groupdict()
 
     """
-    def test__match_iter(self):
-        cell = ""
+    def test_dataframe_component(self):
+        cell = """
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   bat|
+                |  2| mouse|
+                |  3| horse|
+                +---+------+
+
+            Only showing the last 20 rows 
+        """
+        dc = DataframeComponents(cell)
+        rows = dc.row_iter(cell)
+        self.assertDictEqual(next(rows), {'id': '1', 'animal': 'bat'})
+        self.assertDictEqual(next(rows), {'id': '2', 'animal': 'mouse'})
+        self.assertDictEqual(next(rows), {'id': '3', 'animal': 'horse'})
         with self.assertRaises(StopIteration):
-            next(match_iter(cell))
+            next(rows)
 
         cell = """
-          +---+------+
-          | id|animal|
-          +---+------+
-          |  1|   bat|
-          |  2| mouse|
-          |  3| horse|
-          +---+------+
-        """
-        self.assertCountEqual(list(match_iter(cell)), [(1, 161)])
-
-        cell = """
-                +---+------+
-                | id|animal|
-                +---+------+
-                |  1|   bat|
-                |  2| mouse|
-                |  3| horse|
-                +---+------+
-
-                +---+------+
-                | id|animal|
-                +---+------+
-                |  1|   cat|
-                |  2| louse|
-                |  3| morse|
-                +---+------+
-
+                    +---+------+
+                    | id|animal|
+                    +---+------+
+                    +---+------+
                 """
-        self.assertCountEqual(list(match_iter(cell)), [(1, 203), (205, 407)], "Multiple DFs")
+        dc = DataframeComponents(cell)
+        rows = dc.row_iter(cell)                
+        with self.assertRaises(StopIteration):
+            next(rows)
 
         cell = """
                 +---+------+
                 | id|animal|
                 +---+------+
                 |  1|   bat|
-                |  2| mouse|
+                |  2| mouse |
                 |  3| horse|
                 +---+------+
-                        
-                +---+------+
-                | id|animal|
-                +---+------+
-                |  1|   bat|
-                |  2| mouse|
-                |  3| horse|
-                +---+----/-+
-                        
-                +---+------+
-                | id|animal|
-                +---+------+
-                |  1|   cat|
-                |  2| couse|
-                |  3| corse|
-                +---+------+
-        """
-        self.assertCountEqual(list(match_iter(cell)), [(1, 203), (457, 659)], "DF in the middle is not valid")
 
+            Only showing the last 20 rows 
+        """
+        dc = DataframeComponents(cell)
+        rows = dc.row_iter(cell)      
+        self.assertDictEqual(next(rows), {'id': '1', 'animal': 'bat'})
+        with self.assertRaises(ValueError):
+            next(rows)
 
     def test_dataframe_parsing(self):
         
