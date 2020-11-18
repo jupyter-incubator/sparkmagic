@@ -4,7 +4,7 @@
 
 ### Bug fixes
 
-* Fix missing url passing when using a custom authenticator [#684](https://github.com/jupyter-incubator/sparkmagic/pull/684)
+* Fix missing url passing when using a custom authenticator [#684](https://github.com/jupyter-incubator/sparkmagic/pull/684). Thanks @gthomas-slack
 
 ## 0.17.0
 
