@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.17.1
+
+### Bug fixes
+
+* Fix missing url passing when using a custom authenticator [#684](https://github.com/jupyter-incubator/sparkmagic/pull/684)
+
 ## 0.17.0
 
 ### Features
