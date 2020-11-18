@@ -33,7 +33,7 @@ class MagicsControllerWidget(AbstractMenuWidget):
             if all([p in endpoint_config for p in ["url", "password", "username"]]) and endpoint_config["url"] != "":
                 user = endpoint_config["username"]
                 passwd = endpoint_config["password"]
-                args = Namespace(user=user, password=passwd, auth=endpoint_config.get("auth", None))
+                args = Namespace(user=user, password=passwd, auth=endpoint_config.get("auth", None), url=endpoint_config.get("url", None))
                 auth_instance = initialize_auth(args)
 
                 default_endpoints.add(Endpoint(
