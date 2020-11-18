@@ -1,3 +1,4 @@
+import sys
 import textwrap
 import base64
 
@@ -11,8 +12,10 @@ import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS, \
-    MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
-from .exceptions import LivyUnexpectedStatusException
+    MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN, \
+    COMMAND_INTERRUPTED_MSG, COMMAND_CANCELLATION_FAILED_MSG
+from .exceptions import LivyUnexpectedStatusException, SparkStatementCancelledException, \
+    SparkStatementCancellationFailedException
 
 
 class Command(ObjectWithGuid):
@@ -42,6 +45,18 @@ class Command(ObjectWithGuid):
             response = session.http_client.post_statement(session.id, data)
             statement_id = response[u'id']
             output = self._get_statement_output(session, statement_id)
+        except KeyboardInterrupt as e:
+            self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
+                                                                  self.guid, statement_id, False, e.__class__.__name__,
+                                                                  str(e))
+            try:
+                if statement_id >= 0:
+                    response = session.http_client.cancel_statement(session.id, statement_id)
+                    session.wait_for_idle()
+            except:
+                raise SparkStatementCancellationFailedException(COMMAND_CANCELLATION_FAILED_MSG)
+            else:
+                raise SparkStatementCancelledException(COMMAND_INTERRUPTED_MSG)
         except Exception as e:
             self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
                                                                   self.guid, statement_id, False, e.__class__.__name__,
