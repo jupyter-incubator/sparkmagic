@@ -274,7 +274,7 @@ class KernelMagics(SparkMagicBase):
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def pretty(self, line, cell="", local_ns=None):
-        """Evaluates a cell and converts dataframes to HTML tables."""
+        """Evaluates a cell and converts dataframes in cell output to HTML tables."""
         if self._do_not_call_start_session(u""):
             args = parse_argstring_or_throw(self.spark, line)
             coerce = get_coerce_value(args.coerce)
