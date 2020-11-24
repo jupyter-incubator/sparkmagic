@@ -186,19 +186,20 @@ class DataframeHtmlParser:
             'header_bottom': next(header_spans).span(),
             'footer': next(header_spans).span()
         }
-        hc_start, hc_end =  parts['header_content'] 
-        header_content = cell[hc_start: hc_end].strip()
         self.header_content_span = parts['header_content'] 
+        header_content = \
+            self._span_substring(cell, self.header_content_span)
+
         self.expected_width = len(header_content.strip())
 
-        ht_start, ht_end = parts['header_top']
-        self.extractors = extractors(cell[ht_start: ht_end].strip(), 
-                                     header_content)
-        self.header = self.extractors.keys()
+        header_top = self._span_substring(cell, parts['header_top'])
+        self.extractors = extractors(header_top.strip(), header_content.strip())
         # The content is between the header-bottom and the footer
         self.content_span = (parts['header_bottom'][1], parts['footer'][0])
-        
-        self.table_header_html = self._to_tr(header_content, is_header=True)
+
+    def _span_substring(self, content, span):
+        s, e = span 
+        return content[s:e]
 
     def _rowspan_iter(self, cell):
         """Extract each row from the content of a Dataframe."""
@@ -230,8 +231,11 @@ class DataframeHtmlParser:
 
     def to_table(self, cell):
         """Converts a """
+        header_content = self._span_substring(cell, self.header_content_span)
+        table_header_html = self._to_tr(header_content.strip(), is_header=True)
+
         table_row_iter = self.row_iter(cell, self._to_tr)
-        return (f"<table>{self.table_header_html}"
+        return (f"<table>{table_header_html}"
                 f"{''.join([r for r in table_row_iter])}"
                 f"</table>")
         
