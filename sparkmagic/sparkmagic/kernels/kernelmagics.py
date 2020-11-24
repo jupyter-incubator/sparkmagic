@@ -18,9 +18,10 @@ from sparkmagic.utils import constants
 from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value, initialize_auth, Namespace
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import LANGS_SUPPORTED
+from sparkmagic.utils.dataframe_parser import cell_contains_dataframe, CellOutputHtmlParser
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
-from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
+from sparkmagic.magics.sparkmagicsbase import SparkMagicBase, SparkOutputHandler
 from sparkmagic.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
     BadUserDataException
 
@@ -266,6 +267,32 @@ class KernelMagics(SparkMagicBase):
             self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
         else:
             return
+
+    @magic_arguments()
+    @cell_magic
+    @needs_local_scope
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
+    def pretty(self, line, cell="", local_ns=None):
+        """Evaluates a cell and converts dataframes to HTML tables."""
+        if self._do_not_call_start_session(u""):
+            args = parse_argstring_or_throw(self.spark, line)
+            coerce = get_coerce_value(args.coerce)
+
+            def pretty_output_handler(out):
+                if cell_contains_dataframe(out):
+                    self.ipython_display.html(CellOutputHtmlParser.to_html(out)) 
+                else:    
+                    self.ipython_display.write(out)
+
+            so = SparkOutputHandler(handle_html=lambda out: self.ipython_display.html(out),
+                            handle_text=pretty_output_handler,
+                            handle_default=lambda out: self.ipython_display.display(out))
+                            
+            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce, output_handler=so)
+        else:
+            return  
+
 
     @magic_arguments()
     @cell_magic

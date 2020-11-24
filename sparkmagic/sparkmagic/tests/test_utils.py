@@ -8,8 +8,7 @@ from pandas.util.testing import assert_frame_equal
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 from sparkmagic.utils.utils import parse_argstring_or_throw, records_to_dataframe
 from sparkmagic.utils.constants import SESSION_KIND_PYSPARK
-from sparkmagic.utils.dataframe_parser import DataframeComponents,
- cell_contains_dataframe
+from sparkmagic.utils.dataframe_parser import DataframeHtmlParser, cell_contains_dataframe, CellComponentType, cell_components_iter, CellOutputHtmlParser
 
 import unittest
 
@@ -84,7 +83,7 @@ class TestDataframeParsing(unittest.TestCase):
 
             Only showing the last 20 rows 
         """
-        dc = DataframeComponents(cell)
+        dc = DataframeHtmlParser(cell)
         rows = dc.row_iter(cell)
         self.assertDictEqual(next(rows), {'id': '1', 'animal': 'bat'})
         self.assertDictEqual(next(rows), {'id': '2', 'animal': 'mouse'})
@@ -98,7 +97,7 @@ class TestDataframeParsing(unittest.TestCase):
                     +---+------+
                     +---+------+
                 """
-        dc = DataframeComponents(cell)
+        dc = DataframeHtmlParser(cell)
         rows = dc.row_iter(cell)                
         with self.assertRaises(StopIteration):
             next(rows)
@@ -114,7 +113,7 @@ class TestDataframeParsing(unittest.TestCase):
 
             Only showing the last 20 rows 
         """
-        dc = DataframeComponents(cell)
+        dc = DataframeHtmlParser(cell)
         rows = dc.row_iter(cell)      
         self.assertDictEqual(next(rows), {'id': '1', 'animal': 'bat'})
         with self.assertRaises(ValueError):
@@ -196,6 +195,126 @@ class TestDataframeParsing(unittest.TestCase):
                 Only showing the last 20 rows 
                 """
         self.assertFalse(cell_contains_dataframe(cell), "Footer contains a /")
+    
+    def test_cell_components_iter(self):
+        cell = """+---+------+
+| id|animal|
++---+------+
+|  1|   bat|
+|  2| mouse|
+|  3| horse|
++---+------+
 
+            Only showing the last 20 rows 
+        """
+        df_spans = cell_components_iter(cell)
+        
+        self.assertEqual(next(df_spans), (CellComponentType.DF, 0, 90))
+        self.assertEqual(next(df_spans), (CellComponentType.TEXT, 90, 143))
+        self.assertEqual(cell[90:143].strip(), "Only showing the last 20 rows")
+        with self.assertRaises(StopIteration):
+            next(df_spans)
+
+        cell = """
+
+                Random stuff at the start
+
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   bat|
+                |  2| mouse|
+                |  3| horse|
+                +---+------+
+
+                Random stuff in the middle
+
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   cat|
+                |  2| couse|
+                |  3| corse|
+                +---+------+
+
+                Random stuff at the end
+                """
+        df_spans = cell_components_iter(cell)
+        
+        self.assertEqual(next(df_spans), (CellComponentType.TEXT, 0, 45))
+        self.assertEqual(cell[0:45].strip(), "Random stuff at the start")
+        self.assertEqual(next(df_spans), (CellComponentType.DF, 45, 247))
+
+        self.assertEqual(next(df_spans), (CellComponentType.TEXT, 247, 293))
+        self.assertEqual(cell[247:293].strip(), "Random stuff in the middle")
+
+        self.assertEqual(next(df_spans), (CellComponentType.DF, 293, 495))
+
+        self.assertEqual(next(df_spans), (CellComponentType.TEXT, 495, 553))
+        self.assertEqual(cell[495:553].strip(), "Random stuff at the end")
+        
+        with self.assertRaises(StopIteration):
+            next(df_spans)
+
+        cell = """
+
+                Random stuff at the start
+
+                """
+        df_spans = cell_components_iter(cell)
+        
+        self.assertEqual(next(df_spans), (CellComponentType.TEXT, 0, len(cell)))
+        with self.assertRaises(StopIteration):
+            next(df_spans)
+
+        cell = ""
+        df_spans = cell_components_iter(cell)
+        with self.assertRaises(StopIteration):
+            next(df_spans)
+
+    def test_output_html_parser(self):
+        cell = ""
+        self.assertEqual(CellOutputHtmlParser.to_html(cell), "")
+
+        cell = "Some random text"
+        self.assertEqual(CellOutputHtmlParser.to_html(cell), "<pre>Some random text</pre>")
+
+        cell = """
+
+                Random stuff at the start
+
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   bat|
+                |  2| mouse|
+                |  3| horse|
+                +---+------+
+
+                Random stuff in the middle
+                +---+------+
+                | id|animal|
+                +---+------+
+                |  1|   cat|
+                |  2| couse|
+                |  3| corse|
+                +---+------+
+
+                Random stuff at the end
+                """
+        self.maxDiff = 1200
+        self.assertEqual(CellOutputHtmlParser.to_html(cell), 
+            ("<pre>Random stuff at the start</pre><br />"
+            "<table><tr><th>id</th><th>animal</th></tr>"
+            "<tr><td>1</td><td>bat</td></tr>"
+            "<tr><td>2</td><td>mouse</td></tr>"
+            "<tr><td>3</td><td>horse</td></tr>"
+            "</table><br /><pre>Random stuff in the middle</pre><br />"
+            "<table><tr><th>id</th><th>animal</th></tr>"
+            "<tr><td>1</td><td>cat</td></tr>"
+            "<tr><td>2</td><td>couse</td></tr>"
+            "<tr><td>3</td><td>corse</td></tr>"
+            "</table><br /><pre>Random stuff at the end</pre>"))
+        
 if __name__ == '__main__':
     unittest.main()
