@@ -1,5 +1,4 @@
 import re
-import html
 import itertools 
 from collections import OrderedDict 
 from enum import Enum
@@ -158,7 +157,7 @@ class CellOutputHtmlParser:
         if component_type == CellComponentType.DF:
             return DataframeHtmlParser(cell, start, end).to_table(cell)
         elif component_type == CellComponentType.TEXT:
-            return f'<pre>{cell[start:end].strip()}</pre>'
+            return '<pre>%s</pre>' % cell[start:end].strip()
 
 class DataframeHtmlParser:
     """Parses a Spark Dataframe and presents it as a HTML table."""
@@ -224,9 +223,10 @@ class DataframeHtmlParser:
             s, e = rowspan
             row = cell[s: e].strip()
             if len(row) != self.expected_width:
-                raise ValueError(f"Expected DF rows to be uniform width"
-                                 f" ({self.expected_width})"
-                                 f" but found {row} {len(row)}")
+                raise ValueError("""Expected DF rows to be uniform width (%d)
+                                 but found %s (%d)""" % (self.expected_width, 
+                                                        row, 
+                                                        len(row)))
             yield _transform(row)
 
     def to_table(self, cell):
@@ -235,13 +235,13 @@ class DataframeHtmlParser:
         table_header_html = self._to_tr(header_content.strip(), is_header=True)
 
         table_row_iter = self.row_iter(cell, self._to_tr)
-        return (f"<table>{table_header_html}"
-                f"{''.join([r for r in table_row_iter])}"
-                f"</table>")
+        table_body = ''.join([r for r in table_row_iter])
+        return ("<table>%s%s</table>" % (table_header_html, table_body))
         
     def _to_tr(self, row, is_header=False):
         """Converts a spark dataframe row to a HTML row."""
         tag = 'th' if is_header else 'td'
-        row_html = "".join([f"<{tag}>{html.escape(x(row))}</{tag}>" 
-                    for x in self.extractors.values()])
-        return f"<tr>{row_html}</tr>"
+        row_content = [x(row) for x in self.extractors.values()]
+        row_html = "".join(["<%s>%s</%s>" % (tag, rc, tag) 
+                           for rc in row_content])
+        return "<tr>%s</tr>" % row_html
