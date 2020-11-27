@@ -70,5 +70,5 @@ setup(name=NAME,
 
           # qtconsole >= 5.0.0 drops support for python 2
           # https://github.com/jupyter/qtconsole/issues/425
-          "qtconsole < 5.0.0; python_version < '3.0",
+          "qtconsole < 5.0.0 ; python_version < '3.0'",
       ])
