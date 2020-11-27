@@ -67,4 +67,8 @@ setup(name=NAME,
           'notebook>=4.2',
           # Work around broken-on-Python-2 pyrsistent release:
           "pyrsistent < 0.17 ; python_version < '3.0'",
+
+          # qtconsole >= 5.0.0 drops support for python 2
+          # https://github.com/jupyter/qtconsole/issues/425
+          "qtconsole < 5.0.0; python_version < '3.0",
       ])
