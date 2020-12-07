@@ -20,27 +20,35 @@ def with_override(overrides, path, fsrw_class=None):
                 return overrides[name]
             else:
                 return f(*args)
-        
+
         # Hack! We do this so that we can query the .__name__ of the function
         # later to get the name of the configuration dynamically, e.g. for unit tests
         wrapped_f.__name__ = f.__name__
         return wrapped_f
-    
+
     return ret
 
-    
+
 def override(overrides, path, config, value, fsrw_class=None):
     """Given a string representing a configuration and a value for that configuration,
     override the configuration. Initialize the overrided configuration beforehand."""
     _initialize(overrides, path, fsrw_class)
     overrides[config] = value
 
-    
+
 def override_all(overrides, new_overrides):
     """Given a dictionary representing the overrided defaults for this
     configuration, initialize the global configuration."""
     overrides.clear()
     overrides.update(new_overrides)
+
+
+def merge_required(overrides, path, fsrw_class=None):
+    _initialize(overrides, path, fsrw_class)
+    required_conf = _load(path, fsrw_class)
+    for key, conf in required_conf.get('required_session_configs', {}).items():
+        overrides['session_configs'][key] = conf
+
 
 
 def _initialize(overrides, path, fsrw_class):
@@ -50,19 +58,19 @@ def _initialize(overrides, path, fsrw_class):
     if not overrides:
         new_overrides = _load(path, fsrw_class)
         override_all(overrides, new_overrides)
-        
-        
+
+
 def _load(path, fsrw_class=None):
     """Returns a dictionary of configuration by reading from the configuration
     file."""
     if fsrw_class is None:
         fsrw_class = FileSystemReaderWriter
-    
+
     config_file = fsrw_class(path)
     config_file.ensure_file_exists()
     config_text = config_file.read_lines()
     line = u"".join(config_text).strip()
-    
+
     if line == u"":
         overrides = {}
     else:

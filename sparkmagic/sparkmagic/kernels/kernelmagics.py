@@ -239,9 +239,11 @@ class KernelMagics(SparkMagicBase):
             else:
                 self._do_not_call_delete_session(u"")
                 self._override_session_settings(dictionary)
+                self._merge_required_session_settings()
                 self._do_not_call_start_session(u"")
         else:
             self._override_session_settings(dictionary)
+            self._merge_required_session_settings()
         self.info(u"")
 
     @magic_arguments()
@@ -448,6 +450,10 @@ class KernelMagics(SparkMagicBase):
     @staticmethod
     def _override_session_settings(settings):
         conf.override(conf.session_configs.__name__, settings)
+
+    @staticmethod
+    def _merge_required_session_settings():
+        conf.override_required()
 
     @staticmethod
     def _generate_uuid():
