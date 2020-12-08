@@ -97,7 +97,7 @@ def test_configuration_merge_required():
     required_session_confs = {
         "conf": {
             "spark.yarn.tags":
-                "viaduct.ai/created-by=vaatu-raava"
+                "created-by=vaatu-raava"
         },
         "numExecutors": 10
     }
@@ -111,7 +111,7 @@ def test_configuration_merge_required():
                 "spark.sql.shuffle.partitions":
                     20,
                 "spark.yarn.tags":
-                    "viaduct.ai/created-by=vaatu-raava",
+                    "created-by=vaatu-raava",
                 "spark.jars.packages":
                     "net.snowflake:spark-snowflake_2.11:2.5.1-spark_2.4"
             }

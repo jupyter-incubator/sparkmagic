@@ -404,16 +404,30 @@ def test_configure():
 
 
 @with_setup(_setup, _teardown)
-@patch('hdijupyterutils.configuration._load', return_value = {'required_session_configs': {'conf': {'spark.yarn.tags': "viaduct.ai/created-by=vaatu-raava"}}})
+@patch('hdijupyterutils.configuration._load', return_value = {'required_session_configs': {'conf': {'spark.yarn.tags': "created-by=vaatu-raava"}}})
 def test_configure_with_required_settings(hdijupyterutils_load):
     # Mock info method
     magic.info = MagicMock()
     # Session not started
     conf.override_all({})
     magic.configure('', '{"extra": "yes"}')
-    assert_equals(conf.session_configs(), {"extra": "yes", 'conf': {'spark.yarn.tags': "viaduct.ai/created-by=vaatu-raava"}})
+    assert_equals(conf.session_configs(), {"extra": "yes", 'conf': {'spark.yarn.tags': "created-by=vaatu-raava"}})
     _assert_magic_successful_event_emitted_once('configure')
     magic.info.assert_called_once_with("")
+
+
+@with_setup(_setup, _teardown)
+@patch('hdijupyterutils.configuration._load', return_value = {'required_session_configs': {}})
+def test_configure_with_empty_required_settings(hdijupyterutils_load):
+    # Mock info method
+    magic.info = MagicMock()
+    # Session not started
+    conf.override_all({})
+    magic.configure('', '{"extra": "yes"}')
+    assert_equals(conf.session_configs(), {"extra": "yes"})
+    _assert_magic_successful_event_emitted_once('configure')
+    magic.info.assert_called_once_with("")
+
 
 @with_setup(_setup, _teardown)
 def test_configure_unexpected_exception():

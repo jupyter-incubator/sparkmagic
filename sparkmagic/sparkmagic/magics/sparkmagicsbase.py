@@ -70,7 +70,7 @@ class SparkMagicBase(Magics):
         else:
             raise BadUserDataException(u'Invalid or incorrect -t type. Available are: [{}]'.format(u','.join(self._ALLOWED_LOCAL_TO_SPARK_TYPES)))
 
-        (success, result, mime_type) = self.spark_controller.run_command(command, None)
+        (success, result, mime_type) = self.spark_controller.run_command(command, session_name)
         if not success:
             self.ipython_display.send_error(result)
         else:

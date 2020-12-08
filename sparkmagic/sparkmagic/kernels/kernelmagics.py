@@ -175,7 +175,7 @@ class KernelMagics(SparkMagicBase):
     @needs_local_scope
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
-    def send_to_spark(self, line, cell=u"", local_ns=None):
+    def send_to_spark(self, line, cell=u"", local_ns=None, session_name='default'):
         self._assure_cell_body_is_empty(KernelMagics.send_to_spark.__name__, cell)
         args = parse_argstring_or_throw(self.send_to_spark, line)
 
@@ -183,7 +183,7 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException("-i param not provided.")
 
         if self._do_not_call_start_session(""):
-            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, args.maxrows, None)
+            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, args.maxrows, session_name)
         else:
             return
 

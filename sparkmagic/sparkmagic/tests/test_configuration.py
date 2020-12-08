@@ -10,14 +10,14 @@ from sparkmagic.utils.constants import AUTH_BASIC, NO_AUTH
 def _setup():
     conf.override_all({})
 
-@patch('hdijupyterutils.configuration._load', return_value = {'required_session_configs': {'conf': {'spark.yarn.tags': "viaduct.ai/created-by=vaatu-raava"}}})
+@patch('hdijupyterutils.configuration._load', return_value = {'required_session_configs': {'conf': {'spark.yarn.tags': "created-by=vaatu-raava"}}})
 @with_setup(_setup)
 def test_configuration_override_required(hdijupyterutils_load):
     kpc = { 'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L', "auth": AUTH_BASIC }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
     conf.override_required()
-    assert_equals(conf.d, {'kernel_python_credentials': {'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L', 'auth': 'Basic_Access'}, 'session_configs': {'conf': {'spark.yarn.tags': "viaduct.ai/created-by=vaatu-raava"}}})
+    assert_equals(conf.d, {'kernel_python_credentials': {'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L', 'auth': 'Basic_Access'}, 'session_configs': {'conf': {'spark.yarn.tags': "created-by=vaatu-raava"}}})
 
 
 @with_setup(_setup)
@@ -88,9 +88,9 @@ def test_share_config_between_pyspark_and_pyspark3():
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     assert_equals(conf.base64_kernel_python3_credentials(), conf.base64_kernel_python_credentials())
 
-@patch('hdijupyterutils.configuration._load', return_value = {'required_session_configs': {'conf': {'spark.yarn.tags': "viaduct.ai/created-by=vaatu-raava"}}})
+@patch('hdijupyterutils.configuration._load', return_value = {'required_session_configs': {'conf': {'spark.yarn.tags': "created-by=vaatu-raava"}}})
 @with_setup(_setup)
 def test_get_session_properties(hdijupyterutils_load):
     language = 'python'
     properties = conf.get_session_properties(language)
-    assert_equals(properties, {'conf': {'spark.yarn.tags': 'viaduct.ai/created-by=vaatu-raava'}, 'kind': 'pyspark'})
+    assert_equals(properties, {'conf': {'spark.yarn.tags': 'created-by=vaatu-raava'}, 'kind': 'pyspark'})

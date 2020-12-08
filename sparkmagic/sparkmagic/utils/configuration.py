@@ -8,6 +8,7 @@ from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
 from hdijupyterutils.configuration import merge_required as _merge_required
 from hdijupyterutils.configuration import with_override
+from hdijupyterutils.constants import REQUIRED_SESSION_CONFIGS
 
 from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
     LANG_SCALA, LANG_PYTHON, LANG_R, \
@@ -70,16 +71,18 @@ def authenticators():
 # Configs
 
 def get_session_properties(language):
-    config = {'session_configs': copy.deepcopy(session_configs())}
-    _merge_required(config, path)
-    properties = config['session_configs']
+    properties = copy.deepcopy(session_configs())
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
     return properties
 
 
 @_with_override
 def session_configs():
-    return {}
+    session_conf = {}
+    merge_conf = {}
+    _merge_required(merge_conf, path)
+    session_conf.update(merge_conf.get(REQUIRED_SESSION_CONFIGS, {}))
+    return session_conf
 
 
 @_with_override
