@@ -6,8 +6,8 @@ from hdijupyterutils.constants import EVENTS_HANDLER_CLASS_NAME, LOGGING_CONFIG_
 from hdijupyterutils.utils import join_paths
 from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
-from hdijupyterutils.configuration import with_override
 from hdijupyterutils.configuration import merge_required as _merge_required
+from hdijupyterutils.configuration import with_override
 
 from .constants import HOME_PATH, CONFIG_FILE, MAGICS_LOGGER_NAME, LIVY_KIND_PARAM, \
     LANG_SCALA, LANG_PYTHON, LANG_R, \
@@ -70,7 +70,9 @@ def authenticators():
 # Configs
 
 def get_session_properties(language):
-    properties = copy.deepcopy(session_configs())
+    config = {'session_configs': copy.deepcopy(session_configs())}
+    _merge_required(config, path)
+    properties = config['session_configs']
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
     return properties
 

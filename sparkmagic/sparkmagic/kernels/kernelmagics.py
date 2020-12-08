@@ -41,6 +41,7 @@ def _event(f):
             return result
     wrapped.__name__ = f.__name__
     wrapped.__doc__ = f.__doc__
+    print('event triggered by: ', f.__name__)
     return wrapped
 
 

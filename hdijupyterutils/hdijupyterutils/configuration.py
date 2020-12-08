@@ -5,6 +5,7 @@ import sys
 
 from .utils import join_paths
 from .filesystemreaderwriter import FileSystemReaderWriter
+from .constants import REQUIRED_SESSION_CONFIGS
 
 
 def with_override(overrides, path, fsrw_class=None):
@@ -45,10 +46,20 @@ def override_all(overrides, new_overrides):
 
 def merge_required(overrides, path, fsrw_class=None):
     _initialize(overrides, path, fsrw_class)
-    required_conf = _load(path, fsrw_class)
-    for key, conf in required_conf.get('required_session_configs', {}).items():
-        overrides['session_configs'][key] = conf
+    required_conf = _load(path, fsrw_class).get(REQUIRED_SESSION_CONFIGS,{})
+    session_confs = overrides.get('session_configs')
+    if session_confs:
+        _merge_conf(session_confs, required_conf)
+    elif required_conf:
+        overrides['session_configs'] = required_conf
 
+
+def _merge_conf(session_confs, required_confs):
+    for key, value in required_confs.items():
+        if session_confs.get(key) and isinstance(value, dict):
+            _merge_conf(session_confs[key], value)
+        else:
+            session_confs[key] = value
 
 
 def _initialize(overrides, path, fsrw_class):
