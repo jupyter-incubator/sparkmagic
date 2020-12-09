@@ -1,4 +1,4 @@
-hdijupyterutils>=0.6
+git+https://github.com/viaduct-ai/sparkmagic.git@4242ac83059bfa736c785d353d1ac66bc424a501#egg=hdijupyterutils&subdirectory=hdijupyterutils
 autovizwidget>=0.6
 ipython>=4.0.2
 nose
