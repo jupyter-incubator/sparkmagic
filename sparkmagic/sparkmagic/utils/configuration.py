@@ -71,18 +71,16 @@ def authenticators():
 # Configs
 
 def get_session_properties(language):
-    properties = copy.deepcopy(session_configs())
+    config = {'session_configs': copy.deepcopy(session_configs())}
+    _merge_required(config, path)
+    properties = config['session_configs']
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
     return properties
 
 
 @_with_override
 def session_configs():
-    session_conf = {}
-    merge_conf = {}
-    _merge_required(merge_conf, path)
-    session_conf.update(merge_conf.get(REQUIRED_SESSION_CONFIGS, {}))
-    return session_conf
+    return {}
 
 
 @_with_override
