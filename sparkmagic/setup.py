@@ -46,7 +46,7 @@ def version(path):
 
 VERSION = version('sparkmagic/__init__.py')
 
-reqs = parse_requirements('requirements.txt')
+reqs = parse_requirements('requirements.txt', session='hack')
 
 setup(name=NAME,
       version=VERSION,
