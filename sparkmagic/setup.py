@@ -73,5 +73,5 @@ setup(name=NAME,
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7'],
-      install_requires=[str(ir.req) for ir in reqs]
+      install_requires=[str(ir.requirement) for ir in reqs]
       )
