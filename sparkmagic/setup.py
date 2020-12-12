@@ -74,8 +74,8 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7'],
       install_requires=[
-          'hdijupyterutils>=0.6',
-          'autovizwidget>=0.6',
+          #'hdijupyterutils>=0.6',
+          #'autovizwidget>=0.6',
           'ipython>=4.0.2',
           'nose',
           'mock',
@@ -88,4 +88,3 @@ setup(name=NAME,
           'tornado>=4',
           'requests_kerberos>=0.8.0'
       ])
-
