@@ -44,7 +44,7 @@ def override_all(overrides, new_overrides):
     overrides.update(new_overrides)
 
 
-def merge_required(overrides, path, fsrw_class=None):
+def merge_required_session_configs(overrides, path, fsrw_class=None):
     """given overrides, load required session configs from config.json and
     perform nested merge of configurations. Note - for sequences such as spark tags,
     the required configs will completely overwrite the sequence, not append"""

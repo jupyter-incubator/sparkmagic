@@ -6,7 +6,7 @@ from hdijupyterutils.constants import EVENTS_HANDLER_CLASS_NAME, LOGGING_CONFIG_
 from hdijupyterutils.utils import join_paths
 from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
-from hdijupyterutils.configuration import merge_required as _merge_required
+from hdijupyterutils.configuration import merge_required_session_configs as _merge_required
 from hdijupyterutils.configuration import with_override
 from hdijupyterutils.constants import REQUIRED_SESSION_CONFIGS
 
@@ -29,7 +29,7 @@ def override(config, value):
     _override(d, path, config, value)
 
 
-def override_required():
+def merge_required_session_configs():
     _merge_required(d, path)
 
 

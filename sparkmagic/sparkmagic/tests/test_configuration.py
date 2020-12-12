@@ -16,7 +16,7 @@ def test_configuration_override_required(hdijupyterutils_load):
     kpc = { 'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L', "auth": AUTH_BASIC }
     overrides = { conf.kernel_python_credentials.__name__: kpc }
     conf.override_all(overrides)
-    conf.override_required()
+    conf.merge_required_session_configs()
     assert_equals(conf.d, {'kernel_python_credentials': {'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L', 'auth': 'Basic_Access'}, 'session_configs': {'conf': {'spark.yarn.tags': "created-by=vaatu-raava"}}})
 
 

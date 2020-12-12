@@ -1,5 +1,5 @@
 plotly>=3
 ipywidgets>5.0.0
-git+https://github.com/viaduct-ai/sparkmagic.git@4242ac83059bfa736c785d353d1ac66bc424a501#egg=hdijupyterutils&subdirectory=hdijupyterutils
+../hdijupyterutils
 notebook>=4.2
 pandas>=0.20.1

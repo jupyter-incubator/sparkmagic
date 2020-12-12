@@ -430,6 +430,18 @@ def test_configure_with_empty_required_settings(hdijupyterutils_load):
 
 
 @with_setup(_setup, _teardown)
+@patch('hdijupyterutils.configuration._load', return_value = {'required_session_configs': {'extra': {'key': 'required_value'}}, 'session_configs': {'extra': {'key': 'session_value'}}})
+def test_configure_required_settings_merge(hdijupyterutils_load):
+    # Mock info method
+    magic.info = MagicMock()
+    # Session not started
+    conf.override_all({})
+    magic.configure('', '{"extra": {"key": "configured_value"}}')
+    assert_equals(conf.session_configs(), {"extra": {"key": "required_value"}})
+    _assert_magic_successful_event_emitted_once('configure')
+    magic.info.assert_called_once_with("")
+
+@with_setup(_setup, _teardown)
 def test_configure_unexpected_exception():
     magic.info = MagicMock()
 
