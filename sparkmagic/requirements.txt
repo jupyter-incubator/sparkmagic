@@ -1,5 +1,5 @@
-git+https://github.com/viaduct-ai/sparkmagic.git@dbb288934ca0d9c9b1d170e0b52801bfbedc751b#egg=hdijupyterutils&subdirectory=hdijupyterutils
-git+https://github.com/viaduct-ai/sparkmagic.git@dbb288934ca0d9c9b1d170e0b52801bfbedc751b#egg=autovizwidget&subdirectory=autovizwidget
+hdijupyterutils>0.6.0
+autovizwidget>0.6.0
 ipython>=4.0.2
 nose
 mock
