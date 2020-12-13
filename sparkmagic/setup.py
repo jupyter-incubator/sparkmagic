@@ -23,7 +23,7 @@ import os
 import re
 
 from distutils.core import setup
-from pip._internal.req import parse_requirements
+
 
 def read(path, encoding='utf-8'):
     path = os.path.join(os.path.dirname(__file__), path)
@@ -46,7 +46,7 @@ def version(path):
 
 VERSION = version('sparkmagic/__init__.py')
 
-reqs = parse_requirements('requirements.txt', session='hack')
+
 
 setup(name=NAME,
       version=VERSION,
@@ -73,5 +73,18 @@ setup(name=NAME,
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7'],
-      install_requires=[str(ir.requirement) for ir in reqs]
-      )
+      install_requires=[
+          'git+https://github.com/viaduct-ai/sparkmagic.git@dbb288934ca0d9c9b1d170e0b52801bfbedc751b#egg=hdijupyterutils&subdirectory=hdijupyterutils',
+          'git+https://github.com/viaduct-ai/sparkmagic.git@dbb288934ca0d9c9b1d170e0b52801bfbedc751b#egg=autovizwidget&subdirectory=autovizwidget',
+          'ipython>=4.0.2',
+          'nose',
+          'mock',
+          'pandas>=0.17.1',
+          'numpy',
+          'requests',
+          'ipykernel',  # Python 2 will automatically get 4.10
+          'ipywidgets>5.0.0',
+          'notebook>=4.2',
+          'tornado>=4',
+          'requests_kerberos>=0.8.0'
+      ])
