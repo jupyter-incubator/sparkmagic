@@ -1,5 +1,5 @@
 plotly>=3
 ipywidgets>5.0.0
-../hdijupyterutils
+hdijupyterutils>0.6.0
 notebook>=4.2
 pandas>=0.20.1
