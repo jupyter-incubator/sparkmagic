@@ -14,6 +14,7 @@ class SparkKernel(SparkKernelBase):
             'name': 'scala',
             'mimetype': 'text/x-scala',
             'codemirror_mode': 'text/x-scala',
+            'file_extension': '.sc',
             'pygments_lexer': 'scala'
         }
 
