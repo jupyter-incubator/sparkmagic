@@ -74,8 +74,8 @@ setup(name=NAME,
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7'],
       install_requires=[
-          'git+ssh://git@github.com/viaduct-ai/sparkmagic.git@ae2bbeb9b2ec90b32dbe3bcdff0b40f75edab0c6#egg=hdijupyterutils&subdirectory=hdijupyterhutils',
-          'git+ssh://git@github.com/viaduct-ai/sparkmagic.git@ae2bbeb9b2ec90b32dbe3bcdff0b40f75edab0c6#egg=autovizwidget&subdirectory=autovizwidget',
+          'hdijupyterhutils',
+          'autovizwidget',
           'ipython>=4.0.2',
           'nose',
           'mock',
@@ -87,4 +87,8 @@ setup(name=NAME,
           'notebook>=4.2',
           'tornado>=4',
           'requests_kerberos>=0.8.0'
+      ],
+      dependency_links=[
+        'git+ssh://git@github.com/viaduct-ai/sparkmagic.git@ae2bbeb9b2ec90b32dbe3bcdff0b40f75edab0c6#egg=hdijupyterutils&subdirectory=hdijupyterhutils',
+        'git+ssh://git@github.com/viaduct-ai/sparkmagic.git@ae2bbeb9b2ec90b32dbe3bcdff0b40f75edab0c6#egg=autovizwidget&subdirectory=autovizwidget',
       ])
