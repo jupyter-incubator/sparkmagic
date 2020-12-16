@@ -14,6 +14,7 @@ class SparkRKernel(SparkKernelBase):
             'name': 'sparkR',
             'mimetype': 'text/x-rsrc',
             'codemirror_mode': 'text/x-rsrc',
+            'file_extension': '.r',
             'pygments_lexer': 'r'
         }
 

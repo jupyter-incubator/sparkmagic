@@ -14,6 +14,7 @@ class PySparkKernel(SparkKernelBase):
             'name': 'pyspark',
             'mimetype': 'text/x-python',
             'codemirror_mode': {'name': 'python', 'version': 3},
+            'file_extension': '.py'
             'pygments_lexer': 'python3'
         }
 
