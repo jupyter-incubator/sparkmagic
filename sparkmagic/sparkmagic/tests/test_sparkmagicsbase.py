@@ -125,7 +125,7 @@ def test_print_endpoint_info():
     session2.get_row_html.return_value = u"""<tr><td>row2</td></tr>"""
     magic._print_endpoint_info([session2, session1], current_session_id)
     magic.ipython_display.html.assert_called_once_with(u"""<table>
-<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>Current session?</th></tr>\
+<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Owner</th><th>Spark UI</th><th>Driver log</th><th>Current session?</th></tr>\
 <tr><td>row1</td></tr><tr><td>row2</td></tr>\
 </table>""")
 

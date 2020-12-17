@@ -108,6 +108,7 @@ class LivySession(ObjectWithGuid):
                                        .format(kind, ", ".join(constants.SESSION_KINDS_SUPPORTED)))
 
         self._app_id = None
+        self._owner = None
         self._logs = u""
         self._http_client = http_client
         self._wait_for_idle_timeout_seconds = wait_for_idle_timeout_seconds
@@ -182,6 +183,11 @@ class LivySession(ObjectWithGuid):
         if self._app_id is None:
             self._app_id = self._http_client.get_session(self.id).get("appId")
         return self._app_id
+
+    def get_owner(self):
+        if self._owner is None:
+            self._owner = self._http_client.get_session(self.id).get("owner")
+        return self._owner
 
     def get_app_info(self):
         appInfo = self._http_client.get_session(self.id).get("appInfo")
@@ -313,8 +319,8 @@ class LivySession(ObjectWithGuid):
             self._heartbeat_thread = None
 
     def get_row_html(self, current_session_id):
-        return u"""<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td><td>{6}</td></tr>""".format(
-            self.id, self.get_app_id(), self.kind, self.status,
+        return u"""<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td><td>{6}</td><td>{7}</td></tr>""".format(
+            self.id, self.get_app_id(), self.kind, self.status, self.get_owner(),
             self.get_html_link(u'Link', self.get_spark_ui_url()), self.get_html_link(u'Link', self.get_driver_log_url()),
             u"" if current_session_id is None or current_session_id != self.id else u"\u2714"
         )

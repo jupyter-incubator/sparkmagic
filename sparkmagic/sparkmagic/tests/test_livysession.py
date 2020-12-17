@@ -47,7 +47,7 @@ class TestLivySession(object):
     def __init__(self):
         self.http_client = None
         self.spark_events = None
-        
+
         self.get_statement_responses = []
         self.post_statement_responses = []
         self.get_session_responses = []
@@ -110,7 +110,7 @@ class TestLivySession(object):
         assert session.id == session_id
         assert session._heartbeat_thread is None
         assert constants.LIVY_HEARTBEAT_TIMEOUT_PARAM not in list(session.properties.keys())
-        
+
     def test_constructor_starts_heartbeat_with_existing_session(self):
         conf.override_all({
             "heartbeat_refresh_seconds": 0.1
@@ -118,13 +118,13 @@ class TestLivySession(object):
         session_id = 1
         session = self._create_session(session_id=session_id)
         conf.override_all({})
-        
+
         assert session.id == session_id
         assert self.heartbeat_thread.daemon
         self.heartbeat_thread.start.assert_called_once_with()
         assert not session._heartbeat_thread is None
         assert session.properties[constants.LIVY_HEARTBEAT_TIMEOUT_PARAM ] > 0
-        
+
     def test_start_with_heartbeat(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
@@ -132,12 +132,12 @@ class TestLivySession(object):
 
         session = self._create_session()
         session.start()
-        
+
         assert self.heartbeat_thread.daemon
         self.heartbeat_thread.start.assert_called_once_with()
         assert not session._heartbeat_thread is None
         assert session.properties[constants.LIVY_HEARTBEAT_TIMEOUT_PARAM ] > 0
-        
+
     def test_start_with_heartbeat_calls_only_once(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
@@ -151,7 +151,7 @@ class TestLivySession(object):
         assert self.heartbeat_thread.daemon
         self.heartbeat_thread.start.assert_called_once_with()
         assert not session._heartbeat_thread is None
-        
+
     def test_delete_with_heartbeat(self):
         self.http_client.post_session.return_value = self.session_create_json
         self.http_client.get_session.return_value = self.ready_sessions_json
@@ -160,9 +160,9 @@ class TestLivySession(object):
         session = self._create_session()
         session.start()
         heartbeat_thread = session._heartbeat_thread
-        
+
         session.delete()
-        
+
         self.heartbeat_thread.stop.assert_called_once_with()
         assert session._heartbeat_thread is None
 
@@ -496,13 +496,13 @@ class TestLivySession(object):
             session.guid, session.kind, end_id, constants.DEAD_SESSION_STATUS, True, "", "")
 
     def test_get_empty_app_id(self):
-        self._verify_get_app_id("null", None, 6)
+        self._verify_get_app_id("null", None, 7)
 
     def test_get_missing_app_id(self):
-        self._verify_get_app_id(None, None, 6)
+        self._verify_get_app_id(None, None, 7)
 
     def test_get_normal_app_id(self):
-        self._verify_get_app_id("\"app_id_123\"", "app_id_123", 5)
+        self._verify_get_app_id("\"app_id_123\"", "app_id_123", 6)
 
     def test_get_empty_driver_log_url(self):
         self._verify_get_driver_log_url("null", None)
@@ -512,7 +512,7 @@ class TestLivySession(object):
 
     def test_missing_app_info_get_driver_log_url(self):
         self._verify_get_driver_log_url_json(self.ready_sessions_json, None)
-        
+
     def _verify_get_app_id(self, mock_app_id, expected_app_id, expected_call_count):
         mock_field = ",\"appId\":" + mock_app_id if mock_app_id is not None else ""
         get_session_json = json.loads('{"id":0,"state":"idle","output":null%s,"log":""}' % mock_field)
@@ -534,7 +534,7 @@ class TestLivySession(object):
         driver_log_url = session.get_driver_log_url()
 
         assert_equals(expected_url, driver_log_url)
-        assert_equals(6, self.http_client.get_session.call_count)
+        assert_equals(7, self.http_client.get_session.call_count)
 
     def test_get_empty_spark_ui_url(self):
         self._verify_get_spark_ui_url("null", None)
@@ -556,37 +556,41 @@ class TestLivySession(object):
         spark_ui_url = session.get_spark_ui_url()
 
         assert_equals(expected_url, spark_ui_url)
-        assert_equals(6, self.http_client.get_session.call_count)
+        assert_equals(7, self.http_client.get_session.call_count)
 
     def test_get_row_html(self):
         session_id1 = 1
         session1 = self._create_session(session_id=session_id1)
         session1.get_app_id = MagicMock()
+        session1.get_owner = MagicMock()
         session1.get_spark_ui_url = MagicMock()
         session1.get_driver_log_url = MagicMock()
         session1.get_app_id.return_value = 'app1234'
+        session1.get_owner.return_value = 'owner1'
         session1.status = constants.IDLE_SESSION_STATUS
         session1.get_spark_ui_url.return_value = 'https://microsoft.com/sparkui'
         session1.get_driver_log_url.return_value = 'https://microsoft.com/driverlog'
 
         html1 = session1.get_row_html(1)
 
-        assert_equals(html1, u"""<tr><td>1</td><td>app1234</td><td>spark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>\u2714</td></tr>""")
+        assert_equals(html1, u"""<tr><td>1</td><td>app1234</td><td>spark</td><td>idle</td><td>owner1</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>\u2714</td></tr>""")
 
         session_id2 = 3
         session2 = self._create_session(kind=constants.SESSION_KIND_PYSPARK,
                                         session_id=session_id2)
         session2.get_app_id = MagicMock()
+        session2.get_owner = MagicMock()
         session2.get_spark_ui_url = MagicMock()
         session2.get_driver_log_url = MagicMock()
         session2.get_app_id.return_value = 'app5069'
+        session2.get_owner.return_value = 'owner2'
         session2.status = constants.BUSY_SESSION_STATUS
         session2.get_spark_ui_url.return_value = None
         session2.get_driver_log_url.return_value = None
 
         html2 = session2.get_row_html(1)
 
-        assert_equals(html2, u"""<tr><td>3</td><td>app5069</td><td>pyspark</td><td>busy</td><td></td><td></td><td></td></tr>""")
+        assert_equals(html2, u"""<tr><td>3</td><td>app5069</td><td>pyspark</td><td>busy</td><td>owner2</td><td></td><td></td><td></td></tr>""")
 
     def test_link(self):
         url = u"https://microsoft.com"

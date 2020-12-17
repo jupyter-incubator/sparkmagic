@@ -27,12 +27,12 @@ def parse_argstring_or_throw(magic_func, argstring, parse_argstring=parse_argstr
         return parse_argstring(magic_func, argstring)
     except UsageError as e:
         raise BadUserDataException(str(e))
-        
-        
+
+
 def coerce_pandas_df_to_numeric_datetime(df):
     for column_name in df.columns:
         coerced = False
-        
+
         if df[column_name].isnull().all():
             continue
 
@@ -64,7 +64,7 @@ def records_to_dataframe(records_text, kind, coerce=None):
 
         df = pd.DataFrame(data_array)
 
-        if len(data_array) > 0:    
+        if len(data_array) > 0:
             # This will assign the columns in the right order. If we simply did
             # df = pd.DataFrame(data_array, columns=data_array[0].keys())
             # in the code defining df, above, we could get an issue where the first element
@@ -75,7 +75,7 @@ def records_to_dataframe(records_text, kind, coerce=None):
                 if len(data.keys()) == len(df.columns):
                     df = df[list(data.keys())]
                     break
-                    
+
         if coerce is None:
             coerce = conf.coerce_dataframe()
         if coerce:
@@ -88,7 +88,7 @@ def records_to_dataframe(records_text, kind, coerce=None):
 
 def get_sessions_info_html(info_sessions, current_session_id):
     html = u"""<table>
-<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>Current session?</th></tr>""" + \
+<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Owner</th><th>Spark UI</th><th>Driver log</th><th>Current session?</th></tr>""" + \
     u"".join([session.get_row_html(current_session_id) for session in info_sessions]) + \
     u"</table>"
 
@@ -103,10 +103,10 @@ def initialize_auth(args):
 
     Returns:
         An instance of a valid Authenticator or None if args.auth is 'None'
-    
+
     Raises:
         sparkmagic.livyclientlib.BadUserConfigurationException: if args.auth is not a valid
-        authenticator class. 
+        authenticator class.
     """
     if args.auth is None:
         auth = conf.get_auth_value(args.user, args.password)
@@ -114,7 +114,7 @@ def initialize_auth(args):
         auth = args.auth
     if auth == constants.NO_AUTH:
         return None
-    else: 
+    else:
         full_class = conf.authenticators().get(auth)
         if full_class is None:
             raise BadUserConfigurationException(u"Auth '{}' not supported".format(auth))
