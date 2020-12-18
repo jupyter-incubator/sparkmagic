@@ -27,6 +27,14 @@ def test_get_statement():
     http_client.get.assert_called_once_with("/sessions/100/statements/4", [200])
 
 
+def test_cancel_statement():
+    http_client = MagicMock()
+    livy_client = LivyReliableHttpClient(http_client, None)
+    out = livy_client.cancel_statement(100, 104)
+    assert_equals(out, http_client.post.return_value.json.return_value)
+    http_client.post.assert_called_once_with("/sessions/100/statements/104/cancel", [200], {})
+
+
 def test_get_sessions():
     http_client = MagicMock()
     livy_client = LivyReliableHttpClient(http_client, None)
@@ -71,7 +79,7 @@ def test_custom_headers():
     custom_headers = {"header1": "value1"}
     overrides = { conf.custom_headers.__name__: custom_headers }
     conf.override_all(overrides)
-    endpoint = Endpoint("http://url.com", constants.NO_AUTH)
+    endpoint = Endpoint("http://url.com", None)
     client = LivyReliableHttpClient.from_endpoint(endpoint)
     headers = client.get_headers()
     assert_equals(len(headers), 2)

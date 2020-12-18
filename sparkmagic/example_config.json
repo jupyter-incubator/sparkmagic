@@ -41,6 +41,11 @@
       }
     }
   },
+  "authenticators": {
+    "Kerberos": "sparkmagic.auth.kerberos.Kerberos",
+    "None": "sparkmagic.auth.customauth.Authenticator", 
+    "Basic_Access": "sparkmagic.auth.basic.Basic"
+  },
 
   "wait_for_idle_timeout_seconds": 15,
   "livy_session_startup_timeout_seconds": 60,

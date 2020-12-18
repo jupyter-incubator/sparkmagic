@@ -3,7 +3,6 @@
 
 import os
 
-
 HOME_PATH = os.environ.get("SPARKMAGIC_CONF_DIR", "~/.sparkmagic")
 CONFIG_FILE = os.environ.get("SPARKMAGIC_CONF_FILE", "config.json")
 
@@ -54,6 +53,8 @@ LANGS_SUPPORTED = [LANG_SCALA, LANG_PYTHON, LANG_R]
 
 LONG_RANDOM_VARIABLE_NAME = "yQeKOYBsFgLWWGWZJu3y"
 
+WIDGET_WIDTH = "800px"
+
 MAGICS_LOGGER_NAME = "magicsLogger"
 
 # The list here https://livy.incubator.apache.org/docs/latest/rest-api.html
@@ -93,6 +94,9 @@ EXPECTED_ERROR_MSG = "An error was encountered:\n{}"
 
 YARN_RESOURCE_LIMIT_MSG = "Queue's AM resource limit exceeded."
 RESOURCE_LIMIT_WARNING = "Warning: The Spark session does not have enough YARN resources to start. {}"
+COMMAND_INTERRUPTED_MSG = "Interrupted by user"
+COMMAND_CANCELLATION_FAILED_MSG = "Interrupted by user but Livy failed to cancel the Spark statement. "\
+                                  "The Livy session might have become unusable."
 
 LIVY_HEARTBEAT_TIMEOUT_PARAM = u"heartbeatTimeoutInSecond"
 LIVY_KIND_PARAM = u"kind"
@@ -100,7 +104,6 @@ LIVY_KIND_PARAM = u"kind"
 NO_AUTH = "None"
 AUTH_KERBEROS = "Kerberos"
 AUTH_BASIC = "Basic_Access"
-AUTHS_SUPPORTED = [NO_AUTH, AUTH_KERBEROS, AUTH_BASIC]
 
 CONFIGURABLE_RETRY = "configurable"
 LINEAR_RETRY = "linear"
