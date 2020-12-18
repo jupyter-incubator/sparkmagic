@@ -1,4 +1,4 @@
-from mock import MagicMock
+from mock import MagicMock, patch
 from nose.tools import with_setup, raises, assert_equals, assert_is, assert_true
 from IPython.core.magic import magics_class
 
