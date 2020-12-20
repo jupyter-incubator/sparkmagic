@@ -8,19 +8,25 @@ class PySparkKernel(SparkKernelBase):
     def __init__(self, **kwargs):
         implementation = 'PySpark'
         implementation_version = '1.0'
-        language = 'no-op'
+        language = LANG_PYTHON
         language_version = '0.1'
         language_info = {
             'name': 'pyspark',
             'mimetype': 'text/x-python',
-            'codemirror_mode': {'name': 'python', 'version': 3},
+            'codemirror_mode': {
+                'name': 'python',
+                'version': 3
+            },
+            'file_extension': '.py',
             'pygments_lexer': 'python3'
         }
 
         session_language = LANG_PYTHON
 
-        super(PySparkKernel, self).__init__(implementation, implementation_version, language, language_version,
-                                            language_info, session_language, **kwargs)
+        super(PySparkKernel,
+              self).__init__(implementation, implementation_version, language,
+                             language_version, language_info, session_language,
+                             **kwargs)
 
 
 if __name__ == '__main__':

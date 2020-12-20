@@ -27,13 +27,17 @@ def test_pyspark_kernel_configs():
     assert kernel.session_language == LANG_PYTHON
 
     assert kernel.implementation == 'PySpark'
-    assert kernel.language == 'no-op'
+    assert kernel.language == LANG_PYTHON
     assert kernel.language_version == '0.1'
     assert kernel.language_info == {
         'name': 'pyspark',
         'mimetype': 'text/x-python',
-        'codemirror_mode': {'name': 'python', 'version': 3},
-        'pygments_lexer': 'python3'
+        'codemirror_mode': {
+            'name': 'python',
+            'version': 3
+        },
+        'file_extension': '.py',
+        'pygments_lexer': 'python3',
     }
 
 
@@ -43,14 +47,16 @@ def test_spark_kernel_configs():
     assert kernel.session_language == LANG_SCALA
 
     assert kernel.implementation == 'Spark'
-    assert kernel.language == 'no-op'
+    assert kernel.language == LANG_SCALA
     assert kernel.language_version == '0.1'
     assert kernel.language_info == {
         'name': 'scala',
         'mimetype': 'text/x-scala',
         'pygments_lexer': 'scala',
-        'codemirror_mode': 'text/x-scala'
+        'file_extension': '.sc',
+        'codemirror_mode': 'text/x-scala',
     }
+
 
 def test_sparkr_kernel_configs():
     kernel = TestSparkRKernel()
@@ -58,12 +64,12 @@ def test_sparkr_kernel_configs():
     assert kernel.session_language == LANG_R
 
     assert kernel.implementation == 'SparkR'
-    assert kernel.language == 'no-op'
+    assert kernel.language == LANG_R
     assert kernel.language_version == '0.1'
     assert kernel.language_info == {
         'name': 'sparkR',
         'mimetype': 'text/x-rsrc',
         'pygments_lexer': 'r',
+        'file_extension': '.r',
         'codemirror_mode': 'text/x-rsrc'
     }
-
