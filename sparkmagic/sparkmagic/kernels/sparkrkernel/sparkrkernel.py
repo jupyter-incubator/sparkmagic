@@ -20,8 +20,10 @@ class SparkRKernel(SparkKernelBase):
 
         session_language = LANG_R
 
-        super(SparkRKernel, self).__init__(implementation, implementation_version, language, language_version,
-                                          language_info, session_language, **kwargs)
+        super(SparkRKernel,
+              self).__init__(implementation, implementation_version, language,
+                             language_version, language_info, session_language,
+                             **kwargs)
 
 
 if __name__ == '__main__':
