@@ -8,7 +8,7 @@ class PySparkKernel(SparkKernelBase):
     def __init__(self, **kwargs):
         implementation = 'PySpark'
         implementation_version = '1.0'
-        language = 'no-op'
+        language = LANG_PYTHON
         language_version = '0.1'
         language_info = {
             'name': 'pyspark',
