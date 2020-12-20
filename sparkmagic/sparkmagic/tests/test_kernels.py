@@ -27,7 +27,7 @@ def test_pyspark_kernel_configs():
     assert kernel.session_language == LANG_PYTHON
 
     assert kernel.implementation == 'PySpark'
-    assert kernel.language == 'python'
+    assert kernel.language == LANG_PYTHON
     assert kernel.language_version == '0.1'
     assert kernel.language_info == {
         'name': 'pyspark',
@@ -47,7 +47,7 @@ def test_spark_kernel_configs():
     assert kernel.session_language == LANG_SCALA
 
     assert kernel.implementation == 'Spark'
-    assert kernel.language == 'scala'
+    assert kernel.language == LANG_SCALA
     assert kernel.language_version == '0.1'
     assert kernel.language_info == {
         'name': 'scala',
@@ -64,7 +64,7 @@ def test_sparkr_kernel_configs():
     assert kernel.session_language == LANG_R
 
     assert kernel.implementation == 'SparkR'
-    assert kernel.language == 'r'
+    assert kernel.language == LANG_R
     assert kernel.language_version == '0.1'
     assert kernel.language_info == {
         'name': 'sparkR',

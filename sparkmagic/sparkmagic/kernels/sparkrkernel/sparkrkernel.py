@@ -8,7 +8,7 @@ class SparkRKernel(SparkKernelBase):
     def __init__(self, **kwargs):
         implementation = 'SparkR'
         implementation_version = '1.0'
-        language = 'no-op'
+        language = LANG_R
         language_version = '0.1'
         language_info = {
             'name': 'sparkR',
