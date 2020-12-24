@@ -90,6 +90,5 @@ setup(name=NAME,
           'tornado>=4',
           'requests_kerberos>=0.8.0',
           'hdijupyterutils@https://github.com/viaduct-ai/sparkmagic/archive/5689cae59f557eda2c3c0a57a3abb19b00d07c9e.zip#subdirectory=hdijupyterutils',
-          #'hdijupyterutils>=0.6',
           'autovizwidget>=0.6',
       ])
