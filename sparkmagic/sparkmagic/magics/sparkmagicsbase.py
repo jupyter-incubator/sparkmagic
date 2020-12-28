@@ -112,7 +112,7 @@ class SparkMagicBase(Magics):
         return SparkStoreCommand(output_var, samplemethod, maxrows, samplefraction, coerce=coerce)
 
     def execute_sqlquery(self, cell, samplemethod, maxrows, samplefraction,
-                         session, output_var , quiet, coerce):
+                         session, output_var, quiet, coerce):
         sqlquery = self._sqlquery(cell, samplemethod, maxrows, samplefraction, coerce)
         df = self.spark_controller.run_sqlquery(sqlquery, session)
         if output_var is not None:
@@ -133,4 +133,3 @@ class SparkMagicBase(Magics):
             self.ipython_display.html(html)
         else:
             self.ipython_display.html(u'No active sessions.')
-
