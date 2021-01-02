@@ -27,6 +27,14 @@ def test_get_statement():
     http_client.get.assert_called_once_with("/sessions/100/statements/4", [200])
 
 
+def test_cancel_statement():
+    http_client = MagicMock()
+    livy_client = LivyReliableHttpClient(http_client, None)
+    out = livy_client.cancel_statement(100, 104)
+    assert_equals(out, http_client.post.return_value.json.return_value)
+    http_client.post.assert_called_once_with("/sessions/100/statements/104/cancel", [200], {})
+
+
 def test_get_sessions():
     http_client = MagicMock()
     livy_client = LivyReliableHttpClient(http_client, None)
