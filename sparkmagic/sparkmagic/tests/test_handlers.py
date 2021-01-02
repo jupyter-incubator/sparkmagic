@@ -1,5 +1,5 @@
 from mock import MagicMock, patch
-from nose.tools import with_setup, raises, assert_equals, assert_is
+from nose.tools import assert_equals
 from tornado.concurrent import Future
 from tornado.web import MissingArgumentError
 from tornado.testing import gen_test
@@ -8,7 +8,6 @@ import json
 
 from sparkmagic.serverextension.handlers import ReconnectHandler
 from sparkmagic.kernels.kernelmagics import KernelMagics
-import sparkmagic.utils.configuration as conf
 from sparkmagic.utils import constants
 
 
@@ -137,7 +136,7 @@ class TestSparkMagicHandler(AsyncTestCase):
     @patch('sparkmagic.serverextension.handlers.ReconnectHandler._get_kernel_manager')
     @gen_test
     def test_post_existing_kernel_with_auth_missing_basic_auth(self, _get_kernel_manager):
-        self.request.body = json.dumps({ "path": self.path, "username": self.username, "password": self.password, "endpoint": self.endpoint })
+        self.request.body = json.dumps({ "path": self.path, "username": self.username, "password": self.password, "endpoint": self.endpoint})
         kernel_manager_future = Future()
         kernel_manager_future.set_result(self.individual_kernel_manager)
         _get_kernel_manager.return_value = kernel_manager_future
@@ -215,7 +214,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         km_future = Future()
         km_future.set_result(self.individual_kernel_manager)
         _get_kernel_manager_new_session.return_value = km_future
-        
+
         km = yield self.reconnect_handler._get_kernel_manager(self.path, different_kernel)
 
         assert_equals(self.individual_kernel_manager, km)

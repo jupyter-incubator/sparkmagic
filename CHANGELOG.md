@@ -1,5 +1,27 @@
 # Changelog
 
+## NEXT RELEASE
+
+### Features
+
+* Add user to %%info output @tprelle
+
+## 0.17.1
+
+### Bug fixes
+
+* Fix missing url passing when using a custom authenticator [#684](https://github.com/jupyter-incubator/sparkmagic/pull/684). Thanks @gthomas-slack
+
+## 0.17.0
+
+### Features
+
+* Customizable Livy authentication methods [#662](https://github.com/jupyter-incubator/sparkmagic/pull/662). Thanks @alexismacaskilll 
+
+### Bug fixes
+
+* Fix Dockerfile.jupyter build  [#672](https://github.com/jupyter-incubator/sparkmagic/pull/672)
+
 ## 0.16.0
 
 ### Bug fixes

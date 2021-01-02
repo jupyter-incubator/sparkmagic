@@ -4,11 +4,13 @@ from IPython.core.magic_arguments import parse_argstring
 import numpy as np
 import pandas as pd
 import json
+import importlib
 from collections import OrderedDict
 
 import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
-from sparkmagic.livyclientlib.exceptions import BadUserDataException, DataFrameParseException
+from sparkmagic.livyclientlib.exceptions import BadUserDataException, DataFrameParseException, \
+    BadUserConfigurationException
 
 
 def get_coerce_value(coerce):
@@ -86,8 +88,42 @@ def records_to_dataframe(records_text, kind, coerce=None):
 
 def get_sessions_info_html(info_sessions, current_session_id):
     html = u"""<table>
-<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>Current session?</th></tr>""" + \
+<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>User</th><th>Current session?</th></tr>""" + \
     u"".join([session.get_row_html(current_session_id) for session in info_sessions]) + \
     u"</table>"
 
     return html
+
+def initialize_auth(args):
+    """Creates an authenticatior class instance for the given auth type
+
+    Args:
+        args (IPython.core.magics.namespace): The namespace object that is created from
+        parsing %spark magic command
+
+    Returns:
+        An instance of a valid Authenticator or None if args.auth is 'None'
+    
+    Raises:
+        sparkmagic.livyclientlib.BadUserConfigurationException: if args.auth is not a valid
+        authenticator class. 
+    """
+    if args.auth is None:
+        auth = conf.get_auth_value(args.user, args.password)
+    else:
+        auth = args.auth
+    if auth == constants.NO_AUTH:
+        return None
+    else: 
+        full_class = conf.authenticators().get(auth)
+        if full_class is None:
+            raise BadUserConfigurationException(u"Auth '{}' not supported".format(auth))
+        module, class_name = (full_class).rsplit('.', 1)
+        events_handler_module = importlib.import_module(module)
+        auth_class = getattr(events_handler_module, class_name)
+        return auth_class(args)
+
+class Namespace:
+    """Namespace to initialize authenticator class with"""
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)

@@ -1,8 +1,9 @@
 from mock import MagicMock
-from nose.tools import with_setup
+from nose.tools import with_setup, assert_equals
 
 import sparkmagic.utils.configuration as conf
-from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, AUTH_BASIC, NO_AUTH, MIMETYPE_TEXT_PLAIN
+from sparkmagic.utils.utils import parse_argstring_or_throw, initialize_auth
+from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, MIMETYPE_TEXT_PLAIN, NO_AUTH, AUTH_BASIC
 from sparkmagic.magics.remotesparkmagics import RemoteSparkMagics
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
@@ -78,10 +79,9 @@ def test_add_sessions_command_parses():
     line = " ".join([command, name, language, connection_string])
 
     magic.spark(line)
-
-    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", AUTH_BASIC, "sdf", "w"),
+    args = parse_argstring_or_throw(RemoteSparkMagics.spark, line)
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", initialize_auth(args)),
                                               False, {"kind": "pyspark"})
-
     # Skip and scala - upper case
     add_sessions_mock = MagicMock()
     spark_controller.add_session = add_sessions_mock
@@ -92,9 +92,29 @@ def test_add_sessions_command_parses():
     line = " ".join([command, name, language, connection_string, "-k"])
 
     magic.spark(line)
-
-    add_sessions_mock.assert_called_once_with("name", Endpoint("http://location:port", NO_AUTH),
+    args = parse_argstring_or_throw(RemoteSparkMagics.spark, line)
+    args.auth = NO_AUTH
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://location:port", initialize_auth(args)),
                                               True, {"kind": "spark"})
+
+
+@with_setup(_setup, _teardown)
+def test_add_sessions_command_parses_kerberos():
+    # Do not skip and python
+    add_sessions_mock = MagicMock()
+    spark_controller.add_session = add_sessions_mock
+    command = "add"
+    name = "-s name"
+    language = "-l python"
+    connection_string = "-u http://url.com -t {}".format('Kerberos')
+    line = " ".join([command, name, language, connection_string])
+    magic.spark(line)
+    args = parse_argstring_or_throw(RemoteSparkMagics.spark, line)
+    auth_instance = initialize_auth(args)
+    
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", initialize_auth(args)),
+                                              False, {"kind": "pyspark"})
+    assert_equals(auth_instance.url, "http://url.com")
 
 
 @with_setup(_setup, _teardown)
@@ -109,8 +129,8 @@ def test_add_sessions_command_exception():
     line = " ".join([command, name, language, connection_string])
 
     magic.spark(line)
-
-    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", AUTH_BASIC, "sdf", "w"),
+    args = parse_argstring_or_throw(RemoteSparkMagics.spark, line)
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://url.com", initialize_auth(args)),
                                               False, {"kind": "pyspark"})
     ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(add_sessions_mock.side_effect))
@@ -131,8 +151,9 @@ def test_add_sessions_command_extra_properties():
     line = " ".join([command, name, language, connection_string])
 
     magic.spark(line)
-
-    add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com", NO_AUTH),
+    args = parse_argstring_or_throw(RemoteSparkMagics.spark, line)
+    args.auth = NO_AUTH
+    add_sessions_mock.assert_called_once_with("name", Endpoint("http://livyendpoint.com", initialize_auth(args)),
                                               False, {"kind": "spark", "extra": "yes"})
     conf.override_all({})
 
@@ -149,7 +170,8 @@ def test_delete_sessions_command_parses():
     mock_method = MagicMock()
     spark_controller.delete_session_by_id = mock_method
     magic.spark(command)
-    mock_method.assert_called_once_with(Endpoint("URL", AUTH_BASIC, "username", "password"), 4)
+    args = parse_argstring_or_throw(RemoteSparkMagics.spark, command)
+    mock_method.assert_called_once_with(Endpoint("URL", initialize_auth(args)), 4)
 
 
 @with_setup(_setup, _teardown)
@@ -193,12 +215,14 @@ def test_cleanup_endpoint_command_parses():
     line = "cleanup -u endp"
 
     magic.spark(line)
-
-    mock_method.assert_called_once_with(Endpoint("endp", NO_AUTH))
+    args = parse_argstring_or_throw(RemoteSparkMagics.spark, line)
+    args.auth = NO_AUTH
+    mock_method.assert_called_once_with(Endpoint("endp", initialize_auth(args)))
 
     line = "cleanup -u endp -a user -p passw -t {}".format(AUTH_BASIC)
     magic.spark(line)
-    mock_method.assert_called_with(Endpoint("endp", AUTH_BASIC, "user", "passw"))
+    args = parse_argstring_or_throw(RemoteSparkMagics.spark, line)
+    mock_method.assert_called_with(Endpoint("endp", initialize_auth(args)))
 
 
 @with_setup(_setup, _teardown)
@@ -368,7 +392,6 @@ def test_run_spark_with_store_command_parses():
     result = magic.spark(line, cell)
     magic.execute_spark.assert_called_once_with("cell code",
                                                 "var_name", "sample", None, None, "sessions_name", None)
-    
 
 @with_setup(_setup, _teardown)
 def test_run_spark_with_store_correct_calls():

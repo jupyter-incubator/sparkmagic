@@ -1,3 +1,5 @@
+from __future__ import print_function
+import sys
 import traceback
 from sparkmagic.utils.constants import EXPECTED_ERROR_MSG, INTERNAL_ERROR_MSG
 
@@ -53,6 +55,37 @@ class SqlContextNotFoundException(LivyClientLibException):
 
 class SparkStatementException(LivyClientLibException):
     """Exception that is thrown when an error occurs while parsing or executing Spark statements."""
+
+
+# It has to be a KeyboardInterrupt to interrupt the notebook
+class SparkStatementCancelledException(KeyboardInterrupt):
+    """Exception that is thrown when a Spark statement is cancelled."""
+
+    _orig_show_tb = None
+
+    def __init__(self, msg):
+        self.msg = msg
+
+        # Patch _showtraceback() to avoid printing the traceback
+        ipython = get_ipython()
+        if SparkStatementCancelledException._orig_show_tb is None:
+            SparkStatementCancelledException._orig_show_tb = ipython._showtraceback
+        ipython._showtraceback = SparkStatementCancelledException._show_tb
+
+    def __str__(self):
+        return self.msg
+
+    @staticmethod
+    def _show_tb(exc_type, exc_val, tb):
+        if exc_type == SparkStatementCancelledException:
+            print(exc_val, file=sys.stderr)
+        else:
+            SparkStatementCancelledException._orig_show_tb(exc_type, exc_val, tb)
+
+
+class SparkStatementCancellationFailedException(KeyboardInterrupt):
+    """Exception that is thrown when a Spark statement is interrupted but fails to be cancelled in Livy."""
+
 
 # == DECORATORS FOR EXCEPTION HANDLING ==
 EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, SqlContextNotFoundException, HttpClientException, LivyClientTimeoutException, SessionManagementException, SparkStatementException]

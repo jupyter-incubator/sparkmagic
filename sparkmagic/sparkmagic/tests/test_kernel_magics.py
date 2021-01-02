@@ -1,16 +1,19 @@
 from mock import MagicMock
-from nose.tools import with_setup, raises, assert_equals, assert_is
+from nose.tools import with_setup, raises, assert_equals, assert_is, assert_true
 from IPython.core.magic import magics_class
 
 import sparkmagic.utils.configuration as conf
+from sparkmagic.utils.utils import parse_argstring_or_throw, initialize_auth
 import sparkmagic.utils.constants as constants
-from sparkmagic.kernels.kernelmagics import KernelMagics
+from sparkmagic.kernels.kernelmagics import KernelMagics, Namespace
+from sparkmagic.magics.remotesparkmagics import RemoteSparkMagics
 from sparkmagic.livyclientlib.exceptions import LivyClientTimeoutException, BadUserDataException,\
     LivyUnexpectedStatusException, SessionManagementException,\
     HttpClientException, DataFrameParseException, SqlContextNotFoundException, SparkStatementException
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.command import Command
-from sparkmagic.utils.constants import NO_AUTH, AUTH_BASIC
+from sparkmagic.auth.basic import Basic
+import importlib
 
 magic = None
 spark_controller = None
@@ -18,17 +21,16 @@ shell = None
 ipython_display = MagicMock()
 spark_events = None
 
-
 @magics_class
 class TestKernelMagics(KernelMagics):
     def __init__(self, shell, data=None, spark_events=None):
         super(TestKernelMagics, self).__init__(shell, spark_events=spark_events)
 
         self.language = constants.LANG_PYTHON
-        self.endpoint = Endpoint("url", NO_AUTH)
+        self.endpoint = Endpoint("url", None)
 
     def refresh_configuration(self):
-        self.endpoint = Endpoint("new_url", NO_AUTH)
+        self.endpoint = Endpoint("new_url", None)
 
 
 def _setup():
@@ -145,7 +147,7 @@ def test_change_language():
     magic._do_not_call_change_language(line)
 
     assert_equals(constants.LANG_SCALA, magic.language)
-    assert_equals(Endpoint("new_url", NO_AUTH), magic.endpoint)
+    assert_equals(Endpoint("new_url", None), magic.endpoint)
 
 
 @with_setup(_setup, _teardown)
@@ -158,7 +160,7 @@ def test_change_language_session_started():
 
     assert_equals(ipython_display.send_error.call_count, 1)
     assert_equals(constants.LANG_PYTHON, magic.language)
-    assert_equals(Endpoint("url", NO_AUTH), magic.endpoint)
+    assert_equals(Endpoint("url", None), magic.endpoint)
 
 
 @with_setup(_setup, _teardown)
@@ -170,21 +172,21 @@ def test_change_language_not_valid():
 
     assert_equals(ipython_display.send_error.call_count, 1)
     assert_equals(constants.LANG_PYTHON, magic.language)
-    assert_equals(Endpoint("url", NO_AUTH), magic.endpoint)
-
+    assert_equals(Endpoint("url", None), magic.endpoint)
 
 @with_setup(_setup, _teardown)
 def test_change_endpoint():
+    s = 'server'
     u = 'user'
     p = 'password'
-    s = 'server'
-    t = AUTH_BASIC
+    t = constants.AUTH_BASIC
     line = "-s {} -u {} -p {} -t {}".format(s, u, p, t)
-
     magic._do_not_call_change_endpoint(line)
-
-    assert_equals(Endpoint(s, t, u, p), magic.endpoint)
-
+    args = Namespace(auth='Basic_Access', password='password', url='server', user='user')
+    auth_instance = initialize_auth(args)
+    endpoint = Endpoint(s, auth_instance)
+    assert_equals(endpoint.url, magic.endpoint.url)
+    assert_equals(Endpoint(s, auth_instance), magic.endpoint)
 
 @with_setup(_setup, _teardown)
 @raises(BadUserDataException)
@@ -194,9 +196,7 @@ def test_change_endpoint_session_started():
     s = 'server'
     line = "-s {} -u {} -p {}".format(s, u, p)
     magic.session_started = True
-
     magic._do_not_call_change_endpoint(line)
-    
 
 @with_setup(_setup, _teardown)
 def test_info():
@@ -577,21 +577,21 @@ def test_spark_fatal_spark_statement_exception():
 def test_spark_unexpected_exception_in_storing():
     line = "-o var_name"
     cell = "some spark code"
-    side_effect = [(True,'ok',constants.MIMETYPE_TEXT_PLAIN), Exception('oups')]
+    side_effect = [(True, 'ok', constants.MIMETYPE_TEXT_PLAIN), Exception('oups')]
     spark_controller.run_command = MagicMock(side_effect=side_effect)
 
     magic.spark(line, cell)
     assert_equals(spark_controller.run_command.call_count, 2)
     spark_controller.run_command.assert_any_call(Command(cell), None)
     ipython_display.send_error.assert_called_with(constants.INTERNAL_ERROR_MSG
-                                                       .format(side_effect[1]))
+                                                  .format(side_effect[1]))
 
 
 @with_setup(_setup, _teardown)
 def test_spark_expected_exception_in_storing():
     line = "-o var_name"
     cell = "some spark code"
-    side_effect = [(True,'ok',constants.MIMETYPE_TEXT_PLAIN), SessionManagementException('oups')]
+    side_effect = [(True, 'ok', constants.MIMETYPE_TEXT_PLAIN), SessionManagementException('oups')]
     spark_controller.run_command = MagicMock(side_effect=side_effect)
 
     magic.spark(line, cell)
