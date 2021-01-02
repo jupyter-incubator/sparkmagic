@@ -86,7 +86,7 @@ class SparkMagicBase(Magics):
                                        u' kernel'.format(input_variable_name, output_variable_name))
 
     def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce, output_handler=None):
-        _output_handler = output_handler or self.default_spark_output_handler 
+        output_handler = output_handler or self.default_spark_output_handler 
             
         (success, out, mimetype) = self.spark_controller.run_command(Command(cell), session_name)
         if not success:
@@ -97,11 +97,11 @@ class SparkMagicBase(Magics):
         else:
             if isinstance(out, string_types):
                 if mimetype == MIMETYPE_TEXT_HTML:
-                    _output_handler.handle_html(out)
+                    output_handler.handle_html(out)
                 else:
-                    _output_handler.handle_text(out)
+                    output_handler.handle_text(out)
             else:
-                _output_handler.handle_default(out)
+                output_handler.handle_default(out)
             if output_var is not None:
                 spark_store_command = self._spark_store_command(output_var, samplemethod, maxrows, samplefraction, coerce)
                 df = self.spark_controller.run_command(spark_store_command, session_name)
