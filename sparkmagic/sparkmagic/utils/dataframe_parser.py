@@ -148,14 +148,14 @@ class CellOutputHtmlParser:
 
     @staticmethod 
     def to_html(output):
-        return '<br />'.join([CellOutputHtmlParser.to_component(c, output) 
+        return '<br />'.join([CellOutputHtmlParser.to_html_component(c, output) 
                         for c in cell_components_iter(output)])
     
     @staticmethod 
-    def to_component(component_span, cell):
+    def to_html_component(component_span, cell):
         component_type, start, end = component_span
         if component_type == CellComponentType.DF:
-            return DataframeHtmlParser(cell, start, end).to_table(cell)
+            return DataframeHtmlParser(cell, start, end).to_table()
         elif component_type == CellComponentType.TEXT:
             return '<pre>%s</pre>' % cell[start:end].strip()
 
@@ -167,19 +167,24 @@ class DataframeHtmlParser:
     
     def __init__(self, cell, start=0, end=None):
         """ Creates a Dataframe parser for a single dataframe.
+        
 
         :param cell The evaluated output of a cell.
                     Cell can contain more than one dataframe, but a single
                     DataframeHtmlParser can only parse table headers/rows for a 
                     a single dataframe in the substring cell[start:end]
+        :param start The 
         """
-        end = end or len(cell)
+        self.cell_contents = cell
+        end = end or len(self.cell_contents )
         header_spans = \
-            DataframeHtmlParser.header_top_r.finditer(cell, start, end)
+            DataframeHtmlParser.header_top_r.finditer(self.cell_contents,
+                                                      start,
+                                                      end)
         parts = {
             'header_top': next(header_spans).span(),
             'header_content': 
-                DataframeHtmlParser.header_content_r.search(cell, 
+                DataframeHtmlParser.header_content_r.search(self.cell_contents, 
                                                             start,
                                                             end).span(),
             'header_bottom': next(header_spans).span(),
@@ -187,22 +192,22 @@ class DataframeHtmlParser:
         }
         self.header_content_span = parts['header_content'] 
         header_content = \
-            self._span_substring(cell, self.header_content_span)
+            self._cell_span(self.header_content_span)
 
         self.expected_width = len(header_content.strip())
 
-        header_top = self._span_substring(cell, parts['header_top'])
+        header_top = self._cell_span(parts['header_top'])
         self.extractors = extractors(header_top.strip(), header_content.strip())
         # The content is between the header-bottom and the footer
         self.content_span = (parts['header_bottom'][1], parts['footer'][0])
 
-    def _span_substring(self, content, span):
+    def _cell_span(self, span):
         s, e = span 
-        return content[s:e]
+        return self.cell_contents[s:e]
 
-    def _rowspan_iter(self, cell):
-        """Extract each row from the content of a Dataframe."""
-        row_delimiters = re.compile(r"\n").finditer(cell,
+    def _rowspan_iter(self):
+        """Extract each row from the contents of a Dataframe."""
+        row_delimiters = re.compile(r"\n").finditer(self.cell_contents ,
                                                     self.content_span[0], 
                                                     self.content_span[1])
         start = self.content_span[0]
@@ -211,17 +216,15 @@ class DataframeHtmlParser:
             yield (start, end)
             start = next_start
     
-    def row_iter(self, cell, transform=None):
+    def row_iter(self, transform=None):
         """Extract and transform each row from a Dataframe.
 
         Defaults to converting a row to a dict {colName: value} 
         """
         _transform = transform or (lambda r: {col: x(r) 
                                     for col, x in self.extractors.items()})
-        rowspans = self._rowspan_iter(cell)
-        for rowspan in rowspans:
-            s, e = rowspan
-            row = cell[s: e].strip()
+        for rowspan in self._rowspan_iter():
+            row = self._cell_span(rowspan).strip()
             if len(row) != self.expected_width:
                 raise ValueError("""Expected DF rows to be uniform width (%d)
                                  but found %s (%d)""" % (self.expected_width, 
@@ -229,12 +232,13 @@ class DataframeHtmlParser:
                                                         len(row)))
             yield _transform(row)
 
-    def to_table(self, cell):
-        """Converts a """
-        header_content = self._span_substring(cell, self.header_content_span)
+    def to_table(self):
+        """Converts the contents of a notebook cell to a HTML table."""
+
+        header_content = self._cell_span(self.header_content_span)
         table_header_html = self._to_tr(header_content.strip(), is_header=True)
 
-        table_row_iter = self.row_iter(cell, self._to_tr)
+        table_row_iter = self.row_iter(transform=self._to_tr)
         table_body = ''.join([r for r in table_row_iter])
         return ("<table>%s%s</table>" % (table_header_html, table_body))
         

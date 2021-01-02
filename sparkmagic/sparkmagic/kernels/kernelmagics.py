@@ -268,7 +268,6 @@ class KernelMagics(SparkMagicBase):
         else:
             return
 
-    @magic_arguments()
     @cell_magic
     @needs_local_scope
     @wrap_unexpected_exceptions

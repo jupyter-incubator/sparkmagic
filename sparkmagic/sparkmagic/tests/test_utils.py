@@ -66,11 +66,6 @@ def test_records_to_dataframe_missing_value_later():
 
 
 class TestDataframeParsing(unittest.TestCase):
-    """
-    python /Users/gary.he/dev/sparkmagic/sparkmagic/sparkmagic/tests/test_utils.py TestDataframeParsing.test_dataframe_parsing
-    from sparkmagic.utils import dataframe_parser, match_iter;print(dataframe_parser.dataframe_anywhere.pattern); d = dataframe_parser.dataframe_anywhere;c = dataframe_parser.cell;d.match(c).groupdict()
-
-    """
     def test_dataframe_component(self):
         cell = """
                 +---+------+
@@ -84,7 +79,7 @@ class TestDataframeParsing(unittest.TestCase):
             Only showing the last 20 rows 
         """
         dc = DataframeHtmlParser(cell)
-        rows = dc.row_iter(cell)
+        rows = dc.row_iter()
         self.assertDictEqual(next(rows), {'id': '1', 'animal': 'bat'})
         self.assertDictEqual(next(rows), {'id': '2', 'animal': 'mouse'})
         self.assertDictEqual(next(rows), {'id': '3', 'animal': 'horse'})
@@ -98,7 +93,7 @@ class TestDataframeParsing(unittest.TestCase):
                     +---+------+
                 """
         dc = DataframeHtmlParser(cell)
-        rows = dc.row_iter(cell)                
+        rows = dc.row_iter()                
         with self.assertRaises(StopIteration):
             next(rows)
 
@@ -114,7 +109,7 @@ class TestDataframeParsing(unittest.TestCase):
             Only showing the last 20 rows 
         """
         dc = DataframeHtmlParser(cell)
-        rows = dc.row_iter(cell)      
+        rows = dc.row_iter()      
         self.assertDictEqual(next(rows), {'id': '1', 'animal': 'bat'})
         with self.assertRaises(ValueError):
             next(rows)
