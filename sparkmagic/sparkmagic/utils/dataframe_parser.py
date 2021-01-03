@@ -173,10 +173,9 @@ class DataframeHtmlParser:
                     Cell can contain more than one dataframe, but a single
                     DataframeHtmlParser can only parse table headers/rows for a 
                     a single dataframe in the substring cell[start:end]
-        :param start The 
         """
         self.cell_contents = cell
-        end = end or len(self.cell_contents )
+        end = end or len(self.cell_contents)
         header_spans = \
             DataframeHtmlParser.header_top_r.finditer(self.cell_contents,
                                                       start,

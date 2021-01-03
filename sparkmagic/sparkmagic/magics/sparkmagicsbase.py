@@ -46,9 +46,9 @@ class SparkMagicBase(Magics):
         self.spark_controller = SparkController(self.ipython_display)
 
         self.default_spark_output_handler = SparkOutputHandler(
-                              handle_html=self.ipython_display.html,
-                              handle_text=self.ipython_display.write,
-                              handle_default=self.ipython_display.display)
+                              handle_html=lambda out: self.ipython_display.html(out),
+                              handle_text=lambda out: self.ipython_display.write(out),
+                              handle_default=lambda out: self.ipython_display.display(out))
 
         self.logger.debug(u'Initialized spark magics.')
 
