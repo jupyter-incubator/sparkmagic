@@ -275,9 +275,6 @@ class KernelMagics(SparkMagicBase):
     def pretty(self, line, cell="", local_ns=None):
         """Evaluates a cell and converts dataframes in cell output to HTML tables."""
         if self._do_not_call_start_session(u""):
-            args = parse_argstring_or_throw(self.spark, line)
-            coerce = get_coerce_value(args.coerce)
-
             def pretty_output_handler(out):
                 if cell_contains_dataframe(out):
                     self.ipython_display.html(CellOutputHtmlParser.to_html(out)) 
@@ -288,7 +285,7 @@ class KernelMagics(SparkMagicBase):
                             handle_text=pretty_output_handler,
                             handle_default=lambda out: self.ipython_display.display(out))
                             
-            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce, output_handler=so)
+            self.execute_spark(cell, None, None, None, None, None, None, output_handler=so)
         else:
             return  
 
