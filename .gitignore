@@ -63,3 +63,6 @@ target/
 MANIFEST
 .vscode/*
 !.vscode/tasks.json
+
+venv/*
+*/.idea/*
