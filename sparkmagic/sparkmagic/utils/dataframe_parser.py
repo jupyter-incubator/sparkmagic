@@ -33,14 +33,14 @@ Into:
 """
 
 
-header_top = r'[ \t\f\v]*(?P<header_top>\+[-+]*\+)[\n\r]?'
-header_content = r'[ \t\f\v]*(?P<header_content>\|.*\|)[\n\r]'
-header_bottom = r'(?P<header_bottom>[ \t\f\v]*\+[-+]*\+[\n\r])'
-row_content = r'([ \t\f\v]*\|.*\|[\n\r])*'
-footer = r'(?P<footer>[ \t\f\v]*\+[-+]*\+$)'
+header_top_pattern = r'[ \t\f\v]*(?P<header_top>\+[-+]*\+)[\n\r]?'
+header_content_pattern = r'[ \t\f\v]*(?P<header_content>\|.*\|)[\n\r]'
+header_bottom_pattern = r'(?P<header_bottom>[ \t\f\v]*\+[-+]*\+[\n\r])'
+row_content_pattern = r'([ \t\f\v]*\|.*\|[\n\r])*'
+footer_pattern = r'(?P<footer>[ \t\f\v]*\+[-+]*\+$)'
 
-dataframe_pattern_r = re.compile(header_top + header_content +
-                                header_bottom + row_content + footer, 
+dataframe_pattern_r = re.compile(header_top_pattern + header_content_pattern +
+                                header_bottom_pattern + row_content_pattern + footer_pattern,
                                 re.MULTILINE)
 
 def extractors(header_top, header_content):
@@ -117,6 +117,8 @@ def cell_components_iter(cell):
     (CellComponentType.DF, 45, 247)
     (CellComponentType.TEXT, 247, 293)
     """
+    if not cell:
+        return
     df_spans = dataframe_pattern_r.finditer(cell)
     if cell_contains_dataframe(cell):
         df_start, df_end = next(df_spans).span()
@@ -131,12 +133,10 @@ def cell_components_iter(cell):
                     # Some text before the next Dataframe
                     yield (CellComponentType.TEXT, df_end, start) 
                 df_start, df_end = start, end
-            except StopIteration as e: 
+            except StopIteration: 
                 yield (CellComponentType.TEXT, df_end, len(cell))
                 return
     else:
-        if not cell:
-            return
         # Cell does not contain a DF. The whole cell is text.
         yield (CellComponentType.TEXT, 0, len(cell))
 
@@ -162,8 +162,8 @@ class CellOutputHtmlParser:
 class DataframeHtmlParser:
     """Parses a Spark Dataframe and presents it as a HTML table."""
 
-    header_top_r = re.compile(header_top)
-    header_content_r = re.compile(header_content)
+    header_top_r = re.compile(header_top_pattern)
+    header_content_r = re.compile(header_content_pattern)
     
     def __init__(self, cell, start=0, end=None):
         """ Creates a Dataframe parser for a single dataframe.
