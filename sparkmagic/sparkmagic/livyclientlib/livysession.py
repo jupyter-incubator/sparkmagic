@@ -3,6 +3,7 @@ import threading
 from time import sleep, time
 import ipykernel
 import os
+import sys
 
 from hdijupyterutils.guid import ObjectWithGuid
 
@@ -15,7 +16,10 @@ from .configurableretrypolicy import ConfigurableRetryPolicy
 from .command import Command
 from .exceptions import LivyClientTimeoutException, \
     LivyUnexpectedStatusException, BadUserDataException, SqlContextNotFoundException
-
+try:
+    from hops import util
+except ImportError:
+    pass
 
 class _HeartbeatThread(threading.Thread):
     def __init__(self, livy_session, refresh_seconds, retry_seconds, run_at_most=None):
@@ -141,6 +145,8 @@ class LivySession(ObjectWithGuid):
                 kernel_id = connection_file.split('-', 1)[1].split('.')[0]
                 self.properties['conf']['spark.yarn.appMasterEnv.HOPSWORKS_KERNEL_ID'] = kernel_id
                 self.properties['conf']['spark.executorEnv.HOPSWORKS_KERNEL_ID'] = kernel_id
+                if 'hops.util' in sys.modules:
+                    util.attach_jupyter_configuration_to_notebook(kernel_id)
 
             r = self._http_client.post_session(self.properties)
             self.id = r[u"id"]
@@ -335,3 +341,4 @@ class LivySession(ObjectWithGuid):
             return u"""<a target="_blank" href="{1}">{0}</a>""".format(text, url)
         else:
             return u""
+
