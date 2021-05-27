@@ -2,6 +2,8 @@
 
 ## NEXT RELEASE
 
+* Enhance configure magic to support endpoint overriding.
+
 ## 0.18.0
 
 ### Updates
