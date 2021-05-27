@@ -99,10 +99,22 @@ class KernelMagics(SparkMagicBase):
   </tr>
   <tr>
     <td>configure</td>
-    <td>%%configure -f<br/>{"executorMemory": "1000M", "executorCores": 4}</td>
-    <td>Configure the session creation parameters. The force flag is mandatory if a session has already been
-    created and the session will be dropped and recreated.<br/>Look at <a href="https://github.com/cloudera/livy#request-body">
-    Livy's POST /sessions Request Body</a> for a list of valid parameters. Parameters must be passed in as a JSON string.</td>
+    <td>%%configure -f<br/>
+        {"executorMemory": "1000M", "executorCores": 4}<br/>
+        %%configure -f -t kernel_python_credentials<br/>
+        {"username": "", "password": "", "url": "http://livy_host:8998", "auth": "None"}
+    </td>
+    <td>Provide a mechanism to change the configuration at runtime. For instance you can change the endpoint or the session 
+    creation parameters. Parameters must be passed in as a JSON string.<br/>
+    Parameters:
+      <ul>
+        <li>-f: The force flag is mandatory if a session has already been created and the session will be dropped and recreated.</li>
+        <li>-t TYPE: The overriding type to specify which part of configuration to override. Default value is session_configs.</li>
+      </ul>
+    
+    Configuration type could be session_configs, kernel_python_credentials, kernel_scala_credentials, authenticators, etc.
+    Specifically for session creation parameters, please look at <a href="https://github.com/cloudera/livy#request-body">
+    Livy's POST /sessions Request Body</a> for a list of valid parameters.</td>
   </tr>
   <tr>
     <td>spark</td>
@@ -221,6 +233,8 @@ class KernelMagics(SparkMagicBase):
     @magic_arguments()
     @cell_magic
     @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @argument("-t", "--type", type=str, default=conf.session_configs.__name__, help="The overriding type to specify "
+                                                                                    "which part of configuration to override.")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     @_event
@@ -238,10 +252,12 @@ class KernelMagics(SparkMagicBase):
                 return
             else:
                 self._do_not_call_delete_session(u"")
-                self._override_session_settings(dictionary)
+                self._override_settings(dictionary, args.type)
+                self.refresh_configuration()
                 self._do_not_call_start_session(u"")
         else:
-            self._override_session_settings(dictionary)
+            self._override_settings(dictionary, args.type)
+            self.refresh_configuration()
         self.info(u"")
 
     @magic_arguments()
@@ -446,8 +462,8 @@ class KernelMagics(SparkMagicBase):
                 return None
 
     @staticmethod
-    def _override_session_settings(settings):
-        conf.override(conf.session_configs.__name__, settings)
+    def _override_settings(settings, type):
+        conf.override(type, settings)
 
     @staticmethod
     def _generate_uuid():

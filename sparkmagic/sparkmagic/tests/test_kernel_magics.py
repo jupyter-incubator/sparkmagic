@@ -14,6 +14,7 @@ from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.auth.basic import Basic
 import importlib
+import json
 
 magic = None
 spark_controller = None
@@ -31,7 +32,10 @@ class TestKernelMagics(KernelMagics):
 
     def refresh_configuration(self):
         self.endpoint = Endpoint("new_url", None)
-
+    
+    # added for configure test to verify the endpoint is refreshed. 
+    def reset_endpoint(self):
+        self.endpoint = Endpoint("url", None)
 
 def _setup():
     global magic, spark_controller, shell, ipython_display, spark_events, conf
@@ -373,7 +377,7 @@ def test_logs_expected_exception():
 
 
 @with_setup(_setup, _teardown)
-def test_configure():
+def test_configure_session_configs():
     # Mock info method
     magic.info = MagicMock()
 
@@ -401,34 +405,98 @@ def test_configure():
                                                          {"kind": constants.SESSION_KIND_PYSPARK, "extra": "yes"})
     magic.info.assert_called_once_with("")
 
+@with_setup(_setup, _teardown)
+def test_configure_kernel_python_credentials():
+    _do_test_configure_credentials('kernel_python_credentials')
+
+
+@with_setup(_setup, _teardown)
+def test_configure_credentials_kernel_scala_credentials():
+    _do_test_configure_credentials('kernel_scala_credentials')
+
+
+@with_setup(_setup, _teardown)
+def test_configure_credentials_kernel_r_credentials():
+    _do_test_configure_credentials('kernel_r_credentials')
+
+
+def _do_test_configure_credentials(_override_type):
+    override_json = '{"username": "test_user", "base64_password": "d2VsY29tZTEyMw==", "url": "http://host:8998", "auth": "Basic_Access"}'
+    # Mock info method
+    magic.info = MagicMock()
+
+    # Session not started
+    conf.override_all({})
+    magic.configure('-t {}'.format(_override_type), override_json)
+    assert_equals(getattr(conf, _override_type)(), json.loads(override_json))
+    _assert_magic_successful_event_emitted_once('configure')
+    magic.info.assert_called_once_with("")
+    assert_equals(magic.endpoint, Endpoint("new_url", None))
+
+    # Session started - no -f, no overriding happens and expect default values returned.
+    magic.session_started = True
+    conf.override_all({})
+    magic.reset_endpoint()
+    expect_value = getattr(conf, _override_type)()
+    magic.configure('-t {}'.format(_override_type), override_json)
+    assert_equals(getattr(conf, _override_type)(), expect_value)
+    assert_equals(ipython_display.send_error.call_count, 1)
+    assert_equals(magic.endpoint, Endpoint("url", None))
+
+    # Session started - with -f
+    magic.info.reset_mock()
+    conf.override_all({})
+    magic.reset_endpoint()
+    magic.configure("-f -t {}".format(_override_type), override_json)
+    assert_equals(getattr(conf, _override_type)(), json.loads(override_json))
+    spark_controller.delete_session_by_name.assert_called_once_with(magic.session_name)
+    spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
+                                                         {"kind": constants.SESSION_KIND_PYSPARK})
+    magic.info.assert_called_once_with("")
+    assert_equals(magic.endpoint, Endpoint("new_url", None))
+
+
+@with_setup(_setup, _teardown)
+def test_configure_authenticators():
+    override_json = '{"MyCustomAuth": "MyCustomAuth"}'
+
+    # Mock info method
+    magic.info = MagicMock()
+
+    conf.override_all({})
+    magic.configure('-t authenticators', override_json)
+    assert_equals(conf.authenticators(), json.loads(override_json))
+    _assert_magic_successful_event_emitted_once('configure')
+    magic.info.assert_called_once_with("")
+
 
 @with_setup(_setup, _teardown)
 def test_configure_unexpected_exception():
     magic.info = MagicMock()
 
-    magic._override_session_settings = MagicMock(side_effect=ValueError('help'))
+    magic._override_settings = MagicMock(side_effect=ValueError('help'))
     magic.configure('', '{"extra": "yes"}')
-    _assert_magic_failure_event_emitted_once('configure', magic._override_session_settings.side_effect)
+    _assert_magic_failure_event_emitted_once('configure', magic._override_settings.side_effect)
     ipython_display.send_error.assert_called_once_with(constants.INTERNAL_ERROR_MSG\
-                                                       .format(magic._override_session_settings.side_effect))
+                                                       .format(magic._override_settings.side_effect))
 
 
 @with_setup(_setup, _teardown)
 def test_configure_expected_exception():
     magic.info = MagicMock()
 
-    magic._override_session_settings = MagicMock(side_effect=BadUserDataException('help'))
+    magic._override_settings = MagicMock(side_effect=BadUserDataException('help'))
     magic.configure('', '{"extra": "yes"}')
-    _assert_magic_failure_event_emitted_once('configure', magic._override_session_settings.side_effect)
+    _assert_magic_failure_event_emitted_once('configure', magic._override_settings.side_effect)
     ipython_display.send_error.assert_called_once_with(constants.EXPECTED_ERROR_MSG\
-                                                       .format(magic._override_session_settings.side_effect))
+                                                       .format(magic._override_settings.side_effect))
 
 
 @with_setup(_setup, _teardown)
 def test_configure_cant_parse_object_as_json():
     magic.info = MagicMock()
 
-    magic._override_session_settings = MagicMock(side_effect=BadUserDataException('help'))
+    magic._override_settings = MagicMock(side_effect=BadUserDataException('help'))
     magic.configure('', "I CAN'T PARSE THIS AS JSON")
     _assert_magic_successful_event_emitted_once('configure')
     assert_equals(ipython_display.send_error.call_count, 1)
