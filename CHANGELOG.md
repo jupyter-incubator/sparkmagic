@@ -2,6 +2,8 @@
 
 ## NEXT RELEASE
 
+* Update Endpoint widget to shield passwords when entering them in the ipywidget 
+
 ## 0.18.0
 
 ### Updates
