@@ -1,6 +1,8 @@
 # Changelog
 
 ## NEXT RELEASE
+### Features
+Added one internal magic to enable retry of session creation. 
 
 ## 0.18.0
 

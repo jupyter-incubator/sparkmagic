@@ -259,3 +259,4 @@ def test_add_session_throws_when_session_start_fails():
     except ValueError as ex:
         assert str(ex) == str(e)
         session.start.assert_called_once()
+        controller.session_manager.add_session.assert_not_called
