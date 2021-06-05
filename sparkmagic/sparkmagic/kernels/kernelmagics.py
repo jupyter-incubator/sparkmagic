@@ -259,14 +259,14 @@ class KernelMagics(SparkMagicBase):
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
-        if self._do_not_call_start_session(u""):
-            args = parse_argstring_or_throw(self.spark, line)
-
-            coerce = get_coerce_value(args.coerce)
-
-            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
-        else:
+        if not self._do_not_call_start_session(u""):
             return
+
+        args = parse_argstring_or_throw(self.spark, line)
+
+        coerce = get_coerce_value(args.coerce)
+
+        self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
 
     @cell_magic
     @needs_local_scope
@@ -274,20 +274,20 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     def pretty(self, line, cell="", local_ns=None):
         """Evaluates a cell and converts dataframes in cell output to HTML tables."""
-        if self._do_not_call_start_session(u""):
-            def pretty_output_handler(out):
-                if cell_contains_dataframe(out):
-                    self.ipython_display.html(CellOutputHtmlParser.to_html(out)) 
-                else:    
-                    self.ipython_display.write(out)
+        if not self._do_not_call_start_session(u""):
+            return 
 
-            so = SparkOutputHandler(handle_html=lambda out: self.ipython_display.html(out),
-                            handle_text=pretty_output_handler,
-                            handle_default=lambda out: self.ipython_display.display(out))
-                            
-            self.execute_spark(cell, None, None, None, None, None, None, output_handler=so)
-        else:
-            return  
+        def pretty_output_handler(out):
+            if cell_contains_dataframe(out):
+                self.ipython_display.html(CellOutputHtmlParser.to_html(out)) 
+            else:    
+                self.ipython_display.write(out)
+
+        so = SparkOutputHandler(handle_html=lambda out: self.ipython_display.html(out),
+                        handle_text=pretty_output_handler,
+                        handle_default=lambda out: self.ipython_display.display(out))
+                        
+        self.execute_spark(cell, None, None, None, None, None, None, output_handler=so)
 
 
     @magic_arguments()
