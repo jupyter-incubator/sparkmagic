@@ -18,9 +18,10 @@ from sparkmagic.utils import constants
 from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value, initialize_auth, Namespace
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import LANGS_SUPPORTED
+from sparkmagic.utils.dataframe_parser import cell_contains_dataframe, CellOutputHtmlParser
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
-from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
+from sparkmagic.magics.sparkmagicsbase import SparkMagicBase, SparkOutputHandler
 from sparkmagic.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
     BadUserDataException
 
@@ -153,6 +154,11 @@ class KernelMagics(SparkMagicBase):
       </ul>
     </td>
   </tr>
+  <tr>
+    <td>pretty</td>
+    <td>%%pretty</td>
+    <td>If the cell output is a dataframe, like <code>df.show()</code>, then it will pretty print the dataframe as an HTML table</td>
+  </tr>
 </table>
 """
         self.ipython_display.html(help_html)
@@ -258,14 +264,36 @@ class KernelMagics(SparkMagicBase):
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
-        if self._do_not_call_start_session(u""):
-            args = parse_argstring_or_throw(self.spark, line)
-
-            coerce = get_coerce_value(args.coerce)
-
-            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
-        else:
+        if not self._do_not_call_start_session(u""):
             return
+
+        args = parse_argstring_or_throw(self.spark, line)
+
+        coerce = get_coerce_value(args.coerce)
+
+        self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
+
+    @cell_magic
+    @needs_local_scope
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
+    def pretty(self, line, cell="", local_ns=None):
+        """Evaluates a cell and converts dataframes in cell output to HTML tables."""
+        if not self._do_not_call_start_session(u""):
+            return 
+
+        def pretty_output_handler(out):
+            if cell_contains_dataframe(out):
+                self.ipython_display.html(CellOutputHtmlParser.to_html(out)) 
+            else:    
+                self.ipython_display.write(out)
+
+        so = SparkOutputHandler(html=self.ipython_display.html,
+                        text=pretty_output_handler,
+                        default=self.ipython_display.display)
+                        
+        self.execute_spark(cell, None, None, None, None, None, None, output_handler=so)
+
 
     @magic_arguments()
     @cell_magic
@@ -282,15 +310,15 @@ class KernelMagics(SparkMagicBase):
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
-        if self._do_not_call_start_session(""):
-            args = parse_argstring_or_throw(self.sql, line)
-
-            coerce = get_coerce_value(args.coerce)
-
-            return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                         None, args.output, args.quiet, coerce)
-        else:
+        if not self._do_not_call_start_session(""):
             return
+
+        args = parse_argstring_or_throw(self.sql, line)
+
+        coerce = get_coerce_value(args.coerce)
+
+        return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
+                                     None, args.output, args.quiet, coerce)
 
     @magic_arguments()
     @cell_magic

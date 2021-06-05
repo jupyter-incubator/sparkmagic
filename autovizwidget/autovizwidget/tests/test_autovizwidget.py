@@ -1,7 +1,7 @@
 from mock import MagicMock, call
 from nose.tools import with_setup, assert_equals
 import pandas as pd
-from pandas.util.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 from ..widget.autovizwidget import AutoVizWidget
 from ..widget.encoding import Encoding
