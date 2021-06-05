@@ -2,6 +2,7 @@
 
 ## NEXT RELEASE
 
+* New `%%pretty` magic for pretty printing a dataframe as an HTML table. Thanks @hegary 
 * Update Endpoint widget to shield passwords when entering them in the ipywidget. Thanks @J0rg3M3nd3z @jodom961
 
 ## 0.18.0
