@@ -18,7 +18,7 @@ class Basic(HTTPBasicAuth, Authenticator):
             is created from parsing %spark magic command.
         """
         if parsed_attributes is not None:
-            if parsed_attributes.user is '' or parsed_attributes.password is '':
+            if parsed_attributes.user == '' or parsed_attributes.password == '':
                 new_exc = BadUserDataException("Need to supply username and password arguments for "\
                     "Basic Access Authentication. (e.g. -a username -p password).")
                 raise new_exc
