@@ -157,7 +157,7 @@ class KernelMagics(SparkMagicBase):
   <tr>
     <td>pretty</td>
     <td>%%pretty</td>
-    <td>If the cell output is a dataframe, like `df.show()`, then it will pretty print the dataframe as an HTML table</td>
+    <td>If the cell output is a dataframe, like <code>df.show()</code>, then it will pretty print the dataframe as an HTML table</td>
   </tr>
 </table>
 """
