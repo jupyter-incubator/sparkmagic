@@ -3,7 +3,7 @@ from mock import MagicMock
 import numpy as np
 from nose.tools import assert_equals, assert_is
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 from sparkmagic.utils.utils import parse_argstring_or_throw, records_to_dataframe
