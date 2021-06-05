@@ -47,7 +47,7 @@ class Basic(HTTPBasicAuth, Authenticator):
             width=widget_width
         )
 
-        self.password_widget = ipywidget_factory.get_text(
+        self.password_widget = ipywidget_factory.get_password(
             description='Password:',
             value=self.password,
             width=widget_width
