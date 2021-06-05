@@ -16,7 +16,7 @@ import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.utils import get_sessions_info_html
-from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
+from sparkmagic.utils.constants import MIMETYPE_TEXT_HTML 
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
