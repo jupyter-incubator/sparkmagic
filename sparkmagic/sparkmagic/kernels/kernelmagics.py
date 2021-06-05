@@ -154,6 +154,11 @@ class KernelMagics(SparkMagicBase):
       </ul>
     </td>
   </tr>
+  <tr>
+    <td>pretty</td>
+    <td>%%pretty</td>
+    <td>If the cell output is a dataframe, like `df.show()`, then it will pretty print the dataframe as an HTML table</td>
+  </tr>
 </table>
 """
         self.ipython_display.html(help_html)
