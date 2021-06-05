@@ -305,15 +305,15 @@ class KernelMagics(SparkMagicBase):
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
-        if self._do_not_call_start_session(""):
-            args = parse_argstring_or_throw(self.sql, line)
-
-            coerce = get_coerce_value(args.coerce)
-
-            return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                         None, args.output, args.quiet, coerce)
-        else:
+        if not self._do_not_call_start_session(""):
             return
+
+        args = parse_argstring_or_throw(self.sql, line)
+
+        coerce = get_coerce_value(args.coerce)
+
+        return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
+                                     None, args.output, args.quiet, coerce)
 
     @magic_arguments()
     @cell_magic
