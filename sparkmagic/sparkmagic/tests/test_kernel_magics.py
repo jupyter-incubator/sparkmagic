@@ -488,7 +488,7 @@ def test_spark():
     spark_controller.run_command = MagicMock(return_value=(True, line, constants.MIMETYPE_TEXT_PLAIN))
 
     magic.spark(line, cell)
-        
+
     ipython_display.write.assert_called_once_with(line)
     spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                          {"kind": constants.SESSION_KIND_PYSPARK})
