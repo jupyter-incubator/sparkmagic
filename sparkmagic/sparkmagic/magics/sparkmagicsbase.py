@@ -11,12 +11,12 @@ from six import string_types
 
 from IPython.core.magic import Magics, magics_class
 from hdijupyterutils.ipythondisplay import IpythonDisplay
-
+from collections import namedtuple
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.utils import get_sessions_info_html
-from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN
+from sparkmagic.utils.constants import MIMETYPE_TEXT_HTML 
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
@@ -25,6 +25,9 @@ from sparkmagic.livyclientlib.exceptions import SparkStatementException
 from sparkmagic.livyclientlib.sendpandasdftosparkcommand import SendPandasDfToSparkCommand
 from sparkmagic.livyclientlib.sendstringtosparkcommand import SendStringToSparkCommand
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
+
+# How to display different cell content types in IPython 
+SparkOutputHandler = namedtuple('SparkOutputHandler', ['html', 'text', 'default'])
 
 
 @magics_class
@@ -77,7 +80,12 @@ class SparkMagicBase(Magics):
             self.ipython_display.write(u'Successfully passed \'{}\' as \'{}\' to Spark'
                                        u' kernel'.format(input_variable_name, output_variable_name))
 
-    def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce):
+    def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce, output_handler=None):
+        output_handler = output_handler or SparkOutputHandler(
+                                          html=self.ipython_display.html,
+                                          text=self.ipython_display.write,
+                                          default=self.ipython_display.display)
+            
         (success, out, mimetype) = self.spark_controller.run_command(Command(cell), session_name)
         if not success:
             if conf.shutdown_session_on_spark_statement_errors():
@@ -87,11 +95,11 @@ class SparkMagicBase(Magics):
         else:
             if isinstance(out, string_types):
                 if mimetype == MIMETYPE_TEXT_HTML:
-                    self.ipython_display.html(out)
+                    output_handler.html(out)
                 else:
-                    self.ipython_display.write(out)
+                    output_handler.text(out)
             else:
-                self.ipython_display.display(out)
+                output_handler.default(out)
             if output_var is not None:
                 spark_store_command = self._spark_store_command(output_var, samplemethod, maxrows, samplefraction, coerce)
                 df = self.spark_controller.run_command(spark_store_command, session_name)

@@ -2,9 +2,20 @@
 
 ## NEXT RELEASE
 
+* New `%%pretty` magic for pretty printing a dataframe as an HTML table. Thanks @hegary 
+* Update Endpoint widget to shield passwords when entering them in the ipywidget. Thanks @J0rg3M3nd3z @jodom961
+
+## 0.18.0
+
+### Updates
+
+* Officially drop support for Python 2. Sparkmagic will not guarantee Python 2 compatibility moving forward.
+
 ### Features
 
-* Add user to %%info output @tprelle
+* Update Spark, SparkR, and PySpark kernels to include  language info and file extension for Jupyterlab LSP compatibility. Thanks @skakker
+* `KeyboardInterrupt` cancels the Livy statement. Thanks @hanyucui
+* Add user to %%info output. Thanks @tprelle
 
 ## 0.17.1
 
@@ -16,7 +27,7 @@
 
 ### Features
 
-* Customizable Livy authentication methods [#662](https://github.com/jupyter-incubator/sparkmagic/pull/662). Thanks @alexismacaskilll 
+* Customizable Livy authentication methods [#662](https://github.com/jupyter-incubator/sparkmagic/pull/662). Thanks @alexismacaskilll
 
 ### Bug fixes
 
