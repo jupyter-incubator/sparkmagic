@@ -27,7 +27,7 @@ from sparkmagic.livyclientlib.sendstringtosparkcommand import SendStringToSparkC
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 
 # How to display different cell content types in IPython 
-SparkOutputHandler = namedtuple('SparkOutputHandler', ['handle_html', 'handle_text', 'handle_default'])
+SparkOutputHandler = namedtuple('SparkOutputHandler', ['html', 'text', 'default'])
 
 
 @magics_class
@@ -44,11 +44,6 @@ class SparkMagicBase(Magics):
         self.logger = SparkLog(u"SparkMagics")
         self.ipython_display = IpythonDisplay()
         self.spark_controller = SparkController(self.ipython_display)
-
-        self.default_spark_output_handler = SparkOutputHandler(
-                              handle_html=lambda out: self.ipython_display.html(out),
-                              handle_text=lambda out: self.ipython_display.write(out),
-                              handle_default=lambda out: self.ipython_display.display(out))
 
         self.logger.debug(u'Initialized spark magics.')
 
@@ -86,7 +81,10 @@ class SparkMagicBase(Magics):
                                        u' kernel'.format(input_variable_name, output_variable_name))
 
     def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce, output_handler=None):
-        output_handler = output_handler or self.default_spark_output_handler 
+        output_handler = output_handler or SparkOutputHandler(
+                                          html=self.ipython_display.html,
+                                          text=self.ipython_display.write,
+                                          default=self.ipython_display.display)
             
         (success, out, mimetype) = self.spark_controller.run_command(Command(cell), session_name)
         if not success:
@@ -97,11 +95,11 @@ class SparkMagicBase(Magics):
         else:
             if isinstance(out, string_types):
                 if mimetype == MIMETYPE_TEXT_HTML:
-                    output_handler.handle_html(out)
+                    output_handler.html(out)
                 else:
-                    output_handler.handle_text(out)
+                    output_handler.text(out)
             else:
-                output_handler.handle_default(out)
+                output_handler.default(out)
             if output_var is not None:
                 spark_store_command = self._spark_store_command(output_var, samplemethod, maxrows, samplefraction, coerce)
                 df = self.spark_controller.run_command(spark_store_command, session_name)

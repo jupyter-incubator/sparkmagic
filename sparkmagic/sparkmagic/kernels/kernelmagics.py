@@ -283,9 +283,9 @@ class KernelMagics(SparkMagicBase):
             else:    
                 self.ipython_display.write(out)
 
-        so = SparkOutputHandler(handle_html=lambda out: self.ipython_display.html(out),
-                        handle_text=pretty_output_handler,
-                        handle_default=lambda out: self.ipython_display.display(out))
+        so = SparkOutputHandler(html=self.ipython_display.html,
+                        text=pretty_output_handler,
+                        default=self.ipython_display.display)
                         
         self.execute_spark(cell, None, None, None, None, None, None, output_handler=so)
 
