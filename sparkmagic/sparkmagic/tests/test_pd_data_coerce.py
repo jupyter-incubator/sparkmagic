@@ -1,4 +1,4 @@
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 import pandas as pd
 
 from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime

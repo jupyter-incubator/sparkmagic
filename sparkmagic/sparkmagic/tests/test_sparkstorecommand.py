@@ -1,8 +1,7 @@
 # coding=utf-8
 from mock import MagicMock, call
 from nose.tools import with_setup, assert_equals, assert_false, assert_raises
-import pandas as pd
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.constants import LONG_RANDOM_VARIABLE_NAME, MIMETYPE_TEXT_PLAIN
