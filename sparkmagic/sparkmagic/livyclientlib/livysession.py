@@ -220,6 +220,9 @@ class LivySession(ObjectWithGuid):
     def is_final_status(status):
         return status in constants.FINAL_STATUS
 
+    def is_posted(self):
+        return self.status != constants.NOT_STARTED_SESSION_STATUS
+
     def delete(self):
         session_id = self.id
         self._spark_events.emit_session_deletion_start_event(self.guid, self.kind, session_id, self.status)
