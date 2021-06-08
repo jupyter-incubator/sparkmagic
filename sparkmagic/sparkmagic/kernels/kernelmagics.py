@@ -58,6 +58,7 @@ class KernelMagics(SparkMagicBase):
         self.language = u""
         self.endpoint = None
         self.fatal_error = False
+        self.allow_retry_fatal = False
         self.fatal_error_message = u""
         if spark_events is None:
             spark_events = SparkEvents()
@@ -375,17 +376,19 @@ class KernelMagics(SparkMagicBase):
         # No need to add the handle_expected_exceptions decorator to this since we manually catch all
         # exceptions when starting the session.
 
-        if self.fatal_error:
+        if self.fatal_error and not self.allow_retry_fatal:
             self.ipython_display.send_error(self.fatal_error_message)
             return False
 
         if not self.session_started:
             skip = False
             properties = conf.get_session_properties(self.language)
-            self.session_started = True
 
             try:
                 self.spark_controller.add_session(self.session_name, self.endpoint, skip, properties)
+                self.session_started = True
+                self.fatal_error = False
+                self.fatal_error_message = u""
             except Exception as e:
                 self.fatal_error = True
                 self.fatal_error_message = conf.fatal_error_suggestion().format(e)
@@ -398,6 +401,11 @@ class KernelMagics(SparkMagicBase):
                 return False
 
         return self.session_started
+
+    @cell_magic
+    def _do_not_call_allow_retry_fatal(self, line, cell="", local_ns=None):
+        # enable the flag to retry session creation
+        self.allow_retry_fatal = True
 
     @cell_magic
     @handle_expected_exceptions
