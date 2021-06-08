@@ -1,12 +1,10 @@
-from mock import MagicMock, patch
-from nose.tools import with_setup, assert_equals, raises
 import json
 
-from sparkmagic.livyclientlib.sparkcontroller import SparkController
+from mock import MagicMock
+from nose.tools import with_setup, assert_equals, raises
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.exceptions import SessionManagementException, HttpClientException
-import sparkmagic.utils.configuration as conf
-
+from sparkmagic.livyclientlib.sparkcontroller import SparkController
 
 client_manager = None
 controller = None
@@ -259,3 +257,69 @@ def test_add_session_throws_when_session_start_fails():
     except ValueError as ex:
         assert str(ex) == str(e)
         session.start.assert_called_once()
+        controller.session_manager.add_session.assert_not_called
+
+@with_setup(_setup, _teardown)
+def test_add_session_cleanup_when_timeouts_and_session_posted_to_livy():
+    pass
+
+@with_setup(_setup, _teardown)
+def test_add_session_cleanup_when_timeouts_and_session_posted_to_livy():
+    _do_test_add_session_cleanup_when_timeouts(is_session_posted_to_livy=True)
+
+@with_setup(_setup, _teardown)
+def test_add_session_cleanup_when_timeouts_and_session_not_posted_to_livy():
+    _do_test_add_session_cleanup_when_timeouts(is_session_posted_to_livy=False)
+
+def _do_test_add_session_cleanup_when_timeouts(is_session_posted_to_livy):
+    name = "name"
+    properties = {"kind": "spark"}
+    endpoint = Endpoint("http://location:port", None)
+    session = MagicMock()
+
+    controller._livy_session = MagicMock(return_value=session)
+    controller._http_client = MagicMock(return_value=MagicMock())
+    e = RuntimeError("Time out while post session to livy")
+    session.start = MagicMock(side_effect=e)
+
+    if is_session_posted_to_livy:
+        session.is_posted = MagicMock(return_value=True)
+    else:
+        session.is_posted = MagicMock(return_value=False)
+
+    try:
+        controller.add_session(name, endpoint, False, properties)
+        assert False
+    except RuntimeError as ex:
+        assert str(ex) == str(e)
+        session.start.assert_called_once()
+        controller.session_manager.add_session.assert_not_called
+
+        if is_session_posted_to_livy:
+            session.delete.assert_called_once()
+        else:
+            session.delete.assert_not_called()
+
+@with_setup(_setup, _teardown)
+def test_add_session_cleanup_when_session_delete_throws():
+    name = "name"
+    properties = {"kind": "spark"}
+    endpoint = Endpoint("http://location:port", None)
+    session = MagicMock()
+
+    controller._livy_session = MagicMock(return_value=session)
+    controller._http_client = MagicMock(return_value=MagicMock())
+    e = RuntimeError("Time out while post session to livy")
+    session.start = MagicMock(side_effect=e)
+    session.is_posted = MagicMock(return_value=True)
+
+    error_from_cleanup = RuntimeError("Error while clean up session")
+    session.delete = MagicMock(side_effect=error_from_cleanup)
+    try:
+        controller.add_session(name, endpoint, False, properties)
+        assert False
+    except Exception as ex:
+        # in the exception chain mechanism, original exception will be set as context.
+        assert str(ex) == str(error_from_cleanup)
+        assert str(ex.__context__) == str(e)
+        controller.session_manager.add_session.assert_not_called

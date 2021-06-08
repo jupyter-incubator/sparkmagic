@@ -623,3 +623,13 @@ class TestLivySession(object):
         self.http_client.get_statement.return_value = self.ready_statement_failed_json
         session = self._create_session()
         session.start()
+
+    def test_is_posted(self):
+        self.http_client.post_session.return_value = self.session_create_json
+        self.http_client.get_session.return_value = self.ready_sessions_json
+        self.http_client.get_statement.return_value = self.ready_statement_json
+
+        session = self._create_session()
+        assert not session.is_posted()
+        session.start()
+        assert session.is_posted()
