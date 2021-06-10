@@ -89,6 +89,6 @@ setup(name=NAME,
           'notebook>=4.2',
           'tornado>=4',
           'requests_kerberos>=0.8.0',
-          'hdijupyterutils@https://github.com/viaduct-ai/sparkmagic/archive/5689cae59f557eda2c3c0a57a3abb19b00d07c9e.zip#subdirectory=hdijupyterutils',
+          'hdijupyterutils@https://github.com/viaduct-ai/sparkmagic/archive/665745db2b08119e49e3b89829f154293c037cf9.zip#subdirectory=hdijupyterutils',
           'autovizwidget>=0.6',
       ])
