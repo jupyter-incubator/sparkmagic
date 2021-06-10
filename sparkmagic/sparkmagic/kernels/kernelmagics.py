@@ -18,9 +18,10 @@ from sparkmagic.utils import constants
 from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value, initialize_auth, Namespace
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import LANGS_SUPPORTED, DEFAULT_SESSION_NAME
+from sparkmagic.utils.dataframe_parser import cell_contains_dataframe, CellOutputHtmlParser
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
-from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
+from sparkmagic.magics.sparkmagicsbase import SparkMagicBase, SparkOutputHandler
 from sparkmagic.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
     BadUserDataException
 
@@ -57,6 +58,7 @@ class KernelMagics(SparkMagicBase):
         self.language = u""
         self.endpoint = None
         self.fatal_error = False
+        self.allow_retry_fatal = False
         self.fatal_error_message = u""
         if spark_events is None:
             spark_events = SparkEvents()
@@ -152,6 +154,11 @@ class KernelMagics(SparkMagicBase):
         <li>-m MAXROWS: Maximum amount of Pandas rows that will be sent to Spark. Defaults to 2500.</li>
       </ul>
     </td>
+  </tr>
+  <tr>
+    <td>pretty</td>
+    <td>%%pretty</td>
+    <td>If the cell output is a dataframe, like <code>df.show()</code>, then it will pretty print the dataframe as an HTML table</td>
   </tr>
 </table>
 """
@@ -260,14 +267,35 @@ class KernelMagics(SparkMagicBase):
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
-        if self._do_not_call_start_session(u""):
-            args = parse_argstring_or_throw(self.spark, line)
-
-            coerce = get_coerce_value(args.coerce)
-
-            self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, self.session_name, coerce)
-        else:
+        if not self._do_not_call_start_session(u""):
             return
+
+        args = parse_argstring_or_throw(self.spark, line)
+
+        coerce = get_coerce_value(args.coerce)
+
+        self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, self.session_name, coerce)
+
+    @cell_magic
+    @needs_local_scope
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
+    def pretty(self, line, cell="", local_ns=None):
+        """Evaluates a cell and converts dataframes in cell output to HTML tables."""
+        if not self._do_not_call_start_session(u""):
+            return 
+
+        def pretty_output_handler(out):
+            if cell_contains_dataframe(out):
+                self.ipython_display.html(CellOutputHtmlParser.to_html(out)) 
+            else:    
+                self.ipython_display.write(out)
+
+        so = SparkOutputHandler(html=self.ipython_display.html,
+                        text=pretty_output_handler,
+                        default=self.ipython_display.display)
+                        
+        self.execute_spark(cell, None, None, None, None, session_name=self.session_name, coerce=False, output_handler=so)
 
     @magic_arguments()
     @cell_magic
@@ -284,15 +312,15 @@ class KernelMagics(SparkMagicBase):
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
-        if self._do_not_call_start_session(""):
-            args = parse_argstring_or_throw(self.sql, line)
-
-            coerce = get_coerce_value(args.coerce)
-
-            return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                         self.session_name, args.output, args.quiet, coerce)
-        else:
+        if not self._do_not_call_start_session(""):
             return
+
+        args = parse_argstring_or_throw(self.sql, line)
+
+        coerce = get_coerce_value(args.coerce)
+
+        return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
+                                         self.session_name, args.output, args.quiet, coerce)
 
     @magic_arguments()
     @cell_magic
@@ -349,17 +377,19 @@ class KernelMagics(SparkMagicBase):
         # No need to add the handle_expected_exceptions decorator to this since we manually catch all
         # exceptions when starting the session.
 
-        if self.fatal_error:
+        if self.fatal_error and not self.allow_retry_fatal:
             self.ipython_display.send_error(self.fatal_error_message)
             return False
 
         if not self.session_started:
             skip = False
             properties = conf.get_session_properties(self.language)
-            self.session_started = True
 
             try:
                 self.spark_controller.add_session(self.session_name, self.endpoint, skip, properties)
+                self.session_started = True
+                self.fatal_error = False
+                self.fatal_error_message = u""
             except Exception as e:
                 self.fatal_error = True
                 self.fatal_error_message = conf.fatal_error_suggestion().format(e)
@@ -372,6 +402,11 @@ class KernelMagics(SparkMagicBase):
                 return False
 
         return self.session_started
+
+    @cell_magic
+    def _do_not_call_allow_retry_fatal(self, line, cell="", local_ns=None):
+        # enable the flag to retry session creation
+        self.allow_retry_fatal = True
 
     @cell_magic
     @handle_expected_exceptions

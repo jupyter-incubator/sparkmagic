@@ -496,13 +496,13 @@ class TestLivySession(object):
             session.guid, session.kind, end_id, constants.DEAD_SESSION_STATUS, True, "", "")
 
     def test_get_empty_app_id(self):
-        self._verify_get_app_id("null", None, 6)
+        self._verify_get_app_id("null", None, 7)
 
     def test_get_missing_app_id(self):
-        self._verify_get_app_id(None, None, 6)
+        self._verify_get_app_id(None, None, 7)
 
     def test_get_normal_app_id(self):
-        self._verify_get_app_id("\"app_id_123\"", "app_id_123", 5)
+        self._verify_get_app_id("\"app_id_123\"", "app_id_123", 6)
 
     def test_get_empty_driver_log_url(self):
         self._verify_get_driver_log_url("null", None)
@@ -534,7 +534,7 @@ class TestLivySession(object):
         driver_log_url = session.get_driver_log_url()
 
         assert_equals(expected_url, driver_log_url)
-        assert_equals(6, self.http_client.get_session.call_count)
+        assert_equals(7, self.http_client.get_session.call_count)
 
     def test_get_empty_spark_ui_url(self):
         self._verify_get_spark_ui_url("null", None)
@@ -556,7 +556,7 @@ class TestLivySession(object):
         spark_ui_url = session.get_spark_ui_url()
 
         assert_equals(expected_url, spark_ui_url)
-        assert_equals(6, self.http_client.get_session.call_count)
+        assert_equals(7, self.http_client.get_session.call_count)
 
     def test_get_row_html(self):
         session_id1 = 1
@@ -564,14 +564,15 @@ class TestLivySession(object):
         session1.get_app_id = MagicMock()
         session1.get_spark_ui_url = MagicMock()
         session1.get_driver_log_url = MagicMock()
+        session1.get_user = MagicMock()
         session1.get_app_id.return_value = 'app1234'
         session1.status = constants.IDLE_SESSION_STATUS
         session1.get_spark_ui_url.return_value = 'https://microsoft.com/sparkui'
         session1.get_driver_log_url.return_value = 'https://microsoft.com/driverlog'
-
+        session1.get_user.return_value = 'userTest'
         html1 = session1.get_row_html(1)
 
-        assert_equals(html1, u"""<tr><td>1</td><td>app1234</td><td>spark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>\u2714</td></tr>""")
+        assert_equals(html1, u"""<tr><td>1</td><td>app1234</td><td>spark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>userTest</td><td>\u2714</td></tr>""")
 
         session_id2 = 3
         session2 = self._create_session(kind=constants.SESSION_KIND_PYSPARK,
@@ -579,14 +580,16 @@ class TestLivySession(object):
         session2.get_app_id = MagicMock()
         session2.get_spark_ui_url = MagicMock()
         session2.get_driver_log_url = MagicMock()
+        session2.get_user = MagicMock()
         session2.get_app_id.return_value = 'app5069'
         session2.status = constants.BUSY_SESSION_STATUS
         session2.get_spark_ui_url.return_value = None
         session2.get_driver_log_url.return_value = None
+        session2.get_user.return_value = 'userTest2'
 
         html2 = session2.get_row_html(1)
 
-        assert_equals(html2, u"""<tr><td>3</td><td>app5069</td><td>pyspark</td><td>busy</td><td></td><td></td><td></td></tr>""")
+        assert_equals(html2, u"""<tr><td>3</td><td>app5069</td><td>pyspark</td><td>busy</td><td></td><td></td><td>userTest2</td><td></td></tr>""")
 
     def test_link(self):
         url = u"https://microsoft.com"
@@ -620,3 +623,13 @@ class TestLivySession(object):
         self.http_client.get_statement.return_value = self.ready_statement_failed_json
         session = self._create_session()
         session.start()
+
+    def test_is_posted(self):
+        self.http_client.post_session.return_value = self.session_create_json
+        self.http_client.get_session.return_value = self.ready_sessions_json
+        self.http_client.get_statement.return_value = self.ready_statement_json
+
+        session = self._create_session()
+        assert not session.is_posted()
+        session.start()
+        assert session.is_posted()

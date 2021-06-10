@@ -84,7 +84,7 @@ def test_start_session_times_out():
     ret = magic._do_not_call_start_session(line)
 
     assert not ret
-    assert magic.session_started
+    assert not magic.session_started
     assert magic.fatal_error
     assert_equals(ipython_display.send_error.call_count, 1)
 
@@ -92,7 +92,7 @@ def test_start_session_times_out():
     ipython_display.send_error.reset_mock()
     ret = magic._do_not_call_start_session(line)
     assert not ret
-    assert magic.session_started
+    assert not magic.session_started
     assert_equals(ipython_display.send_error.call_count, 1)
 
 @with_setup(_setup, _teardown)
@@ -962,12 +962,70 @@ def test_start_session_displays_fatal_error_when_session_throws():
     magic.ipython_display = ipython_display
     magic.ipython_display.send_error = MagicMock()
 
-    magic._do_not_call_start_session("Test Line")
+    magic._do_not_call_start_session("")
 
     magic.spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
                                                                {"kind": constants.SESSION_KIND_SPARK})
     assert magic.fatal_error
     assert magic.fatal_error_message == conf.fatal_error_suggestion().format(str(e))
+
+
+@with_setup(_setup, _teardown)
+def test_start_session_when_retry_fatal_error_is_not_allowed_by_default():
+    e = ValueError("Failed to create the SqlContext.\nError, '{}'".format("Exception"))
+    magic.spark_controller.add_session = MagicMock(side_effect=e)
+    magic.language = constants.LANG_SCALA
+    magic.ipython_display = ipython_display
+    magic.ipython_display.send_error = MagicMock()
+
+    # first session creation
+    magic._do_not_call_start_session("")
+    # retry session creation
+    magic._do_not_call_start_session("")
+
+    # call add_session once and call send_error twice to show the error message
+    magic.spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
+                                                               {"kind": constants.SESSION_KIND_SPARK})
+    assert_equals(magic.ipython_display.send_error.call_count, 2)
+
+
+@with_setup(_setup, _teardown)
+def test_retry_start_session_when_retry_fatal_error_is_allowed():
+    e = ValueError("Failed to create the SqlContext.\nError, '{}'".format("Exception"))
+    magic.spark_controller.add_session = MagicMock(side_effect=e)
+    magic.language = constants.LANG_SCALA
+    magic.ipython_display = ipython_display
+    magic.ipython_display.send_error = MagicMock()
+    magic.allow_retry_fatal = True
+
+    # first session creation - failed
+    session_created = magic._do_not_call_start_session("")
+    magic.spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
+                                                               {"kind": constants.SESSION_KIND_SPARK})
+    assert not session_created
+    assert magic.fatal_error
+    assert magic.fatal_error_message == conf.fatal_error_suggestion().format(str(e))
+
+    # retry session creation - successful
+    magic.spark_controller.add_session = MagicMock()
+    session_created = magic._do_not_call_start_session("")
+    magic.spark_controller.add_session.assert_called_once_with(magic.session_name, magic.endpoint, False,
+                                                               {"kind": constants.SESSION_KIND_SPARK})
+    print(session_created)
+    assert session_created
+    assert magic.session_started
+    assert not magic.fatal_error
+    assert magic.fatal_error_message == u''
+
+    # show error message only once
+    assert magic.ipython_display.send_error.call_count == 1
+
+
+@with_setup(_setup, _teardown)
+def test_allow_retry_fatal():
+    assert not magic.allow_retry_fatal
+    magic._do_not_call_allow_retry_fatal("")
+    assert magic.allow_retry_fatal
 
 
 @with_setup(_setup, _teardown)

@@ -1,9 +1,10 @@
 dist: xenial
 language: python
 python:
-- '2.7.13'
 - '3.6'
 - '3.7'
+- '3.8'
+- '3.9'
 install:
 - pip install six
 - pip install -r hdijupyterutils/requirements.txt -e hdijupyterutils
@@ -34,13 +35,13 @@ deploy:
   on:
     branch: release
     tags: true
-    condition: $TRAVIS_PYTHON_VERSION = "2.7.13"
+    condition: $TRAVIS_PYTHON_VERSION = "3.6"
 - provider: script
   script: /bin/sh deploy_test.sh
   on:
     branch: release
     tags: false
-    condition: $TRAVIS_PYTHON_VERSION = "2.7.13"
+    condition: $TRAVIS_PYTHON_VERSION = "3.6"
 env:
   global:
     secure: Xk+uGuB1bZGhSKVB+pfTrZaJ8JU0mlceIRbA2yLuHYsOpI3vpAY1YtNVaeZ9e3cUCc0uofvJHOnbdZiZFwEod9An2T6Iq939xFIAkHz9GyWJL54esldXFJaQscwtC9XO8o9V4eS7RbptTPRQpo3isPSk7+4bXLevCQ1lcE3xBoVjAQuGtoPRGODo0jfPiURN1QnKdfjKk0KIEb01YS5azdMq4WD8EV8IlF5eYb+3JUvzc2Le7hpPNzzmxco+VTLFUXIckJrKr4uJxDwj6v5bVaDq/JpzDsX4TKezSWVzZuLMDG/N21fwmA4U7iZVjHgHD279fU69lxINPvKKkfFEs4KXOPJ31W2S0eR2xbEq48kU9v00ixaQpqbPjBnhddOJBBOVpw0VF0BiW6n8drKMRqrz2UuWQVekPKJ609APhUXNZiF9gV5WWNElKuq0xIXpnQ3c2yww836w9Cj522hKQd6IGcqR/SWYvFgEHkLw17dJl6eSCT7N4slAoqLetr3JX/YTVwLMGvvYls0YANJPkaLr2Mv3NCiz5SIUz1zfK6nQEwx6X3Zr+HPw9enj90q0QV56o0MdgUN573HGivRO8b0Hb5hiq6gq1HkRZ+I/SUlMUZ64OaKMMIoYxlDvFicrFSnSbsK2PBWiFKF2A/ZX2QDyk9Y+SWIqa2K3ZWuGb0Q=
