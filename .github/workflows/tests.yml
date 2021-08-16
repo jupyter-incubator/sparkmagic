@@ -32,4 +32,5 @@ jobs:
           nosetests autovizwidget
       - name: Run sparkmagic tests
         run: |
+          mkdir ~/.sparkmagic
           nosetests sparkmagic
