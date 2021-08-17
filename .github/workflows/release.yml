@@ -1,0 +1,50 @@
+name: Publish Packages
+
+on:
+  push:
+    branches:    
+      # Only detect release on master branch
+      - master
+    tags:
+      # Format of tag should be #.#.# (no v-prefix)
+      - *.*.*
+
+jobs:
+  build:
+    env:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Setup PyPI
+        run: |
+          cat > ~/.pypirc <<- EOF
+          [distutils]
+          index-servers =
+              pypi
+              pypitest
+
+          [pypi]
+          username=__token__
+          password=$PYPI_TOKEN
+
+          [pypitest]
+          repository=https://test.pypi.org/legacy/
+          username=__token__
+          password=$PYPI_TOKEN
+          EOF
+
+      - name: Test Release
+        run: |
+          /bin/sh deploy_test.sh
+
+      - name: Release
+        run: |
+          /bin/sh deploy.sh
