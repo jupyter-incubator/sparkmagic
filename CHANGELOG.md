@@ -2,6 +2,10 @@
 
 ## NEXT RELEASE
 
+### Bug Fixes
+
+* Pins `ipykernel<6.0.0` because of breaking changes
+
 ## 0.19.0
 
 ### Features
