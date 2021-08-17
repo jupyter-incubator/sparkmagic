@@ -3,8 +3,8 @@ NAME = "hdijupyterutils"
 PACKAGES = ["hdijupyterutils"]
 AUTHOR = "Jupyter Development Team"
 AUTHOR_EMAIL = "jupyter@googlegroups.org"
-URL = "https://github.com/jupyter-incubator/sparkmagic/hdijupyterutils"
-DOWNLOAD_URL = "https://github.com/jupyter-incubator/sparkmagic/hdijupyterutils"
+URL = "https://github.com/jupyter-incubator/sparkmagic"
+DOWNLOAD_URL = "https://github.com/jupyter-incubator/sparkmagic"
 LICENSE = "BSD 3-clause"
 
 import io
@@ -21,7 +21,7 @@ def read(path, encoding="utf-8"):
 
 
 def version(path):
-    """Obtain the package version from a python file e.g. pkg/__init__.py
+    """Obtain the package version from a python file e.g. pkg/__init__.py.
 
     See <https://packaging.python.org/en/latest/single_source_version.html>.
     """
