@@ -6,6 +6,9 @@
 
 * Pins `ipykernel<6.0.0` because of breaking changes
 
+### Updates
+* Migrate from Travis to Github Actions for CI
+
 ## 0.19.0
 
 ### Features
