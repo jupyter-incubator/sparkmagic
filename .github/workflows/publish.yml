@@ -17,7 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.8
 
       - name: Setup PyPI
         run: |
@@ -41,6 +41,10 @@ jobs:
         # run: |
           # /bin/sh deploy_test.sh
 
+      - name: Upgrade dependencies
+        run: |
+          pip install -U pip setuptools twine
       - name: Release
         run: |
+
           /bin/sh deploy.sh
