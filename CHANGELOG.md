@@ -2,6 +2,8 @@
 
 ## NEXT RELEASE
 
+* Migrate from Travis to Github Actions for CI
+
 ## 0.19.0
 
 ### Features
