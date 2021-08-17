@@ -1,13 +1,9 @@
 name: Publish Packages
 
 on:
-  push:
-    branches:    
-      # Only detect release on master branch
-      - master
-    tags:
-      # Format of tag should be #.#.# (no v-prefix)
-      - *.*.*
+  release:
+    types: [released]
+
 
 jobs:
   build:
