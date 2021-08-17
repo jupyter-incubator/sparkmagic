@@ -37,9 +37,9 @@ jobs:
           password=$PYPI_TOKEN
           EOF
 
-      - name: Test Release
-        run: |
-          /bin/sh deploy_test.sh
+      # - name: Test Release
+        # run: |
+          # /bin/sh deploy_test.sh
 
       - name: Release
         run: |
