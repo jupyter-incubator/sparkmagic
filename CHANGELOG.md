@@ -2,6 +2,8 @@
 
 ## NEXT RELEASE
 
+## 0.19.1
+
 ### Bug Fixes
 
 * Pins `ipykernel<6.0.0` because of breaking changes
