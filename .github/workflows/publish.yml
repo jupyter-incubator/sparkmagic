@@ -8,7 +8,9 @@ on:
 jobs:
   build:
     env:
-      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      PYPI_TOKEN_AUTOVIZWIDGET: ${{ secrets.PYPI_TOKEN_AUTOVIZWIDGET }}
+      PYPI_TOKEN_HDIJUPYTERUTILS: ${{ secrets.PYPI_TOKEN_HDIJUPYTERUTILS }}
+      PYPI_TOKEN_SPARKMAGIC: ${{ secrets.PYPI_TOKEN_SPARKMAGIC }}
 
     runs-on: ubuntu-latest
 
@@ -27,19 +29,19 @@ jobs:
               pypi
               pypitest
 
-          [pypi]
+          [autovizwidget]
           username=__token__
-          password=$PYPI_TOKEN
+          password=$PYPI_TOKEN_AUTOVIZWIDGET
 
-          [pypitest]
-          repository=https://test.pypi.org/legacy/
+          [hdijupyterutils]
           username=__token__
-          password=$PYPI_TOKEN
+          password=$PYPI_TOKEN_HDIJUPYTERUTILS
+
+          [sparkmagic]
+          username=__token__
+          password=$PYPI_TOKEN_SPARKMAGIC
+
           EOF
-
-      # - name: Test Release
-        # run: |
-          # /bin/sh deploy_test.sh
 
       - name: Upgrade dependencies
         run: |
