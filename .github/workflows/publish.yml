@@ -43,10 +43,44 @@ jobs:
 
           EOF
 
-      - name: Upgrade dependencies
+      - name: Build hdijupyterutils dist
         run: |
-          pip install -U pip setuptools twine
-      - name: Release
-        run: |
+          cd hdijupyterutils
+          python setup.py sdist
+          cd ..
 
-          /bin/sh deploy.sh
+      - name: Publish hdijupyterutils to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN_HDIJUPYTERUTILS }}
+          packages_dir: hdijupyterutils/dist/
+          verbose: true
+
+      - name: Build autovizwidget dist
+        run: |
+          cd autovizwidget
+          python setup.py sdist
+          cd ..
+
+      - name: Publish autovizwidget to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN_AUTOVIZWIDGET }}
+          packages_dir: autovizwidget/dist/
+          verbose: true
+
+      - name: Build sparkmagic dist
+        run: |
+          cd sparkmagic
+          python setup.py sdist
+          cd ..
+
+      - name: Publish sparkmagic to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN_SPARKMAGIC }}
+          packages_dir: sparkmagic/dist/
+          verbose: true
