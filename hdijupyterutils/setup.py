@@ -61,7 +61,7 @@ setup(
         "nose",
         "mock",
         "ipywidgets>5.0.0",
-        "ipykernel>=4.2.2<6.0.0",
+        "ipykernel>=4.2.2,<6.0.0",
         "jupyter>=1",
         "pandas>=0.17.1",
         "numpy",
