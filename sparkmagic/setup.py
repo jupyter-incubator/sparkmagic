@@ -34,7 +34,7 @@ def read(path, encoding="utf-8"):
 
 
 def version(path):
-    """Obtain the package version from a python file e.g. pkg/__init__.py
+    """Obtain the package version from a python file e.g. pkg/__init__.py.
 
     See <https://packaging.python.org/en/latest/single_source_version.html>.
     """
@@ -89,7 +89,7 @@ setup(
         "pandas>=0.17.1",
         "numpy",
         "requests",
-        "ipykernel<6.0.0",
+        "ipykernel>=4.2.2",
         "ipywidgets>5.0.0",
         "notebook>=4.2",
         "tornado>=4",
