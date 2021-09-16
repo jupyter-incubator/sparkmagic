@@ -165,11 +165,11 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
 
         # In ipykernel 6, this returns native asyncio coroutine
         if asyncio.iscoroutine(result):
-            return await result
+            result = await result
 
         # In ipykernel 5, this returns gen.coroutine
         if isinstance(result, asyncio.Future):
-            return result.result()
+            result = result.result()
 
         # In ipykernel 4, this func is synchronous
         return result

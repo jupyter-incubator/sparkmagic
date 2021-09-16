@@ -1,7 +1,7 @@
 import asyncio
 import ipykernel
 
-from unittest.mock import MagicMock, AsyncMock, call, patch
+from unittest.mock import MagicMock, call, patch
 from nose.tools import with_setup
 from aiounittest import async_test
 
@@ -213,10 +213,10 @@ async def test_execute_cell_for_user_ipykernel5(mock_ipy_execute):
 @patch.object(
     ipykernel.ipkernel.IPythonKernel,
     "do_execute",
-    new=AsyncMock(return_value={"status": "OK"}),
 )
 @with_setup(_teardown)
-async def test_execute_cell_for_user_ipykernel6():
+async def test_execute_cell_for_user_ipykernel6(mock_ipy_execute):
+    mock_ipy_execute.return_value = {"status": "OK"}
     actual_result = await TestSparkKernel()._execute_cell_for_user(
         code="Foo", silent=True
     )
