@@ -177,50 +177,49 @@ def test_delete_session():
 @async_test
 @with_setup(_teardown)
 async def test_execute_cell_for_user_ipykernel4():
+    want = {"status": "OK"}
+    # Can't use patch decorator because
+    # it fails to patch async functions in Python < 3.8
     with patch(
         "ipykernel.ipkernel.IPythonKernel.do_execute",
         new_callable=MagicMock,
-        return_value={"status": "OK"},
+        return_value=want,
     ) as mock_ipy_execute:
-        print(mock_ipy_execute)
-        actual_result = await TestSparkKernel()._execute_cell_for_user(
-            code="1", silent=True
-        )
-        print(actual_result)
+        got = await TestSparkKernel()._execute_cell_for_user(code="1", silent=True)
+
         assert mock_ipy_execute.called
-        assert mock_ipy_execute.called
-        assert {"status": "OK"} == actual_result
+        assert want == got
 
 
 @async_test
 @with_setup(_teardown)
 async def test_execute_cell_for_user_ipykernel5():
+    want = {"status": "OK"}
+    # Can't use patch decorator because
+    # it fails to patch async functions in Python < 3.8
     with patch(
         "ipykernel.ipkernel.IPythonKernel.do_execute",
         new_callable=MagicMock,
     ) as mock_ipy_execute:
         mock_ipy_execute.return_value = asyncio.Future()
-        mock_ipy_execute.return_value.set_result({"status": "OK"})
-        print(mock_ipy_execute)
-        actual_result = await TestSparkKernel()._execute_cell_for_user(
-            code="1", silent=True
-        )
-        print(actual_result)
+        mock_ipy_execute.return_value.set_result(want)
+
+        got = await TestSparkKernel()._execute_cell_for_user(code="1", silent=True)
+
         assert mock_ipy_execute.called
-        assert {"status": "OK"} == actual_result
+        assert want == got
 
 
 @async_test
 @with_setup(_teardown)
 async def test_execute_cell_for_user_ipykernel6():
+    want = {"status": "OK"}
+    # Can't use patch decorator because
+    # it fails to patch async functions in Python < 3.8
     with patch(
-        "ipykernel.ipkernel.IPythonKernel.do_execute",
-        return_value={"status": "OK"},
+        "ipykernel.ipkernel.IPythonKernel.do_execute", return_value=want
     ) as mock_ipy_execute:
-        mock_ipy_execute.return_value = {"status": "OK"}
-        print(mock_ipy_execute)
-        actual_result = await TestSparkKernel()._execute_cell_for_user(
-            code="1", silent=True
-        )
+        got = await TestSparkKernel()._execute_cell_for_user(code="1", silent=True)
+
         assert mock_ipy_execute.called
-        assert {"status": "OK"} == actual_result
+        assert want == got
