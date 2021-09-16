@@ -175,38 +175,52 @@ def test_delete_session():
 
 
 @async_test
-@patch.object(ipykernel.ipkernel.IPythonKernel, "do_execute", new_callable=MagicMock)
 @with_setup(_teardown)
-async def test_execute_cell_for_user_ipykernel4(mock_ipy_execute):
-    mock_ipy_execute.return_value = {"status": "OK"}
-    actual_result = await TestSparkKernel()._execute_cell_for_user(
-        code="1", silent=True
-    )
-    assert {"status": "OK"} == actual_result
+async def test_execute_cell_for_user_ipykernel4():
+    with patch(
+        "ipykernel.ipkernel.IPythonKernel.do_execute",
+        new_callable=MagicMock,
+        return_value={"status": "OK"},
+    ) as mock_ipy_execute:
+        print(mock_ipy_execute)
+        actual_result = await TestSparkKernel()._execute_cell_for_user(
+            code="1", silent=True
+        )
+        print(actual_result)
+        assert mock_ipy_execute.called
+        assert mock_ipy_execute.called
+        assert {"status": "OK"} == actual_result
 
 
 @async_test
-@patch.object(ipykernel.ipkernel.IPythonKernel, "do_execute", new_callable=MagicMock)
 @with_setup(_teardown)
-async def test_execute_cell_for_user_ipykernel5(mock_ipy_execute):
-    mock_ipy_execute.return_value = asyncio.Future()
-    mock_ipy_execute.return_value.set_result({"status": "OK"})
-
-    actual_result = await TestSparkKernel()._execute_cell_for_user(
-        code="1", silent=True
-    )
-    assert {"status": "OK"} == actual_result
+async def test_execute_cell_for_user_ipykernel5():
+    with patch(
+        "ipykernel.ipkernel.IPythonKernel.do_execute",
+        new_callable=MagicMock,
+    ) as mock_ipy_execute:
+        mock_ipy_execute.return_value = asyncio.Future()
+        mock_ipy_execute.return_value.set_result({"status": "OK"})
+        print(mock_ipy_execute)
+        actual_result = await TestSparkKernel()._execute_cell_for_user(
+            code="1", silent=True
+        )
+        print(actual_result)
+        assert mock_ipy_execute.called
+        assert {"status": "OK"} == actual_result
 
 
 @async_test
-@patch.object(
-    ipykernel.ipkernel.IPythonKernel,
-    "do_execute",
-)
 @with_setup(_teardown)
-async def test_execute_cell_for_user_ipykernel6(mock_ipy_execute):
-    mock_ipy_execute.return_value = {"status": "OK"}
-    actual_result = await TestSparkKernel()._execute_cell_for_user(
-        code="1", silent=True
-    )
-    assert {"status": "OK"} == actual_result
+async def test_execute_cell_for_user_ipykernel6():
+    with patch(
+        "ipykernel.ipkernel.IPythonKernel.do_execute",
+        return_value={"status": "OK"},
+    ) as mock_ipy_execute:
+        mock_ipy_execute.return_value = {"status": "OK"}
+        print(mock_ipy_execute)
+        actual_result = await TestSparkKernel()._execute_cell_for_user(
+            code="1", silent=True
+        )
+        assert mock_ipy_execute.called
+        assert {"status": "OK"} == actual_result
