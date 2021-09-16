@@ -35,7 +35,7 @@ class SparkKernelBase(IPythonKernel):
         # Override
         self.session_language = session_language
 
-        super(SparkKernelBase, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.logger = SparkLog(u"{}_jupyter_kernel".format(self.session_language))
         self._fatal_error = None
@@ -165,17 +165,17 @@ ip.display_formatter.ipython_display_formatter.for_type_by_name('pandas.core.fra
 
         # In ipykernel 6, this returns native asyncio coroutine
         if asyncio.iscoroutine(result):
-            result = await result
+            return await result
 
         # In ipykernel 5, this returns gen.coroutine
         if isinstance(result, asyncio.Future):
-            result = result.result()
+            return result.result()
 
         # In ipykernel 4, this func is synchronous
         return result
 
     def _do_shutdown_ipykernel(self, restart):
-        return super(SparkKernelBase, self).do_shutdown(restart)
+        return super().do_shutdown(restart)
 
     def _complete_cell(self):
         """A method that runs a cell with no effect.
