@@ -3,7 +3,7 @@ import asyncio
 
 from unittest.mock import MagicMock, call, patch
 from nose.tools import with_setup
-from aiounittest import async_test, futurized
+from aiounittest.helpers import async_test, futurized
 
 from sparkmagic.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 from sparkmagic.utils.constants import LANG_PYTHON
@@ -28,12 +28,14 @@ execute_cell_mock = None
 do_shutdown_mock = None
 ipython_display = None
 code = "some spark code"
-user_code_parser = MagicMock(return_value=code)
 
 
 class TestSparkKernel(SparkKernelBase):
-    def __init__(self):
+    def __init__(self, user_code_parser=None):
         kwargs = {"testing": True}
+        if user_code_parser is None:
+            user_code_parser = MagicMock(return_value=code)
+
         super().__init__(
             None, None, None, None, None, LANG_PYTHON, user_code_parser, **kwargs
         )
@@ -42,7 +44,8 @@ class TestSparkKernel(SparkKernelBase):
 def _setup():
     global kernel, execute_cell_mock, do_shutdown_mock, ipython_display
 
-    kernel = TestSparkKernel()
+    user_code_parser = MagicMock(return_value=code)
+    kernel = TestSparkKernel(user_code_parser)
 
     if is_async_mock_available:
         kernel._execute_cell_for_user = execute_cell_mock = AsyncMock(
@@ -89,7 +92,7 @@ async def test_execute_valid_code():
     # Verify that the execution flows through.
     ret = await kernel.do_execute(code, False)
 
-    user_code_parser.get_code_to_run.assert_called_once_with(code)
+    kernel.user_code_parser.get_code_to_run.assert_called_once_with(code)
     await async_assert_return_value(execute_cell_mock, ret)
     assert kernel._fatal_error is None
     #  assert execute_cell_mock.called_once_with(code, True)
@@ -278,3 +281,29 @@ async def test_execute_cell_for_user_ipykernel6():
         got = await TestSparkKernel()._execute_cell_for_user(code="1", silent=True)
         assert mock_ipy_execute.called
         assert want == got
+
+
+@async_test
+@with_setup(_setup, _teardown)
+async def test_lazily_loads_magics():
+    # Verify that the execution flows through.
+    kernel._has_lazily_loaded_magics = False
+
+    # Set mocks
+    kernel._load_magics_extension = AsyncMock()
+    kernel._change_language = AsyncMock()
+
+    ret = await kernel.do_execute(code, False)
+
+    # Assert magics are loaded
+    assert kernel._has_lazily_loaded_magics
+    assert kernel._load_magics_extension.called
+    assert kernel._change_language.called
+
+    # Assert code is executed
+    kernel.user_code_parser.get_code_to_run.assert_called_once_with(code)
+    await async_assert_return_value(execute_cell_mock, ret)
+    assert kernel._fatal_error is None
+    #  assert execute_cell_mock.called_once_with(code, True)
+    await async_assert_called_once_with(execute_cell_mock, code, True)
+    assert ipython_display.send_error.call_count == 0
