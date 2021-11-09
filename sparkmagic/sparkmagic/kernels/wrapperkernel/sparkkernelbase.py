@@ -50,11 +50,12 @@ class SparkKernelBase(IPythonKernel):
         requests.packages.urllib3.disable_warnings()
 
         # Do not load magics in testing
-        if kwargs.get("testing", False):
+        if not kwargs.get("testing", False):
             # Get and use asyncio event loop to run async functions
             # from a synchronous init function
             # Python 3.6 compatibility
-            loop = asyncio.get_running_loop()
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
             loop.run_until_complete(self._load_magics_extension())
             loop.run_until_complete(self._change_language())
             if conf.use_auto_viz():
