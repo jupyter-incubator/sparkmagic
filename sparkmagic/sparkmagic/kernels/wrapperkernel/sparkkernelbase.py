@@ -32,10 +32,6 @@ class SparkKernelBase(IPythonKernel):
         self.language_version = language_version
         self.language_info = language_info
 
-        # Load magics lazily in do_execute because they are async
-        # because IPythonKernel doesn't support async "on start" or init functionality natively
-        self._has_lazily_loaded_magics = False
-
         # Override
         self.session_language = session_language
 
@@ -55,7 +51,14 @@ class SparkKernelBase(IPythonKernel):
 
         # Do not load magics in testing
         if kwargs.get("testing", False):
-            self._has_lazily_loaded_magics = True
+            # Get and use asyncio event loop to run async functions
+            # from a synchronous init function
+            # Python 3.6 compatibility
+            loop = asyncio.get_running_loop()
+            loop.run_until_complete(self._load_magics_extension())
+            loop.run_until_complete(self._change_language())
+            if conf.use_auto_viz():
+                loop.run_until_complete(self._register_auto_viz())
 
     async def do_execute(
         self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
@@ -67,16 +70,6 @@ class SparkKernelBase(IPythonKernel):
             return await self._do_execute(
                 code, silent, store_history, user_expressions, allow_stdin
             )
-
-        # On first cell, lazily initialize magics before executing
-        if not self._has_lazily_loaded_magics:
-            await self._load_magics_extension()
-            await self._change_language()
-
-            if conf.use_auto_viz():
-                await self._register_auto_viz()
-
-            self._has_lazily_loaded_magics = True
 
         # Execute the code and handle exceptions
         wrapped = async_wrap_unexpected_exceptions(f, self._complete_cell)
