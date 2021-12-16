@@ -85,6 +85,17 @@ class KernelMagics(SparkMagicBase):
     <td>Outputs session information for the current Livy endpoint.</td>
   </tr>
   <tr>
+    <td>connection_info</td>
+    <td>%connection_info -o connection</td>
+    <td>Outputs or returns the url and session id for the current session.</td>
+    Parameters:
+      <ul>
+        <li>-o VAR_NAME: The variable of name VAR_NAME will be available in the %%local Python context as a
+          dict: {"endpoint": "http:<ip_address>:<port>", "session": "<session_number>"}
+      </ul>
+    </td>
+  </tr>
+  <tr>
     <td>cleanup</td>
     <td>%%cleanup -f</td>
     <td>Deletes all sessions for the current Livy endpoint, including this notebook's session. The force flag is mandatory.</td>
@@ -210,6 +221,33 @@ class KernelMagics(SparkMagicBase):
 
         info_sessions = self.spark_controller.get_all_sessions_endpoint(self.endpoint)
         self._print_endpoint_info(info_sessions, current_session_id)
+
+    @magic_arguments()
+    @argument(
+        "-o",
+        "--output",
+        type=str,
+        default=None,
+        help="If present, indicated variable will be stored in variable"
+        "of this name in user's local context.",
+    )
+    @line_magic
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
+    @_event
+    def connection_info(self, line, cell=u"", local_ns=None):
+        args = parse_argstring_or_throw(self.info, line)
+        connection_info = {"endpoint": None, "session": None}
+        if self.session_started:
+            current_session_id = self.spark_controller.get_session_id_for_client(
+                self.session_name
+            )
+            connection_info["endpoint"] = self.endpoint.url
+            connection_info["session"] = current_session_id
+        if args.output:
+            self.shell.user_ns[args.output] = connection_info
+        else:
+            self._print_current_connection_info(connection_info, current_session_id)
 
     @magic_arguments()
     @cell_magic

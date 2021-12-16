@@ -15,7 +15,7 @@ from collections import namedtuple
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
-from sparkmagic.utils.utils import get_sessions_info_html
+from sparkmagic.utils.utils import get_connection_info_html, get_sessions_info_html
 from sparkmagic.utils.constants import MIMETYPE_TEXT_HTML 
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
@@ -128,6 +128,13 @@ class SparkMagicBase(Magics):
         if info_sessions:
             info_sessions = sorted(info_sessions, key=lambda s: s.id)
             html = get_sessions_info_html(info_sessions, current_session_id)
+            self.ipython_display.html(html)
+        else:
+            self.ipython_display.html(u'No active sessions.')
+
+    def _print_current_connection_info(self, connection_info):
+        if connection_info.get("endpoint"):
+            html = get_connection_info_html(connection_info)
             self.ipython_display.html(html)
         else:
             self.ipython_display.html(u'No active sessions.')
