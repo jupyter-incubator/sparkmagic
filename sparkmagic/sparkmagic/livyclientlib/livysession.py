@@ -8,7 +8,7 @@ import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
-from sparkmagic.utils.utils import get_sessions_info_html
+from sparkmagic.utils.utils import get_startup_info_display_class
 from .configurableretrypolicy import ConfigurableRetryPolicy
 from .command import Command
 from .exceptions import LivyClientTimeoutException, \
@@ -118,6 +118,8 @@ class LivySession(ObjectWithGuid):
         self.id = session_id
         self.session_info = u""
 
+        self.startup_info_display = get_startup_info_display_class()
+
         self._heartbeat_thread = None
         if session_id == -1:
             self.status = constants.NOT_STARTED_SESSION_STATUS
@@ -139,7 +141,8 @@ class LivySession(ObjectWithGuid):
             self.id = r[u"id"]
             self.status = str(r[u"state"])
 
-            self.ipython_display.writeln(u"Starting Spark application")
+            startup_info =  self.startup_info_display(self.ipython_display, [self], self.id)
+            startup_info.write_msg(u"Starting Spark application")
 
             # Start heartbeat thread to keep Livy interactive session alive.
             self._start_heartbeat_thread()
@@ -151,24 +154,23 @@ class LivySession(ObjectWithGuid):
                 raise LivyClientTimeoutException(u"Session {} did not start up in {} seconds."
                                                  .format(self.id, conf.livy_session_startup_timeout_seconds()))
 
-            html = get_sessions_info_html([self], self.id)
-            self.ipython_display.html(html)
+            startup_info.display_info()
 
             command = Command("spark")
             (success, out, mimetype) = command.execute(self)
 
             if success:
-                self.ipython_display.writeln(u"SparkSession available as 'spark'.")
+                startup_info.write_msg(u"SparkSession available as 'spark'.")
                 self.sql_context_variable_name = "spark"
             else:
                 command = Command("sqlContext")
                 (success, out, mimetype) = command.execute(self)
                 if success:
-                    self.ipython_display.writeln(u"SparkContext available as 'sc'.")
+                    startup_info.write_msg(u"SparkContext available as 'sc'.")
                     if ("hive" in out.lower()):
-                        self.ipython_display.writeln(u"HiveContext available as 'sqlContext'.")
+                        startup_info.write_msg(u"HiveContext available as 'sqlContext'.")
                     else:
-                        self.ipython_display.writeln(u"SqlContext available as 'sqlContext'.")
+                        startup_info.write_msg(u"SqlContext available as 'sqlContext'.")
                     self.sql_context_variable_name = "sqlContext"
                 else:
                     raise SqlContextNotFoundException(u"Neither SparkSession nor HiveContext/SqlContext is available.")

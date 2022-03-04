@@ -22,7 +22,7 @@ from requests_kerberos import REQUIRED
 d = {}
 path = join_paths(HOME_PATH, CONFIG_FILE)
 
-    
+
 def override(config, value):
     _override(d, path, config, value)
 
@@ -60,8 +60,8 @@ def authenticators():
         u"None": u"sparkmagic.auth.customauth.Authenticator",
         u"Basic_Access": u"sparkmagic.auth.basic.Basic"
     }
-       
-    
+
+
 # Configs
 
 def get_session_properties(language):
@@ -78,8 +78,8 @@ def session_configs():
 @_with_override
 def kernel_python_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': NO_AUTH}
-    
-    
+
+
 def base64_kernel_python_credentials():
     return _credentials_override(kernel_python_credentials)
 
@@ -99,7 +99,7 @@ def kernel_scala_credentials():
     return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': NO_AUTH}
 
 
-def base64_kernel_scala_credentials():        
+def base64_kernel_scala_credentials():
     return _credentials_override(kernel_scala_credentials)
 
 @_with_override
@@ -271,6 +271,13 @@ def kerberos_auth_configuration():
         "mutual_authentication": REQUIRED
     }
 
+@_with_override
+def progress_indicator_class():
+    return 'sparkmagic.utils.progress.defaultProgressIndicator'
+
+@_with_override
+def startup_info_display_class():
+    return 'sparkmagic.utils.startupinfo.defaultStartupInfoDisplay'
 
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().

@@ -172,6 +172,43 @@ If you want any registered livy sessions to be cleaned up on exit regardless of 
 }
 ```
 
+## Notebook customizations
+
+There are several ways in which sparkmagic gives feedback via the Jupyter notebook display system. This section
+describes customizations available to modify the default behavior for such interactions, where applicable.
+
+### Startup info table
+
+When a session starts up, sparkmagic displays a table of session information including application name and the links to
+sparkUI and logs. The display may be overridden by specifying a custom class:
+
+```json
+{
+    "startup_info_display_class": "module.path.classname"
+}
+```
+
+The class should be a subclass of [StartupInfoDisplay](sparkmagic/sparkmagic/utils/startupinfo.py). It will be passed
+the ipython_display, the LivySession object and the current session id. It should implement the `write_msg(msg)` method
+to write a line of status output (by default this writes text to the current cell output), and the `display_info()`
+method to show session information (by default, this displays an HTML table).
+
+### Statement progress indicator
+
+By default, sparkmagic uses the FloatProgress ipython widget to display the progress of a statement in the cell
+output. If this is not desired, override the class used to construct the progress indicator:
+
+```json
+{
+    "progress_indicator_class": "module.path.classname"
+}
+```
+
+The class should be a subclass of [ProgressIndicator](sparkmagic/sparkmagic/utils/progress.py) and will be passed the
+session object and statement_id as arguments to the constructor. The `update(value_in_pct)` method will be called on
+progress and the `close()` method will be called when the statement completes.
+
+
 ### Conf overrides in code
 
 In addition to the conf at `~/.sparkmagic/config.json`, sparkmagic conf can be overridden programmatically in a notebook.

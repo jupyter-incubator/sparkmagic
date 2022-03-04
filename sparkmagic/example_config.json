@@ -21,20 +21,20 @@
   "logging_config": {
     "version": 1,
     "formatters": {
-      "magicsFormatter": { 
+      "magicsFormatter": {
         "format": "%(asctime)s\t%(levelname)s\t%(message)s",
         "datefmt": ""
       }
     },
     "handlers": {
-      "magicsHandler": { 
+      "magicsHandler": {
         "class": "hdijupyterutils.filehandler.MagicsFileHandler",
         "formatter": "magicsFormatter",
         "home_path": "~/.sparkmagic"
       }
     },
     "loggers": {
-      "magicsLogger": { 
+      "magicsLogger": {
         "handlers": ["magicsHandler"],
         "level": "DEBUG",
         "propagate": 0
@@ -43,7 +43,7 @@
   },
   "authenticators": {
     "Kerberos": "sparkmagic.auth.kerberos.Kerberos",
-    "None": "sparkmagic.auth.customauth.Authenticator", 
+    "None": "sparkmagic.auth.customauth.Authenticator",
     "Basic_Access": "sparkmagic.auth.basic.Basic"
   },
 
@@ -63,15 +63,18 @@
   "coerce_dataframe": true,
   "max_results_sql": 2500,
   "pyspark_dataframe_encoding": "utf-8",
-  
+
   "heartbeat_refresh_seconds": 30,
   "livy_server_heartbeat_timeout_seconds": 0,
   "heartbeat_retry_seconds": 10,
 
   "server_extension_default_kernel_name": "pysparkkernel",
   "custom_headers": {},
-  
+
   "retry_policy": "configurable",
   "retry_seconds_to_sleep_list": [0.2, 0.5, 1, 3, 5],
-  "configurable_retry_policy_max_retries": 8
+  "configurable_retry_policy_max_retries": 8,
+
+  "progress_indicator_class": "sparkmagic.utils.progress.defaultProgressIndicator",
+  "startup_info_display_class": "sparkmagic.utils.startupinfo.defaultStartupInfoDisplay"
 }

@@ -27,12 +27,12 @@ def parse_argstring_or_throw(magic_func, argstring, parse_argstring=parse_argstr
         return parse_argstring(magic_func, argstring)
     except UsageError as e:
         raise BadUserDataException(str(e))
-        
-        
+
+
 def coerce_pandas_df_to_numeric_datetime(df):
     for column_name in df.columns:
         coerced = False
-        
+
         if df[column_name].isnull().all():
             continue
 
@@ -64,7 +64,7 @@ def records_to_dataframe(records_text, kind, coerce=None):
 
         df = pd.DataFrame(data_array)
 
-        if len(data_array) > 0:    
+        if len(data_array) > 0:
             # This will assign the columns in the right order. If we simply did
             # df = pd.DataFrame(data_array, columns=data_array[0].keys())
             # in the code defining df, above, we could get an issue where the first element
@@ -75,7 +75,7 @@ def records_to_dataframe(records_text, kind, coerce=None):
                 if len(data.keys()) == len(df.columns):
                     df = df[list(data.keys())]
                     break
-                    
+
         if coerce is None:
             coerce = conf.coerce_dataframe()
         if coerce:
@@ -94,6 +94,12 @@ def get_sessions_info_html(info_sessions, current_session_id):
 
     return html
 
+def load_class_from_string(full_class):
+    module, class_name = full_class.rsplit('.', 1)
+    class_module = importlib.import_module(module)
+    class_class = getattr(class_module, class_name)
+    return class_class
+
 def initialize_auth(args):
     """Creates an authenticatior class instance for the given auth type
 
@@ -103,10 +109,10 @@ def initialize_auth(args):
 
     Returns:
         An instance of a valid Authenticator or None if args.auth is 'None'
-    
+
     Raises:
         sparkmagic.livyclientlib.BadUserConfigurationException: if args.auth is not a valid
-        authenticator class. 
+        authenticator class.
     """
     if args.auth is None:
         auth = conf.get_auth_value(args.user, args.password)
@@ -114,14 +120,18 @@ def initialize_auth(args):
         auth = args.auth
     if auth == constants.NO_AUTH:
         return None
-    else: 
+    else:
         full_class = conf.authenticators().get(auth)
         if full_class is None:
             raise BadUserConfigurationException(u"Auth '{}' not supported".format(auth))
-        module, class_name = (full_class).rsplit('.', 1)
-        events_handler_module = importlib.import_module(module)
-        auth_class = getattr(events_handler_module, class_name)
+        auth_class = load_class_from_string(full_class)
         return auth_class(args)
+
+def get_progress_indicator_class():
+    return load_class_from_string(conf.progress_indicator_class())
+
+def get_startup_info_display_class():
+    return load_class_from_string(conf.startup_info_display_class())
 
 class Namespace:
     """Namespace to initialize authenticator class with"""

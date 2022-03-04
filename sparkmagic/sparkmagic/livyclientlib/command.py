@@ -11,6 +11,7 @@ from hdijupyterutils.guid import ObjectWithGuid
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
+from sparkmagic.utils.utils import get_progress_indicator_class
 from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS, \
     MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN, \
     COMMAND_INTERRUPTED_MSG, COMMAND_CANCELLATION_FAILED_MSG
@@ -26,6 +27,7 @@ class Command(ObjectWithGuid):
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
+        self.progress_indicator_class = get_progress_indicator_class()
 
     def __repr__(self):
         return "Command({}, ...)".format(repr(self.code))
@@ -69,16 +71,8 @@ class Command(ObjectWithGuid):
 
     def _get_statement_output(self, session, statement_id):
         retries = 1
-        progress = FloatProgress(value=0.0,
-                                     min=0,
-                                     max=1.0,
-                                     step=0.01,
-                                     description='Progress:',
-                                     bar_style='info',
-                                     orientation='horizontal',
-                                     layout=Layout(width='50%', height='25px')
-                                     )
-        session.ipython_display.display(progress)
+
+        progress = self.progress_indicator_class(session, statement_id)
 
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
@@ -87,7 +81,7 @@ class Command(ObjectWithGuid):
             self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
 
             if status not in FINAL_STATEMENT_STATUS:
-                progress.value = statement.get('progress', 0.0)
+                progress.update(statement.get('progress', 0.0))
                 session.sleep(retries)
                 retries += 1
             else:
