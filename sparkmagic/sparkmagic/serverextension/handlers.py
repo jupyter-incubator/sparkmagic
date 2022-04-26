@@ -1,4 +1,5 @@
 import json
+import os
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 from tornado import web
@@ -99,20 +100,25 @@ class ReconnectHandler(IPythonHandler):
         sessions = self.session_manager.list_sessions()
 
         kernel_id = None
+        name = None
         for session in sessions:
             if session['notebook']['path'] == path:
                 session_id = session['id']
                 kernel_id = session['kernel']['id']
                 existing_kernel_name = session['kernel']['name']
+                if 'name' in session:
+                    name = session['name']
+
                 break
 
         if kernel_id is None:
             self.logger.debug(u"Kernel not found. Starting a new kernel.")
-            k_m = yield self._get_kernel_manager_new_session(path, kernel_name)
+            name = os.path.basename(path)
+            k_m = yield self._get_kernel_manager_new_session(path, kernel_name, name)
         elif existing_kernel_name != kernel_name:
             self.logger.debug(u"Existing kernel name '{}' does not match requested '{}'. Starting a new kernel.".format(existing_kernel_name, kernel_name))
             self._delete_session(session_id)
-            k_m = yield self._get_kernel_manager_new_session(path, kernel_name)
+            k_m = yield self._get_kernel_manager_new_session(path, kernel_name, name)
         else:
             self.logger.debug(u"Kernel found. Restarting kernel.")
             k_m = self.kernel_manager.get_kernel(kernel_id)
@@ -121,8 +127,11 @@ class ReconnectHandler(IPythonHandler):
         raise gen.Return(k_m)
 
     @gen.coroutine
-    def _get_kernel_manager_new_session(self, path, kernel_name):
-        model_future = self.session_manager.create_session(kernel_name=kernel_name, path=path, type="notebook")
+    def _get_kernel_manager_new_session(self, path, kernel_name, name=None):
+        if name is None:
+            name = os.path.basename(path)
+
+        model_future = self.session_manager.create_session(kernel_name=kernel_name, path=path, name=name, type="notebook")
         model = yield model_future
         kernel_id = model["kernel"]["id"]
         self.logger.debug("Kernel created with id {}".format(str(kernel_id)))
