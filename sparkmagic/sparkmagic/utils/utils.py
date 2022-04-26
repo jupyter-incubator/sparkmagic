@@ -94,6 +94,15 @@ def get_sessions_info_html(info_sessions, current_session_id):
 
     return html
 
+
+def get_connection_info_html(connection_info):
+    html = u"""<table>
+<tr><th>endpoint</th><th>session</th></tr>""" + \
+    u"""<tr><td>{0}</td><td>{1}</td></tr>""".format(connection_info["endpoint"], connection_info["session"]) + \
+    u"</table>"
+
+    return html
+
 def initialize_auth(args):
     """Creates an authenticatior class instance for the given auth type
 
