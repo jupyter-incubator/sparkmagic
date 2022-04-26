@@ -2,6 +2,10 @@
 
 ## NEXT RELEASE
 
+### Bug Fixes
+
+* Pins `ipython<8.0.0` because of breaking changes. Thanks @utkarshgupta137
+
 ## 0.19.1
 
 ### Bug Fixes
