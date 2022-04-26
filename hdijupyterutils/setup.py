@@ -57,7 +57,7 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     install_requires=[
-        "ipython>=4.0.2",
+        "ipython>=4.0.2,<8",
         "nose",
         "mock",
         "ipywidgets>5.0.0",
