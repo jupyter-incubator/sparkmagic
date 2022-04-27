@@ -2,6 +2,10 @@
 
 ## NEXT RELEASE
 
+### Updates
+
+* Officially drop support for Python 3.6. Sparkmagic will not guarantee Python 3.6 compatibility moving forward.
+
 ## 0.19.2
 
 ### Bug Fixes
