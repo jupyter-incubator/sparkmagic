@@ -8,48 +8,64 @@ from .abstractmenuwidget import AbstractMenuWidget
 
 
 class AddEndpointWidget(AbstractMenuWidget):
-
-    def __init__(self, spark_controller, ipywidget_factory, ipython_display, endpoints, endpoints_dropdown_widget,
-                 refresh_method):
+    def __init__(
+        self,
+        spark_controller,
+        ipywidget_factory,
+        ipython_display,
+        endpoints,
+        endpoints_dropdown_widget,
+        refresh_method,
+    ):
         # This is nested
-        super(AddEndpointWidget, self).__init__(spark_controller, ipywidget_factory, ipython_display, True)
+        super(AddEndpointWidget, self).__init__(
+            spark_controller, ipywidget_factory, ipython_display, True
+        )
         self.endpoints = endpoints
         self.endpoints_dropdown_widget = endpoints_dropdown_widget
         self.refresh_method = refresh_method
 
-        #map auth class path string to the instance of the class.
+        # map auth class path string to the instance of the class.
         self.auth_instances = {}
         for auth in conf.authenticators().values():
-            module, class_name = (auth).rsplit('.', 1)
+            module, class_name = (auth).rsplit(".", 1)
             events_handler_module = importlib.import_module(module)
             auth_class = getattr(events_handler_module, class_name)
             self.auth_instances[auth] = auth_class()
 
         self.auth_type = self.ipywidget_factory.get_dropdown(
-            options=conf.authenticators(),
-            description=u"Auth type:"
+            options=conf.authenticators(), description="Auth type:"
         )
 
-        #combine all authentication instance's widgets into one list to pass to self.children.
+        # combine all authentication instance's widgets into one list to pass to self.children.
         self.all_widgets = list()
         for _class, instance in self.auth_instances.items():
             for widget in instance.widgets:
-                if  _class == self.auth_type.value:
-                    widget.layout.display = 'flex'
+                if _class == self.auth_type.value:
+                    widget.layout.display = "flex"
                     self.auth = instance
                 else:
-                    widget.layout.display = 'none'
+                    widget.layout.display = "none"
                 self.all_widgets.append(widget)
 
         # Submit widget
         self.submit_widget = self.ipywidget_factory.get_submit_button(
-            description='Add endpoint'
+            description="Add endpoint"
         )
 
         self.auth_type.on_trait_change(self._update_auth)
 
-        self.children = [self.ipywidget_factory.get_html(value="<br/>", width=WIDGET_WIDTH), self.auth_type] + self.all_widgets \
-        + [self.ipywidget_factory.get_html(value="<br/>", width=WIDGET_WIDTH), self.submit_widget]
+        self.children = (
+            [
+                self.ipywidget_factory.get_html(value="<br/>", width=WIDGET_WIDTH),
+                self.auth_type,
+            ]
+            + self.all_widgets
+            + [
+                self.ipywidget_factory.get_html(value="<br/>", width=WIDGET_WIDTH),
+                self.submit_widget,
+            ]
+        )
 
         for child in self.children:
             child.parent_widget = self
@@ -77,7 +93,7 @@ class AddEndpointWidget(AbstractMenuWidget):
         Create an instance of the chosen auth type maps to in the config file.
         """
         for widget in self.auth.widgets:
-            widget.layout.display = 'none'
+            widget.layout.display = "none"
         self.auth = self.auth_instances.get(self.auth_type.value)
         for widget in self.auth.widgets:
-            widget.layout.display = 'flex'
+            widget.layout.display = "flex"

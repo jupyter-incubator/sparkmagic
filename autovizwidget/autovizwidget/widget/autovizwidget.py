@@ -13,13 +13,24 @@ from ..utils.events import AutoVizEvents
 
 
 class AutoVizWidget(Box):
-    def __init__(self, df, encoding, renderer=None, ipywidget_factory=None, encoding_widget=None, ipython_display=None,
-                 nested_widget_mode=False, spark_events=None, testing=False, **kwargs):
+    def __init__(
+        self,
+        df,
+        encoding,
+        renderer=None,
+        ipywidget_factory=None,
+        encoding_widget=None,
+        ipython_display=None,
+        nested_widget_mode=False,
+        spark_events=None,
+        testing=False,
+        **kwargs
+    ):
         assert encoding is not None
         assert df is not None
         assert type(df) is pd.DataFrame
 
-        kwargs['orientation'] = 'vertical'
+        kwargs["orientation"] = "vertical"
 
         if not testing:
             super(AutoVizWidget, self).__init__((), **kwargs)
@@ -74,14 +85,22 @@ class AutoVizWidget(Box):
 
         self.encoding_widget.show_x(self.renderer.display_x(self.encoding.chart_type))
         self.encoding_widget.show_y(self.renderer.display_y(self.encoding.chart_type))
-        self.encoding_widget.show_controls(self.renderer.display_controls(self.encoding.chart_type))
-        self.encoding_widget.show_logarithmic_x_axis(self.renderer.display_logarithmic_x_axis(self.encoding.chart_type))
-        self.encoding_widget.show_logarithmic_y_axis(self.renderer.display_logarithmic_y_axis(self.encoding.chart_type))
+        self.encoding_widget.show_controls(
+            self.renderer.display_controls(self.encoding.chart_type)
+        )
+        self.encoding_widget.show_logarithmic_x_axis(
+            self.renderer.display_logarithmic_x_axis(self.encoding.chart_type)
+        )
+        self.encoding_widget.show_logarithmic_y_axis(
+            self.renderer.display_logarithmic_y_axis(self.encoding.chart_type)
+        )
         if len(self.df) > 0:
             self.renderer.render(self.df, self.encoding, self.to_display)
         else:
             with self.to_display:
-                self.ipython_display.display(self.ipywidget_factory.get_html('No results.'))
+                self.ipython_display.display(
+                    self.ipywidget_factory.get_html("No results.")
+                )
 
     def _create_controls_widget(self):
         # Create types of viz hbox
@@ -97,7 +116,9 @@ class AutoVizWidget(Box):
         children = list()
 
         if len(self.df) > 0:
-            self.heading = self.ipywidget_factory.get_html('Type:', width='80px', height='32px')
+            self.heading = self.ipywidget_factory.get_html(
+                "Type:", width="80px", height="32px"
+            )
             children.append(self.heading)
 
             self._create_type_button(Encoding.chart_type_table, children)
@@ -130,6 +151,6 @@ class AutoVizWidget(Box):
         df = df.copy()
         # Convert all booleans to string because Plotly doesn't know how to plot booleans,
         # but it does know how to plot strings.
-        bool_columns = list(df.select_dtypes(include=['bool']).columns)
+        bool_columns = list(df.select_dtypes(include=["bool"]).columns)
         df[bool_columns] = df[bool_columns].astype(str)
         return df

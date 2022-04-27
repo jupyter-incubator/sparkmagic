@@ -6,9 +6,18 @@ from sparkmagic.utils.sparklogger import SparkLog
 
 
 class ManageEndpointWidget(AbstractMenuWidget):
-    def __init__(self, spark_controller, ipywidget_factory, ipython_display, endpoints, refresh_method):
+    def __init__(
+        self,
+        spark_controller,
+        ipywidget_factory,
+        ipython_display,
+        endpoints,
+        refresh_method,
+    ):
         # This is nested
-        super(ManageEndpointWidget, self).__init__(spark_controller, ipywidget_factory, ipython_display, True)
+        super(ManageEndpointWidget, self).__init__(
+            spark_controller, ipywidget_factory, ipython_display, True
+        )
 
         self.logger = SparkLog("ManageEndpointWidget")
         self.endpoints = endpoints
@@ -24,7 +33,9 @@ class ManageEndpointWidget(AbstractMenuWidget):
 
     def get_existing_endpoint_widgets(self):
         endpoint_widgets = []
-        endpoint_widgets.append(self.ipywidget_factory.get_html(value="<br/>", width="600px"))
+        endpoint_widgets.append(
+            self.ipywidget_factory.get_html(value="<br/>", width="600px")
+        )
 
         if len(self.endpoints) > 0:
             # Header
@@ -40,11 +51,20 @@ class ManageEndpointWidget(AbstractMenuWidget):
                     if not endpoint.implicitly_added:
                         raise
                     else:
-                        self.logger.info("Failed to connect to implicitly-defined endpoint at: %s" % url)
+                        self.logger.info(
+                            "Failed to connect to implicitly-defined endpoint at: %s"
+                            % url
+                        )
 
-            endpoint_widgets.append(self.ipywidget_factory.get_html(value="<br/>", width="600px"))
+            endpoint_widgets.append(
+                self.ipywidget_factory.get_html(value="<br/>", width="600px")
+            )
         else:
-            endpoint_widgets.append(self.ipywidget_factory.get_html(value="No endpoints yet.", width="600px"))
+            endpoint_widgets.append(
+                self.ipywidget_factory.get_html(
+                    value="No endpoints yet.", width="600px"
+                )
+            )
 
         return endpoint_widgets
 
@@ -63,7 +83,9 @@ class ManageEndpointWidget(AbstractMenuWidget):
             hbox_outter_children.append(vbox_left)
             hbox_outter_children.append(cleanup_w)
         except ValueError as e:
-            hbox_outter_children.append(self.ipywidget_factory.get_html(value=str(e), width=width))
+            hbox_outter_children.append(
+                self.ipywidget_factory.get_html(value=str(e), width=width)
+            )
 
         hbox_outter_children.append(self.get_delete_button_endpoint(url, endpoint))
         hbox_outter.children = hbox_outter_children
@@ -76,7 +98,9 @@ class ManageEndpointWidget(AbstractMenuWidget):
         # 400 px
         info = self.get_info_endpoint_widget(endpoint, url)
         delete_session_number = self.get_delete_session_endpoint_widget(url, endpoint)
-        vbox_left = self.ipywidget_factory.get_vbox(children=[info, delete_session_number], width="400px")
+        vbox_left = self.ipywidget_factory.get_vbox(
+            children=[info, delete_session_number], width="400px"
+        )
         return vbox_left
 
     def get_cleanup_button_endpoint(self, url, endpoint):
@@ -84,7 +108,9 @@ class ManageEndpointWidget(AbstractMenuWidget):
             try:
                 self.spark_controller.cleanup_endpoint(endpoint)
             except ValueError as e:
-                self.ipython_display.send_error("Could not clean up endpoint due to error: {}".format(e))
+                self.ipython_display.send_error(
+                    "Could not clean up endpoint due to error: {}".format(e)
+                )
                 return
             self.ipython_display.writeln("Cleaned up endpoint {}".format(url))
             self.refresh_method()
@@ -105,7 +131,9 @@ class ManageEndpointWidget(AbstractMenuWidget):
         return delete_w
 
     def get_delete_session_endpoint_widget(self, url, endpoint):
-        session_text = self.ipywidget_factory.get_text(description="Session to delete:", value="0", width="50px")
+        session_text = self.ipywidget_factory.get_text(
+            description="Session to delete:", value="0", width="50px"
+        )
 
         def delete_endpoint(button):
             try:
@@ -120,7 +148,9 @@ class ManageEndpointWidget(AbstractMenuWidget):
         button = self.ipywidget_factory.get_button(description="Delete")
         button.on_click(delete_endpoint)
 
-        return self.ipywidget_factory.get_hbox(children=[session_text, button], width="152px")
+        return self.ipywidget_factory.get_hbox(
+            children=[session_text, button], width="152px"
+        )
 
     def get_info_endpoint_widget(self, endpoint, url):
         # 400 px
@@ -129,7 +159,9 @@ class ManageEndpointWidget(AbstractMenuWidget):
         info_sessions = self.spark_controller.get_all_sessions_endpoint_info(endpoint)
 
         if len(info_sessions) > 0:
-            text = "{}:<br/>{}".format(url, "* {}".format("<br/>* ".join(info_sessions)))
+            text = "{}:<br/>{}".format(
+                url, "* {}".format("<br/>* ".join(info_sessions))
+            )
         else:
             text = "No sessions on this endpoint."
 

@@ -24,29 +24,33 @@ def _teardown():
 @with_setup(_setup, _teardown)
 def test_not_emit_graph_render_event_when_not_registered():
     event_name = GRAPH_RENDER_EVENT
-    graph_type = 'Bar'
+    graph_type = "Bar"
 
-    kwargs_list = [(INSTANCE_ID, get_instance_id()),
-                   (EVENT_NAME, event_name),
-                   (TIMESTAMP, time_stamp),
-                   (GRAPH_TYPE, graph_type)]
+    kwargs_list = [
+        (INSTANCE_ID, get_instance_id()),
+        (EVENT_NAME, event_name),
+        (TIMESTAMP, time_stamp),
+        (GRAPH_TYPE, graph_type),
+    ]
 
     events.emit_graph_render_event(graph_type)
 
     events.get_utc_date_time.assert_called_with()
     assert not events.handler.handle_event.called
-    
-    
+
+
 @with_setup(_setup, _teardown)
 def test_emit_graph_render_event_when_registered():
     conf.override(conf.events_handler.__name__, events.handler)
     event_name = GRAPH_RENDER_EVENT
-    graph_type = 'Bar'
+    graph_type = "Bar"
 
-    kwargs_list = [(INSTANCE_ID, get_instance_id()),
-                   (EVENT_NAME, event_name),
-                   (TIMESTAMP, time_stamp),
-                   (GRAPH_TYPE, graph_type)]
+    kwargs_list = [
+        (INSTANCE_ID, get_instance_id()),
+        (EVENT_NAME, event_name),
+        (TIMESTAMP, time_stamp),
+        (GRAPH_TYPE, graph_type),
+    ]
 
     events.emit_graph_render_event(graph_type)
 

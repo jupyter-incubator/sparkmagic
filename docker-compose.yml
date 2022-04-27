@@ -14,7 +14,7 @@ services:
       context: .
       dockerfile: Dockerfile.jupyter
       args:
-        dev_mode: "false"
+        dev_mode: "true"
     links:
       - spark
     ports:

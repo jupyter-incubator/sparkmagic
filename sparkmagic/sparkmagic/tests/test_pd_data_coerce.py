@@ -5,8 +5,10 @@ from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime
 
 
 def test_no_coercing():
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': u'12'},
-               {u'buildingID': 1, u'date': u'random', u'temp_diff': u'0adsf'}]
+    records = [
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": "12"},
+        {"buildingID": 1, "date": "random", "temp_diff": "0adsf"},
+    ]
     desired_df = pd.DataFrame(records)
 
     df = pd.DataFrame(records)
@@ -16,8 +18,10 @@ def test_no_coercing():
 
 
 def test_date_coercing():
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': u'12'},
-               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': u'0adsf'}]
+    records = [
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": "12"},
+        {"buildingID": 1, "date": "6/1/13", "temp_diff": "0adsf"},
+    ]
     desired_df = pd.DataFrame(records)
     desired_df["date"] = pd.to_datetime(desired_df["date"])
 
@@ -28,8 +32,10 @@ def test_date_coercing():
 
 
 def test_date_coercing_none_values():
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': u'12'},
-               {u'buildingID': 1, u'date': None, u'temp_diff': u'0adsf'}]
+    records = [
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": "12"},
+        {"buildingID": 1, "date": None, "temp_diff": "0adsf"},
+    ]
     desired_df = pd.DataFrame(records)
     desired_df["date"] = pd.to_datetime(desired_df["date"])
 
@@ -40,9 +46,11 @@ def test_date_coercing_none_values():
 
 
 def test_date_none_values_and_no_coercing():
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': u'12'},
-               {u'buildingID': 1, u'date': None, u'temp_diff': u'0adsf'},
-               {u'buildingID': 1, u'date': u'adsf', u'temp_diff': u'0adsf'}]
+    records = [
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": "12"},
+        {"buildingID": 1, "date": None, "temp_diff": "0adsf"},
+        {"buildingID": 1, "date": "adsf", "temp_diff": "0adsf"},
+    ]
     desired_df = pd.DataFrame(records)
 
     df = pd.DataFrame(records)
@@ -52,8 +60,10 @@ def test_date_none_values_and_no_coercing():
 
 
 def test_numeric_coercing():
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': u'12'},
-               {u'buildingID': 1, u'date': u'adsf', u'temp_diff': u'0'}]
+    records = [
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": "12"},
+        {"buildingID": 1, "date": "adsf", "temp_diff": "0"},
+    ]
     desired_df = pd.DataFrame(records)
     desired_df["temp_diff"] = pd.to_numeric(desired_df["temp_diff"])
 
@@ -64,8 +74,10 @@ def test_numeric_coercing():
 
 
 def test_numeric_coercing_none_values():
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': u'12'},
-               {u'buildingID': 1, u'date': u'asdf', u'temp_diff': None}]
+    records = [
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": "12"},
+        {"buildingID": 1, "date": "asdf", "temp_diff": None},
+    ]
     desired_df = pd.DataFrame(records)
     desired_df["temp_diff"] = pd.to_numeric(desired_df["temp_diff"])
 
@@ -76,9 +88,11 @@ def test_numeric_coercing_none_values():
 
 
 def test_numeric_none_values_and_no_coercing():
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': u'12'},
-               {u'buildingID': 1, u'date': u'asdf', u'temp_diff': None},
-               {u'buildingID': 1, u'date': u'adsf', u'temp_diff': u'0asdf'}]
+    records = [
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": "12"},
+        {"buildingID": 1, "date": "asdf", "temp_diff": None},
+        {"buildingID": 1, "date": "adsf", "temp_diff": "0asdf"},
+    ]
     desired_df = pd.DataFrame(records)
 
     df = pd.DataFrame(records)
@@ -125,18 +139,18 @@ def test_df_dict_does_not_throw():
 
 
 def test_overflow_coercing():
-    records = [{'_c0':'12345678901'}]
+    records = [{"_c0": "12345678901"}]
     desired_df = pd.DataFrame(records)
-    desired_df['_c0'] = pd.to_numeric(desired_df['_c0'])
+    desired_df["_c0"] = pd.to_numeric(desired_df["_c0"])
     df = pd.DataFrame(records)
     coerce_pandas_df_to_numeric_datetime(df)
     assert_frame_equal(desired_df, df)
-    
+
 
 def test_all_null_columns():
-    records = [{'_c0':'12345', 'nulla': None}, {'_c0':'12345', 'nulla': None}]
+    records = [{"_c0": "12345", "nulla": None}, {"_c0": "12345", "nulla": None}]
     desired_df = pd.DataFrame(records)
-    desired_df['_c0'] = pd.to_numeric(desired_df['_c0'])
+    desired_df["_c0"] = pd.to_numeric(desired_df["_c0"])
     df = pd.DataFrame(records)
     coerce_pandas_df_to_numeric_datetime(df)
     assert_frame_equal(desired_df, df)
