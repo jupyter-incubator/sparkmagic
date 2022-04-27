@@ -25,9 +25,9 @@ RUN chown -R $NB_USER .
 
 USER $NB_USER
 RUN if [ "$dev_mode" = "true" ]; then \
-      cd hdijupyterutils && pip install . && cd ../ && \
-      cd autovizwidget && pip install . && cd ../ && \
-      cd sparkmagic && pip install . && cd ../ ; \
+      cd hdijupyterutils && pip install -e . && cd ../ && \
+      cd autovizwidget && pip install -e . && cd ../ && \
+      cd sparkmagic && pip install -e . && cd ../ ; \
     else pip install sparkmagic ; fi
 
 RUN mkdir /home/$NB_USER/.sparkmagic
@@ -41,9 +41,7 @@ RUN jupyter serverextension enable --py sparkmagic
 
 USER root
 RUN chown $NB_USER /home/$NB_USER/.sparkmagic/config.json
-RUN rm -rf hdijupyterutils/ autovizwidget/ sparkmagic/
 
 CMD ["start-notebook.sh", "--NotebookApp.iopub_data_rate_limit=1000000000"]
 
 USER $NB_USER
-
