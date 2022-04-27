@@ -3,25 +3,9 @@ import asyncio
 
 from unittest.mock import MagicMock, call, patch
 from nose.tools import with_setup
-from aiounittest.helpers import async_test, futurized
 
 from sparkmagic.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 from sparkmagic.utils.constants import LANG_PYTHON
-
-# AsyncMock is only available in Python >= 3.8
-# This helps modify tests to accommodate older Python version
-is_async_mock_available = True
-try:
-    # Python >= 3.8
-    from unittest.mock import AsyncMock
-except Exception:
-    # Patch
-    is_async_mock_available = False
-
-    class AsyncMock(MagicMock):
-        async def __call__(self, *args, **kwargs):
-            return super(AsyncMock, self).__call__(*args, **kwargs)
-
 
 kernel = None
 execute_cell_mock = None
@@ -107,9 +91,8 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
     reply_content = dict()
     reply_content["status"] = "error"
     reply_content["evalue"] = fatal_error
-    execute_cell_mock.return_value = (
-        reply_content if is_async_mock_available else futurized(reply_content)
-    )
+
+    execute_cell_mock.return_value = reply_content
 
     ret = kernel._execute_cell(
         code, False, shutdown_if_error=True, log_if_error=fatal_error

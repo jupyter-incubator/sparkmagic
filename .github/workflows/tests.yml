@@ -25,7 +25,6 @@ jobs:
           pip install -r hdijupyterutils/requirements.txt -e hdijupyterutils
           pip install -r autovizwidget/requirements.txt -e autovizwidget
           pip install -r sparkmagic/requirements.txt -e sparkmagic
-          pip install aiounittest
       - name: Run hdijupyterutils tests
         run: |
           nosetests hdijupyterutils
