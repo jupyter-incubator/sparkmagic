@@ -94,5 +94,6 @@ setup(
         "notebook>=4.2",
         "tornado>=4",
         "requests_kerberos>=0.8.0",
+        "nest_asyncio==1.5.5",
     ],
 )
