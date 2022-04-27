@@ -18,7 +18,9 @@ class ConfigurableRetryPolicy(LinearRetryPolicy):
         if len(retry_seconds_to_sleep_list) == 0:
             retry_seconds_to_sleep_list = [5]
         elif not all(n > 0 for n in retry_seconds_to_sleep_list):
-            raise BadUserConfigurationException(u"All items in the list in your config need to be positive for configurable retry policy")
+            raise BadUserConfigurationException(
+                "All items in the list in your config need to be positive for configurable retry policy"
+            )
 
         self.retry_seconds_to_sleep_list = retry_seconds_to_sleep_list
         self._max_index = len(self.retry_seconds_to_sleep_list) - 1

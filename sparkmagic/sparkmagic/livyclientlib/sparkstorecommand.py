@@ -5,13 +5,25 @@ from sparkmagic.utils.utils import records_to_dataframe
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.livyclientlib.command import Command
-from sparkmagic.livyclientlib.exceptions import DataFrameParseException, BadUserDataException
+from sparkmagic.livyclientlib.exceptions import (
+    DataFrameParseException,
+    BadUserDataException,
+)
 import sparkmagic.utils.constants as constants
 
 import ast
 
+
 class SparkStoreCommand(Command):
-    def __init__(self, output_var, samplemethod=None, maxrows=None, samplefraction=None, spark_events=None, coerce=None):
+    def __init__(
+        self,
+        output_var,
+        samplemethod=None,
+        maxrows=None,
+        samplefraction=None,
+        spark_events=None,
+        coerce=None,
+    ):
         super(SparkStoreCommand, self).__init__("", spark_events)
 
         if samplemethod is None:
@@ -21,12 +33,16 @@ class SparkStoreCommand(Command):
         if samplefraction is None:
             samplefraction = conf.default_samplefraction()
 
-        if samplemethod not in {u'take', u'sample'}:
-            raise BadUserDataException(u'samplemethod (-m) must be one of (take, sample)')
+        if samplemethod not in {"take", "sample"}:
+            raise BadUserDataException(
+                "samplemethod (-m) must be one of (take, sample)"
+            )
         if not isinstance(maxrows, int):
-            raise BadUserDataException(u'maxrows (-n) must be an integer')
+            raise BadUserDataException("maxrows (-n) must be an integer")
         if not 0.0 <= samplefraction <= 1.0:
-            raise BadUserDataException(u'samplefraction (-r) must be a float between 0.0 and 1.0')
+            raise BadUserDataException(
+                "samplefraction (-r) must be a float between 0.0 and 1.0"
+            )
 
         self.samplemethod = samplemethod
         self.maxrows = maxrows
@@ -36,7 +52,6 @@ class SparkStoreCommand(Command):
             spark_events = SparkEvents()
         self._spark_events = spark_events
         self._coerce = coerce
-
 
     def execute(self, session):
         try:
@@ -50,7 +65,6 @@ class SparkStoreCommand(Command):
         else:
             return result
 
-
     def to_command(self, kind, spark_context_variable_name):
         if kind == constants.SESSION_KIND_PYSPARK:
             return self._pyspark_command(spark_context_variable_name)
@@ -59,64 +73,63 @@ class SparkStoreCommand(Command):
         elif kind == constants.SESSION_KIND_SPARKR:
             return self._r_command(spark_context_variable_name)
         else:
-            raise BadUserDataException(u"Kind '{}' is not supported.".format(kind))
-
+            raise BadUserDataException("Kind '{}' is not supported.".format(kind))
 
     def _pyspark_command(self, spark_context_variable_name):
         # use_unicode=False means the result will be UTF-8-encoded bytes, so we
         # set it to False for Python 2.
-        command = u'{}.toJSON(use_unicode=(sys.version_info.major > 2))'.format(
-            spark_context_variable_name)
-        if self.samplemethod == u'sample':
-            command = u'{}.sample(False, {})'.format(command, self.samplefraction)
+        command = "{}.toJSON(use_unicode=(sys.version_info.major > 2))".format(
+            spark_context_variable_name
+        )
+        if self.samplemethod == "sample":
+            command = "{}.sample(False, {})".format(command, self.samplefraction)
         if self.maxrows >= 0:
-            command = u'{}.take({})'.format(command, self.maxrows)
+            command = "{}.take({})".format(command, self.maxrows)
         else:
-            command = u'{}.collect()'.format(command)
+            command = "{}.collect()".format(command)
         # Unicode support has improved in Python 3 so we don't need to encode.
         print_command = constants.LONG_RANDOM_VARIABLE_NAME
-        command = u'import sys\nfor {} in {}: print({})'.format(
-            constants.LONG_RANDOM_VARIABLE_NAME,
-            command,
-            print_command)
+        command = "import sys\nfor {} in {}: print({})".format(
+            constants.LONG_RANDOM_VARIABLE_NAME, command, print_command
+        )
         return Command(command)
 
-
     def _scala_command(self, spark_context_variable_name):
-        command = u'{}.toJSON'.format(spark_context_variable_name)
-        if self.samplemethod == u'sample':
-            command = u'{}.sample(false, {})'.format(command, self.samplefraction)
+        command = "{}.toJSON".format(spark_context_variable_name)
+        if self.samplemethod == "sample":
+            command = "{}.sample(false, {})".format(command, self.samplefraction)
         if self.maxrows >= 0:
-            command = u'{}.take({})'.format(command, self.maxrows)
+            command = "{}.take({})".format(command, self.maxrows)
         else:
-            command = u'{}.collect'.format(command)
-        return Command(u'{}.foreach(println)'.format(command))
-
+            command = "{}.collect".format(command)
+        return Command("{}.foreach(println)".format(command))
 
     def _r_command(self, spark_context_variable_name):
         command = spark_context_variable_name
-        if self.samplemethod == u'sample':
-            command = u'sample({}, FALSE, {})'.format(command,
-                                                      self.samplefraction)
+        if self.samplemethod == "sample":
+            command = "sample({}, FALSE, {})".format(command, self.samplefraction)
         if self.maxrows >= 0:
-            command = u'take({},{})'.format(command, self.maxrows)
+            command = "take({},{})".format(command, self.maxrows)
         else:
-            command = u'collect({})'.format(command)
-        command = u'jsonlite::toJSON({})'.format(command)
-        command = u'for ({} in ({})) {{cat({})}}'.format(constants.LONG_RANDOM_VARIABLE_NAME,
-                                                         command,
-                                                         constants.LONG_RANDOM_VARIABLE_NAME)
+            command = "collect({})".format(command)
+        command = "jsonlite::toJSON({})".format(command)
+        command = "for ({} in ({})) {{cat({})}}".format(
+            constants.LONG_RANDOM_VARIABLE_NAME,
+            command,
+            constants.LONG_RANDOM_VARIABLE_NAME,
+        )
         return Command(command)
-
 
     # Used only for unit testing
     def __eq__(self, other):
-        return self.code == other.code and \
-            self.samplemethod == other.samplemethod and \
-            self.maxrows == other.maxrows and \
-            self.samplefraction == other.samplefraction and \
-            self.output_var == other.output_var and \
-            self._coerce == other._coerce
+        return (
+            self.code == other.code
+            and self.samplemethod == other.samplemethod
+            and self.maxrows == other.maxrows
+            and self.samplefraction == other.samplefraction
+            and self.output_var == other.output_var
+            and self._coerce == other._coerce
+        )
 
     def __ne__(self, other):
         return not (self == other)

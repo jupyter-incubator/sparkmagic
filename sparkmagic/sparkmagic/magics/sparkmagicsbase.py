@@ -16,48 +16,62 @@ import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.utils import get_sessions_info_html
-from sparkmagic.utils.constants import MIMETYPE_TEXT_HTML 
+from sparkmagic.utils.constants import MIMETYPE_TEXT_HTML
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
 from sparkmagic.livyclientlib.exceptions import SparkStatementException
-from sparkmagic.livyclientlib.sendpandasdftosparkcommand import SendPandasDfToSparkCommand
+from sparkmagic.livyclientlib.sendpandasdftosparkcommand import (
+    SendPandasDfToSparkCommand,
+)
 from sparkmagic.livyclientlib.sendstringtosparkcommand import SendStringToSparkCommand
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
 
-# How to display different cell content types in IPython 
-SparkOutputHandler = namedtuple('SparkOutputHandler', ['html', 'text', 'default'])
+# How to display different cell content types in IPython
+SparkOutputHandler = namedtuple("SparkOutputHandler", ["html", "text", "default"])
 
 
 @magics_class
 class SparkMagicBase(Magics):
 
-    _STRING_VAR_TYPE = 'str'
-    _PANDAS_DATAFRAME_VAR_TYPE = 'df'
+    _STRING_VAR_TYPE = "str"
+    _PANDAS_DATAFRAME_VAR_TYPE = "df"
     _ALLOWED_LOCAL_TO_SPARK_TYPES = [_STRING_VAR_TYPE, _PANDAS_DATAFRAME_VAR_TYPE]
 
     def __init__(self, shell, data=None, spark_events=None):
         # You must call the parent constructor
         super(SparkMagicBase, self).__init__(shell)
 
-        self.logger = SparkLog(u"SparkMagics")
+        self.logger = SparkLog("SparkMagics")
         self.ipython_display = IpythonDisplay()
         self.spark_controller = SparkController(self.ipython_display)
 
-        self.logger.debug(u'Initialized spark magics.')
+        self.logger.debug("Initialized spark magics.")
 
         if spark_events is None:
             spark_events = SparkEvents()
         spark_events.emit_library_loaded_event()
 
-    def do_send_to_spark(self, cell, input_variable_name, var_type, output_variable_name, max_rows, session_name):
+    def do_send_to_spark(
+        self,
+        cell,
+        input_variable_name,
+        var_type,
+        output_variable_name,
+        max_rows,
+        session_name,
+    ):
         try:
             input_variable_value = self.shell.user_ns[input_variable_name]
         except KeyError:
-            raise BadUserDataException(u'Variable named {} not found.'.format(input_variable_name))
+            raise BadUserDataException(
+                "Variable named {} not found.".format(input_variable_name)
+            )
         if input_variable_value is None:
-            raise BadUserDataException(u'Value of {} is None!'.format(input_variable_name))
+            raise BadUserDataException(
+                "Value of {} is None!".format(input_variable_name)
+            )
 
         if not output_variable_name:
             output_variable_name = input_variable_name
@@ -67,26 +81,52 @@ class SparkMagicBase(Magics):
 
         input_variable_type = var_type.lower()
         if input_variable_type == self._STRING_VAR_TYPE:
-            command = SendStringToSparkCommand(input_variable_name, input_variable_value, output_variable_name)
+            command = SendStringToSparkCommand(
+                input_variable_name, input_variable_value, output_variable_name
+            )
         elif input_variable_type == self._PANDAS_DATAFRAME_VAR_TYPE:
-            command = SendPandasDfToSparkCommand(input_variable_name, input_variable_value, output_variable_name, max_rows)
+            command = SendPandasDfToSparkCommand(
+                input_variable_name,
+                input_variable_value,
+                output_variable_name,
+                max_rows,
+            )
         else:
-            raise BadUserDataException(u'Invalid or incorrect -t type. Available are: [{}]'.format(u','.join(self._ALLOWED_LOCAL_TO_SPARK_TYPES)))
+            raise BadUserDataException(
+                "Invalid or incorrect -t type. Available are: [{}]".format(
+                    ",".join(self._ALLOWED_LOCAL_TO_SPARK_TYPES)
+                )
+            )
 
         (success, result, mime_type) = self.spark_controller.run_command(command, None)
         if not success:
             self.ipython_display.send_error(result)
         else:
-            self.ipython_display.write(u'Successfully passed \'{}\' as \'{}\' to Spark'
-                                       u' kernel'.format(input_variable_name, output_variable_name))
+            self.ipython_display.write(
+                "Successfully passed '{}' as '{}' to Spark"
+                " kernel".format(input_variable_name, output_variable_name)
+            )
 
-    def execute_spark(self, cell, output_var, samplemethod, maxrows, samplefraction, session_name, coerce, output_handler=None):
+    def execute_spark(
+        self,
+        cell,
+        output_var,
+        samplemethod,
+        maxrows,
+        samplefraction,
+        session_name,
+        coerce,
+        output_handler=None,
+    ):
         output_handler = output_handler or SparkOutputHandler(
-                                          html=self.ipython_display.html,
-                                          text=self.ipython_display.write,
-                                          default=self.ipython_display.display)
-            
-        (success, out, mimetype) = self.spark_controller.run_command(Command(cell), session_name)
+            html=self.ipython_display.html,
+            text=self.ipython_display.write,
+            default=self.ipython_display.display,
+        )
+
+        (success, out, mimetype) = self.spark_controller.run_command(
+            Command(cell), session_name
+        )
         if not success:
             if conf.shutdown_session_on_spark_statement_errors():
                 self.spark_controller.cleanup()
@@ -101,16 +141,31 @@ class SparkMagicBase(Magics):
             else:
                 output_handler.default(out)
             if output_var is not None:
-                spark_store_command = self._spark_store_command(output_var, samplemethod, maxrows, samplefraction, coerce)
-                df = self.spark_controller.run_command(spark_store_command, session_name)
+                spark_store_command = self._spark_store_command(
+                    output_var, samplemethod, maxrows, samplefraction, coerce
+                )
+                df = self.spark_controller.run_command(
+                    spark_store_command, session_name
+                )
                 self.shell.user_ns[output_var] = df
 
     @staticmethod
     def _spark_store_command(output_var, samplemethod, maxrows, samplefraction, coerce):
-        return SparkStoreCommand(output_var, samplemethod, maxrows, samplefraction, coerce=coerce)
+        return SparkStoreCommand(
+            output_var, samplemethod, maxrows, samplefraction, coerce=coerce
+        )
 
-    def execute_sqlquery(self, cell, samplemethod, maxrows, samplefraction,
-                         session, output_var, quiet, coerce):
+    def execute_sqlquery(
+        self,
+        cell,
+        samplemethod,
+        maxrows,
+        samplefraction,
+        session,
+        output_var,
+        quiet,
+        coerce,
+    ):
         sqlquery = self._sqlquery(cell, samplemethod, maxrows, samplefraction, coerce)
         df = self.spark_controller.run_sqlquery(sqlquery, session)
         if output_var is not None:
@@ -130,4 +185,4 @@ class SparkMagicBase(Magics):
             html = get_sessions_info_html(info_sessions, current_session_id)
             self.ipython_display.html(html)
         else:
-            self.ipython_display.html(u'No active sessions.')
+            self.ipython_display.html("No active sessions.")

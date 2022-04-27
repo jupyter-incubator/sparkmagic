@@ -15,31 +15,52 @@ import importlib
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils import constants
-from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value, initialize_auth, Namespace
+from sparkmagic.utils.utils import (
+    parse_argstring_or_throw,
+    get_coerce_value,
+    initialize_auth,
+    Namespace,
+)
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import LANGS_SUPPORTED
-from sparkmagic.utils.dataframe_parser import cell_contains_dataframe, CellOutputHtmlParser
+from sparkmagic.utils.dataframe_parser import (
+    cell_contains_dataframe,
+    CellOutputHtmlParser,
+)
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase, SparkOutputHandler
-from sparkmagic.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
-    BadUserDataException
+from sparkmagic.livyclientlib.exceptions import (
+    handle_expected_exceptions,
+    wrap_unexpected_exceptions,
+    BadUserDataException,
+)
 
 
 def _event(f):
     def wrapped(self, *args, **kwargs):
         guid = self._generate_uuid()
-        self._spark_events.emit_magic_execution_start_event(f.__name__, get_livy_kind(self.language), guid)
+        self._spark_events.emit_magic_execution_start_event(
+            f.__name__, get_livy_kind(self.language), guid
+        )
         try:
             result = f(self, *args, **kwargs)
         except Exception as e:
-            self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
-                                                              False, e.__class__.__name__, str(e))
+            self._spark_events.emit_magic_execution_end_event(
+                f.__name__,
+                get_livy_kind(self.language),
+                guid,
+                False,
+                e.__class__.__name__,
+                str(e),
+            )
             raise
         else:
-            self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
-                                                              True, u"", u"")
+            self._spark_events.emit_magic_execution_end_event(
+                f.__name__, get_livy_kind(self.language), guid, True, "", ""
+            )
             return result
+
     wrapped.__name__ = f.__name__
     wrapped.__doc__ = f.__doc__
     return wrapped
@@ -51,15 +72,15 @@ class KernelMagics(SparkMagicBase):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
 
-        self.session_name = u"session_name"
+        self.session_name = "session_name"
         self.session_started = False
 
         # In order to set these following 3 properties, call %%_do_not_call_change_language -l language
-        self.language = u""
+        self.language = ""
         self.endpoint = None
         self.fatal_error = False
         self.allow_retry_fatal = False
-        self.fatal_error_message = u""
+        self.fatal_error_message = ""
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
@@ -72,7 +93,7 @@ class KernelMagics(SparkMagicBase):
     def help(self, line, cell="", local_ns=None):
         parse_argstring_or_throw(self.help, line)
         self._assure_cell_body_is_empty(KernelMagics.help.__name__, cell)
-        help_html = u"""
+        help_html = """
 <table>
   <tr>
     <th>Magic</th>
@@ -165,23 +186,49 @@ class KernelMagics(SparkMagicBase):
         self.ipython_display.html(help_html)
 
     @cell_magic
-    def local(self, line, cell=u"", local_ns=None):
+    def local(self, line, cell="", local_ns=None):
         # This should not be reachable thanks to UserCodeParser. Registering it here so that it auto-completes with tab.
-        raise NotImplementedError(u"UserCodeParser should have prevented code execution from reaching here.")
+        raise NotImplementedError(
+            "UserCodeParser should have prevented code execution from reaching here."
+        )
 
     @magic_arguments()
-    @argument("-i", "--input", type=str, default=None, help="If present, indicated variable will be stored in variable"
-                                                             " in Spark's context.")
-    @argument("-t", "--vartype", type=str, default='str', help="Optionally specify the type of input variable. "
-                                                               "Available: 'str' - string(default) or 'df' - Pandas DataFrame")
-    @argument("-n", "--varname", type=str, default=None, help="Optionally specify the custom name for the input variable.")
-    @argument("-m", "--maxrows", type=int, default=2500, help="Maximum number of rows that will be pulled back "
-                                                              "from the local dataframe")
+    @argument(
+        "-i",
+        "--input",
+        type=str,
+        default=None,
+        help="If present, indicated variable will be stored in variable"
+        " in Spark's context.",
+    )
+    @argument(
+        "-t",
+        "--vartype",
+        type=str,
+        default="str",
+        help="Optionally specify the type of input variable. "
+        "Available: 'str' - string(default) or 'df' - Pandas DataFrame",
+    )
+    @argument(
+        "-n",
+        "--varname",
+        type=str,
+        default=None,
+        help="Optionally specify the custom name for the input variable.",
+    )
+    @argument(
+        "-m",
+        "--maxrows",
+        type=int,
+        default=2500,
+        help="Maximum number of rows that will be pulled back "
+        "from the local dataframe",
+    )
     @cell_magic
     @needs_local_scope
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
-    def send_to_spark(self, line, cell=u"", local_ns=None):
+    def send_to_spark(self, line, cell="", local_ns=None):
         self._assure_cell_body_is_empty(KernelMagics.send_to_spark.__name__, cell)
         args = parse_argstring_or_throw(self.send_to_spark, line)
 
@@ -189,7 +236,9 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException("-i param not provided.")
 
         if self._do_not_call_start_session(""):
-            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, args.maxrows, None)
+            self.do_send_to_spark(
+                cell, args.input, args.vartype, args.varname, args.maxrows, None
+            )
         else:
             return
 
@@ -198,15 +247,21 @@ class KernelMagics(SparkMagicBase):
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     @_event
-    def info(self, line, cell=u"", local_ns=None):
+    def info(self, line, cell="", local_ns=None):
         parse_argstring_or_throw(self.info, line)
         self._assure_cell_body_is_empty(KernelMagics.info.__name__, cell)
         if self.session_started:
-            current_session_id = self.spark_controller.get_session_id_for_client(self.session_name)
+            current_session_id = self.spark_controller.get_session_id_for_client(
+                self.session_name
+            )
         else:
             current_session_id = None
 
-        self.ipython_display.html(u"Current session configs: <tt>{}</tt><br>".format(conf.get_session_properties(self.language)))
+        self.ipython_display.html(
+            "Current session configs: <tt>{}</tt><br>".format(
+                conf.get_session_properties(self.language)
+            )
+        )
 
         info_sessions = self.spark_controller.get_all_sessions_endpoint(self.endpoint)
         self._print_endpoint_info(info_sessions, current_session_id)
@@ -223,11 +278,19 @@ class KernelMagics(SparkMagicBase):
             out = self.spark_controller.get_logs()
             self.ipython_display.write(out)
         else:
-            self.ipython_display.write(u"No logs yet.")
+            self.ipython_display.write("No logs yet.")
 
     @magic_arguments()
     @cell_magic
-    @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @argument(
+        "-f",
+        "--force",
+        type=bool,
+        default=False,
+        nargs="?",
+        const=True,
+        help="If present, user understands.",
+    )
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     @_event
@@ -235,44 +298,86 @@ class KernelMagics(SparkMagicBase):
         try:
             dictionary = json.loads(cell)
         except ValueError:
-            self.ipython_display.send_error(u"Could not parse JSON object from input '{}'".format(cell))
+            self.ipython_display.send_error(
+                "Could not parse JSON object from input '{}'".format(cell)
+            )
             return
         args = parse_argstring_or_throw(self.configure, line)
         if self.session_started:
             if not args.force:
-                self.ipython_display.send_error(u"A session has already been started. If you intend to recreate the "
-                                                u"session with new configurations, please include the -f argument.")
+                self.ipython_display.send_error(
+                    "A session has already been started. If you intend to recreate the "
+                    "session with new configurations, please include the -f argument."
+                )
                 return
             else:
-                self._do_not_call_delete_session(u"")
+                self._do_not_call_delete_session("")
                 self._override_session_settings(dictionary)
-                self._do_not_call_start_session(u"")
+                self._do_not_call_start_session("")
         else:
             self._override_session_settings(dictionary)
-        self.info(u"")
+        self.info("")
 
     @magic_arguments()
     @cell_magic
     @needs_local_scope
-    @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
-                                                             "of this name in user's local context.")
-    @argument("-m", "--samplemethod", type=str, default=None, help="Sample method for dataframe: either take or sample")
-    @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
-                                                                        "from the dataframe on the server for storing")
-    @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from dataframe")
-    @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) " 
-                                                                        "of the dataframe or not (pass False)")
+    @argument(
+        "-o",
+        "--output",
+        type=str,
+        default=None,
+        help="If present, indicated variable will be stored in variable"
+        "of this name in user's local context.",
+    )
+    @argument(
+        "-m",
+        "--samplemethod",
+        type=str,
+        default=None,
+        help="Sample method for dataframe: either take or sample",
+    )
+    @argument(
+        "-n",
+        "--maxrows",
+        type=int,
+        default=None,
+        help="Maximum number of rows that will be pulled back "
+        "from the dataframe on the server for storing",
+    )
+    @argument(
+        "-r",
+        "--samplefraction",
+        type=float,
+        default=None,
+        help="Sample fraction for sampling from dataframe",
+    )
+    @argument(
+        "-c",
+        "--coerce",
+        type=str,
+        default=None,
+        help="Whether to automatically coerce the types (default, pass True if being explicit) "
+        "of the dataframe or not (pass False)",
+    )
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
-        if not self._do_not_call_start_session(u""):
+        if not self._do_not_call_start_session(""):
             return
 
         args = parse_argstring_or_throw(self.spark, line)
 
         coerce = get_coerce_value(args.coerce)
 
-        self.execute_spark(cell, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
+        self.execute_spark(
+            cell,
+            args.output,
+            args.samplemethod,
+            args.maxrows,
+            args.samplefraction,
+            None,
+            coerce,
+        )
 
     @cell_magic
     @needs_local_scope
@@ -280,34 +385,72 @@ class KernelMagics(SparkMagicBase):
     @handle_expected_exceptions
     def pretty(self, line, cell="", local_ns=None):
         """Evaluates a cell and converts dataframes in cell output to HTML tables."""
-        if not self._do_not_call_start_session(u""):
-            return 
+        if not self._do_not_call_start_session(""):
+            return
 
         def pretty_output_handler(out):
             if cell_contains_dataframe(out):
-                self.ipython_display.html(CellOutputHtmlParser.to_html(out)) 
-            else:    
+                self.ipython_display.html(CellOutputHtmlParser.to_html(out))
+            else:
                 self.ipython_display.write(out)
 
-        so = SparkOutputHandler(html=self.ipython_display.html,
-                        text=pretty_output_handler,
-                        default=self.ipython_display.display)
-                        
-        self.execute_spark(cell, None, None, None, None, None, None, output_handler=so)
+        so = SparkOutputHandler(
+            html=self.ipython_display.html,
+            text=pretty_output_handler,
+            default=self.ipython_display.display,
+        )
 
+        self.execute_spark(cell, None, None, None, None, None, None, output_handler=so)
 
     @magic_arguments()
     @cell_magic
     @needs_local_scope
-    @argument("-o", "--output", type=str, default=None, help="If present, query will be stored in variable of this "
-                                                             "name.")
-    @argument("-q", "--quiet", type=bool, default=False, const=True, nargs="?", help="Return None instead of the dataframe.")
-    @argument("-m", "--samplemethod", type=str, default=None, help="Sample method for SQL queries: either take or sample")
-    @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
-                                                                        "from the server for SQL queries")
-    @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from SQL queries")
-    @argument("-c", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) " 
-                                                                        "of the dataframe or not (pass False)")
+    @argument(
+        "-o",
+        "--output",
+        type=str,
+        default=None,
+        help="If present, query will be stored in variable of this " "name.",
+    )
+    @argument(
+        "-q",
+        "--quiet",
+        type=bool,
+        default=False,
+        const=True,
+        nargs="?",
+        help="Return None instead of the dataframe.",
+    )
+    @argument(
+        "-m",
+        "--samplemethod",
+        type=str,
+        default=None,
+        help="Sample method for SQL queries: either take or sample",
+    )
+    @argument(
+        "-n",
+        "--maxrows",
+        type=int,
+        default=None,
+        help="Maximum number of rows that will be pulled back "
+        "from the server for SQL queries",
+    )
+    @argument(
+        "-r",
+        "--samplefraction",
+        type=float,
+        default=None,
+        help="Sample fraction for sampling from SQL queries",
+    )
+    @argument(
+        "-c",
+        "--coerce",
+        type=str,
+        default=None,
+        help="Whether to automatically coerce the types (default, pass True if being explicit) "
+        "of the dataframe or not (pass False)",
+    )
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def sql(self, line, cell="", local_ns=None):
@@ -318,12 +461,28 @@ class KernelMagics(SparkMagicBase):
 
         coerce = get_coerce_value(args.coerce)
 
-        return self.execute_sqlquery(cell, args.samplemethod, args.maxrows, args.samplefraction,
-                                     None, args.output, args.quiet, coerce)
+        return self.execute_sqlquery(
+            cell,
+            args.samplemethod,
+            args.maxrows,
+            args.samplefraction,
+            None,
+            args.output,
+            args.quiet,
+            coerce,
+        )
 
     @magic_arguments()
     @cell_magic
-    @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @argument(
+        "-f",
+        "--force",
+        type=bool,
+        default=False,
+        nargs="?",
+        const=True,
+        help="If present, user understands.",
+    )
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     @_event
@@ -331,18 +490,28 @@ class KernelMagics(SparkMagicBase):
         self._assure_cell_body_is_empty(KernelMagics.cleanup.__name__, cell)
         args = parse_argstring_or_throw(self.cleanup, line)
         if args.force:
-            self._do_not_call_delete_session(u"")
+            self._do_not_call_delete_session("")
 
             self.spark_controller.cleanup_endpoint(self.endpoint)
         else:
-            self.ipython_display.send_error(u"When you clean up the endpoint, all sessions will be lost, including the "
-                                            u"one used for this notebook. Include the -f parameter if that's your "
-                                            u"intention.")
+            self.ipython_display.send_error(
+                "When you clean up the endpoint, all sessions will be lost, including the "
+                "one used for this notebook. Include the -f parameter if that's your "
+                "intention."
+            )
             return
 
     @magic_arguments()
     @cell_magic
-    @argument("-f", "--force", type=bool, default=False, nargs="?", const=True, help="If present, user understands.")
+    @argument(
+        "-f",
+        "--force",
+        type=bool,
+        default=False,
+        nargs="?",
+        const=True,
+        help="If present, user understands.",
+    )
     @argument("-s", "--session", type=int, help="Session id number to delete.")
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
@@ -353,21 +522,27 @@ class KernelMagics(SparkMagicBase):
         session = args.session
 
         if args.session is None:
-            self.ipython_display.send_error(u'You must provide a session ID (-s argument).')
+            self.ipython_display.send_error(
+                "You must provide a session ID (-s argument)."
+            )
             return
 
         if args.force:
             id = self.spark_controller.get_session_id_for_client(self.session_name)
             if session == id:
-                self.ipython_display.send_error(u"Cannot delete this kernel's session ({}). Specify a different session,"
-                                                u" shutdown the kernel to delete this session, or run %cleanup to "
-                                                u"delete all sessions for this endpoint.".format(id))
+                self.ipython_display.send_error(
+                    "Cannot delete this kernel's session ({}). Specify a different session,"
+                    " shutdown the kernel to delete this session, or run %cleanup to "
+                    "delete all sessions for this endpoint.".format(id)
+                )
                 return
 
             self.spark_controller.delete_session_by_id(self.endpoint, session)
         else:
-            self.ipython_display.send_error(u"Include the -f parameter if you understand that all statements executed "
-                                            u"in this session will be lost.")
+            self.ipython_display.send_error(
+                "Include the -f parameter if you understand that all statements executed "
+                "in this session will be lost."
+            )
 
     @cell_magic
     def _do_not_call_start_session(self, line, cell="", local_ns=None):
@@ -385,14 +560,16 @@ class KernelMagics(SparkMagicBase):
             properties = conf.get_session_properties(self.language)
 
             try:
-                self.spark_controller.add_session(self.session_name, self.endpoint, skip, properties)
+                self.spark_controller.add_session(
+                    self.session_name, self.endpoint, skip, properties
+                )
                 self.session_started = True
                 self.fatal_error = False
-                self.fatal_error_message = u""
+                self.fatal_error_message = ""
             except Exception as e:
                 self.fatal_error = True
                 self.fatal_error_message = conf.fatal_error_suggestion().format(e)
-                self.logger.error(u"Error creating session: {}".format(e))
+                self.logger.error("Error creating session: {}".format(e))
                 self.ipython_display.send_error(self.fatal_error_message)
 
                 if conf.all_errors_are_fatal():
@@ -427,11 +604,15 @@ class KernelMagics(SparkMagicBase):
         language = args.language.lower()
 
         if language not in LANGS_SUPPORTED:
-            self.ipython_display.send_error(u"'{}' language not supported in kernel magics.".format(language))
+            self.ipython_display.send_error(
+                "'{}' language not supported in kernel magics.".format(language)
+            )
             return
 
         if self.session_started:
-            self.ipython_display.send_error(u"Cannot change the language if a session has been started.")
+            self.ipython_display.send_error(
+                "Cannot change the language if a session has been started."
+            )
             return
 
         self.language = language
@@ -439,22 +620,24 @@ class KernelMagics(SparkMagicBase):
 
     @magic_arguments()
     @line_magic
-    @argument("-u", "--username", dest='user', type=str, help="Username to use.")
+    @argument("-u", "--username", dest="user", type=str, help="Username to use.")
     @argument("-p", "--password", type=str, help="Password to use.")
-    @argument("-s", "--server", dest='url', type=str, help="Url of server to use.")
+    @argument("-s", "--server", dest="url", type=str, help="Url of server to use.")
     @argument("-t", "--auth", type=str, help="Auth type for authentication")
     @_event
     def _do_not_call_change_endpoint(self, line, cell="", local_ns=None):
         args = parse_argstring_or_throw(self._do_not_call_change_endpoint, line)
         if self.session_started:
-            error = u"Cannot change the endpoint if a session has been started."
+            error = "Cannot change the endpoint if a session has been started."
             raise BadUserDataException(error)
         auth = initialize_auth(args=args)
         self.endpoint = Endpoint(args.url, auth)
 
     @line_magic
     def matplot(self, line, cell="", local_ns=None):
-        session = self.spark_controller.get_session_by_name_or_default(self.session_name)
+        session = self.spark_controller.get_session_by_name_or_default(
+            self.session_name
+        )
         command = Command("%matplot " + line)
         (success, out, mimetype) = command.execute(session)
         if success:
@@ -463,8 +646,13 @@ class KernelMagics(SparkMagicBase):
             session.ipython_display.send_error(out)
 
     def refresh_configuration(self):
-        credentials = getattr(conf, 'base64_kernel_' + self.language + '_credentials')()
-        (username, password, auth, url) = (credentials['username'], credentials['password'], credentials['auth'], credentials['url'])
+        credentials = getattr(conf, "base64_kernel_" + self.language + "_credentials")()
+        (username, password, auth, url) = (
+            credentials["username"],
+            credentials["password"],
+            credentials["auth"],
+            credentials["url"],
+        )
         args = Namespace(auth=auth, user=username, password=password, url=url)
         auth_instance = initialize_auth(args)
         self.endpoint = Endpoint(url, auth_instance)
@@ -492,8 +680,12 @@ class KernelMagics(SparkMagicBase):
     @staticmethod
     def _assure_cell_body_is_empty(magic_name, cell):
         if cell.strip():
-            raise BadUserDataException(u"Cell body for %%{} magic must be empty; got '{}' instead"
-                                       .format(magic_name, cell.strip()))
+            raise BadUserDataException(
+                "Cell body for %%{} magic must be empty; got '{}' instead".format(
+                    magic_name, cell.strip()
+                )
+            )
+
 
 def load_ipython_extension(ip):
     ip.register_magics(KernelMagics)

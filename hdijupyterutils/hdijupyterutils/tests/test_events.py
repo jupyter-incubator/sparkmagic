@@ -30,24 +30,26 @@ def test_send_to_handler():
     events.send_to_handler(kwargs_list)
 
     events.handler.handle_event.assert_called_once_with(expected_kwargs_list)
-    
-    
+
+
 @with_setup(_setup, _teardown)
 @raises(AssertionError)
 def test_send_to_handler_asserts_less_than_12():
-    kwargs_list = [(TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp),
-                   (TIMESTAMP, time_stamp)]
+    kwargs_list = [
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+        (TIMESTAMP, time_stamp),
+    ]
 
     events.send_to_handler(kwargs_list)
 

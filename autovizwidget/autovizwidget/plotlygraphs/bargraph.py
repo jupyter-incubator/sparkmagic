@@ -10,4 +10,3 @@ class BarGraph(GraphBase):
     def _get_data(self, df, encoding):
         x_values, y_values = GraphBase._get_x_y_values(df, encoding)
         return [Bar(x=x_values, y=y_values)]
-

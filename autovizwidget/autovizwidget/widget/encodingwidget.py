@@ -17,12 +17,14 @@ else:
 
 
 class EncodingWidget(Box):
-    def __init__(self, df, encoding, change_hook, ipywidget_factory=None, testing=False, **kwargs):
+    def __init__(
+        self, df, encoding, change_hook, ipywidget_factory=None, testing=False, **kwargs
+    ):
         assert encoding is not None
         assert df is not None
         assert type(df) is pd.DataFrame
 
-        kwargs['orientation'] = 'vertical'
+        kwargs["orientation"] = "vertical"
         if not testing:
             super(EncodingWidget, self).__init__((), **kwargs)
 
@@ -36,36 +38,43 @@ class EncodingWidget(Box):
 
         self.widget = self.ipywidget_factory.get_vbox()
 
-        self.title = self.ipywidget_factory.get_html('Encoding:', width='148px', height='32px')
+        self.title = self.ipywidget_factory.get_html(
+            "Encoding:", width="148px", height="32px"
+        )
 
         # X view
         options_x_view = {text(i): text(i) for i in self.df.columns}
         options_x_view["-"] = None
-        self.x_view = self.ipywidget_factory.get_dropdown(options=options_x_view,
-                                                          description="X", value=self.encoding.x)
-        self.x_view.on_trait_change(self._x_changed_callback, 'value')
+        self.x_view = self.ipywidget_factory.get_dropdown(
+            options=options_x_view, description="X", value=self.encoding.x
+        )
+        self.x_view.on_trait_change(self._x_changed_callback, "value")
         self.x_view.layout.width = "200px"
 
         # Y
         options_y_view = {text(i): text(i) for i in self.df.columns}
         options_y_view["-"] = None
-        y_column_view = self.ipywidget_factory.get_dropdown(options=options_y_view,
-                                                            description="Y", value=self.encoding.y)
-        y_column_view.on_trait_change(self._y_changed_callback, 'value')
+        y_column_view = self.ipywidget_factory.get_dropdown(
+            options=options_y_view, description="Y", value=self.encoding.y
+        )
+        y_column_view.on_trait_change(self._y_changed_callback, "value")
         y_column_view.layout.width = "200px"
 
         # Y aggregator
         value_for_view = self._get_value_for_aggregation(self.encoding.y_aggregation)
         self.y_agg_view = self.ipywidget_factory.get_dropdown(
-            options={"-": Encoding.y_agg_none,
-                     Encoding.y_agg_avg: Encoding.y_agg_avg,
-                     Encoding.y_agg_min: Encoding.y_agg_min,
-                     Encoding.y_agg_max: Encoding.y_agg_max,
-                     Encoding.y_agg_sum: Encoding.y_agg_sum,
-                     Encoding.y_agg_count: Encoding.y_agg_count},
+            options={
+                "-": Encoding.y_agg_none,
+                Encoding.y_agg_avg: Encoding.y_agg_avg,
+                Encoding.y_agg_min: Encoding.y_agg_min,
+                Encoding.y_agg_max: Encoding.y_agg_max,
+                Encoding.y_agg_sum: Encoding.y_agg_sum,
+                Encoding.y_agg_count: Encoding.y_agg_count,
+            },
             description="Func.",
-            value=value_for_view)
-        self.y_agg_view.on_trait_change(self._y_agg_changed_callback, 'value')
+            value=value_for_view,
+        )
+        self.y_agg_view.on_trait_change(self._y_agg_changed_callback, "value")
         self.y_agg_view.layout.width = "200px"
 
         # Y view
@@ -74,15 +83,23 @@ class EncodingWidget(Box):
 
         # Logarithmic X axis
         self.logarithmic_x_axis = self.ipywidget_factory.get_checkbox(
-            description="Log scale X", value=encoding.logarithmic_x_axis)
+            description="Log scale X", value=encoding.logarithmic_x_axis
+        )
         self.logarithmic_x_axis.on_trait_change(self._logarithmic_x_callback, "value")
 
         # Logarithmic Y axis
         self.logarithmic_y_axis = self.ipywidget_factory.get_checkbox(
-            description="Log scale Y", value=encoding.logarithmic_y_axis)
+            description="Log scale Y", value=encoding.logarithmic_y_axis
+        )
         self.logarithmic_y_axis.on_trait_change(self._logarithmic_y_callback, "value")
 
-        children = [self.title, self.x_view, self.y_view, self.logarithmic_x_axis, self.logarithmic_y_axis]
+        children = [
+            self.title,
+            self.x_view,
+            self.y_view,
+            self.logarithmic_x_axis,
+            self.logarithmic_y_axis,
+        ]
         self.widget.children = children
 
         self.children = [self.widget]
@@ -109,28 +126,28 @@ class EncodingWidget(Box):
         return "none"
 
     def _x_changed_callback(self, name, old_value, new_value):
-            self.encoding.x = new_value
-            return self.change_hook()
+        self.encoding.x = new_value
+        return self.change_hook()
 
     def _y_changed_callback(self, name, old_value, new_value):
-            self.encoding.y = new_value
-            return self.change_hook()
+        self.encoding.y = new_value
+        return self.change_hook()
 
     def _y_agg_changed_callback(self, name, old_value, new_value):
-            if new_value == "none":
-                self.encoding.y_aggregation = None
-            else:
-                self.encoding.y_aggregation = new_value
-            return self.change_hook()
+        if new_value == "none":
+            self.encoding.y_aggregation = None
+        else:
+            self.encoding.y_aggregation = new_value
+        return self.change_hook()
 
     def _logarithmic_x_callback(self, name, old_value, new_value):
-            self.encoding.logarithmic_x_axis = new_value
-            return self.change_hook()
+        self.encoding.logarithmic_x_axis = new_value
+        return self.change_hook()
 
     def _logarithmic_y_callback(self, name, old_value, new_value):
-            self.encoding.logarithmic_y_axis = new_value
-            return self.change_hook()
-            
+        self.encoding.logarithmic_y_axis = new_value
+        return self.change_hook()
+
     def _widget_visible(self, widget, visible):
         if visible:
             widget.layout.display = "flex"

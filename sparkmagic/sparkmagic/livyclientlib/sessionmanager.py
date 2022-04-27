@@ -9,7 +9,7 @@ import sparkmagic.utils.configuration as conf
 
 class SessionManager(object):
     def __init__(self, ipython_display):
-        self.logger = SparkLog(u"SessionManager")
+        self.logger = SparkLog("SessionManager")
         self.ipython_display = ipython_display
 
         self._sessions = dict()
@@ -24,12 +24,17 @@ class SessionManager(object):
         return list(self._sessions.keys())
 
     def get_sessions_info(self):
-        return [u"Name: {}\t{}".format(k, str(self._sessions[k])) for k in list(self._sessions.keys())]
+        return [
+            "Name: {}\t{}".format(k, str(self._sessions[k]))
+            for k in list(self._sessions.keys())
+        ]
 
     def add_session(self, name, session):
         if name in self._sessions:
-            raise SessionManagementException(u"Session with name '{}' already exists. Please delete the session"
-                                             u" first if you intend to replace it.".format(name))
+            raise SessionManagementException(
+                "Session with name '{}' already exists. Please delete the session"
+                " first if you intend to replace it.".format(name)
+            )
 
         self._sessions[name] = session
 
@@ -39,16 +44,24 @@ class SessionManager(object):
             key = self.get_sessions_list()[0]
             return self._sessions[key]
         elif number_of_sessions == 0:
-            raise SessionManagementException(u"You need to have at least 1 client created to execute commands.")
+            raise SessionManagementException(
+                "You need to have at least 1 client created to execute commands."
+            )
         else:
-            raise SessionManagementException(u"Please specify the client to use. Possible sessions are {}".format(
-                self.get_sessions_list()))
-        
+            raise SessionManagementException(
+                "Please specify the client to use. Possible sessions are {}".format(
+                    self.get_sessions_list()
+                )
+            )
+
     def get_session(self, name):
         if name in self._sessions:
             return self._sessions[name]
-        raise SessionManagementException(u"Could not find '{}' session in list of saved sessions. Possible sessions are {}".format(
-            name, self.get_sessions_list()))
+        raise SessionManagementException(
+            "Could not find '{}' session in list of saved sessions. Possible sessions are {}".format(
+                name, self.get_sessions_list()
+            )
+        )
 
     def get_session_id_for_client(self, name):
         if name in self.get_sessions_list():
@@ -63,7 +76,7 @@ class SessionManager(object):
 
     def delete_client(self, name):
         self._remove_session(name)
-    
+
     def clean_up_all(self):
         for name in self.get_sessions_list():
             self._remove_session(name)
@@ -73,19 +86,26 @@ class SessionManager(object):
             self._sessions[name].delete()
             del self._sessions[name]
         else:
-            raise SessionManagementException(u"Could not find '{}' session in list of saved sessions. Possible sessions are {}"
-                                             .format(name, self.get_sessions_list()))
+            raise SessionManagementException(
+                "Could not find '{}' session in list of saved sessions. Possible sessions are {}".format(
+                    name, self.get_sessions_list()
+                )
+            )
 
     def _register_cleanup_on_exit(self):
         """
         Stop the livy sessions before python process exits for any reason (if enabled in conf)
         """
         if conf.cleanup_all_sessions_on_exit():
+
             def cleanup_spark_sessions():
                 try:
                     self.clean_up_all()
                 except Exception as e:
-                    self.logger.error(u"Error cleaning up sessions on exit: {}".format(e))
+                    self.logger.error(
+                        "Error cleaning up sessions on exit: {}".format(e)
+                    )
                     pass
+
             atexit.register(cleanup_spark_sessions)
-            self.ipython_display.writeln(u"Cleaning up livy sessions on exit is enabled")
+            self.ipython_display.writeln("Cleaning up livy sessions on exit is enabled")

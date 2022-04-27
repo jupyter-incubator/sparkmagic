@@ -111,7 +111,9 @@ def test_cleanup_all_sessions_on_exit():
 
     client0.delete.assert_called_once_with()
     client1.delete.assert_called_once_with()
-    manager.ipython_display.writeln.assert_called_once_with(u"Cleaning up livy sessions on exit is enabled")
+    manager.ipython_display.writeln.assert_called_once_with(
+        "Cleaning up livy sessions on exit is enabled"
+    )
 
 
 def test_cleanup_all_sessions_on_exit_fails():
@@ -121,7 +123,7 @@ def test_cleanup_all_sessions_on_exit_fails():
     conf.override(conf.cleanup_all_sessions_on_exit.__name__, True)
     client0 = MagicMock()
     client1 = MagicMock()
-    client0.delete.side_effect = Exception('Mocked exception for client1.delete')
+    client0.delete.side_effect = Exception("Mocked exception for client1.delete")
     manager = get_session_manager()
     manager.add_session("name0", client0)
     manager.add_session("name1", client1)
@@ -150,7 +152,7 @@ def test_get_session_name_by_id_endpoint():
 
     name = manager.get_session_name_by_id_endpoint(id_to_search, endpoint_to_search)
     assert_equals(None, name)
-    
+
     session = MagicMock()
     type(session).id = PropertyMock(return_value=int(id_to_search))
     session.endpoint = endpoint_to_search
