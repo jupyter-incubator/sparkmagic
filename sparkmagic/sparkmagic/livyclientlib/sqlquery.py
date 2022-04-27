@@ -1,11 +1,12 @@
 from hdijupyterutils.guid import ObjectWithGuid
+from hdijupyterutils.ipythondisplay import IpythonDisplay
 
 from sparkmagic.utils.utils import coerce_pandas_df_to_numeric_datetime, records_to_dataframe
 import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparkevents import SparkEvents
 from .command import Command
-from .exceptions import DataFrameParseException, BadUserDataException
+from .exceptions import DataFrameParseException, BadUserDataException, SparkStatementException
 
 
 class SQLQuery(ObjectWithGuid):
@@ -25,6 +26,7 @@ class SQLQuery(ObjectWithGuid):
             raise BadUserDataException(u'maxrows (-n) must be an integer')
         if not 0.0 <= samplefraction <= 1.0:
             raise BadUserDataException(u'samplefraction (-r) must be a float between 0.0 and 1.0')
+        self.ipython_display = IpythonDisplay()
 
         self.query = query
         self.samplemethod = samplemethod
@@ -49,13 +51,17 @@ class SQLQuery(ObjectWithGuid):
         self._spark_events.emit_sql_execution_start_event(session.guid, session.kind, session.id, self.guid,
                                                           self.samplemethod, self.maxrows, self.samplefraction)
         command_guid = ''
+        result = None
         try:
             command = self.to_command(session.kind, session.sql_context_variable_name)
             command_guid = command.guid
             (success, records_text, mimetype) = command.execute(session)
             if not success:
-                raise BadUserDataException(records_text)
-            result = records_to_dataframe(records_text, session.kind, self._coerce)
+                if conf.spark_statement_errors_are_fatal():
+                    raise SparkStatementException(records_text)
+                self.ipython_display.send_error(records_text)
+            else:
+                result = records_to_dataframe(records_text, session.kind, self._coerce)
         except Exception as e:
             self._spark_events.emit_sql_execution_end_event(session.guid, session.kind, session.id, self.guid,
                                                             command_guid, False, e.__class__.__name__, str(e))
