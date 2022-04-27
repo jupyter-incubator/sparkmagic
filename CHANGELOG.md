@@ -2,6 +2,14 @@
 
 ## NEXT RELEASE
 
+### Updates
+
+* Officially drop support for Python 3.6. Sparkmagic will not guarantee Python 3.6 compatibility moving forward.
+
+### Bug Fixes
+
+* Fixed, simplified, and sped up the sparkmagic Docker images for local development and testing
+
 ## 0.19.2
 
 ### Bug Fixes

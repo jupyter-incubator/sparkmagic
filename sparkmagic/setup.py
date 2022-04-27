@@ -77,7 +77,6 @@ setup(
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
     install_requires=[

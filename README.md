@@ -204,8 +204,8 @@ In order to use it, make sure you have [Docker](https://docker.com) and
 [Docker Compose](https://docs.docker.com/compose/) both installed, and
 then simply run:
 
-    docker-compose build
-    docker-compose up
+    docker compose build
+    docker compose up
 
 You will then be able to access the Jupyter notebook in your browser at
 http://localhost:8888. Inside this notebook, you can configure a
@@ -213,16 +213,15 @@ sparkmagic endpoint at http://spark:8998. This endpoint is able to
 launch both Scala and Python sessions. You can also choose to start a
 wrapper kernel for Scala, Python, or R from the list of kernels.
 
-To shut down the containers, you can interrupt `docker-compose` with
-`Ctrl-C`, and optionally remove the containers with `docker-compose
+To shut down the containers, you can interrupt `docker compose` with
+`Ctrl-C`, and optionally remove the containers with `docker compose
 down`.
 
 If you are developing sparkmagic and want to test out your changes in
 the Docker container without needing to push a version to PyPI, you can
 set the `dev_mode` build arg in `docker-compose.yml` to `true`, and then
 re-build the container. This will cause the container to install your
-local version of autovizwidget, hdijupyterutils, and sparkmagic. Make
-sure to re-run `docker-compose build` before each test run.
+local version of autovizwidget, hdijupyterutils, and sparkmagic. The local packages are installed with the editable flag, meaning you can make edits directly to the libraries within the Jupyterlab docker service to debug issues in realtime. To make local changes available in Jupyterlab, make  sure to re-run `docker compose build` before spinning up the services.
 
 ## Server extension API
 
