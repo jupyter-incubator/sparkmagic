@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 * Fixed, simplified, and sped up the sparkmagic Docker images for local development and testing
+* Adds support for `ipython>=8`
 
 ## 0.19.2
 
