@@ -571,3 +571,267 @@ def test_logs_exception():
     assert result is None
     ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
                                                        .format(get_logs_method.side_effect))
+
+
+
+#@with_setup(_setup, _teardown)
+#def test_spark_collect_bad_command_writes_error():
+#    line = "bad_command"
+#    usage = "Please look at usage of %spark_collect by executing `%spark_collect?`."
+#
+#    result = magic.spark_collect(line)
+#
+#    ipython_display.send_error.assert_called_once_with("Command '{}' not found. {}".format(line, usage))
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_cell_command_parses():
+    run_cell_method = MagicMock()
+    result_value = ""
+    run_cell_method.return_value = (True, result_value)
+    spark_controller.run_command = run_cell_method
+
+    commandline = "command"
+
+    result = magic.spark_collect(commandline)
+
+    run_cell_method.assert_called_once_with(Command(commandline), None)
+    assert result is None
+    ipython_display.write.assert_called_once_with(result_value)
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_cell_command_writes_to_err():
+    run_cell_method = MagicMock()
+    result_value = ""
+    run_cell_method.return_value = (False, result_value)
+    spark_controller.run_command = run_cell_method
+
+    commandline = "command"
+
+    result = magic.spark_collect(commandline)
+
+    run_cell_method.assert_called_once_with(Command(commandline), None)
+    assert result is None
+    ipython_display.send_error.assert_called_once_with(result_value)
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_cell_command_exception():
+    run_cell_method = MagicMock()
+    run_cell_method.side_effect = HttpClientException('meh')
+    spark_controller.run_command = run_cell_method
+
+    commandline = "command"
+
+    result = magic.spark_collect(commandline)
+
+    run_cell_method.assert_called_once_with(Command(commandline), None)
+    assert result is None
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
+                                                       .format(run_cell_method.side_effect))
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_spark_command_parses():
+    magic.execute_spark = MagicMock()
+
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    commandline = "command"
+    line = " ".join([context, context_name, meth, method_name, commandline])
+    
+    result = magic.spark_collect(line)
+
+    magic.execute_spark.assert_called_once_with("command",
+                                                None, "sample", None, None, None, None)
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_spark_command_parses_with_coerce():
+    magic.execute_spark = MagicMock()
+
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    coer = "--coerce"
+    coerce_value = "True"
+    commandline = "command"
+    line = " ".join([context, context_name, meth, method_name, coer, coerce_value, commandline])
+    
+    result = magic.spark_collect(line)
+
+    magic.execute_spark.assert_called_once_with("command",
+                                                None, "sample", None, None, None, True)
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_spark_command_parses_with_coerce_false():
+    magic.execute_spark = MagicMock()
+
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    coer = "--coerce"
+    coerce_value = "False"
+    commandline = "command"
+    line = " ".join([context, context_name, meth, method_name, coer, coerce_value, commandline])
+    
+    result = magic.spark_collect(line)
+
+    magic.execute_spark.assert_called_once_with("command",
+                                                None, "sample", None, None, None, False)
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_sql_command_parses_with_coerce_false():
+    magic.execute_sqlquery = MagicMock()
+    
+    context = "-c"
+    context_name = "sql"
+    meth = "-m"
+    method_name = "sample"
+    coer = "--coerce"
+    coerce_value = "False"
+    commandline = "command"
+    line = " ".join([context, context_name, meth, method_name, coer, coerce_value, commandline])
+    
+    result = magic.spark_collect(line)
+
+    magic.execute_sqlquery.assert_called_once_with("command",
+                                                "sample", None, None, None, None, None, False)
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_spark_with_store_command_parses():
+    magic.execute_spark = MagicMock()
+
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    output = "-o"
+    output_var = "var_name"
+    commandline = "command"
+    line = " ".join([context, context_name, meth, method_name, output, output_var, commandline])
+    
+
+    result = magic.spark_collect(line)
+    magic.execute_spark.assert_called_once_with("command",
+                                                "var_name", "sample", None, None, None, None)
+    
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_spark_with_store_correct_calls():
+    run_cell_method = MagicMock()
+    run_cell_method.return_value = (True, "")
+    spark_controller.run_command = run_cell_method
+
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    output = "-o"
+    output_var = "var_name"
+    coer = "--coerce"
+    coerce_value = "True"
+    commandline = "command"
+    line = " ".join([context, context_name, meth, method_name, 
+        output, output_var, coer, coerce_value, commandline])
+    
+
+    result = magic.spark_collect(line)
+    run_cell_method.assert_any_call(Command(commandline), None)
+    run_cell_method.assert_any_call(SparkStoreCommand(output_var, samplemethod=method_name, coerce=True), None)
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_spark_command_exception():
+    run_cell_method = MagicMock()
+    run_cell_method.side_effect = LivyUnexpectedStatusException('WOW')
+    spark_controller.run_command = run_cell_method
+
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    output = "-o"
+    output_var = "var_name"
+    commandline = "command"
+    line = " ".join([context, context_name, meth, method_name, 
+        output, output_var, commandline])
+
+    result = magic.spark_collect(line)
+
+    run_cell_method.assert_any_call(Command(commandline), None)
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
+                                                       .format(run_cell_method.side_effect))
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_spark_command_exception_while_storing():
+    run_cell_method = MagicMock()
+    exception = LivyUnexpectedStatusException('WOW')
+    run_cell_method.side_effect = [(True, ""), exception]
+    spark_controller.run_command = run_cell_method
+
+    
+    context = "-c"
+    context_name = "spark"
+    meth = "-m"
+    method_name = "sample"
+    output = "-o"
+    output_var = "var_name"
+    commandline = "command"
+    line = " ".join([context, context_name, meth, method_name, 
+        output, output_var, commandline])
+
+    result = magic.spark_collect(line)
+
+    run_cell_method.assert_any_call(Command(commandline), None)
+    run_cell_method.assert_any_call(SparkStoreCommand(output_var, samplemethod=method_name), None)
+    ipython_display.write.assert_called_once_with("")
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
+                                                       .format(exception))
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_sql_command_parses():
+    run_cell_method = MagicMock()
+    run_cell_method.return_value = (True, "")
+    spark_controller.run_sqlquery = run_cell_method
+
+    context = "-c"
+    context_name = "sql"
+    meth = "-m"
+    method_name = "sample"
+    commandline = "command"
+    line = " ".join([context, context_name, meth, method_name, commandline])
+
+    result = magic.spark_collect(line)
+
+    run_cell_method.assert_called_once_with(SQLQuery(commandline, samplemethod=method_name), None)
+    assert result is not None
+
+
+@with_setup(_setup, _teardown)
+def test_spark_collect_run_sql_command_exception():
+    run_cell_method = MagicMock()
+    run_cell_method.side_effect = LivyUnexpectedStatusException('WOW')
+    spark_controller.run_sqlquery = run_cell_method
+
+    context = "-c"
+    context_name = "sql"
+    meth = "-m"
+    method_name = "sample"
+    commandline = "command"
+    line = " ".join([context, context_name, meth, method_name, commandline])
+
+    result = magic.spark_collect(line)
+
+    run_cell_method.assert_called_once_with(SQLQuery(commandline, samplemethod=method_name), None)
+    ipython_display.send_error.assert_called_once_with(EXPECTED_ERROR_MSG
+                                                       .format(run_cell_method.side_effect))

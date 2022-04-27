@@ -1,4 +1,4 @@
-﻿"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
+"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
 Provides the %spark magic."""
 
 # Copyright (c) 2015  aggftw@gmail.com
@@ -37,6 +37,42 @@ class RemoteSparkMagics(SparkMagicBase):
         Then, create a session. You'll be able to select the session created from the %%spark magic."""
         return self.manage_widget
 
+
+    @magic_arguments()
+    @line_magic
+    @needs_local_scope
+    @argument("-c", "--context", type=str, default=CONTEXT_NAME_SPARK,
+              help="Context to use: '{}' for spark and '{}' for sql queries. "
+                   "Default is '{}'.".format(CONTEXT_NAME_SPARK, CONTEXT_NAME_SQL, CONTEXT_NAME_SPARK))
+    @argument("-o", "--output", type=str, default=None, help="If present, indicated variable will be stored in variable"
+                                                             "of this name in user's local context.")
+    @argument("-m", "--samplemethod", type=str, default=None, help="Sample method for dataframe: either take or sample")
+    @argument("-n", "--maxrows", type=int, default=None, help="Maximum number of rows that will be pulled back "
+                                                                        "from the dataframe on the server for storing")
+    @argument("-r", "--samplefraction", type=float, default=None, help="Sample fraction for sampling from dataframe")
+    @argument("-e", "--coerce", type=str, default=None, help="Whether to automatically coerce the types (default, pass True if being explicit) "
+                                                                        "of the dataframe or not (pass False)")
+    @handle_expected_exceptions
+    def spark_collect(self, line, local_ns=None):
+        args = parse_argstring_or_throw(self.spark, line)
+        coerce = get_coerce_value(args.coerce)
+        if (len(args.command) > 0):
+            command = " ".join(args.command)
+        else:
+            command = ""
+        if args.context == CONTEXT_NAME_SPARK:
+            return self.execute_spark(command, args.output, args.samplemethod, args.maxrows, args.samplefraction, None, coerce)
+
+        elif args.context == CONTEXT_NAME_SQL:
+            args.session = None
+            args.quiet = None
+            return self.execute_sqlquery(command, args.samplemethod, args.maxrows, args.samplefraction,
+                                           args.session, args.output, args.quiet, coerce)
+
+        else:
+            self.ipython_display.send_error("Context '{}' not found".format(args.context))
+
+              
     @magic_arguments()
     @argument("-c", "--context", type=str, default=CONTEXT_NAME_SPARK,
               help="Context to use: '{}' for spark and '{}' for sql queries. "
