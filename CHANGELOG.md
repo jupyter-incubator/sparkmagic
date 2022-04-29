@@ -5,6 +5,8 @@
 ### Updates
 
 * Officially drop support for Python 3.6. Sparkmagic will not guarantee Python 3.6 compatibility moving forward.
+* Re-format all code with [`black`](https://black.readthedocs.io/en/stable/index.html) and validate via CI
+
 
 ### Bug Fixes
 

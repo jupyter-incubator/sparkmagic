@@ -24,6 +24,7 @@ class HttpClientException(LivyClientLibException):
 class LivyClientTimeoutException(LivyClientLibException):
     """An exception for timeouts while interacting with Livy."""
 
+
 class DataFrameParseException(LivyClientLibException):
     """An internal error which suggests a bad implementation of dataframe parsing from JSON --
     if we get a JSON parsing error when parsing the results from the Livy server, this exception
@@ -88,7 +89,17 @@ class SparkStatementCancellationFailedException(KeyboardInterrupt):
 
 
 # == DECORATORS FOR EXCEPTION HANDLING ==
-EXPECTED_EXCEPTIONS = [BadUserConfigurationException, BadUserDataException, LivyUnexpectedStatusException, SqlContextNotFoundException, HttpClientException, LivyClientTimeoutException, SessionManagementException, SparkStatementException]
+EXPECTED_EXCEPTIONS = [
+    BadUserConfigurationException,
+    BadUserDataException,
+    LivyUnexpectedStatusException,
+    SqlContextNotFoundException,
+    HttpClientException,
+    LivyClientTimeoutException,
+    SessionManagementException,
+    SparkStatementException,
+]
+
 
 def handle_expected_exceptions(f):
     """A decorator that handles expected exceptions. Self can be any object with
@@ -98,6 +109,7 @@ def handle_expected_exceptions(f):
     def fn(self, ...):
         etc..."""
     from sparkmagic.utils import configuration as conf
+
     exceptions_to_handle = tuple(EXPECTED_EXCEPTIONS)
 
     # Notice that we're NOT handling e.DataFrameParseException here. That's because DataFrameParseException
@@ -114,6 +126,7 @@ def handle_expected_exceptions(f):
             return None
         else:
             return out
+
     wrapped.__name__ = f.__name__
     wrapped.__doc__ = f.__doc__
     return wrapped
@@ -128,10 +141,15 @@ def wrap_unexpected_exceptions(f, execute_if_error=None):
     Usage:
     @wrap_unexpected_exceptions
     def fn(self, ...):
-        ..etc """
+        ..etc"""
     from sparkmagic.utils import configuration as conf
+
     def handle_exception(self, e):
-        self.logger.error(u"ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(e, traceback.format_exc()))
+        self.logger.error(
+            "ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(
+                e, traceback.format_exc()
+            )
+        )
         self.ipython_display.send_error(INTERNAL_ERROR_MSG.format(e))
         return None if execute_if_error is None else execute_if_error()
 
@@ -144,6 +162,7 @@ def wrap_unexpected_exceptions(f, execute_if_error=None):
             return handle_exception(self, err)
         else:
             return out
+
     wrapped.__name__ = f.__name__
     wrapped.__doc__ = f.__doc__
     return wrapped

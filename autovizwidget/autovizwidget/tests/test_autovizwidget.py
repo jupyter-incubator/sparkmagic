@@ -27,12 +27,14 @@ def _setup():
     renderer.display_logarithmic_x_axis.return_value = True
     renderer.display_logarithmic_y_axis.return_value = True
 
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12},
-               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0},
-               {u'buildingID': 2, u'date': u'6/1/14', u'temp_diff': 11},
-               {u'buildingID': 0, u'date': u'6/1/15', u'temp_diff': 5},
-               {u'buildingID': 1, u'date': u'6/1/16', u'temp_diff': 19},
-               {u'buildingID': 2, u'date': u'6/1/17', u'temp_diff': 32}]
+    records = [
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": 12},
+        {"buildingID": 1, "date": "6/1/13", "temp_diff": 0},
+        {"buildingID": 2, "date": "6/1/14", "temp_diff": 11},
+        {"buildingID": 0, "date": "6/1/15", "temp_diff": 5},
+        {"buildingID": 1, "date": "6/1/16", "temp_diff": 19},
+        {"buildingID": 2, "date": "6/1/17", "temp_diff": 32},
+    ]
     df = pd.DataFrame(records)
 
     encoding = Encoding(chart_type="table", x="date", y="temp_diff")
@@ -53,8 +55,16 @@ def _teardown():
 
 @with_setup(_setup, _teardown)
 def test_on_render_viz():
-    widget = AutoVizWidget(df, encoding, renderer, ipywidget_factory,
-                           encoding_widget, ipython_display, spark_events=spark_events, testing=True)
+    widget = AutoVizWidget(
+        df,
+        encoding,
+        renderer,
+        ipywidget_factory,
+        encoding_widget,
+        ipython_display,
+        spark_events=spark_events,
+        testing=True,
+    )
 
     # on_render_viz is called in the constructor, so no need to call it here.
     output.clear_output.assert_called_once_with()
@@ -76,59 +86,129 @@ def test_on_render_viz():
     encoding._chart_type = Encoding.chart_type_scatter
     widget.on_render_viz()
     assert_equals(len(spark_events.emit_graph_render_event.mock_calls), 2)
-    assert_equals(spark_events.emit_graph_render_event.call_args, call(Encoding.chart_type_scatter))
+    assert_equals(
+        spark_events.emit_graph_render_event.call_args,
+        call(Encoding.chart_type_scatter),
+    )
 
 
 @with_setup(_setup, _teardown)
 def test_create_viz_types_buttons():
-    df_single_column = pd.DataFrame([{u'buildingID': 0}])
-    widget = AutoVizWidget(df_single_column, encoding, renderer, ipywidget_factory,
-                           encoding_widget, ipython_display, spark_events=spark_events, testing=True)
+    df_single_column = pd.DataFrame([{"buildingID": 0}])
+    widget = AutoVizWidget(
+        df_single_column,
+        encoding,
+        renderer,
+        ipywidget_factory,
+        encoding_widget,
+        ipython_display,
+        spark_events=spark_events,
+        testing=True,
+    )
 
     # create_viz_types_buttons is called in the constructor, so no need to call it here.
-    assert call(description=Encoding.chart_type_table) in ipywidget_factory.get_button.mock_calls
-    assert call(description=Encoding.chart_type_pie) in ipywidget_factory.get_button.mock_calls
-    assert call(description=Encoding.chart_type_line) not in ipywidget_factory.get_button.mock_calls
-    assert call(description=Encoding.chart_type_area) not in ipywidget_factory.get_button.mock_calls
-    assert call(description=Encoding.chart_type_bar) not in ipywidget_factory.get_button.mock_calls
+    assert (
+        call(description=Encoding.chart_type_table)
+        in ipywidget_factory.get_button.mock_calls
+    )
+    assert (
+        call(description=Encoding.chart_type_pie)
+        in ipywidget_factory.get_button.mock_calls
+    )
+    assert (
+        call(description=Encoding.chart_type_line)
+        not in ipywidget_factory.get_button.mock_calls
+    )
+    assert (
+        call(description=Encoding.chart_type_area)
+        not in ipywidget_factory.get_button.mock_calls
+    )
+    assert (
+        call(description=Encoding.chart_type_bar)
+        not in ipywidget_factory.get_button.mock_calls
+    )
     spark_events.emit_graph_render_event.assert_called_once_with(encoding.chart_type)
 
-    widget = AutoVizWidget(df, encoding, renderer, ipywidget_factory,
-                           encoding_widget, ipython_display, spark_events=spark_events, testing=True)
+    widget = AutoVizWidget(
+        df,
+        encoding,
+        renderer,
+        ipywidget_factory,
+        encoding_widget,
+        ipython_display,
+        spark_events=spark_events,
+        testing=True,
+    )
 
     # create_viz_types_buttons is called in the constructor, so no need to call it here.
-    assert call(description=Encoding.chart_type_table) in ipywidget_factory.get_button.mock_calls
-    assert call(description=Encoding.chart_type_pie) in ipywidget_factory.get_button.mock_calls
-    assert call(description=Encoding.chart_type_line) in ipywidget_factory.get_button.mock_calls
-    assert call(description=Encoding.chart_type_area) in ipywidget_factory.get_button.mock_calls
-    assert call(description=Encoding.chart_type_bar) in ipywidget_factory.get_button.mock_calls
+    assert (
+        call(description=Encoding.chart_type_table)
+        in ipywidget_factory.get_button.mock_calls
+    )
+    assert (
+        call(description=Encoding.chart_type_pie)
+        in ipywidget_factory.get_button.mock_calls
+    )
+    assert (
+        call(description=Encoding.chart_type_line)
+        in ipywidget_factory.get_button.mock_calls
+    )
+    assert (
+        call(description=Encoding.chart_type_area)
+        in ipywidget_factory.get_button.mock_calls
+    )
+    assert (
+        call(description=Encoding.chart_type_bar)
+        in ipywidget_factory.get_button.mock_calls
+    )
 
 
 @with_setup(_setup, _teardown)
 def test_create_viz_empty_df():
     df = pd.DataFrame([])
-    widget = AutoVizWidget(df, encoding, renderer, ipywidget_factory,
-                           encoding_widget, ipython_display, spark_events=spark_events, testing=True)
+    widget = AutoVizWidget(
+        df,
+        encoding,
+        renderer,
+        ipywidget_factory,
+        encoding_widget,
+        ipython_display,
+        spark_events=spark_events,
+        testing=True,
+    )
 
     ipywidget_factory.get_button.assert_not_called()
     ipywidget_factory.get_html.assert_called_once_with("No results.")
     ipython_display.display.assert_called_with(ipywidget_factory.get_html.return_value)
     spark_events.emit_graph_render_event.assert_called_once_with(encoding.chart_type)
 
+
 @with_setup(_setup, _teardown)
 def test_convert_to_displayable_dataframe():
-    bool_df = pd.DataFrame([{u'bool_col': True, u'int_col': 0, u'float_col': 3.0},
-                            {u'bool_col': False, u'int_col': 100, u'float_col': 0.7}])
+    bool_df = pd.DataFrame(
+        [
+            {"bool_col": True, "int_col": 0, "float_col": 3.0},
+            {"bool_col": False, "int_col": 100, "float_col": 0.7},
+        ]
+    )
     copy_of_df = bool_df.copy()
-    widget = AutoVizWidget(df, encoding, renderer, ipywidget_factory,
-                           encoding_widget, ipython_display, spark_events=spark_events, testing=True)
+    widget = AutoVizWidget(
+        df,
+        encoding,
+        renderer,
+        ipywidget_factory,
+        encoding_widget,
+        ipython_display,
+        spark_events=spark_events,
+        testing=True,
+    )
     result = AutoVizWidget._convert_to_displayable_dataframe(bool_df)
     # Ensure original DF not changed
     assert_frame_equal(bool_df, copy_of_df)
-    assert_series_equal(bool_df[u'int_col'], result[u'int_col'])
-    assert_series_equal(bool_df[u'float_col'], result[u'float_col'])
-    assert_equals(result.dtypes[u'bool_col'], object)
-    assert_equals(len(result[u'bool_col']), 2)
-    assert_equals(result[u'bool_col'][0], 'True')
-    assert_equals(result[u'bool_col'][1], 'False')
+    assert_series_equal(bool_df["int_col"], result["int_col"])
+    assert_series_equal(bool_df["float_col"], result["float_col"])
+    assert_equals(result.dtypes["bool_col"], object)
+    assert_equals(len(result["bool_col"]), 2)
+    assert_equals(result["bool_col"][0], "True")
+    assert_equals(result["bool_col"][1], "False")
     spark_events.emit_graph_render_event.assert_called_once_with(encoding.chart_type)

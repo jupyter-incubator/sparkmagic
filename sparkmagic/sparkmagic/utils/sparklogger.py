@@ -7,4 +7,6 @@ from sparkmagic.utils.constants import MAGICS_LOGGER_NAME
 
 class SparkLog(Log):
     def __init__(self, class_name):
-        super(SparkLog, self).__init__(MAGICS_LOGGER_NAME, conf.logging_config(), class_name)
+        super(SparkLog, self).__init__(
+            MAGICS_LOGGER_NAME, conf.logging_config(), class_name
+        )

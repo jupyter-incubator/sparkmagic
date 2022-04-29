@@ -8,6 +8,7 @@ from hdijupyterutils.ipythondisplay import IpythonDisplay
 class DataGraph(object):
     """This does not use the table version of plotly because it freezes up the browser for >60 rows. Instead, we use
     pandas df HTML representation."""
+
     def __init__(self, display=None):
         if display is None:
             self.display = IpythonDisplay()
@@ -21,7 +22,8 @@ class DataGraph(object):
             show_dimensions = pd.get_option("display.show_dimensions")
 
             # This will hide the index column for pandas df.
-            self.display.html("""
+            self.display.html(
+                """
 <style>
     table.dataframe.hideme thead th:first-child {
         display: none;
@@ -30,9 +32,17 @@ class DataGraph(object):
         display: none;
     }
 </style>
-""")
-            self.display.html(df.to_html(max_rows=max_rows, max_cols=max_cols,
-                                         show_dimensions=show_dimensions, notebook=True, classes="hideme"))
+"""
+            )
+            self.display.html(
+                df.to_html(
+                    max_rows=max_rows,
+                    max_cols=max_cols,
+                    show_dimensions=show_dimensions,
+                    notebook=True,
+                    classes="hideme",
+                )
+            )
 
     @staticmethod
     def display_logarithmic_x_axis():

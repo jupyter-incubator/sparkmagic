@@ -5,9 +5,16 @@ from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 
 
 class AbstractMenuWidget(Box):
-    def __init__(self, spark_controller, ipywidget_factory=None, ipython_display=None,
-                 nested_widget_mode=False, testing=False, **kwargs):
-        kwargs['orientation'] = 'vertical'
+    def __init__(
+        self,
+        spark_controller,
+        ipywidget_factory=None,
+        ipython_display=None,
+        nested_widget_mode=False,
+        testing=False,
+        **kwargs
+    ):
+        kwargs["orientation"] = "vertical"
 
         if not testing:
             super(AbstractMenuWidget, self).__init__((), **kwargs)

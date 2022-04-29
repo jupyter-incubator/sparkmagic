@@ -5,8 +5,10 @@ from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 from requests.auth import HTTPBasicAuth
 from .customauth import Authenticator
 
+
 class Basic(HTTPBasicAuth, Authenticator):
     """Basic Access authenticator for SparkMagic"""
+
     def __init__(self, parsed_attributes=None):
         """Initializes the Authenticator with the attributes in the attributes
         parsed from a %spark magic command if applicable, or with default values
@@ -18,15 +20,17 @@ class Basic(HTTPBasicAuth, Authenticator):
             is created from parsing %spark magic command.
         """
         if parsed_attributes is not None:
-            if parsed_attributes.user == '' or parsed_attributes.password == '':
-                new_exc = BadUserDataException("Need to supply username and password arguments for "\
-                    "Basic Access Authentication. (e.g. -a username -p password).")
+            if parsed_attributes.user == "" or parsed_attributes.password == "":
+                new_exc = BadUserDataException(
+                    "Need to supply username and password arguments for "
+                    "Basic Access Authentication. (e.g. -a username -p password)."
+                )
                 raise new_exc
             self.username = parsed_attributes.user
             self.password = parsed_attributes.password
         else:
-            self.username = 'username'
-            self.password = 'password'
+            self.username = "username"
+            self.password = "password"
         HTTPBasicAuth.__init__(self, self.username, self.password)
         Authenticator.__init__(self, parsed_attributes)
 
@@ -42,15 +46,11 @@ class Basic(HTTPBasicAuth, Authenticator):
         ipywidget_factory = IpyWidgetFactory()
 
         self.user_widget = ipywidget_factory.get_text(
-            description='Username:',
-            value=self.username,
-            width=widget_width
+            description="Username:", value=self.username, width=widget_width
         )
 
         self.password_widget = ipywidget_factory.get_password(
-            description='Password:',
-            value=self.password,
-            width=widget_width
+            description="Password:", value=self.password, width=widget_width
         )
 
         widgets = [self.user_widget, self.password_widget]
@@ -65,8 +65,11 @@ class Basic(HTTPBasicAuth, Authenticator):
     def __eq__(self, other):
         if not isinstance(other, Basic):
             return False
-        return self.url == other.url and self.username == other.username and \
-            self.password == other.password
+        return (
+            self.url == other.url
+            and self.username == other.username
+            and self.password == other.password
+        )
 
     def __call__(self, request):
         return HTTPBasicAuth.__call__(self, request)
