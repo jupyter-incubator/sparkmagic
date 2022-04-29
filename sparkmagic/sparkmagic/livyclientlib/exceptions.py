@@ -153,7 +153,7 @@ def wrap_unexpected_exceptions(f, execute_if_error=None):
 
     def handle_exception(self, e):
         self.logger.error(
-            u"ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(
+            "ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(
                 e, traceback.format_exc()
             )
         )
@@ -191,7 +191,7 @@ def async_wrap_unexpected_exceptions(f, execute_if_error=None):
 
     async def handle_exception(self, e):
         self.logger.error(
-            u"ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(
+            "ENCOUNTERED AN INTERNAL ERROR: {}\n\tTraceback:\n{}".format(
                 e, traceback.format_exc()
             )
         )
