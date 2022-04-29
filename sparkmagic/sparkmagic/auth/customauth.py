@@ -3,6 +3,7 @@
 from hdijupyterutils.ipywidgetfactory import IpyWidgetFactory
 from sparkmagic.utils.constants import WIDGET_WIDTH
 
+
 class Authenticator(object):
     """Base Authenticator for all Sparkmagic authentication providers."""
 
@@ -19,7 +20,7 @@ class Authenticator(object):
         if parsed_attributes is not None:
             self.url = parsed_attributes.url
         else:
-            self.url = 'http://example.com/livy'
+            self.url = "http://example.com/livy"
         self.widgets = self.get_widgets(WIDGET_WIDTH)
 
     def get_widgets(self, widget_width):
@@ -34,9 +35,7 @@ class Authenticator(object):
         ipywidget_factory = IpyWidgetFactory()
 
         self.address_widget = ipywidget_factory.get_text(
-            description='Address:',
-            value='http://example.com/livy',
-            width=widget_width
+            description="Address:", value="http://example.com/livy", width=widget_width
         )
         widgets = [self.address_widget]
         return widgets

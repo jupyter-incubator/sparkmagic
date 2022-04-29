@@ -13,7 +13,7 @@ from sparkmagic.livyclientlib.linearretrypolicy import LinearRetryPolicy
 def test_post_statement():
     http_client = MagicMock()
     livy_client = LivyReliableHttpClient(http_client, None)
-    data = {"adlfj":"sadflkjsdf"}
+    data = {"adlfj": "sadflkjsdf"}
     out = livy_client.post_statement(100, data)
     assert_equals(out, http_client.post.return_value.json.return_value)
     http_client.post.assert_called_once_with("/sessions/100/statements", [201], data)
@@ -32,7 +32,9 @@ def test_cancel_statement():
     livy_client = LivyReliableHttpClient(http_client, None)
     out = livy_client.cancel_statement(100, 104)
     assert_equals(out, http_client.post.return_value.json.return_value)
-    http_client.post.assert_called_once_with("/sessions/100/statements/104/cancel", [200], {})
+    http_client.post.assert_called_once_with(
+        "/sessions/100/statements/104/cancel", [200], {}
+    )
 
 
 def test_get_sessions():
@@ -46,7 +48,7 @@ def test_get_sessions():
 def test_post_session():
     http_client = MagicMock()
     livy_client = LivyReliableHttpClient(http_client, None)
-    properties = {"adlfj":"sadflkjsdf", 1: [2,3,4,5]}
+    properties = {"adlfj": "sadflkjsdf", 1: [2, 3, 4, 5]}
     out = livy_client.post_session(properties)
     assert_equals(out, http_client.post.return_value.json.return_value)
     http_client.post.assert_called_once_with("/sessions", [201], properties)
@@ -77,7 +79,7 @@ def test_get_all_session_logs():
 
 def test_custom_headers():
     custom_headers = {"header1": "value1"}
-    overrides = { conf.custom_headers.__name__: custom_headers }
+    overrides = {conf.custom_headers.__name__: custom_headers}
     conf.override_all(overrides)
     endpoint = Endpoint("http://url.com", None)
     client = LivyReliableHttpClient.from_endpoint(endpoint)
@@ -113,5 +115,5 @@ def test_retry_policy():
 
 
 def _override_policy(policy):
-    overrides = { conf.retry_policy.__name__: policy }
+    overrides = {conf.retry_policy.__name__: policy}
     conf.override_all(overrides)

@@ -3,7 +3,10 @@ import json
 from mock import MagicMock
 from nose.tools import with_setup, assert_equals, raises
 from sparkmagic.livyclientlib.endpoint import Endpoint
-from sparkmagic.livyclientlib.exceptions import SessionManagementException, HttpClientException
+from sparkmagic.livyclientlib.exceptions import (
+    SessionManagementException,
+    HttpClientException,
+)
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 
 client_manager = None
@@ -34,8 +37,10 @@ def _setup():
     controller.session_manager = client_manager
     controller.spark_events = spark_events
 
+
 def _teardown():
     pass
+
 
 @with_setup(_setup, _teardown)
 def test_add_session():
@@ -49,7 +54,9 @@ def test_add_session():
 
     controller.add_session(name, endpoint, False, properties)
 
-    controller._livy_session.assert_called_once_with(controller._http_client.return_value, properties, ipython_display)
+    controller._livy_session.assert_called_once_with(
+        controller._http_client.return_value, properties, ipython_display
+    )
     controller.session_manager.add_session.assert_called_once_with(name, session)
     session.start.assert_called_once()
 
@@ -129,10 +136,12 @@ def test_get_client_keys():
 @with_setup(_setup, _teardown)
 def test_get_all_sessions():
     http_client = MagicMock()
-    http_client.get_sessions.return_value = json.loads('{"from":0,"total":3,"sessions":[{"id":0,"state":"idle","kind":'
-                                                       '"spark","log":[""]}, {"id":1,"state":"busy","kind":"spark","log"'
-                                                       ':[""]},{"id":2,"state":"busy","kind":"sql","log"'
-                                                       ':[""]}]}')
+    http_client.get_sessions.return_value = json.loads(
+        '{"from":0,"total":3,"sessions":[{"id":0,"state":"idle","kind":'
+        '"spark","log":[""]}, {"id":1,"state":"busy","kind":"spark","log"'
+        ':[""]},{"id":2,"state":"busy","kind":"sql","log"'
+        ':[""]}]}'
+    )
     controller._http_client = MagicMock(return_value=http_client)
     controller._livy_session = MagicMock()
 
@@ -156,21 +165,27 @@ def test_cleanup_endpoint():
 @with_setup(_setup, _teardown)
 def test_delete_session_by_id_existent_non_managed():
     http_client = MagicMock()
-    http_client.get_session.return_value = json.loads('{"id":0,"state":"starting","kind":"spark","log":[]}')
+    http_client.get_session.return_value = json.loads(
+        '{"id":0,"state":"starting","kind":"spark","log":[]}'
+    )
     controller._http_client = MagicMock(return_value=http_client)
     session = MagicMock()
     controller._livy_session = MagicMock(return_value=session)
 
     controller.delete_session_by_id("conn_str", 0)
 
-    controller._livy_session.assert_called_once_with(http_client, {"kind": "spark"}, ipython_display, 0)
+    controller._livy_session.assert_called_once_with(
+        http_client, {"kind": "spark"}, ipython_display, 0
+    )
     session.delete.assert_called_once_with()
 
 
 @with_setup(_setup, _teardown)
 def test_delete_session_by_id_existent_managed():
     name = "name"
-    controller.session_manager.get_session_name_by_id_endpoint = MagicMock(return_value=name)
+    controller.session_manager.get_session_name_by_id_endpoint = MagicMock(
+        return_value=name
+    )
     controller.session_manager.get_sessions_list = MagicMock(return_value=[name])
     controller.delete_session_by_name = MagicMock()
 
@@ -190,6 +205,7 @@ def test_delete_session_by_id_non_existent():
 
     controller.delete_session_by_id("conn_str", 0)
 
+
 @with_setup(_setup, _teardown)
 def test_get_app_id():
     chosen_client = MagicMock()
@@ -198,6 +214,7 @@ def test_get_app_id():
     result = controller.get_app_id()
     assert_equals(result, chosen_client.get_app_id.return_value)
     chosen_client.get_app_id.assert_called_with()
+
 
 @with_setup(_setup, _teardown)
 def test_get_driver_log():
@@ -208,6 +225,7 @@ def test_get_driver_log():
     assert_equals(result, chosen_client.get_driver_log_url.return_value)
     chosen_client.get_driver_log_url.assert_called_with()
 
+
 @with_setup(_setup, _teardown)
 def test_get_logs():
     chosen_client = MagicMock()
@@ -217,18 +235,23 @@ def test_get_logs():
     assert_equals(result, chosen_client.get_logs.return_value)
     chosen_client.get_logs.assert_called_with()
 
+
 @with_setup(_setup, _teardown)
 @raises(SessionManagementException)
 def test_get_logs_error():
     chosen_client = MagicMock()
-    controller.get_session_by_name_or_default = MagicMock(side_effect=SessionManagementException('THERE WAS A SPOOKY GHOST'))
+    controller.get_session_by_name_or_default = MagicMock(
+        side_effect=SessionManagementException("THERE WAS A SPOOKY GHOST")
+    )
 
     result = controller.get_logs()
+
 
 @with_setup(_setup, _teardown)
 def test_get_session_id_for_client():
     assert controller.get_session_id_for_client("name") is not None
     client_manager.get_session_id_for_client.assert_called_once_with("name")
+
 
 @with_setup(_setup, _teardown)
 def test_get_spark_ui_url():
@@ -238,6 +261,7 @@ def test_get_spark_ui_url():
     result = controller.get_spark_ui_url()
     assert_equals(result, chosen_client.get_spark_ui_url.return_value)
     chosen_client.get_spark_ui_url.assert_called_with()
+
 
 @with_setup(_setup, _teardown)
 def test_add_session_throws_when_session_start_fails():
@@ -259,17 +283,21 @@ def test_add_session_throws_when_session_start_fails():
         session.start.assert_called_once()
         controller.session_manager.add_session.assert_not_called
 
+
 @with_setup(_setup, _teardown)
 def test_add_session_cleanup_when_timeouts_and_session_posted_to_livy():
     pass
+
 
 @with_setup(_setup, _teardown)
 def test_add_session_cleanup_when_timeouts_and_session_posted_to_livy():
     _do_test_add_session_cleanup_when_timeouts(is_session_posted_to_livy=True)
 
+
 @with_setup(_setup, _teardown)
 def test_add_session_cleanup_when_timeouts_and_session_not_posted_to_livy():
     _do_test_add_session_cleanup_when_timeouts(is_session_posted_to_livy=False)
+
 
 def _do_test_add_session_cleanup_when_timeouts(is_session_posted_to_livy):
     name = "name"
@@ -299,6 +327,7 @@ def _do_test_add_session_cleanup_when_timeouts(is_session_posted_to_livy):
             session.delete.assert_called_once()
         else:
             session.delete.assert_not_called()
+
 
 @with_setup(_setup, _teardown)
 def test_add_session_cleanup_when_session_delete_throws():

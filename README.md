@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/jupyter-incubator/sparkmagic.svg?branch=master)](https://travis-ci.org/jupyter-incubator/sparkmagic) [![Join the chat at https://gitter.im/sparkmagic/Lobby](https://badges.gitter.im/sparkmagic/Lobby.svg)](https://gitter.im/sparkmagic/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/jupyter-incubator/sparkmagic.svg?branch=master)](https://travis-ci.org/jupyter-incubator/sparkmagic) [![Join the chat at https://gitter.im/sparkmagic/Lobby](https://badges.gitter.im/sparkmagic/Lobby.svg)](https://gitter.im/sparkmagic/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 
 # sparkmagic
 
