@@ -82,7 +82,7 @@ setup(
     install_requires=[
         "hdijupyterutils>=0.6",
         "autovizwidget>=0.6",
-        "ipython>=4.0.2",
+        "ipython>=5",
         "nose",
         "mock",
         "pandas>=0.17.1",
