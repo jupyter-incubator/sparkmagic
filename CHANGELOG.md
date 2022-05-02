@@ -1,17 +1,17 @@
 # Changelog
 
-## NEXT RELEASE
+## 0.20.0
 
 ### Updates
 
 * Officially drop support for Python 3.6. Sparkmagic will not guarantee Python 3.6 compatibility moving forward.
 * Re-format all code with [`black`](https://black.readthedocs.io/en/stable/index.html) and validate via CI
 
-
 ### Bug Fixes
 
 * Fixed, simplified, and sped up the sparkmagic Docker images for local development and testing
 * Adds support for `ipython>=8`
+* Adds support for `ipykernel>=6`
 
 ## 0.19.2
 
