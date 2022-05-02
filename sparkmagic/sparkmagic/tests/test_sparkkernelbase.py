@@ -1,5 +1,7 @@
-import ipykernel
-from mock import MagicMock, call, patch
+import asyncio
+
+
+from unittest.mock import MagicMock, call, patch
 from nose.tools import with_setup
 
 from sparkmagic.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
@@ -10,13 +12,15 @@ execute_cell_mock = None
 do_shutdown_mock = None
 ipython_display = None
 code = "some spark code"
-user_code_parser = MagicMock(return_value=code)
 
 
 class TestSparkKernel(SparkKernelBase):
-    def __init__(self):
+    def __init__(self, user_code_parser=None):
         kwargs = {"testing": True}
-        super(TestSparkKernel, self).__init__(
+        if user_code_parser is None:
+            user_code_parser = MagicMock(return_value=code)
+
+        super().__init__(
             None, None, None, None, None, LANG_PYTHON, user_code_parser, **kwargs
         )
 
@@ -24,7 +28,8 @@ class TestSparkKernel(SparkKernelBase):
 def _setup():
     global kernel, execute_cell_mock, do_shutdown_mock, ipython_display
 
-    kernel = TestSparkKernel()
+    user_code_parser = MagicMock(return_value=code)
+    kernel = TestSparkKernel(user_code_parser)
 
     kernel._execute_cell_for_user = execute_cell_mock = MagicMock(
         return_value={"test": "ing", "a": "b", "status": "ok"}
@@ -42,9 +47,11 @@ def test_execute_valid_code():
     # Verify that the execution flows through.
     ret = kernel.do_execute(code, False)
 
-    user_code_parser.get_code_to_run.assert_called_once_with(code)
-    assert ret is execute_cell_mock.return_value
+    kernel.user_code_parser.get_code_to_run.assert_called_once_with(code)
+    assert execute_cell_mock.called_once_with(ret, True)
+    assert execute_cell_mock.return_value is ret
     assert kernel._fatal_error is None
+
     assert execute_cell_mock.called_once_with(code, True)
     assert ipython_display.send_error.call_count == 0
 
@@ -57,7 +64,7 @@ def test_execute_throws_if_fatal_error_happened():
 
     ret = kernel.do_execute(code, False)
 
-    assert ret is execute_cell_mock.return_value
+    assert execute_cell_mock.return_value is ret
     assert kernel._fatal_error == fatal_error
     assert execute_cell_mock.called_once_with("None", True)
     assert ipython_display.send_error.call_count == 1
@@ -71,8 +78,7 @@ def test_execute_alerts_user_if_an_unexpected_error_happens():
     kernel._repeat_fatal_error = MagicMock(side_effect=ValueError)
 
     ret = kernel.do_execute(code, False)
-
-    assert ret is execute_cell_mock.return_value
+    assert execute_cell_mock.return_value is ret
     assert execute_cell_mock.called_once_with("None", True)
     assert ipython_display.send_error.call_count == 1
 
@@ -85,13 +91,13 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
     reply_content = dict()
     reply_content["status"] = "error"
     reply_content["evalue"] = fatal_error
+
     execute_cell_mock.return_value = reply_content
 
     ret = kernel._execute_cell(
         code, False, shutdown_if_error=True, log_if_error=fatal_error
     )
-
-    assert ret is execute_cell_mock.return_value
+    assert execute_cell_mock.return_value is ret
     assert kernel._fatal_error == message
     assert execute_cell_mock.called_once_with("None", True)
     assert ipython_display.send_error.call_count == 1
@@ -171,31 +177,48 @@ def test_delete_session():
     )
 
 
-@patch.object(ipykernel.ipkernel.IPythonKernel, "do_execute")
 @with_setup(_teardown)
-def test_execute_cell_for_user_ipykernel5(mock_ipy_execute):
-    import sys
+def test_execute_cell_for_user_ipykernel4():
+    want = {"status": "OK"}
+    # Can't use patch decorator because
+    # it fails to patch async functions in Python < 3.8
+    with patch(
+        "ipykernel.ipkernel.IPythonKernel.do_execute",
+        new_callable=MagicMock,
+        return_value=want,
+    ) as mock_ipy_execute:
+        got = TestSparkKernel()._execute_cell_for_user(code="1", silent=True)
 
-    if sys.version_info.major == 2:
-        from unittest import SkipTest
-
-        raise SkipTest("Python 3 only")
-    else:
-        import asyncio
-    mock_ipy_execute_result = asyncio.Future()
-    mock_ipy_execute_result.set_result({"status": "OK"})
-    mock_ipy_execute.return_value = mock_ipy_execute_result
-
-    actual_result = TestSparkKernel()._execute_cell_for_user(code="Foo", silent=True)
-
-    assert {"status": "OK"} == actual_result
+        assert mock_ipy_execute.called
+        assert want == got
 
 
-@patch.object(ipykernel.ipkernel.IPythonKernel, "do_execute")
 @with_setup(_teardown)
-def test_execute_cell_for_user_ipykernel4(mock_ipy_execute):
-    mock_ipy_execute.return_value = {"status": "OK"}
+def test_execute_cell_for_user_ipykernel5():
+    want = {"status": "OK"}
+    # Can't use patch decorator because
+    # it fails to patch async functions in Python < 3.8
+    with patch(
+        "ipykernel.ipkernel.IPythonKernel.do_execute",
+        new_callable=MagicMock,
+    ) as mock_ipy_execute:
+        mock_ipy_execute.return_value = asyncio.Future()
+        mock_ipy_execute.return_value.set_result(want)
 
-    actual_result = TestSparkKernel()._execute_cell_for_user(code="Foo", silent=True)
+        got = TestSparkKernel()._execute_cell_for_user(code="1", silent=True)
 
-    assert {"status": "OK"} == actual_result
+        assert mock_ipy_execute.called
+        assert want == got
+
+
+@with_setup(_teardown)
+def test_execute_cell_for_user_ipykernel6():
+    want = {"status": "OK"}
+    # Can't use patch decorator because
+    # it fails to patch async functions in Python < 3.8
+    with patch(
+        "ipykernel.ipkernel.IPythonKernel.do_execute", return_value=want
+    ) as mock_ipy_execute:
+        got = TestSparkKernel()._execute_cell_for_user(code="1", silent=True)
+        assert mock_ipy_execute.called
+        assert want == got

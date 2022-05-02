@@ -88,10 +88,11 @@ setup(
         "pandas>=0.17.1",
         "numpy",
         "requests",
-        "ipykernel<6.0.0",
+        "ipykernel>=4.2.2",
         "ipywidgets>5.0.0",
         "notebook>=4.2",
         "tornado>=4",
         "requests_kerberos>=0.8.0",
+        "nest_asyncio==1.5.5",
     ],
 )
