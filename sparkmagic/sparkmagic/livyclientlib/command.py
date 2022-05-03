@@ -12,11 +12,20 @@ import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.utils import get_progress_indicator_class
-from sparkmagic.utils.constants import MAGICS_LOGGER_NAME, FINAL_STATEMENT_STATUS, \
-    MIMETYPE_IMAGE_PNG, MIMETYPE_TEXT_HTML, MIMETYPE_TEXT_PLAIN, \
-    COMMAND_INTERRUPTED_MSG, COMMAND_CANCELLATION_FAILED_MSG
-from .exceptions import LivyUnexpectedStatusException, SparkStatementCancelledException, \
-    SparkStatementCancellationFailedException
+from sparkmagic.utils.constants import (
+    MAGICS_LOGGER_NAME,
+    FINAL_STATEMENT_STATUS,
+    MIMETYPE_IMAGE_PNG,
+    MIMETYPE_TEXT_HTML,
+    MIMETYPE_TEXT_PLAIN,
+    COMMAND_INTERRUPTED_MSG,
+    COMMAND_CANCELLATION_FAILED_MSG,
+)
+from .exceptions import (
+    LivyUnexpectedStatusException,
+    SparkStatementCancelledException,
+    SparkStatementCancellationFailedException,
+)
 
 
 class Command(ObjectWithGuid):
@@ -112,7 +121,7 @@ class Command(ObjectWithGuid):
             )
 
             if status not in FINAL_STATEMENT_STATUS:
-                progress.update(statement.get('progress', 0.0))
+                progress.update(statement.get("progress", 0.0))
                 session.sleep(retries)
                 retries += 1
             else:

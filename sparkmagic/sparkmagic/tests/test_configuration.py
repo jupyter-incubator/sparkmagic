@@ -5,9 +5,13 @@ import json
 import sparkmagic.utils.configuration as conf
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 from sparkmagic.utils.constants import AUTH_BASIC, NO_AUTH
-from sparkmagic.utils.utils import get_progress_indicator_class, get_startup_info_display_class
+from sparkmagic.utils.utils import (
+    get_progress_indicator_class,
+    get_startup_info_display_class,
+)
 from sparkmagic.utils.progress import ProgressIndicator
 from sparkmagic.utils.startupinfo import StartupInfoDisplay
+
 
 def _setup():
     conf.override_all({})
@@ -116,13 +120,24 @@ def test_configuration_raise_error_for_bad_base64_password():
 
 @with_setup(_setup)
 def test_share_config_between_pyspark_and_pyspark3():
-    kpc = { 'username': 'U', 'password': 'P', 'base64_password': 'cGFzc3dvcmQ=', 'url': 'L', 'auth': AUTH_BASIC }
-    overrides = { conf.kernel_python_credentials.__name__: kpc }
-    assert_equals(conf.base64_kernel_python3_credentials(), conf.base64_kernel_python_credentials())
+    kpc = {
+        "username": "U",
+        "password": "P",
+        "base64_password": "cGFzc3dvcmQ=",
+        "url": "L",
+        "auth": AUTH_BASIC,
+    }
+    overrides = {conf.kernel_python_credentials.__name__: kpc}
+    assert_equals(
+        conf.base64_kernel_python3_credentials(),
+        conf.base64_kernel_python_credentials(),
+    )
+
 
 @with_setup(_setup)
 def test_default_progress_class_valid():
     assert_true(issubclass(get_progress_indicator_class(), ProgressIndicator))
+
 
 @with_setup(_setup)
 def test_default_startup_class_valid():

@@ -105,11 +105,13 @@ def get_sessions_info_html(info_sessions, current_session_id):
 
     return html
 
+
 def load_class_from_string(full_class):
-    module, class_name = full_class.rsplit('.', 1)
+    module, class_name = full_class.rsplit(".", 1)
     class_module = importlib.import_module(module)
     class_class = getattr(class_module, class_name)
     return class_class
+
 
 def initialize_auth(args):
     """Creates an authenticatior class instance for the given auth type
@@ -134,15 +136,18 @@ def initialize_auth(args):
     else:
         full_class = conf.authenticators().get(auth)
         if full_class is None:
-            raise BadUserConfigurationException(u"Auth '{}' not supported".format(auth))
+            raise BadUserConfigurationException("Auth '{}' not supported".format(auth))
         auth_class = load_class_from_string(full_class)
         return auth_class(args)
+
 
 def get_progress_indicator_class():
     return load_class_from_string(conf.progress_indicator_class())
 
+
 def get_startup_info_display_class():
     return load_class_from_string(conf.startup_info_display_class())
+
 
 class Namespace:
     """Namespace to initialize authenticator class with"""

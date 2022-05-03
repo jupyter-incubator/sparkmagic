@@ -96,7 +96,12 @@ def session_configs():
 
 @_with_override
 def kernel_python_credentials():
-    return {u'username': u'', u'base64_password': u'', u'url': u'http://localhost:8998', u'auth': NO_AUTH}
+    return {
+        "username": "",
+        "base64_password": "",
+        "url": "http://localhost:8998",
+        "auth": NO_AUTH,
+    }
 
 
 def base64_kernel_python_credentials():
@@ -299,13 +304,16 @@ def cleanup_all_sessions_on_exit():
 def kerberos_auth_configuration():
     return {"mutual_authentication": REQUIRED}
 
+
 @_with_override
 def progress_indicator_class():
-    return 'sparkmagic.utils.progress.HorizontalFloatProgressWidgetIndicator'
+    return "sparkmagic.utils.progress.HorizontalFloatProgressWidgetIndicator"
+
 
 @_with_override
 def startup_info_display_class():
-    return 'sparkmagic.utils.startupinfo.HTMLTableStartupInfoDisplay'
+    return "sparkmagic.utils.startupinfo.HTMLTableStartupInfoDisplay"
+
 
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
