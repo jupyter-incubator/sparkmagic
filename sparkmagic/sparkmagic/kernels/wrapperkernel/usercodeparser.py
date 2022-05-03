@@ -9,9 +9,18 @@ class UserCodeParser(object):
     # For example, the %%info magic has no cell body input, i.e. it is incorrect to call
     #    %%info
     #    some_input
-    _magics_with_no_cell_body = [i.__name__ for i in [KernelMagics.info, KernelMagics.logs, KernelMagics.cleanup,
-                                                      KernelMagics.delete, KernelMagics.help, KernelMagics.spark,
-                                                      KernelMagics.send_to_spark]]
+    _magics_with_no_cell_body = [
+        i.__name__
+        for i in [
+            KernelMagics.info,
+            KernelMagics.logs,
+            KernelMagics.cleanup,
+            KernelMagics.delete,
+            KernelMagics.help,
+            KernelMagics.spark,
+            KernelMagics.send_to_spark,
+        ]
+    ]
 
     def get_code_to_run(self, code):
         try:
@@ -22,9 +31,9 @@ class UserCodeParser(object):
         if code.startswith("%%local") or code.startswith("%local"):
             return all_but_first_line
         elif any(code.startswith("%%" + s) for s in self._magics_with_no_cell_body):
-            return u"{}\n ".format(code)
+            return "{}\n ".format(code)
         elif any(code.startswith("%" + s) for s in self._magics_with_no_cell_body):
-            return u"%{}\n ".format(code)
+            return "%{}\n ".format(code)
         elif code.startswith("%%") or code.startswith("%"):
             # If they use other line magics:
             #       %autosave
@@ -34,4 +43,4 @@ class UserCodeParser(object):
         elif not code:
             return code
         else:
-            return u"%%spark\n{}".format(code)
+            return "%%spark\n{}".format(code)

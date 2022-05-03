@@ -9,8 +9,11 @@ from collections import OrderedDict
 
 import sparkmagic.utils.configuration as conf
 import sparkmagic.utils.constants as constants
-from sparkmagic.livyclientlib.exceptions import BadUserDataException, DataFrameParseException, \
-    BadUserConfigurationException
+from sparkmagic.livyclientlib.exceptions import (
+    BadUserDataException,
+    DataFrameParseException,
+    BadUserConfigurationException,
+)
 
 
 def get_coerce_value(coerce):
@@ -52,12 +55,14 @@ def coerce_pandas_df_to_numeric_datetime(df):
 
 
 def records_to_dataframe(records_text, kind, coerce=None):
-    if records_text in ['', '[]']:
+    if records_text in ["", "[]"]:
         strings = []
     else:
-        strings = records_text.strip().split('\n')
+        strings = records_text.strip().split("\n")
     try:
-        data_array = [json.JSONDecoder(object_pairs_hook=OrderedDict).decode(s) for s in strings]
+        data_array = [
+            json.JSONDecoder(object_pairs_hook=OrderedDict).decode(s) for s in strings
+        ]
 
         if kind == constants.SESSION_KIND_SPARKR and len(data_array) > 0:
             data_array = data_array[0]
@@ -83,14 +88,20 @@ def records_to_dataframe(records_text, kind, coerce=None):
 
         return df
     except ValueError:
-        raise DataFrameParseException(u"Cannot parse object as JSON: '{}'".format(strings))
+        raise DataFrameParseException(
+            "Cannot parse object as JSON: '{}'".format(strings)
+        )
 
 
 def get_sessions_info_html(info_sessions, current_session_id):
-    html = u"""<table>
-<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>User</th><th>Current session?</th></tr>""" + \
-    u"".join([session.get_row_html(current_session_id) for session in info_sessions]) + \
-    u"</table>"
+    html = (
+        """<table>
+<tr><th>ID</th><th>YARN Application ID</th><th>Kind</th><th>State</th><th>Spark UI</th><th>Driver log</th><th>User</th><th>Current session?</th></tr>"""
+        + "".join(
+            [session.get_row_html(current_session_id) for session in info_sessions]
+        )
+        + "</table>"
+    )
 
     return html
 
@@ -135,5 +146,6 @@ def get_startup_info_display_class():
 
 class Namespace:
     """Namespace to initialize authenticator class with"""
+
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)

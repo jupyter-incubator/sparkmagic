@@ -23,7 +23,7 @@ class Command(ObjectWithGuid):
     def __init__(self, code, spark_events=None):
         super(Command, self).__init__()
         self.code = textwrap.dedent(code)
-        self.logger = SparkLog(u"Command")
+        self.logger = SparkLog("Command")
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
@@ -39,34 +39,62 @@ class Command(ObjectWithGuid):
         return not self == other
 
     def execute(self, session):
-        self._spark_events.emit_statement_execution_start_event(session.guid, session.kind, session.id, self.guid)
+        self._spark_events.emit_statement_execution_start_event(
+            session.guid, session.kind, session.id, self.guid
+        )
         statement_id = -1
         try:
             session.wait_for_idle()
-            data = {u"code": self.code}
+            data = {"code": self.code}
             response = session.http_client.post_statement(session.id, data)
-            statement_id = response[u'id']
+            statement_id = response["id"]
             output = self._get_statement_output(session, statement_id)
         except KeyboardInterrupt as e:
-            self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
-                                                                  self.guid, statement_id, False, e.__class__.__name__,
-                                                                  str(e))
+            self._spark_events.emit_statement_execution_end_event(
+                session.guid,
+                session.kind,
+                session.id,
+                self.guid,
+                statement_id,
+                False,
+                e.__class__.__name__,
+                str(e),
+            )
             try:
                 if statement_id >= 0:
-                    response = session.http_client.cancel_statement(session.id, statement_id)
+                    response = session.http_client.cancel_statement(
+                        session.id, statement_id
+                    )
                     session.wait_for_idle()
             except:
-                raise SparkStatementCancellationFailedException(COMMAND_CANCELLATION_FAILED_MSG)
+                raise SparkStatementCancellationFailedException(
+                    COMMAND_CANCELLATION_FAILED_MSG
+                )
             else:
                 raise SparkStatementCancelledException(COMMAND_INTERRUPTED_MSG)
         except Exception as e:
-            self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
-                                                                  self.guid, statement_id, False, e.__class__.__name__,
-                                                                  str(e))
+            self._spark_events.emit_statement_execution_end_event(
+                session.guid,
+                session.kind,
+                session.id,
+                self.guid,
+                statement_id,
+                False,
+                e.__class__.__name__,
+                str(e),
+            )
             raise
         else:
-            self._spark_events.emit_statement_execution_end_event(session.guid, session.kind, session.id,
-                                                                  self.guid, statement_id, True, "", "")
+            self._spark_events.emit_statement_execution_end_event(
+                session.guid,
+                session.kind,
+                session.id,
+                self.guid,
+                statement_id,
+                True,
+                "",
+                "",
+            )
             return output
 
     def _get_statement_output(self, session, statement_id):
@@ -77,23 +105,25 @@ class Command(ObjectWithGuid):
 
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
-            status = statement[u"state"].lower()
+            status = statement["state"].lower()
 
-            self.logger.debug(u"Status of statement {} is {}.".format(statement_id, status))
+            self.logger.debug(
+                "Status of statement {} is {}.".format(statement_id, status)
+            )
 
             if status not in FINAL_STATEMENT_STATUS:
                 progress.update(statement.get('progress', 0.0))
                 session.sleep(retries)
                 retries += 1
             else:
-                statement_output = statement[u"output"]
+                statement_output = statement["output"]
                 progress.close()
 
                 if statement_output is None:
-                    return (True, u"", MIMETYPE_TEXT_PLAIN)
+                    return (True, "", MIMETYPE_TEXT_PLAIN)
 
-                if statement_output[u"status"] == u"ok":
-                    data = statement_output[u"data"]
+                if statement_output["status"] == "ok":
+                    data = statement_output["data"]
                     if MIMETYPE_IMAGE_PNG in data:
                         image = Image(base64.b64decode(data[MIMETYPE_IMAGE_PNG]))
                         return (True, image, MIMETYPE_IMAGE_PNG)
@@ -101,10 +131,17 @@ class Command(ObjectWithGuid):
                         return (True, data[MIMETYPE_TEXT_HTML], MIMETYPE_TEXT_HTML)
                     else:
                         return (True, data[MIMETYPE_TEXT_PLAIN], MIMETYPE_TEXT_PLAIN)
-                elif statement_output[u"status"] == u"error":
-                    return (False,
-                           statement_output[u"evalue"] + u"\n" + u"".join(statement_output[u"traceback"]),
-                           MIMETYPE_TEXT_PLAIN)
+                elif statement_output["status"] == "error":
+                    return (
+                        False,
+                        statement_output["evalue"]
+                        + "\n"
+                        + "".join(statement_output["traceback"]),
+                        MIMETYPE_TEXT_PLAIN,
+                    )
                 else:
-                    raise LivyUnexpectedStatusException(u"Unknown output status from Livy: '{}'"
-                                                        .format(statement_output[u"status"]))
+                    raise LivyUnexpectedStatusException(
+                        "Unknown output status from Livy: '{}'".format(
+                            statement_output["status"]
+                        )
+                    )

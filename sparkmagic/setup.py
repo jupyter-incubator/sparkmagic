@@ -34,7 +34,7 @@ def read(path, encoding="utf-8"):
 
 
 def version(path):
-    """Obtain the package version from a python file e.g. pkg/__init__.py
+    """Obtain the package version from a python file e.g. pkg/__init__.py.
 
     See <https://packaging.python.org/en/latest/single_source_version.html>.
     """
@@ -77,22 +77,22 @@ setup(
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
     install_requires=[
         "hdijupyterutils>=0.6",
         "autovizwidget>=0.6",
-        "ipython>=4.0.2",
+        "ipython>=5",
         "nose",
         "mock",
         "pandas>=0.17.1",
         "numpy",
         "requests",
-        "ipykernel<6.0.0",
+        "ipykernel>=4.2.2",
         "ipywidgets>5.0.0",
         "notebook>=4.2",
         "tornado>=4",
         "requests_kerberos>=0.8.0",
+        "nest_asyncio==1.5.5",
     ],
 )

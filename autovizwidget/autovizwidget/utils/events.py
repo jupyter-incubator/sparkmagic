@@ -17,9 +17,11 @@ class AutoVizEvents(Events):
         event_name = GRAPH_RENDER_EVENT
         time_stamp = self.get_utc_date_time()
 
-        kwargs_list = [(EVENT_NAME, event_name),
-                       (TIMESTAMP, time_stamp),
-                       (GRAPH_TYPE, graph_type)]
-             
-        if self.emit:                  
+        kwargs_list = [
+            (EVENT_NAME, event_name),
+            (TIMESTAMP, time_stamp),
+            (GRAPH_TYPE, graph_type),
+        ]
+
+        if self.emit:
             self.send_to_handler(kwargs_list)
