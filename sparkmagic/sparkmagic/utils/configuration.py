@@ -305,6 +305,16 @@ def kerberos_auth_configuration():
     return {"mutual_authentication": REQUIRED}
 
 
+@_with_override
+def progress_indicator_class():
+    return "sparkmagic.utils.progress.HorizontalFloatProgressWidgetIndicator"
+
+
+@_with_override
+def startup_info_display_class():
+    return "sparkmagic.utils.startupinfo.HTMLTableStartupInfoDisplay"
+
+
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().
     If 'base64_password' in config is set, it will base64 decode it and returned in return value's 'password' field.

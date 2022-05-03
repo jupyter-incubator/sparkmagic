@@ -19,6 +19,8 @@
 
 * Pins `ipython<8.0.0` because of breaking changes. Thanks @utkarshgupta137
 
+* Added customization options for startup information and progress indicator
+
 ## 0.19.1
 
 ### Bug Fixes
@@ -33,7 +35,7 @@
 ### Features
 
 * Added one internal magic to enable retry of session creation. Thanks @edwardps
-* New `%%pretty` magic for pretty printing a dataframe as an HTML table. Thanks @hegary 
+* New `%%pretty` magic for pretty printing a dataframe as an HTML table. Thanks @hegary
 * Update Endpoint widget to shield passwords when entering them in the ipywidget. Thanks @J0rg3M3nd3z @jodom961
 
 ## 0.18.0
@@ -129,4 +131,3 @@
 * Updated code to work with Livy 0.5 and later, where Python 3 support is not a different kind of session. Thanks to Gianmario Spacagna for contributing some of the code, and G-Research for sponsoring Itamar Turner-Trauring's time.
 * Fixed `AttributeError` on `None`, thanks to Eric Dill.
 * `recovering` session status won't cause a blow up anymore. Thanks to G-Research for sponsoring Itamar Turner-Trauring's time.
-
