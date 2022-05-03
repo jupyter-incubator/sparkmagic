@@ -4,13 +4,16 @@ class ProgressIndicator:
     def __init__(self, session, statement_id):
         pass
 
+    def display(self):
+        pass
+
     def update(self, value):
         pass
 
     def close(self):
         pass
 
-class defaultProgressIndicator(ProgressIndicator):
+class HorizontalFloatProgressWidgetIndicator(ProgressIndicator):
     def __init__(self, session, statement_id):
         self.session = session
         self.statement_id = statement_id
@@ -23,6 +26,8 @@ class defaultProgressIndicator(ProgressIndicator):
                                  orientation='horizontal',
                                  layout=Layout(width='50%', height='25px')
         )
+
+    def display(self):
         self.session.ipython_display.display(self.progress)
 
     def update(self, value):

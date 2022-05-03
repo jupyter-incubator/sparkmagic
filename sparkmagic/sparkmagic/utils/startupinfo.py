@@ -9,12 +9,12 @@ class StartupInfoDisplay:
     def write_msg(self, msg):
         pass
 
-    def display_info(self):
+    def display(self):
         pass
 
-class defaultStartupInfoDisplay(StartupInfoDisplay):
+class HTMLTableStartupInfoDisplay(StartupInfoDisplay):
+    def display(self):
+        self.ipython_display.html(get_sessions_info_html(self.sessions_info, self.current_session_id))
+
     def write_msg(self, msg):
         self.ipython_display.writeln(msg)
-
-    def display_info(self):
-        self.ipython_display.html(get_sessions_info_html(self.sessions_info, self.current_session_id))

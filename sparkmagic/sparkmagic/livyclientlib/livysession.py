@@ -154,7 +154,7 @@ class LivySession(ObjectWithGuid):
                 raise LivyClientTimeoutException(u"Session {} did not start up in {} seconds."
                                                  .format(self.id, conf.livy_session_startup_timeout_seconds()))
 
-            startup_info.display_info()
+            startup_info.display()
 
             command = Command("spark")
             (success, out, mimetype) = command.execute(self)

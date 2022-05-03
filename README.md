@@ -190,7 +190,7 @@ sparkUI and logs. The display may be overridden by specifying a custom class:
 
 The class should be a subclass of [StartupInfoDisplay](sparkmagic/sparkmagic/utils/startupinfo.py). It will be passed
 the ipython_display, the LivySession object and the current session id. It should implement the `write_msg(msg)` method
-to write a line of status output (by default this writes text to the current cell output), and the `display_info()`
+to write a line of status output (by default this writes text to the current cell output), and the `display()`
 method to show session information (by default, this displays an HTML table).
 
 ### Statement progress indicator
@@ -205,9 +205,10 @@ output. If this is not desired, override the class used to construct the progres
 ```
 
 The class should be a subclass of [ProgressIndicator](sparkmagic/sparkmagic/utils/progress.py) and will be passed the
-session object and statement_id as arguments to the constructor. The `update(value_in_pct)` method will be called on
-progress and the `close()` method will be called when the statement completes.
-
+session object and statement_id as arguments to the constructor. The `display()` method will be called after
+initialization and should arrange to display the widget via the `ipython_display` attribute of the session object. The
+`update(value_in_pct)` method will be called on progress and the `close()` method will be called when the statement
+completes. By default this uses a horizontal FloatProgress widget.
 
 ### Conf overrides in code
 

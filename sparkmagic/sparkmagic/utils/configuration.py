@@ -273,11 +273,11 @@ def kerberos_auth_configuration():
 
 @_with_override
 def progress_indicator_class():
-    return 'sparkmagic.utils.progress.defaultProgressIndicator'
+    return 'sparkmagic.utils.progress.HorizontalFloatProgressWidgetIndicator'
 
 @_with_override
 def startup_info_display_class():
-    return 'sparkmagic.utils.startupinfo.defaultStartupInfoDisplay'
+    return 'sparkmagic.utils.startupinfo.HTMLTableStartupInfoDisplay'
 
 def _credentials_override(f):
     """Provides special handling for credentials. It still calls _override().

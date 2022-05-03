@@ -73,6 +73,7 @@ class Command(ObjectWithGuid):
         retries = 1
 
         progress = self.progress_indicator_class(session, statement_id)
+        progress.display()
 
         while True:
             statement = session.http_client.get_statement(session.id, statement_id)
