@@ -259,5 +259,8 @@ class DataframeHtmlParser:
         """Converts a spark dataframe row to a HTML row."""
         tag = "th" if is_header else "td"
         row_content = [x(row) for x in self.extractors.values()]
-        row_html = "".join(["<%s>%s</%s>" % (tag, rc, tag) for rc in row_content])
+        pre = '<pre style="word-break: unset; background-color: unset;">'
+        row_html = "".join(
+            ["<%s>%s%s</pre></%s>" % (tag, pre, rc, tag) for rc in row_content]
+        )
         return "<tr>%s</tr>" % row_html

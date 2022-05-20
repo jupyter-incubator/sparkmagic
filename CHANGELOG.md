@@ -1,5 +1,7 @@
 # Changelog
 
+- For pretty-printed dataframe output, the table data is now wrapped in a `<pre>` tag so that it isn't parsed in anyway.
+
 ## 0.20.0
 
 ### Updates
