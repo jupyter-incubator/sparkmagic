@@ -19,7 +19,7 @@ class ReconnectHandler(IPythonHandler):
     @web.authenticated
     @gen.coroutine
     def post(self):
-        self.logger = SparkLog(u"ReconnectHandler")
+        self.logger = SparkLog("ReconnectHandler")
 
         spark_events = self._get_spark_events()
 
@@ -35,13 +35,13 @@ class ReconnectHandler(IPythonHandler):
 
         endpoint = None
         try:
-            path = self._get_argument_or_raise(data, 'path')
-            username = self._get_argument_or_raise(data, 'username')
-            password = self._get_argument_or_raise(data, 'password')
-            endpoint = self._get_argument_or_raise(data, 'endpoint')
-            auth = self._get_argument_if_exists(data, 'auth')
+            path = self._get_argument_or_raise(data, "path")
+            username = self._get_argument_or_raise(data, "username")
+            password = self._get_argument_or_raise(data, "password")
+            endpoint = self._get_argument_or_raise(data, "endpoint")
+            auth = self._get_argument_if_exists(data, "auth")
             if auth is None:
-                if username == '' and password == '':
+                if username == "" and password == "":
                     auth = constants.NO_AUTH
                 else:
                     auth = constants.AUTH_BASIC
@@ -59,7 +59,13 @@ class ReconnectHandler(IPythonHandler):
 
         # Execute code
         client = kernel_manager.client()
-        code = '%{} -s {} -u {} -p {} -t {}'.format(KernelMagics._do_not_call_change_endpoint.__name__, endpoint, username, password, auth)
+        code = "%{} -s {} -u {} -p {} -t {}".format(
+            KernelMagics._do_not_call_change_endpoint.__name__,
+            endpoint,
+            username,
+            password,
+            auth,
+        )
         response_id = client.execute(code, silent=False, store_history=False)
         msg = client.get_shell_msg(response_id)
 
@@ -69,16 +75,20 @@ class ReconnectHandler(IPythonHandler):
         if successful_message:
             status_code = 200
         else:
-            self.logger.error(u"Code to reconnect errored out: {}".format(error))
+            self.logger.error("Code to reconnect errored out: {}".format(error))
             status_code = 500
 
         # Post execution info
         self.set_status(status_code)
-        self.finish(json.dumps(dict(success=successful_message, error=error), sort_keys=True))
-        spark_events.emit_cluster_change_event(endpoint, status_code, successful_message, error)
+        self.finish(
+            json.dumps(dict(success=successful_message, error=error), sort_keys=True)
+        )
+        spark_events.emit_cluster_change_event(
+            endpoint, status_code, successful_message, error
+        )
 
     def _get_kernel_name(self, data):
-        kernel_name = self._get_argument_if_exists(data, 'kernelname')
+        kernel_name = self._get_argument_if_exists(data, "kernelname")
         self.logger.debug("Kernel name is {}".format(kernel_name))
         if kernel_name is None:
             kernel_name = conf.server_extension_default_kernel_name()
@@ -100,21 +110,25 @@ class ReconnectHandler(IPythonHandler):
 
         kernel_id = None
         for session in sessions:
-            if session['notebook']['path'] == path:
-                session_id = session['id']
-                kernel_id = session['kernel']['id']
-                existing_kernel_name = session['kernel']['name']
+            if session["notebook"]["path"] == path:
+                session_id = session["id"]
+                kernel_id = session["kernel"]["id"]
+                existing_kernel_name = session["kernel"]["name"]
                 break
 
         if kernel_id is None:
-            self.logger.debug(u"Kernel not found. Starting a new kernel.")
+            self.logger.debug("Kernel not found. Starting a new kernel.")
             k_m = yield self._get_kernel_manager_new_session(path, kernel_name)
         elif existing_kernel_name != kernel_name:
-            self.logger.debug(u"Existing kernel name '{}' does not match requested '{}'. Starting a new kernel.".format(existing_kernel_name, kernel_name))
+            self.logger.debug(
+                "Existing kernel name '{}' does not match requested '{}'. Starting a new kernel.".format(
+                    existing_kernel_name, kernel_name
+                )
+            )
             self._delete_session(session_id)
             k_m = yield self._get_kernel_manager_new_session(path, kernel_name)
         else:
-            self.logger.debug(u"Kernel found. Restarting kernel.")
+            self.logger.debug("Kernel found. Restarting kernel.")
             k_m = self.kernel_manager.get_kernel(kernel_id)
             k_m.restart_kernel()
 
@@ -122,7 +136,9 @@ class ReconnectHandler(IPythonHandler):
 
     @gen.coroutine
     def _get_kernel_manager_new_session(self, path, kernel_name):
-        model_future = self.session_manager.create_session(kernel_name=kernel_name, path=path, type="notebook")
+        model_future = self.session_manager.create_session(
+            kernel_name=kernel_name, path=path, type="notebook"
+        )
         model = yield model_future
         kernel_id = model["kernel"]["id"]
         self.logger.debug("Kernel created with id {}".format(str(kernel_id)))
@@ -133,18 +149,18 @@ class ReconnectHandler(IPythonHandler):
         self.session_manager.delete_session(session_id)
 
     def _msg_status(self, msg):
-        return msg['content']['status']
+        return msg["content"]["status"]
 
     def _msg_successful(self, msg):
-        return self._msg_status(msg) == 'ok'
+        return self._msg_status(msg) == "ok"
 
     def _msg_error(self, msg):
-        if self._msg_status(msg) != 'error':
+        if self._msg_status(msg) != "error":
             return None
-        return u'{}:\n{}'.format(msg['content']['ename'], msg['content']['evalue'])
+        return "{}:\n{}".format(msg["content"]["ename"], msg["content"]["evalue"])
 
     def _get_spark_events(self):
-        spark_events = getattr(self, 'spark_events', None)
+        spark_events = getattr(self, "spark_events", None)
         if spark_events is None:
             return SparkEvents()
         return spark_events
@@ -154,10 +170,10 @@ def load_jupyter_server_extension(nb_app):
     nb_app.log.info("sparkmagic extension enabled!")
     web_app = nb_app.web_app
 
-    base_url = web_app.settings['base_url']
-    host_pattern = '.*$'
+    base_url = web_app.settings["base_url"]
+    host_pattern = ".*$"
 
-    route_pattern_reconnect = url_path_join(base_url, '/reconnectsparkmagic')
+    route_pattern_reconnect = url_path_join(base_url, "/reconnectsparkmagic")
     handlers = [(route_pattern_reconnect, ReconnectHandler)]
 
     web_app.add_handlers(host_pattern, handlers)

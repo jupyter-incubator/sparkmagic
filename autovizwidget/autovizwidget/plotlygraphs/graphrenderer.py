@@ -14,7 +14,6 @@ from ..widget.encoding import Encoding
 
 
 class GraphRenderer(object):
-
     @staticmethod
     def render(df, encoding, output):
         with output:

@@ -78,41 +78,34 @@ def test_resetting_values_when_others_override():
     assert_equals(original_value, my_config())
     assert_equals(original_value, my_config_2())
 
+
 @with_setup(_setup, _teardown)
 def test_configuration_merge_required():
     current_session_confs = {
         "archives": ["s3://my-test-archive"],
         "numExecutors": 5,
         "conf": {
-                "spark.dynamicAllocation.enabled":
-                    "false",
-                "spark.sql.shuffle.partitions":
-                    20,
-                "spark.yarn.tags":
-                    "my=tag,wee=wa",
-                "spark.jars.packages":
-                    "net.snowflake:spark-snowflake_2.11:2.5.1-spark_2.4"
-            }
+            "spark.dynamicAllocation.enabled": "false",
+            "spark.sql.shuffle.partitions": 20,
+            "spark.yarn.tags": "my=tag,wee=wa",
+            "spark.jars.packages": "net.snowflake:spark-snowflake_2.11:2.5.1-spark_2.4",
+        },
     }
     required_session_confs = {
-        "conf": {
-            "spark.yarn.tags":
-                "created-by=vaatu-raava"
-        },
-        "numExecutors": 10
+        "conf": {"spark.yarn.tags": "created-by=vaatu-raava"},
+        "numExecutors": 10,
     }
     _merge_conf(current_session_confs, required_session_confs)
-    assert_equals(current_session_confs, {
-        "archives": ["s3://my-test-archive"],
-        "numExecutors": 10,
-        "conf": {
-                "spark.dynamicAllocation.enabled":
-                    "false",
-                "spark.sql.shuffle.partitions":
-                    20,
-                "spark.yarn.tags":
-                    "created-by=vaatu-raava",
-                "spark.jars.packages":
-                    "net.snowflake:spark-snowflake_2.11:2.5.1-spark_2.4"
-            }
-    })
+    assert_equals(
+        current_session_confs,
+        {
+            "archives": ["s3://my-test-archive"],
+            "numExecutors": 10,
+            "conf": {
+                "spark.dynamicAllocation.enabled": "false",
+                "spark.sql.shuffle.partitions": 20,
+                "spark.yarn.tags": "created-by=vaatu-raava",
+                "spark.jars.packages": "net.snowflake:spark-snowflake_2.11:2.5.1-spark_2.4",
+            },
+        },
+    )

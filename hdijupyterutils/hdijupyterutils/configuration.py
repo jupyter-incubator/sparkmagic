@@ -12,6 +12,7 @@ def with_override(overrides, path, fsrw_class=None):
     """A decorator which first initializes the overrided configurations,
     then checks the global overrided defaults for the given configuration,
     calling the function to get the default result otherwise."""
+
     def ret(f):
         def wrapped_f(*args):
             # Can access overrides and path here
@@ -49,12 +50,12 @@ def merge_required_session_configs(overrides, path, fsrw_class=None):
     perform nested merge of configurations. Note - for sequences such as spark tags,
     the required configs will completely overwrite the sequence, not append"""
     _initialize(overrides, path, fsrw_class)
-    required_conf = _load(path, fsrw_class).get(REQUIRED_SESSION_CONFIGS,{})
-    session_confs = overrides.get('session_configs')
+    required_conf = _load(path, fsrw_class).get(REQUIRED_SESSION_CONFIGS, {})
+    session_confs = overrides.get("session_configs")
     if session_confs:
         _merge_conf(session_confs, required_conf)
     elif required_conf:
-        overrides['session_configs'] = required_conf
+        overrides["session_configs"] = required_conf
 
 
 def _merge_conf(session_confs, required_confs):
@@ -84,9 +85,9 @@ def _load(path, fsrw_class=None):
     config_file = fsrw_class(path)
     config_file.ensure_file_exists()
     config_text = config_file.read_lines()
-    line = u"".join(config_text).strip()
+    line = "".join(config_text).strip()
 
-    if line == u"":
+    if line == "":
         overrides = {}
     else:
         overrides = json.loads(line)
