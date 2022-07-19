@@ -112,4 +112,4 @@ MIMETYPE_IMAGE_PNG = "image/png"
 MIMETYPE_TEXT_HTML = "text/html"
 MIMETYPE_TEXT_PLAIN = "text/plain"
 
-DEFAULT_SESSION_NAME = u"default"
+DEFAULT_SESSION_NAME = "default"
