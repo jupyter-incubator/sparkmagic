@@ -9,7 +9,11 @@ from hdijupyterutils.constants import (
 from hdijupyterutils.utils import join_paths
 from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
+from hdijupyterutils.configuration import (
+    merge_required_session_configs as _merge_required,
+)
 from hdijupyterutils.configuration import with_override
+from hdijupyterutils.constants import REQUIRED_SESSION_CONFIGS
 
 from .constants import (
     HOME_PATH,
@@ -40,6 +44,10 @@ path = join_paths(HOME_PATH, CONFIG_FILE)
 
 def override(config, value):
     _override(d, path, config, value)
+
+
+def merge_required_session_configs():
+    _merge_required(d, path)
 
 
 def override_all(obj):
@@ -84,7 +92,9 @@ def authenticators():
 
 
 def get_session_properties(language):
-    properties = copy.deepcopy(session_configs())
+    config = {"session_configs": copy.deepcopy(session_configs())}
+    _merge_required(config, path)
+    properties = config["session_configs"]
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
     return properties
 

@@ -15,31 +15,49 @@ import importlib
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils import constants
-from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value, initialize_auth, Namespace
+from sparkmagic.utils.utils import (
+    parse_argstring_or_throw,
+    get_coerce_value,
+    initialize_auth,
+    Namespace,
+)
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.constants import LANGS_SUPPORTED, DEFAULT_SESSION_NAME
 from sparkmagic.utils.dataframe_parser import cell_contains_dataframe, CellOutputHtmlParser
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase, SparkOutputHandler
-from sparkmagic.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
-    BadUserDataException
+from sparkmagic.livyclientlib.exceptions import (
+    handle_expected_exceptions,
+    wrap_unexpected_exceptions,
+    BadUserDataException,
+)
 
 
 def _event(f):
     def wrapped(self, *args, **kwargs):
         guid = self._generate_uuid()
-        self._spark_events.emit_magic_execution_start_event(f.__name__, get_livy_kind(self.language), guid)
+        self._spark_events.emit_magic_execution_start_event(
+            f.__name__, get_livy_kind(self.language), guid
+        )
         try:
             result = f(self, *args, **kwargs)
         except Exception as e:
-            self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
-                                                              False, e.__class__.__name__, str(e))
+            self._spark_events.emit_magic_execution_end_event(
+                f.__name__,
+                get_livy_kind(self.language),
+                guid,
+                False,
+                e.__class__.__name__,
+                str(e),
+            )
             raise
         else:
-            self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
-                                                              True, u"", u"")
+            self._spark_events.emit_magic_execution_end_event(
+                f.__name__, get_livy_kind(self.language), guid, True, "", ""
+            )
             return result
+
     wrapped.__name__ = f.__name__
     wrapped.__doc__ = f.__doc__
     return wrapped
@@ -55,11 +73,11 @@ class KernelMagics(SparkMagicBase):
         self.session_started = False
 
         # In order to set these following 3 properties, call %%_do_not_call_change_language -l language
-        self.language = u""
+        self.language = ""
         self.endpoint = None
         self.fatal_error = False
         self.allow_retry_fatal = False
-        self.fatal_error_message = u""
+        self.fatal_error_message = ""
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
@@ -72,7 +90,7 @@ class KernelMagics(SparkMagicBase):
     def help(self, line, cell="", local_ns=None):
         parse_argstring_or_throw(self.help, line)
         self._assure_cell_body_is_empty(KernelMagics.help.__name__, cell)
-        help_html = u"""
+        help_html = """
 <table>
   <tr>
     <th>Magic</th>
@@ -146,7 +164,7 @@ class KernelMagics(SparkMagicBase):
     <br/>
     Parameters:
       <ul>
-        <li>-i VAR_NAME: Local Pandas DataFrame(or String) of name VAR_NAME will be available in the %%spark context as a 
+        <li>-i VAR_NAME: Local Pandas DataFrame(or String) of name VAR_NAME will be available in the %%spark context as a
           Spark dataframe(or String) with the same name.</li>
         <li>-t TYPE: Specifies the type of variable passed as -i. Available options are:
          `str` for string and `df` for Pandas DataFrame. Optional, defaults to `str`.</li>
@@ -207,7 +225,7 @@ class KernelMagics(SparkMagicBase):
     @needs_local_scope
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
-    def send_to_spark(self, line, cell="", local_ns=None):
+    def send_to_spark(self, line, cell="", local_ns=None, session_name="default"):
         self._assure_cell_body_is_empty(KernelMagics.send_to_spark.__name__, cell)
         args = parse_argstring_or_throw(self.send_to_spark, line)
 
@@ -215,7 +233,9 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException("-i param not provided.")
 
         if self._do_not_call_start_session(""):
-            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, args.maxrows, None)
+            self.do_send_to_spark(
+                cell, args.input, args.vartype, args.varname, args.maxrows, None
+            )
         else:
             return
 
@@ -290,9 +310,11 @@ class KernelMagics(SparkMagicBase):
             else:
                 self._do_not_call_delete_session("")
                 self._override_session_settings(dictionary)
+                self._merge_required_session_configs()
                 self._do_not_call_start_session("")
         else:
             self._override_session_settings(dictionary)
+            self._merge_required_session_configs()
         self.info("")
 
     @magic_arguments()
@@ -352,7 +374,7 @@ class KernelMagics(SparkMagicBase):
             args.samplemethod,
             args.maxrows,
             args.samplefraction,
-            None,
+            self.session_name,
             coerce,
         )
 
@@ -377,7 +399,16 @@ class KernelMagics(SparkMagicBase):
             default=self.ipython_display.display,
         )
 
-        self.execute_spark(cell, None, None, None, None, None, None, output_handler=so)
+        self.execute_spark(
+            cell,
+            None,
+            None,
+            None,
+            None,
+            session_name=self.session_name,
+            coerce=False,
+            output_handler=so,
+        )
 
     @magic_arguments()
     @cell_magic
@@ -443,7 +474,7 @@ class KernelMagics(SparkMagicBase):
             args.samplemethod,
             args.maxrows,
             args.samplefraction,
-            None,
+            self.session_name,
             args.output,
             args.quiet,
             coerce,
@@ -649,6 +680,10 @@ class KernelMagics(SparkMagicBase):
     @staticmethod
     def _override_session_settings(settings):
         conf.override(conf.session_configs.__name__, settings)
+
+    @staticmethod
+    def _merge_required_session_configs():
+        conf.merge_required_session_configs()
 
     @staticmethod
     def _generate_uuid():

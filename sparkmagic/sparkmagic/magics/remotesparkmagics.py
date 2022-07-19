@@ -225,6 +225,7 @@ class RemoteSparkMagics(SparkMagicBase):
         # config
         elif subcommand == "config":
             conf.override(conf.session_configs.__name__, json.loads(cell))
+            conf.merge_required_session_configs()
         # add
         elif subcommand == "add":
             if args.url is None:

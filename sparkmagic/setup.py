@@ -23,6 +23,7 @@ LICENSE = "BSD 3-clause"
 import io
 import os
 import re
+import pathlib
 
 from distutils.core import setup
 

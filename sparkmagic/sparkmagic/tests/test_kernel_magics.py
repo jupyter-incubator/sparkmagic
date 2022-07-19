@@ -1,4 +1,4 @@
-from mock import MagicMock
+from mock import MagicMock, patch
 from nose.tools import with_setup, raises, assert_equals, assert_is, assert_true
 from IPython.core.magic import magics_class
 
@@ -460,6 +460,63 @@ def test_configure():
 
 
 @with_setup(_setup, _teardown)
+@patch(
+    "hdijupyterutils.configuration._load",
+    return_value={
+        "required_session_configs": {
+            "conf": {"spark.yarn.tags": "created-by=vaatu-raava"}
+        }
+    },
+)
+def test_configure_with_required_settings(hdijupyterutils_load):
+    # Mock info method
+    magic.info = MagicMock()
+    # Session not started
+    conf.override_all({})
+    magic.configure("", '{"extra": "yes"}')
+    assert_equals(
+        conf.session_configs(),
+        {"extra": "yes", "conf": {"spark.yarn.tags": "created-by=vaatu-raava"}},
+    )
+    _assert_magic_successful_event_emitted_once("configure")
+    magic.info.assert_called_once_with("")
+
+
+@with_setup(_setup, _teardown)
+@patch(
+    "hdijupyterutils.configuration._load", return_value={"required_session_configs": {}}
+)
+def test_configure_with_empty_required_settings(hdijupyterutils_load):
+    # Mock info method
+    magic.info = MagicMock()
+    # Session not started
+    conf.override_all({})
+    magic.configure("", '{"extra": "yes"}')
+    assert_equals(conf.session_configs(), {"extra": "yes"})
+    _assert_magic_successful_event_emitted_once("configure")
+    magic.info.assert_called_once_with("")
+
+
+@with_setup(_setup, _teardown)
+@patch(
+    "hdijupyterutils.configuration._load",
+    return_value={
+        "required_session_configs": {"extra": {"key": "required_value"}},
+        "session_configs": {"extra": {"key": "session_value"}},
+    },
+)
+def test_configure_required_settings_merge(hdijupyterutils_load):
+    # Mock info method
+    magic.info = MagicMock()
+    # Session not started
+    conf.override_all({})
+    magic.configure("", '{"extra": {"key": "configured_value"}}')
+    assert_equals(conf.session_configs(), {"extra": {"key": "required_value"}})
+    _assert_magic_successful_event_emitted_once("configure")
+    magic.info.assert_called_once_with("")
+
+
+@with_setup(_setup, _teardown)
 def test_configure_unexpected_exception():
     magic.info = MagicMock()
 
@@ -557,7 +614,8 @@ def test_send_to_spark_ok():
         False,
         {"kind": constants.SESSION_KIND_PYSPARK},
     )
-    spark_controller.run_command.assert_called_once_with(Command(cell), None)
+    spark_controller.run_command.assert_called_once_with(Command(cell), "default")
+
 
 
 @with_setup(_setup, _teardown)
@@ -577,7 +635,7 @@ def test_spark():
         False,
         {"kind": constants.SESSION_KIND_PYSPARK},
     )
-    spark_controller.run_command.assert_called_once_with(Command(cell), None)
+    spark_controller.run_command.assert_called_once_with(Command(cell), "default")
 
 
 @with_setup(_setup, _teardown)
@@ -610,7 +668,7 @@ def test_spark_error():
         False,
         {"kind": constants.SESSION_KIND_PYSPARK},
     )
-    spark_controller.run_command.assert_called_once_with(Command(cell), None)
+    spark_controller.run_command.assert_called_once_with(Command(cell), "default")
 
 
 @with_setup(_setup, _teardown)
@@ -634,7 +692,7 @@ def test_spark_unexpected_exception():
     spark_controller.run_command = MagicMock(side_effect=Exception("oups"))
 
     magic.spark(line, cell)
-    spark_controller.run_command.assert_called_once_with(Command(cell), None)
+    spark_controller.run_command.assert_called_once_with(Command(cell), "default")
     ipython_display.send_error.assert_called_once_with(
         constants.INTERNAL_ERROR_MSG.format(spark_controller.run_command.side_effect)
     )
@@ -649,7 +707,7 @@ def test_spark_expected_exception():
     )
 
     magic.spark(line, cell)
-    spark_controller.run_command.assert_called_once_with(Command(cell), None)
+    spark_controller.run_command.assert_called_once_with(Command(cell), "default")
     ipython_display.send_error.assert_called_once_with(
         constants.EXPECTED_ERROR_MSG.format(spark_controller.run_command.side_effect)
     )
@@ -683,7 +741,7 @@ def test_spark_unexpected_exception_in_storing():
 
     magic.spark(line, cell)
     assert_equals(spark_controller.run_command.call_count, 2)
-    spark_controller.run_command.assert_any_call(Command(cell), None)
+    spark_controller.run_command.assert_any_call(Command(cell), "default")
     ipython_display.send_error.assert_called_with(
         constants.INTERNAL_ERROR_MSG.format(side_effect[1])
     )
@@ -701,7 +759,7 @@ def test_spark_expected_exception_in_storing():
 
     magic.spark(line, cell)
     assert spark_controller.run_command.call_count == 2
-    spark_controller.run_command.assert_any_call(Command(cell), None)
+    spark_controller.run_command.assert_any_call(Command(cell), "default")
     ipython_display.send_error.assert_called_with(
         constants.EXPECTED_ERROR_MSG.format(side_effect[1])
     )
@@ -715,7 +773,7 @@ def test_spark_sample_options():
     ret = magic.spark(line, cell)
 
     magic.execute_spark.assert_called_once_with(
-        cell, "var_name", "sample", 142, 0.3, None, True
+        cell, "var_name", "sample", 142, 0.3, "default", True
     )
 
 
@@ -727,7 +785,7 @@ def test_spark_false_coerce():
     ret = magic.spark(line, cell)
 
     magic.execute_spark.assert_called_once_with(
-        cell, "var_name", "sample", 142, 0.3, None, False
+        cell, "var_name", "sample", 142, 0.3, "default", False
     )
 
 
@@ -746,7 +804,7 @@ def test_sql_without_output():
         {"kind": constants.SESSION_KIND_PYSPARK},
     )
     magic.execute_sqlquery.assert_called_once_with(
-        cell, None, None, None, None, None, False, None
+        cell, None, None, None, "default", None, False, None
     )
 
 
@@ -765,7 +823,7 @@ def test_sql_with_output():
         {"kind": constants.SESSION_KIND_PYSPARK},
     )
     magic.execute_sqlquery.assert_called_once_with(
-        cell, None, None, None, None, "my_var", False, None
+        cell, None, None, None, "default", "my_var", False, None
     )
 
 
@@ -777,7 +835,7 @@ def test_sql_exception():
 
     magic.sql(line, cell)
     magic.execute_sqlquery.assert_called_once_with(
-        cell, None, None, None, None, "my_var", False, None
+        cell, None, None, None, "default", "my_var", False, None
     )
     ipython_display.send_error.assert_called_once_with(
         constants.INTERNAL_ERROR_MSG.format(magic.execute_sqlquery.side_effect)
@@ -792,7 +850,7 @@ def test_sql_expected_exception():
 
     magic.sql(line, cell)
     magic.execute_sqlquery.assert_called_once_with(
-        cell, None, None, None, None, "my_var", False, None
+        cell, None, None, None, "default", "my_var", False, None
     )
     ipython_display.send_error.assert_called_once_with(
         constants.EXPECTED_ERROR_MSG.format(magic.execute_sqlquery.side_effect)
@@ -827,7 +885,7 @@ def test_sql_quiet():
         {"kind": constants.SESSION_KIND_PYSPARK},
     )
     magic.execute_sqlquery.assert_called_once_with(
-        cell, None, None, None, None, "Output", True, None
+        cell, None, None, None, "default", "Output", True, None
     )
 
 
@@ -846,7 +904,7 @@ def test_sql_sample_options():
         {"kind": constants.SESSION_KIND_PYSPARK},
     )
     magic.execute_sqlquery.assert_called_once_with(
-        cell, "sample", 142, 0.3, None, None, True, True
+        cell, "sample", 142, 0.3, "default", None, True, True
     )
 
 
@@ -865,7 +923,7 @@ def test_sql_false_coerce():
         {"kind": constants.SESSION_KIND_PYSPARK},
     )
     magic.execute_sqlquery.assert_called_once_with(
-        cell, "sample", 142, 0.3, None, None, True, False
+        cell, "sample", 142, 0.3, "default", None, True, False
     )
 
 

@@ -411,4 +411,4 @@ def test_spark_statement_exception_shutdowns_livy_session():
         session,
         True,
     )
-    magic.spark_controller.cleanup.assert_called_once()
+    magic.spark_controller.delete_session_by_name.assert_called_once()

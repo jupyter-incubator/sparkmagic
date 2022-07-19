@@ -103,7 +103,9 @@ class SparkMagicBase(Magics):
                 )
             )
 
-        (success, result, mime_type) = self.spark_controller.run_command(command, None)
+        (success, result, mime_type) = self.spark_controller.run_command(
+            command, session_name
+        )
         if not success:
             self.ipython_display.send_error(result)
         else:
