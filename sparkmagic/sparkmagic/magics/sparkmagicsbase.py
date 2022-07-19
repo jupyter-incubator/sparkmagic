@@ -16,7 +16,12 @@ import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
 from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.utils import get_sessions_info_html
-from sparkmagic.utils.constants import MIMETYPE_TEXT_HTML
+from sparkmagic.utils.constants import (
+    MAGICS_LOGGER_NAME,
+    MIMETYPE_TEXT_HTML,
+    MIMETYPE_TEXT_PLAIN,
+    DEFAULT_SESSION_NAME,
+)
 from sparkmagic.livyclientlib.sparkcontroller import SparkController
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.command import Command
@@ -60,7 +65,7 @@ class SparkMagicBase(Magics):
         var_type,
         output_variable_name,
         max_rows,
-        session_name,
+        session_name=DEFAULT_SESSION_NAME,
     ):
         try:
             input_variable_value = self.shell.user_ns[input_variable_name]
@@ -114,8 +119,8 @@ class SparkMagicBase(Magics):
         samplemethod,
         maxrows,
         samplefraction,
-        session_name,
-        coerce,
+        session_name=DEFAULT_SESSION_NAME,
+        coerce=False,
         output_handler=None,
     ):
         output_handler = output_handler or SparkOutputHandler(
@@ -129,7 +134,7 @@ class SparkMagicBase(Magics):
         )
         if not success:
             if conf.shutdown_session_on_spark_statement_errors():
-                self.spark_controller.cleanup()
+                self.spark_controller.delete_session_by_name(session_name)
 
             raise SparkStatementException(out)
         else:

@@ -15,52 +15,31 @@ import importlib
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils import constants
-from sparkmagic.utils.utils import (
-    parse_argstring_or_throw,
-    get_coerce_value,
-    initialize_auth,
-    Namespace,
-)
+from sparkmagic.utils.utils import parse_argstring_or_throw, get_coerce_value, initialize_auth, Namespace
 from sparkmagic.utils.sparkevents import SparkEvents
-from sparkmagic.utils.constants import LANGS_SUPPORTED
-from sparkmagic.utils.dataframe_parser import (
-    cell_contains_dataframe,
-    CellOutputHtmlParser,
-)
+from sparkmagic.utils.constants import LANGS_SUPPORTED, DEFAULT_SESSION_NAME
+from sparkmagic.utils.dataframe_parser import cell_contains_dataframe, CellOutputHtmlParser
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase, SparkOutputHandler
-from sparkmagic.livyclientlib.exceptions import (
-    handle_expected_exceptions,
-    wrap_unexpected_exceptions,
-    BadUserDataException,
-)
+from sparkmagic.livyclientlib.exceptions import handle_expected_exceptions, wrap_unexpected_exceptions, \
+    BadUserDataException
 
 
 def _event(f):
     def wrapped(self, *args, **kwargs):
         guid = self._generate_uuid()
-        self._spark_events.emit_magic_execution_start_event(
-            f.__name__, get_livy_kind(self.language), guid
-        )
+        self._spark_events.emit_magic_execution_start_event(f.__name__, get_livy_kind(self.language), guid)
         try:
             result = f(self, *args, **kwargs)
         except Exception as e:
-            self._spark_events.emit_magic_execution_end_event(
-                f.__name__,
-                get_livy_kind(self.language),
-                guid,
-                False,
-                e.__class__.__name__,
-                str(e),
-            )
+            self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
+                                                              False, e.__class__.__name__, str(e))
             raise
         else:
-            self._spark_events.emit_magic_execution_end_event(
-                f.__name__, get_livy_kind(self.language), guid, True, "", ""
-            )
+            self._spark_events.emit_magic_execution_end_event(f.__name__, get_livy_kind(self.language), guid,
+                                                              True, u"", u"")
             return result
-
     wrapped.__name__ = f.__name__
     wrapped.__doc__ = f.__doc__
     return wrapped
@@ -72,15 +51,15 @@ class KernelMagics(SparkMagicBase):
         # You must call the parent constructor
         super(KernelMagics, self).__init__(shell, data)
 
-        self.session_name = "session_name"
+        self.session_name = DEFAULT_SESSION_NAME
         self.session_started = False
 
         # In order to set these following 3 properties, call %%_do_not_call_change_language -l language
-        self.language = ""
+        self.language = u""
         self.endpoint = None
         self.fatal_error = False
         self.allow_retry_fatal = False
-        self.fatal_error_message = ""
+        self.fatal_error_message = u""
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
@@ -93,7 +72,7 @@ class KernelMagics(SparkMagicBase):
     def help(self, line, cell="", local_ns=None):
         parse_argstring_or_throw(self.help, line)
         self._assure_cell_body_is_empty(KernelMagics.help.__name__, cell)
-        help_html = """
+        help_html = u"""
 <table>
   <tr>
     <th>Magic</th>
@@ -236,9 +215,7 @@ class KernelMagics(SparkMagicBase):
             raise BadUserDataException("-i param not provided.")
 
         if self._do_not_call_start_session(""):
-            self.do_send_to_spark(
-                cell, args.input, args.vartype, args.varname, args.maxrows, None
-            )
+            self.do_send_to_spark(cell, args.input, args.vartype, args.varname, args.maxrows, None)
         else:
             return
 
