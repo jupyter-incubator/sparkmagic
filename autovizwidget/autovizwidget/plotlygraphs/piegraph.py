@@ -4,7 +4,13 @@
 from plotly.graph_objs import Pie, Figure
 from plotly.offline import iplot
 
-from pandas.errors import DataError
+try:
+    from pandas.core.base import DataError
+except ImportError:
+    try:
+        from pandas.core.groupby import DataError
+    except ImportError:
+        from pandas.errors import DataError
 
 import autovizwidget.utils.configuration as conf
 from .graphbase import GraphBase
