@@ -3,7 +3,10 @@
 
 # sparkmagic
 
-Sparkmagic is a set of tools for interactively working with remote Spark clusters through [Livy](https://livy.incubator.apache.org/), a Spark REST server, in [Jupyter](http://jupyter.org) notebooks.
+Sparkmagic is a set of tools for interactively working with remote Spark clusters in [Jupyter](http://jupyter.org) notebooks. Sparkmagic interacts with remote Spark clusters through a REST server. Currently there are two server implementations compatible with Spararkmagic: 
+* [Livy](https://livy.apache.org) - for running interactive sessions on Yarn
+* [Lighter](https://github.com/exacaster/lighter) - for running interactive sessions on Yarn or Kubernetes (only PySpark sessions are supported)
+
 The Sparkmagic project includes a set of magics for interactively running Spark code in multiple languages, as well as some kernels that you can use to turn Jupyter into an integrated Spark environment.
 
 ![Automatic SparkContext and SQLContext creation](screenshots/sparkcontext.png)
