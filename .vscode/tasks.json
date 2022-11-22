@@ -3,73 +3,136 @@
     // Ctrl + Shift + B to bring tasks up and select one
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
-    "version": "0.1.0",
-    "command": "cmd", 
-    "isShellCommand": true,
-    "showOutput": "silent",
+    "version": "2.0.0",
+    "command": "cmd",
     "args": ["/C"],
 
     "tasks": [
         {
-            "taskName": "go to github",
-            "suppressTaskName": true,
-            "isBuildCommand": true,
-            "args": ["start https://github.com/jupyter-incubator/sparkmagic"]
+            "label": "go to github",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/C",
+                "start https://github.com/jupyter-incubator/sparkmagic"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "build",
+                "isDefault": false
+            }
         },
         {
-            "taskName": "docker build",
-            "suppressTaskName": true,
-            "isBuildCommand": true,
-            "args": ["docker-compose build"]
+            "label": "docker build",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/C",
+                "docker-compose build"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "build",
+                "isDefault": false
+            }
         },
         {
-            "taskName": "docker-compose up",
-            "suppressTaskName": true,
-            "isBuildCommand": false,
-            "isTestCommand": true,
-            "args": ["docker-compose up -d && start http://localhost:8888"]
+            "label": "docker-compose up",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/C",
+                "docker-compose up -d && start http://localhost:8888"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "test",
+                "isDefault": false
+            }
         },
         {
-            "taskName": "docker-compose down",
-            "suppressTaskName": true,
-            "isBuildCommand": false,
-            "isTestCommand": true,
-            "args": ["docker-compose down"]
+            "label": "docker-compose down",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/C",
+                "docker-compose down"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "test",
+                "isDefault": false
+            }
         },
         {
-            "taskName": "test all",
-            "suppressTaskName": true,
-            "isBuildCommand": false,
-            "isTestCommand": true,
-            "args": ["nosetests autovizwidget hdijupyterutils sparkmagic"]
+            "label": "test all",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/C",
+                "nosetests autovizwidget hdijupyterutils sparkmagic"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "test",
+                "isDefault": false
+            }
         },
         {
-            "taskName": "test autovizwidget",
-            "suppressTaskName": true,
-            "isBuildCommand": false,
-            "isTestCommand": true,
-            "args": ["nosetests autovizwidget"]
+            "label": "test autovizwidget",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/C",
+                "nosetests autovizwidget"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "test",
+                "isDefault": false
+            }
         },
         {
-            "taskName": "test hdijupyterutils",
-            "suppressTaskName": true,
-            "isBuildCommand": false,
-            "isTestCommand": true,
-            "args": ["nosetests hdijupyterutils"]
+            "label": "test hdijupyterutils",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/C",
+                "nosetests hdijupyterutils"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "test",
+                "isDefault": false
+            }
         },
         {
-            "taskName": "test sparkmagic",
-            "suppressTaskName": true,
-            "isBuildCommand": false,
-            "isTestCommand": true,
-            "args": ["nosetests sparkmagic"]
+            "label": "test sparkmagic",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/C",
+                "nosetests sparkmagic"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "test",
+                "isDefault": false
+            }
         },
         {
-            "taskName": "test file",
-            "suppressTaskName": true,
-            "isBuildCommand": false,
-            "isTestCommand": true,
-            "args": ["nosetests --nocapture ${file}"]
+            "label": "test file",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/C",
+                "nosetests --nocapture ${file}"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "_id": "test",
+                "isDefault": false
+            }
         }
     ]
 }

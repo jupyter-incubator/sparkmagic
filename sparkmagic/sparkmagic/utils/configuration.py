@@ -6,6 +6,8 @@ from hdijupyterutils.constants import (
     EVENTS_HANDLER_CLASS_NAME,
     LOGGING_CONFIG_CLASS_NAME,
 )
+import pwd
+import os
 from hdijupyterutils.utils import join_paths
 from hdijupyterutils.configuration import override as _override
 from hdijupyterutils.configuration import override_all as _override_all
@@ -84,11 +86,34 @@ def authenticators():
 
 
 def get_session_properties(language):
+    default_properties = default_sesion_configs()
     properties = copy.deepcopy(session_configs())
+    properties.update(default_properties)
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
     return properties
 
 
+def default_sesion_configs():
+    if livy_user_impersonation() is True:
+        python_creds = base64_kernel_python_credentials()
+        python3_creds = base64_kernel_python3_credentials()
+        r_creds = base64_kernel_r_credentials()
+        scala_creds = base64_kernel_scala_credentials()
+
+        # for No Auth use process user for impersonation
+        if python_creds["auth"] in (None, constants.NO_AUTH) and \
+           python3_creds["auth"] in (None, constants.NO_AUTH) and \
+           r_creds["auth"] in (None, constants.NO_AUTH) and \
+           scala_creds["auth"] in (None, constants.NO_AUTH):
+            return {u'proxyUser': pwd.getpwuid(os.getuid()).pw_name}
+        else:
+            return {}
+    return {}
+
+@_with_override
+def livy_user_impersonation():
+    return True
+    
 @_with_override
 def session_configs():
     return {}
