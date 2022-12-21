@@ -30,7 +30,7 @@ from .constants import (
 )
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 
-# import sparkmagic.utils.constants as constants
+import sparkmagic.utils.constants as constants
 
 
 from requests_kerberos import REQUIRED
