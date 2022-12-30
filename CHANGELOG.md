@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.20.1
+
+### Bug Fixes
+
+* Fixed compatibility issue with Pandas >=1.5.0 (https://github.com/jupyter-incubator/sparkmagic/issues/776). Thanks @GaspardBT
+
 ## 0.20.0
 
 ### Updates
