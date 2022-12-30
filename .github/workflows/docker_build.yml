@@ -1,6 +1,10 @@
 name: Build Docker Image
 
-on: [push]
+on:
+  push: {}
+  schedule:
+    # Run daily
+    - cron: '6 4 * * *'
 
 jobs:
   docker:
