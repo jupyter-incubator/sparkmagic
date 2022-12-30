@@ -6,8 +6,11 @@ from plotly.offline import iplot
 
 try:
     from pandas.core.base import DataError
-except:
-    from pandas.core.groupby import DataError
+except ImportError:
+    try:
+        from pandas.core.groupby import DataError
+    except ImportError:
+        from pandas.errors import DataError
 
 import autovizwidget.utils.configuration as conf
 from .graphbase import GraphBase
