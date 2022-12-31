@@ -26,16 +26,17 @@ jobs:
       - name: Install package dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install pytest
           pip install -r hdijupyterutils/requirements.txt -e hdijupyterutils
           pip install -r autovizwidget/requirements.txt -e autovizwidget
           pip install -r sparkmagic/requirements.txt -e sparkmagic
       - name: Run hdijupyterutils tests
         run: |
-          nosetests hdijupyterutils
+          pytest hdijupyterutils
       - name: Run autovizwidget tests
         run: |
-          nosetests autovizwidget
+          pytest autovizwidget
       - name: Run sparkmagic tests
         run: |
           mkdir ~/.sparkmagic
-          nosetests sparkmagic
+          pytest sparkmagic
