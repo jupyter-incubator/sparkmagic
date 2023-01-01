@@ -1,6 +1,5 @@
+import pytest
 from mock import MagicMock
-from nose.tools import raises
-import json
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
@@ -96,13 +95,13 @@ def test_configuration_override_work_with_empty_password():
     }
 
 
-@raises(BadUserConfigurationException)
 def test_configuration_raise_error_for_bad_base64_password():
-    kpc = {"username": "U", "base64_password": "P", "url": "L"}
-    overrides = {conf.kernel_python_credentials.__name__: kpc}
-    conf.override_all(overrides)
-    conf.override(conf.livy_session_startup_timeout_seconds.__name__, 1)
-    conf.base64_kernel_python_credentials()
+    with pytest.raises(BadUserConfigurationException):
+        kpc = {"username": "U", "base64_password": "P", "url": "L"}
+        overrides = {conf.kernel_python_credentials.__name__: kpc}
+        conf.override_all(overrides)
+        conf.override(conf.livy_session_startup_timeout_seconds.__name__, 1)
+        conf.base64_kernel_python_credentials()
 
 
 def test_share_config_between_pyspark_and_pyspark3():

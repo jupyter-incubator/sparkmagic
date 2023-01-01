@@ -1,5 +1,4 @@
 from mock import MagicMock
-from nose.tools import raises
 import pytest
 
 import sparkmagic.utils.configuration as conf
