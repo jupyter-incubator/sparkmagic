@@ -61,8 +61,9 @@ class MagicsControllerWidget(AbstractMenuWidget):
         return default_endpoints
 
     def _refresh(self):
+        dropdown_options = [(k, v) for k, v in self.endpoints.items()]
         self.endpoints_dropdown_widget = self.ipywidget_factory.get_dropdown(
-            description="Endpoint:", options=self.endpoints
+            description="Endpoint:", options=dropdown_options
         )
 
         self.manage_session = ManageSessionWidget(
