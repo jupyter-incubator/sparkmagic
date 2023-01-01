@@ -33,7 +33,7 @@ class AddEndpointWidget(AbstractMenuWidget):
             auth_class = getattr(events_handler_module, class_name)
             self.auth_instances[auth] = auth_class()
 
-        dropdown_options = [(k, v) for k, v in conf.authenticators()]
+        dropdown_options = [(k, v) for k, v in conf.authenticators().items()]
         self.auth_type = self.ipywidget_factory.get_dropdown(
             options=dropdown_options, description="Auth type:"
         )
