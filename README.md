@@ -304,6 +304,9 @@ Alternatively, you can use [Poetry](https://python-poetry.org/docs/) to setup a 
 
 ```bash
 poetry install
+# If you run into issues install numpy or pandas, run
+# poetry run pip install numpy pandas
+# then re-run poetry install
 ```
 
 3. Run unit tests, with `pytest`
