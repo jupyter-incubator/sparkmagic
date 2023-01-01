@@ -2,8 +2,11 @@
 
 ## Next Release
 
+## 0.20.2
+
 ### Updates
 * Add official support for Python 3.10 and 3.11
+* Migrate from nose to pytest for tests
 * Add Poetry as an option for local development
 
 ### Bug Fixes
