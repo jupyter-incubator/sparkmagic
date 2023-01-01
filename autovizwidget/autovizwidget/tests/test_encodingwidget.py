@@ -1,5 +1,4 @@
 from mock import MagicMock, call
-from nose.tools import with_setup
 from ipywidgets import Widget
 import pandas as pd
 
@@ -13,7 +12,7 @@ ipywidget_factory = None
 change_hook = None
 
 
-def _setup():
+def setup_function():
     global df, encoding, ipywidget_factory, change_hook
 
     records = [
@@ -34,11 +33,10 @@ def _setup():
     change_hook = MagicMock()
 
 
-def _teardown():
+def teardown_function():
     pass
 
 
-@with_setup(_setup, _teardown)
 def test_encoding_with_all_none_doesnt_throw():
     records = [
         {"buildingID": 0, "date": "6/1/13", "temp_diff": 12},
@@ -100,7 +98,6 @@ def test_encoding_with_all_none_doesnt_throw():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_value_for_aggregation():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
@@ -108,7 +105,6 @@ def test_value_for_aggregation():
     assert widget._get_value_for_aggregation("avg") == "avg"
 
 
-@with_setup(_setup, _teardown)
 def test_x_changed_callback():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
@@ -118,7 +114,6 @@ def test_x_changed_callback():
     assert change_hook.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_y_changed_callback():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
@@ -128,7 +123,6 @@ def test_y_changed_callback():
     assert change_hook.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_y_agg__changed_callback():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
@@ -138,7 +132,6 @@ def test_y_agg__changed_callback():
     assert change_hook.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_log_x_changed_callback():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
@@ -148,7 +141,6 @@ def test_log_x_changed_callback():
     assert change_hook.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_log_y_changed_callback():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 

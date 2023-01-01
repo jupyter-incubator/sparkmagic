@@ -2,7 +2,7 @@ import sys
 from base64 import b64encode
 from contextlib import contextmanager
 from mock import MagicMock
-from nose.tools import assert_equals, with_setup
+import pytest
 
 from IPython.display import Image
 
@@ -29,7 +29,7 @@ else:
     assert False
 
 
-def _setup():
+def setup_function():
     conf.override_all({})
 
 
@@ -60,7 +60,6 @@ def _capture_stderr():
         sys.stderr = sys.__stderr__
 
 
-@with_setup(_setup)
 def test_execute():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
@@ -78,8 +77,8 @@ def test_execute():
     http_client.post_statement.assert_called_with(0, {"code": command.code})
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
-    assert_equals(tls.TestLivySession.pi_result, result[1])
-    assert_equals(MIMETYPE_TEXT_PLAIN, result[2])
+    assert tls.TestLivySession.pi_result == result[1]
+    assert MIMETYPE_TEXT_PLAIN == result[2]
     spark_events.emit_statement_execution_start_event.assert_called_once_with(
         session.guid, session.kind, session.id, command.guid
     )
@@ -101,7 +100,7 @@ def test_execute():
     assert result[0]
     assert isinstance(result[1], Image)
     assert result[1].data == b"hello"
-    assert_equals(MIMETYPE_IMAGE_PNG, result[2])
+    assert MIMETYPE_IMAGE_PNG == result[2]
 
     # Now try with HTML result:
     http_client.get_statement.return_value = {
@@ -115,11 +114,10 @@ def test_execute():
     }
     result = command.execute(session)
     assert result[0]
-    assert_equals("<p>out</p>", result[1])
-    assert_equals(MIMETYPE_TEXT_HTML, result[2])
+    assert "<p>out</p>" == result[1]
+    assert MIMETYPE_TEXT_HTML == result[2]
 
 
-@with_setup(_setup)
 def test_execute_waiting():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
@@ -142,8 +140,8 @@ def test_execute_waiting():
     http_client.post_statement.assert_called_with(0, {"code": command.code})
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
-    assert_equals(tls.TestLivySession.pi_result, result[1])
-    assert_equals(MIMETYPE_TEXT_PLAIN, result[2])
+    assert tls.TestLivySession.pi_result == result[1]
+    assert MIMETYPE_TEXT_PLAIN == result[2]
     spark_events.emit_statement_execution_start_event.assert_called_once_with(
         session.guid, session.kind, session.id, command.guid
     )
@@ -152,7 +150,6 @@ def test_execute_waiting():
     )
 
 
-@with_setup(_setup)
 def test_execute_null_ouput():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
@@ -172,8 +169,8 @@ def test_execute_null_ouput():
     http_client.post_statement.assert_called_with(0, {"code": command.code})
     http_client.get_statement.assert_called_with(0, 0)
     assert result[0]
-    assert_equals("", result[1])
-    assert_equals(MIMETYPE_TEXT_PLAIN, result[2])
+    assert "" == result[1]
+    assert MIMETYPE_TEXT_PLAIN == result[2]
     spark_events.emit_statement_execution_start_event.assert_called_once_with(
         session.guid, session.kind, session.id, command.guid
     )
@@ -182,7 +179,6 @@ def test_execute_null_ouput():
     )
 
 
-@with_setup(_setup)
 def test_execute_failure_wait_for_session_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
@@ -213,10 +209,9 @@ def test_execute_failure_wait_for_session_emits_event():
             "ValueError",
             "yo",
         )
-        assert_equals(e, session.wait_for_idle.side_effect)
+        assert e == session.wait_for_idle.side_effect
 
 
-@with_setup(_setup)
 def test_execute_failure_post_statement_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
@@ -246,10 +241,9 @@ def test_execute_failure_post_statement_emits_event():
             "KeyError",
             "Something bad happened here",
         )
-        assert_equals(e, http_client.post_statement.side_effect)
+        assert e == http_client.post_statement.side_effect
 
 
-@with_setup(_setup)
 def test_execute_failure_get_statement_output_emits_event():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
@@ -280,10 +274,9 @@ def test_execute_failure_get_statement_output_emits_event():
             "AttributeError",
             "OHHHH",
         )
-        assert_equals(e, command._get_statement_output.side_effect)
+        assert e == command._get_statement_output.side_effect
 
 
-@with_setup(_setup)
 def test_execute_interrupted():
     spark_events = MagicMock()
     kind = SESSION_KIND_SPARK
@@ -318,7 +311,7 @@ def test_execute_interrupted():
             "",
         )
         assert isinstance(e, SparkStatementCancelledException)
-        assert_equals(str(e), COMMAND_INTERRUPTED_MSG)
+        assert str(e) == COMMAND_INTERRUPTED_MSG
 
         # Test patching _showtraceback()
         assert mock_ipython._showtraceback is SparkStatementCancelledException._show_tb
@@ -333,7 +326,7 @@ def test_execute_interrupted():
                 SparkStatementCancelledException, COMMAND_INTERRUPTED_MSG, MagicMock()
             )
             mock_show_tb.assert_called_once()  # still once
-            assert_equals(stderr.getvalue().strip(), COMMAND_INTERRUPTED_MSG)
+            assert stderr.getvalue().strip() == COMMAND_INTERRUPTED_MSG
 
     except:
         assert False

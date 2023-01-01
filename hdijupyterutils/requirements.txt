@@ -1,6 +1,4 @@
 ipython>=4.0.2
-nose
-mock
 ipywidgets>5.0.0
 ipykernel>=4.2.2
 jupyter>=1

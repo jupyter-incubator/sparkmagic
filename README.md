@@ -296,7 +296,7 @@ To dev install, execute the following:
 and optionally follow steps 3 and 4 above.
 
 To run unit tests, run:
-
-        nosetests hdijupyterutils autovizwidget sparkmagic
-
+```bash
+pytest
+```
 If you want to see an enhancement made but don't have time to work on it yourself, feel free to submit an [issue](https://github.com/jupyter-incubator/sparkmagic/issues) for us to deal with.

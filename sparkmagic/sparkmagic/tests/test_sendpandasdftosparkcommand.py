@@ -1,9 +1,11 @@
 # coding=utf-8
 
-import pandas as pd
+import pytest
 from mock import MagicMock
+
+import pandas as pd
+
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
-from nose.tools import assert_raises, assert_equals
 from sparkmagic.livyclientlib.command import Command
 import sparkmagic.utils.constants as constants
 from sparkmagic.livyclientlib.sendpandasdftosparkcommand import (
@@ -86,12 +88,9 @@ def test_should_create_a_valid_scala_expression():
     sparkcommand = SendPandasDfToSparkCommand(
         input_variable_name, input_variable_value, output_variable_name, 1
     )
-    assert_equals(
-        sparkcommand._scala_command(
-            input_variable_name, input_variable_value, output_variable_name
-        ),
-        Command(expected_scala_code),
-    )
+    assert sparkcommand._scala_command(
+        input_variable_name, input_variable_value, output_variable_name
+    ) == Command(expected_scala_code)
 
 
 def test_should_create_a_valid_r_expression():
@@ -113,12 +112,9 @@ def test_should_create_a_valid_r_expression():
     sparkcommand = SendPandasDfToSparkCommand(
         input_variable_name, input_variable_value, output_variable_name, 1
     )
-    assert_equals(
-        sparkcommand._r_command(
-            input_variable_name, input_variable_value, output_variable_name
-        ),
-        Command(expected_r_code),
-    )
+    assert sparkcommand._r_command(
+        input_variable_name, input_variable_value, output_variable_name
+    ) == Command(expected_r_code)
 
 
 def test_should_create_a_valid_python3_expression():
@@ -139,12 +135,9 @@ def test_should_create_a_valid_python3_expression():
     sparkcommand = SendPandasDfToSparkCommand(
         input_variable_name, input_variable_value, output_variable_name, 1
     )
-    assert_equals(
-        sparkcommand._pyspark_command(
-            input_variable_name, input_variable_value, output_variable_name
-        ),
-        Command(expected_python3_code),
-    )
+    assert sparkcommand._pyspark_command(
+        input_variable_name, input_variable_value, output_variable_name
+    ) == Command(expected_python3_code)
 
 
 def test_should_create_a_valid_python2_expression():
@@ -165,12 +158,9 @@ def test_should_create_a_valid_python2_expression():
     sparkcommand = SendPandasDfToSparkCommand(
         input_variable_name, input_variable_value, output_variable_name, 1
     )
-    assert_equals(
-        sparkcommand._pyspark_command(
-            input_variable_name, input_variable_value, output_variable_name
-        ),
-        Command(expected_python2_code),
-    )
+    assert sparkcommand._pyspark_command(
+        input_variable_name, input_variable_value, output_variable_name
+    ) == Command(expected_python2_code)
 
 
 def test_should_properly_limit_pandas_dataframe():
@@ -191,26 +181,22 @@ def test_should_properly_limit_pandas_dataframe():
     sparkcommand = SendPandasDfToSparkCommand(
         input_variable_name, input_variable_value, output_variable_name, max_rows
     )
-    assert_equals(
-        sparkcommand._scala_command(
-            input_variable_name, input_variable_value, output_variable_name
-        ),
-        Command(expected_scala_code),
-    )
+    assert sparkcommand._scala_command(
+        input_variable_name, input_variable_value, output_variable_name
+    ) == Command(expected_scala_code)
 
 
 def test_should_raise_when_input_is_not_pandas_df():
-    input_variable_name = "input"
-    input_variable_value = "not a pandas dataframe"
-    output_variable_name = "output"
-    sparkcommand = SendPandasDfToSparkCommand(
-        input_variable_name, input_variable_value, output_variable_name, 1
-    )
-    assert_raises(
-        BadUserDataException,
-        sparkcommand.to_command,
-        "spark",
-        input_variable_name,
-        input_variable_value,
-        output_variable_name,
-    )
+    with pytest.raises(BadUserDataException):
+        input_variable_name = "input"
+        input_variable_value = "not a pandas dataframe"
+        output_variable_name = "output"
+        sparkcommand = SendPandasDfToSparkCommand(
+            input_variable_name, input_variable_value, output_variable_name, 1
+        )
+        sparkcommand.to_command(
+            "spark",
+            input_variable_name,
+            input_variable_value,
+            output_variable_name,
+        )

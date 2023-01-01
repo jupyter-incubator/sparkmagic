@@ -1,5 +1,4 @@
 from mock import MagicMock, patch
-from nose.tools import assert_equals
 from tornado.concurrent import Future
 from tornado.web import MissingArgumentError
 from tornado.testing import gen_test
@@ -101,18 +100,17 @@ class TestSparkMagicHandler(AsyncTestCase):
         super(TestSparkMagicHandler, self).setUp()
 
     def test_msg_status(self):
-        assert_equals(self.reconnect_handler._msg_status(self.good_msg), "ok")
-        assert_equals(self.reconnect_handler._msg_status(self.bad_msg), "error")
+        assert self.reconnect_handler._msg_status(self.good_msg) == "ok"
+        assert self.reconnect_handler._msg_status(self.bad_msg) == "error"
 
     def test_msg_successful(self):
-        assert_equals(self.reconnect_handler._msg_successful(self.good_msg), True)
-        assert_equals(self.reconnect_handler._msg_successful(self.bad_msg), False)
+        assert self.reconnect_handler._msg_successful(self.good_msg) == True
+        assert self.reconnect_handler._msg_successful(self.bad_msg) == False
 
     def test_msg_error(self):
-        assert_equals(self.reconnect_handler._msg_error(self.good_msg), None)
-        assert_equals(
-            self.reconnect_handler._msg_error(self.bad_msg),
-            "{}:\n{}".format("SyntaxError", "oh no!"),
+        assert self.reconnect_handler._msg_error(self.good_msg) == None
+        assert self.reconnect_handler._msg_error(self.bad_msg) == "{}:\n{}".format(
+            "SyntaxError", "oh no!"
         )
 
     @gen_test
@@ -120,7 +118,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         self.reconnect_handler.request.body = "{{}"
 
         res = yield self.reconnect_handler.post()
-        assert_equals(res, None)
+        assert res == None
 
         msg = "Invalid JSON in request body."
         self.reconnect_handler.set_status.assert_called_once_with(400)
@@ -134,7 +132,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         self.reconnect_handler.request.body = json.dumps({})
 
         res = yield self.reconnect_handler.post()
-        assert_equals(res, None)
+        assert res == None
 
         msg = "HTTP 400: Bad Request (Missing argument path)"
         self.reconnect_handler.set_status.assert_called_once_with(400)
@@ -159,7 +157,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         _get_kernel_manager.return_value = kernel_manager_future
 
         res = yield self.reconnect_handler.post()
-        assert_equals(res, None)
+        assert res == None
 
         code = "%{} -s {} -u {} -p {} -t {}".format(
             KernelMagics._do_not_call_change_endpoint.__name__,
@@ -197,7 +195,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         _get_kernel_manager.return_value = kernel_manager_future
 
         res = yield self.reconnect_handler.post()
-        assert_equals(res, None)
+        assert res == None
 
         code = "%{} -s {} -u {} -p {} -t {}".format(
             KernelMagics._do_not_call_change_endpoint.__name__,
@@ -225,7 +223,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         _get_kernel_manager.return_value = kernel_manager_future
 
         res = yield self.reconnect_handler.post()
-        assert_equals(res, None)
+        assert res == None
 
         code = "%{} -s {} -u {} -p {} -t {}".format(
             KernelMagics._do_not_call_change_endpoint.__name__,
@@ -254,7 +252,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         self.client.get_shell_msg = MagicMock(return_value=self.bad_msg)
 
         res = yield self.reconnect_handler.post()
-        assert_equals(res, None)
+        assert res == None
 
         code = "%{} -s {} -u {} -p {} -t {}".format(
             KernelMagics._do_not_call_change_endpoint.__name__,
@@ -290,7 +288,7 @@ class TestSparkMagicHandler(AsyncTestCase):
             different_path, self.kernel_name
         )
 
-        assert_equals(self.individual_kernel_manager, km)
+        assert self.individual_kernel_manager == km
         self.individual_kernel_manager.restart_kernel.assert_not_called()
         self.kernel_manager.get_kernel.assert_not_called()
         _get_kernel_manager_new_session.assert_called_once_with(
@@ -306,7 +304,7 @@ class TestSparkMagicHandler(AsyncTestCase):
             self.path, self.kernel_name
         )
 
-        assert_equals(self.individual_kernel_manager, km)
+        assert self.individual_kernel_manager == km
         self.individual_kernel_manager.restart_kernel.assert_called_once_with()
         _get_kernel_manager_new_session.assert_not_called()
 
@@ -326,7 +324,7 @@ class TestSparkMagicHandler(AsyncTestCase):
             self.path, different_kernel
         )
 
-        assert_equals(self.individual_kernel_manager, km)
+        assert self.individual_kernel_manager == km
         self.individual_kernel_manager.restart_kernel.assert_not_called()
         self.kernel_manager.get_kernel.assert_not_called()
         _get_kernel_manager_new_session.assert_called_once_with(

@@ -1,8 +1,6 @@
 import asyncio
 
-
 from unittest.mock import MagicMock, call, patch
-from nose.tools import with_setup
 
 from sparkmagic.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 from sparkmagic.utils.constants import LANG_PYTHON
@@ -25,7 +23,7 @@ class TestSparkKernel(SparkKernelBase):
         )
 
 
-def _setup():
+def setup_function():
     global kernel, execute_cell_mock, do_shutdown_mock, ipython_display
 
     user_code_parser = MagicMock(return_value=code)
@@ -38,11 +36,10 @@ def _setup():
     kernel.ipython_display = ipython_display = MagicMock()
 
 
-def _teardown():
+def teardown_function():
     pass
 
 
-@with_setup(_setup, _teardown)
 def test_execute_valid_code():
     # Verify that the execution flows through.
     ret = kernel.do_execute(code, False)
@@ -56,7 +53,6 @@ def test_execute_valid_code():
     assert ipython_display.send_error.call_count == 0
 
 
-@with_setup(_setup, _teardown)
 def test_execute_throws_if_fatal_error_happened():
     # Verify that if a fatal error already happened, we don't run the code and show the fatal error instead.
     fatal_error = "Error."
@@ -70,7 +66,6 @@ def test_execute_throws_if_fatal_error_happened():
     assert ipython_display.send_error.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_execute_alerts_user_if_an_unexpected_error_happens():
     # Verify that developer error shows developer error (the Github link).
     # Because do_execute is so minimal, we'll assume we have a bug in the _repeat_fatal_error method
@@ -83,7 +78,6 @@ def test_execute_alerts_user_if_an_unexpected_error_happens():
     assert ipython_display.send_error.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_execute_throws_if_fatal_error_happens_for_execution():
     # Verify that the kernel sends the error from Python execution's context to the user
     fatal_error = "Error."
@@ -103,7 +97,6 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
     assert ipython_display.send_error.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_shutdown_cleans_up():
     # No restart
     kernel._execute_cell_for_user = ecfu_m = MagicMock()
@@ -124,7 +117,6 @@ def test_shutdown_cleans_up():
     dsi_m.assert_called_once_with(True)
 
 
-@with_setup(_setup, _teardown)
 def test_register_auto_viz():
     kernel._register_auto_viz()
 
@@ -141,7 +133,6 @@ def test_register_auto_viz():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_change_language():
     kernel._change_language()
 
@@ -157,7 +148,6 @@ def test_change_language():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_load_magics():
     kernel._load_magics_extension()
 
@@ -167,7 +157,6 @@ def test_load_magics():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_delete_session():
     kernel._delete_session()
 
@@ -177,7 +166,6 @@ def test_delete_session():
     )
 
 
-@with_setup(_teardown)
 def test_execute_cell_for_user_ipykernel4():
     want = {"status": "OK"}
     # Can't use patch decorator because
@@ -193,7 +181,6 @@ def test_execute_cell_for_user_ipykernel4():
         assert want == got
 
 
-@with_setup(_teardown)
 def test_execute_cell_for_user_ipykernel5():
     want = {"status": "OK"}
     # Can't use patch decorator because
@@ -211,7 +198,6 @@ def test_execute_cell_for_user_ipykernel5():
         assert want == got
 
 
-@with_setup(_teardown)
 def test_execute_cell_for_user_ipykernel6():
     want = {"status": "OK"}
     # Can't use patch decorator because

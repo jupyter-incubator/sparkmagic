@@ -1,4 +1,4 @@
-from nose.tools import with_setup, raises
+import pytest
 from mock import MagicMock
 
 from hdijupyterutils.events import Events
@@ -7,7 +7,7 @@ from hdijupyterutils.constants import INSTANCE_ID, TIMESTAMP
 from hdijupyterutils.utils import get_instance_id
 
 
-def _setup():
+def setup_function():
     global events, guid1, guid2, guid3, time_stamp
 
     events = Events(MagicMock())
@@ -18,11 +18,10 @@ def _setup():
     guid3 = generate_uuid()
 
 
-def _teardown():
+def teardown_function():
     pass
 
 
-@with_setup(_setup, _teardown)
 def test_send_to_handler():
     kwargs_list = [(TIMESTAMP, time_stamp)]
     expected_kwargs_list = [(INSTANCE_ID, get_instance_id())] + kwargs_list
@@ -32,25 +31,8 @@ def test_send_to_handler():
     events.handler.handle_event.assert_called_once_with(expected_kwargs_list)
 
 
-@with_setup(_setup, _teardown)
-@raises(AssertionError)
 def test_send_to_handler_asserts_less_than_12():
-    kwargs_list = [
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-        (TIMESTAMP, time_stamp),
-    ]
-
-    events.send_to_handler(kwargs_list)
-
-    assert False
+    with pytest.raises(AssertionError):
+        kwargs_list = [(TIMESTAMP, time_stamp)] * 13
+        events.send_to_handler(kwargs_list)
+        assert False
