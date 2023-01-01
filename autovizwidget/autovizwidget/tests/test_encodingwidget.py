@@ -55,13 +55,6 @@ def test_encoding_with_all_none_doesnt_throw():
 
     EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
-    #  call(options=[('-', None), ('buildingID', 'buildingID'), ('date', 'date'), ('temp_diff', 'temp_diff')], description='X', value=None),
-    #  call().on_trait_change(<bound method EncodingWidget._x_changed_callback of EncodingWidget(children=(<MagicMock name='mock.get_vbox()' spec='Widget' id='4770343872'>,))>, 'value'),
-    #  call(options=[('-', None), ('buildingID', 'buildingID'), ('date', 'date'), ('temp_diff', 'temp_diff')], description='Y', value=None),
-    #  call().on_trait_change(<bound method EncodingWidget._y_changed_callback of EncodingWidget(children=(<MagicMock name='mock.get_vbox()' spec='Widget' id='4770343872'>,))>, 'value'),
-    #  call(options=[('-', 'None'), ('Avg', 'Avg'), ('Min', 'Min'), ('Max', 'Max'), ('Sum', 'Sum'), ('Count', 'Count')], description='Func.', value='none'),
-    #  call().on_trait_change(<bound method EncodingWidget._y_agg_changed_callback of EncodingWidget(children=(<MagicMock name='mock.get_vbox()' spec='Widget' id='4770343872'>,))>, 'value')
-
     assert (
         call(
             description="X",
