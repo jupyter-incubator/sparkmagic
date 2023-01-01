@@ -1,8 +1,12 @@
-[![Build Status](https://travis-ci.org/jupyter-incubator/sparkmagic.svg?branch=master)](https://travis-ci.org/jupyter-incubator/sparkmagic) [![Join the chat at https://gitter.im/sparkmagic/Lobby](https://badges.gitter.im/sparkmagic/Lobby.svg)](https://gitter.im/sparkmagic/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/jupyter-incubator/sparkmagic.svg?branch=master)](https://travis-ci.org/jupyter-incubator/sparkmagic) [![Join the chat at https://gitter.im/sparkmagic/Lobby](https://badges.gitter.im/sparkmagic/Lobby.svg)](https://gitter.im/sparkmagic/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 
 # sparkmagic
 
-Sparkmagic is a set of tools for interactively working with remote Spark clusters through [Livy](https://livy.incubator.apache.org/), a Spark REST server, in [Jupyter](http://jupyter.org) notebooks.
+Sparkmagic is a set of tools for interactively working with remote Spark clusters in [Jupyter](http://jupyter.org) notebooks. Sparkmagic interacts with remote Spark clusters through a REST server. Currently there are two server implementations compatible with Spararkmagic: 
+* [Livy](https://livy.apache.org) - for running interactive sessions on Yarn
+* [Lighter](https://github.com/exacaster/lighter) - for running interactive sessions on Yarn or Kubernetes (only PySpark sessions are supported)
+
 The Sparkmagic project includes a set of magics for interactively running Spark code in multiple languages, as well as some kernels that you can use to turn Jupyter into an integrated Spark environment.
 
 ![Automatic SparkContext and SQLContext creation](screenshots/sparkcontext.png)
@@ -204,8 +208,8 @@ In order to use it, make sure you have [Docker](https://docker.com) and
 [Docker Compose](https://docs.docker.com/compose/) both installed, and
 then simply run:
 
-    docker-compose build
-    docker-compose up
+    docker compose build
+    docker compose up
 
 You will then be able to access the Jupyter notebook in your browser at
 http://localhost:8888. Inside this notebook, you can configure a
@@ -213,16 +217,15 @@ sparkmagic endpoint at http://spark:8998. This endpoint is able to
 launch both Scala and Python sessions. You can also choose to start a
 wrapper kernel for Scala, Python, or R from the list of kernels.
 
-To shut down the containers, you can interrupt `docker-compose` with
-`Ctrl-C`, and optionally remove the containers with `docker-compose
+To shut down the containers, you can interrupt `docker compose` with
+`Ctrl-C`, and optionally remove the containers with `docker compose
 down`.
 
 If you are developing sparkmagic and want to test out your changes in
 the Docker container without needing to push a version to PyPI, you can
 set the `dev_mode` build arg in `docker-compose.yml` to `true`, and then
 re-build the container. This will cause the container to install your
-local version of autovizwidget, hdijupyterutils, and sparkmagic. Make
-sure to re-run `docker-compose build` before each test run.
+local version of autovizwidget, hdijupyterutils, and sparkmagic. The local packages are installed with the editable flag, meaning you can make edits directly to the libraries within the Jupyterlab docker service to debug issues in realtime. To make local changes available in Jupyterlab, make  sure to re-run `docker compose build` before spinning up the services.
 
 ## Server extension API
 
@@ -293,7 +296,7 @@ To dev install, execute the following:
 and optionally follow steps 3 and 4 above.
 
 To run unit tests, run:
-
-        nosetests hdijupyterutils autovizwidget sparkmagic
-
+```bash
+pytest
+```
 If you want to see an enhancement made but don't have time to work on it yourself, feel free to submit an [issue](https://github.com/jupyter-incubator/sparkmagic/issues) for us to deal with.

@@ -1,5 +1,4 @@
 from mock import MagicMock, call
-from nose.tools import with_setup
 from ipywidgets import Widget
 import pandas as pd
 
@@ -13,15 +12,17 @@ ipywidget_factory = None
 change_hook = None
 
 
-def _setup():
+def setup_function():
     global df, encoding, ipywidget_factory, change_hook
 
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12, u'\u263A': True},
-               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0, u'\u263A': True},
-               {u'buildingID': 2, u'date': u'6/1/14', u'temp_diff': 11, u'\u263A': True},
-               {u'buildingID': 0, u'date': u'6/1/15', u'temp_diff': 5, u'\u263A': True},
-               {u'buildingID': 1, u'date': u'6/1/16', u'temp_diff': 19, u'\u263A': True},
-               {u'buildingID': 2, u'date': u'6/1/17', u'temp_diff': 32, u'\u263A': True}]
+    records = [
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": 12, "\u263A": True},
+        {"buildingID": 1, "date": "6/1/13", "temp_diff": 0, "\u263A": True},
+        {"buildingID": 2, "date": "6/1/14", "temp_diff": 11, "\u263A": True},
+        {"buildingID": 0, "date": "6/1/15", "temp_diff": 5, "\u263A": True},
+        {"buildingID": 1, "date": "6/1/16", "temp_diff": 19, "\u263A": True},
+        {"buildingID": 2, "date": "6/1/17", "temp_diff": 32, "\u263A": True},
+    ]
     df = pd.DataFrame(records)
 
     encoding = Encoding(chart_type="table", x="date", y="temp_diff")
@@ -32,18 +33,19 @@ def _setup():
     change_hook = MagicMock()
 
 
-def _teardown():
+def teardown_function():
     pass
 
 
-@with_setup(_setup, _teardown)
 def test_encoding_with_all_none_doesnt_throw():
-    records = [{u'buildingID': 0, u'date': u'6/1/13', u'temp_diff': 12},
-               {u'buildingID': 1, u'date': u'6/1/13', u'temp_diff': 0},
-               {u'buildingID': 2, u'date': u'6/1/14', u'temp_diff': 11},
-               {u'buildingID': 0, u'date': u'6/1/15', u'temp_diff': 5},
-               {u'buildingID': 1, u'date': u'6/1/16', u'temp_diff': 19},
-               {u'buildingID': 2, u'date': u'6/1/17', u'temp_diff': 32}]
+    records = [
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": 12},
+        {"buildingID": 1, "date": "6/1/13", "temp_diff": 0},
+        {"buildingID": 2, "date": "6/1/14", "temp_diff": 11},
+        {"buildingID": 0, "date": "6/1/15", "temp_diff": 5},
+        {"buildingID": 1, "date": "6/1/16", "temp_diff": 19},
+        {"buildingID": 2, "date": "6/1/17", "temp_diff": 32},
+    ]
     df = pd.DataFrame(records)
 
     encoding = Encoding()
@@ -53,19 +55,49 @@ def test_encoding_with_all_none_doesnt_throw():
 
     EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
-    assert call(description='X', value=None, options={'date': 'date', 'temp_diff': 'temp_diff', '-': None,
-                                                      'buildingID': 'buildingID'}) \
+    assert (
+        call(
+            description="X",
+            value=None,
+            options={
+                "date": "date",
+                "temp_diff": "temp_diff",
+                "-": None,
+                "buildingID": "buildingID",
+            },
+        )
         in ipywidget_factory.get_dropdown.mock_calls
-    assert call(description='Y', value=None, options={'date': 'date', 'temp_diff': 'temp_diff', '-': None,
-                                                      'buildingID': 'buildingID'}) \
+    )
+    assert (
+        call(
+            description="Y",
+            value=None,
+            options={
+                "date": "date",
+                "temp_diff": "temp_diff",
+                "-": None,
+                "buildingID": "buildingID",
+            },
+        )
         in ipywidget_factory.get_dropdown.mock_calls
-    assert call(description='Func.', value='none', options={'Max': 'Max', 'Sum': 'Sum', 'Avg': 'Avg',
-                                                            '-': 'None', 'Min': 'Min', 'Count': 'Count'}) \
+    )
+    assert (
+        call(
+            description="Func.",
+            value="none",
+            options={
+                "Max": "Max",
+                "Sum": "Sum",
+                "Avg": "Avg",
+                "-": "None",
+                "Min": "Min",
+                "Count": "Count",
+            },
+        )
         in ipywidget_factory.get_dropdown.mock_calls
+    )
 
 
-
-@with_setup(_setup, _teardown)
 def test_value_for_aggregation():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
@@ -73,7 +105,6 @@ def test_value_for_aggregation():
     assert widget._get_value_for_aggregation("avg") == "avg"
 
 
-@with_setup(_setup, _teardown)
 def test_x_changed_callback():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
@@ -83,7 +114,6 @@ def test_x_changed_callback():
     assert change_hook.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_y_changed_callback():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
@@ -93,7 +123,6 @@ def test_y_changed_callback():
     assert change_hook.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_y_agg__changed_callback():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
@@ -103,7 +132,6 @@ def test_y_agg__changed_callback():
     assert change_hook.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_log_x_changed_callback():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 
@@ -113,7 +141,6 @@ def test_log_x_changed_callback():
     assert change_hook.call_count == 1
 
 
-@with_setup(_setup, _teardown)
 def test_log_y_changed_callback():
     widget = EncodingWidget(df, encoding, change_hook, ipywidget_factory, testing=True)
 

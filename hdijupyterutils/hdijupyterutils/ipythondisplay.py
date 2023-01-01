@@ -20,12 +20,12 @@ class IpythonDisplay(object):
         sys.stdout.flush()
 
     def write(self, msg):
-        self._ipython_shell.write(msg)
+        sys.stdout.write(msg)
         self.stdout_flush()
 
     def writeln(self, msg):
-        self.write(u"{}\n".format(msg))
+        self.write("{}\n".format(msg))
 
     def send_error(self, error):
-        self._ipython_shell.write_err(u"{}\n".format(error))
+        sys.stderr.write("{}\n".format(error))
         self.stderr_flush()

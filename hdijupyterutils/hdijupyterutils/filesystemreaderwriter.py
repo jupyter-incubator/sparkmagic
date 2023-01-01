@@ -4,9 +4,9 @@ import os
 
 
 class FileSystemReaderWriter(object):
-
     def __init__(self, path):
         from .utils import expand_path
+
         assert path is not None
         self.path = expand_path(path)
 
@@ -16,7 +16,7 @@ class FileSystemReaderWriter(object):
     def ensure_file_exists(self):
         self._ensure_path_exists(os.path.dirname(self.path))
         if not os.path.exists(self.path):
-            open(self.path, 'w').close()
+            open(self.path, "w").close()
 
     def read_lines(self):
         if os.path.isfile(self.path):

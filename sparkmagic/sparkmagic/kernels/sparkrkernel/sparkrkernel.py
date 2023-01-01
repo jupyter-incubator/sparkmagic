@@ -6,26 +6,32 @@ from sparkmagic.kernels.wrapperkernel.sparkkernelbase import SparkKernelBase
 
 class SparkRKernel(SparkKernelBase):
     def __init__(self, **kwargs):
-        implementation = 'SparkR'
-        implementation_version = '1.0'
+        implementation = "SparkR"
+        implementation_version = "1.0"
         language = LANG_R
-        language_version = '0.1'
+        language_version = "0.1"
         language_info = {
-            'name': 'sparkR',
-            'mimetype': 'text/x-rsrc',
-            'codemirror_mode': 'text/x-rsrc',
-            'file_extension': '.r',
-            'pygments_lexer': 'r'
+            "name": "sparkR",
+            "mimetype": "text/x-rsrc",
+            "codemirror_mode": "text/x-rsrc",
+            "file_extension": ".r",
+            "pygments_lexer": "r",
         }
 
         session_language = LANG_R
 
-        super(SparkRKernel,
-              self).__init__(implementation, implementation_version, language,
-                             language_version, language_info, session_language,
-                             **kwargs)
+        super(SparkRKernel, self).__init__(
+            implementation,
+            implementation_version,
+            language,
+            language_version,
+            language_info,
+            session_language,
+            **kwargs
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from ipykernel.kernelapp import IPKernelApp
+
     IPKernelApp.launch_instance(kernel_class=SparkRKernel)

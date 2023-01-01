@@ -9,7 +9,13 @@ class Encoding(object):
     chart_type_bar = "Bar"
     chart_type_pie = "Pie"
     chart_type_table = "Table"
-    supported_chart_types = [chart_type_line, chart_type_area, chart_type_bar, chart_type_pie, chart_type_table]
+    supported_chart_types = [
+        chart_type_line,
+        chart_type_area,
+        chart_type_bar,
+        chart_type_pie,
+        chart_type_table,
+    ]
 
     y_agg_avg = "Avg"
     y_agg_min = "Min"
@@ -17,10 +23,24 @@ class Encoding(object):
     y_agg_sum = "Sum"
     y_agg_none = "None"
     y_agg_count = "Count"
-    supported_y_agg = [y_agg_avg, y_agg_min, y_agg_max, y_agg_sum, y_agg_none, y_agg_count]
+    supported_y_agg = [
+        y_agg_avg,
+        y_agg_min,
+        y_agg_max,
+        y_agg_sum,
+        y_agg_none,
+        y_agg_count,
+    ]
 
-    def __init__(self, chart_type=None, x=None, y=None, y_aggregation=None,
-                 logarithmic_x_axis=False, logarithmic_y_axis=False):
+    def __init__(
+        self,
+        chart_type=None,
+        x=None,
+        y=None,
+        y_aggregation=None,
+        logarithmic_x_axis=False,
+        logarithmic_y_axis=False,
+    ):
         self._chart_type = chart_type
         self._x = x
         self._y = y

@@ -20,6 +20,14 @@ def read(path, encoding="utf-8"):
         return fp.read()
 
 
+# read requirements.txt and convert to install_requires format
+def requirements(path):
+    lines = read(path).splitlines()
+    # remove comments and empty lines
+    lines = [line for line in lines if not line.startswith("#") and line]
+    return lines
+
+
 def version(path):
     """Obtain the package version from a python file e.g. pkg/__init__.py.
 
@@ -35,7 +43,6 @@ def version(path):
 
 
 VERSION = version("hdijupyterutils/__init__.py")
-
 
 setup(
     name=NAME,
@@ -55,15 +62,5 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python :: 3.7",
     ],
-    install_requires=[
-        "ipython>=4.0.2,<8",
-        "nose",
-        "mock",
-        "ipywidgets>5.0.0",
-        "ipykernel>=4.2.2,<6.0.0",
-        "jupyter>=1",
-        "pandas>=0.17.1",
-        "numpy",
-        "notebook>=4.2",
-    ],
+    install_requires=requirements("requirements.txt"),
 )

@@ -1,11 +1,28 @@
 # Changelog
 
-## NEXT RELEASE
+## Next Release
+
+### Updates
+* Add official support for Python 3.10
+
+## 0.20.1
+
+### Bug Fixes
+
+* Fixed compatibility issue with Pandas >=1.5.0 (https://github.com/jupyter-incubator/sparkmagic/issues/776). Thanks @GaspardBT
+
+## 0.20.0
 
 ### Updates
 
 * Officially drop support for Python 3.6. Sparkmagic will not guarantee Python 3.6 compatibility moving forward.
-* Add official support for Python 3.10
+* Re-format all code with [`black`](https://black.readthedocs.io/en/stable/index.html) and validate via CI
+
+### Bug Fixes
+
+* Fixed, simplified, and sped up the sparkmagic Docker images for local development and testing
+* Adds support for `ipython>=8`
+* Adds support for `ipykernel>=6`
 
 ## 0.19.2
 
