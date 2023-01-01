@@ -3,7 +3,7 @@
 ## Next Release
 
 ### Updates
-* Add official support for Python 3.10
+* Add official support for Python 3.10 and 3.11
 
 ## 0.20.1
 
