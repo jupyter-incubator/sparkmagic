@@ -59,12 +59,12 @@ def test_encoding_with_all_none_doesnt_throw():
         call(
             description="X",
             value=None,
-            options={
-                "date": "date",
-                "temp_diff": "temp_diff",
-                "-": None,
-                "buildingID": "buildingID",
-            },
+            options=[
+                ("-", None),
+                ("buildingID", "buildingID"),
+                ("date", "date"),
+                ("temp_diff", "temp_diff"),
+            ],
         )
         in ipywidget_factory.get_dropdown.mock_calls
     )
@@ -72,12 +72,12 @@ def test_encoding_with_all_none_doesnt_throw():
         call(
             description="Y",
             value=None,
-            options={
-                "date": "date",
-                "temp_diff": "temp_diff",
-                "-": None,
-                "buildingID": "buildingID",
-            },
+            options=[
+                ("-", None),
+                ("buildingID", "buildingID"),
+                ("date", "date"),
+                ("temp_diff", "temp_diff"),
+            ],
         )
         in ipywidget_factory.get_dropdown.mock_calls
     )
@@ -85,14 +85,14 @@ def test_encoding_with_all_none_doesnt_throw():
         call(
             description="Func.",
             value="none",
-            options={
-                "Max": "Max",
-                "Sum": "Sum",
-                "Avg": "Avg",
-                "-": "None",
-                "Min": "Min",
-                "Count": "Count",
-            },
+            options=[
+                ("-", "None"),
+                ("Avg", "Avg"),
+                ("Min", "Min"),
+                ("Max", "Max"),
+                ("Sum", "Sum"),
+                ("Count", "Count"),
+            ],
         )
         in ipywidget_factory.get_dropdown.mock_calls
     )
