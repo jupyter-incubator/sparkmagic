@@ -4,6 +4,7 @@
 
 ### Updates
 * Add official support for Python 3.10 and 3.11
+* Add Poetry as an option for local development
 
 ### Bug Fixes
 * Support `ipywidgets==8.0.0` 

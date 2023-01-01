@@ -288,15 +288,38 @@ If you've made an improvement to our code, please send us a [pull request](https
 
 To dev install, execute the following:
 
-        git clone https://github.com/jupyter-incubator/sparkmagic
-        pip install -e hdijupyterutils 
-        pip install -e autovizwidget
-        pip install -e sparkmagic
-        
-and optionally follow steps 3 and 4 above.
-
-To run unit tests, run:
+1. Clone the repo
 ```bash
+git clone https://github.com/jupyter-incubator/sparkmagic
+```
+
+2. Install local versions of packages
+```bash
+pip install -e hdijupyterutils 
+pip install -e autovizwidget
+pip install -e sparkmagic
+```
+
+Alternatively, you can use [Poetry](https://python-poetry.org/docs/) to setup a virtual environment
+
+```bash
+poetry install
+# If you run into issues install numpy or pandas, run
+# poetry run pip install numpy pandas
+# then re-run poetry install
+```
+
+3. Run unit tests, with `pytest`
+
+```bash
+# if you don't have pytest and mock installed, run
+# pip install pytest mock
 pytest
 ```
+
+If you installed packages with Poetry, run
+```bash 
+poetry run pytest 
+```
+
 If you want to see an enhancement made but don't have time to work on it yourself, feel free to submit an [issue](https://github.com/jupyter-incubator/sparkmagic/issues) for us to deal with.

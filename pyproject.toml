@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "development"
+version = "0.1.0"
+description = ""
+authors = ["Devin Stein <devstein@seas.upenn.edu>"]
+readme = "README.md"
+
+packages = [
+    { include = "hdijupyterutils", from = "./hdijupyterutils" },
+    { include = "autovizwidget", from = "./autovizwidget" },
+    { include = "sparkmagic", from = "./sparkmagic" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+hdijupyterutils = {path = "./hdijupyterutils", develop = true }
+autovizwidget = {path = "./autovizwidget", develop = true }
+sparkmagic = {path = "./sparkmagic", develop = true }
+numpy = "^1.24.1"
+pandas = "^1.5.2"
+pytest = "^7.2.0"
+mock = "^5.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
