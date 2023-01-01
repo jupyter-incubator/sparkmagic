@@ -1,5 +1,4 @@
 from mock import MagicMock
-from nose.tools import assert_equals
 from time import sleep
 
 from sparkmagic.livyclientlib.livysession import _HeartbeatThread
@@ -11,9 +10,9 @@ def test_create_thread():
     retry_seconds = 2
     heartbeat_thread = _HeartbeatThread(session, refresh_seconds, retry_seconds)
 
-    assert_equals(heartbeat_thread.livy_session, session)
-    assert_equals(heartbeat_thread.refresh_seconds, refresh_seconds)
-    assert_equals(heartbeat_thread.retry_seconds, retry_seconds)
+    assert heartbeat_thread.livy_session == session
+    assert heartbeat_thread.refresh_seconds == refresh_seconds
+    assert heartbeat_thread.retry_seconds == retry_seconds
 
 
 def test_run_once():

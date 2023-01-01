@@ -1,8 +1,9 @@
 # coding=utf-8
-from sparkmagic.livyclientlib.sendstringtosparkcommand import SendStringToSparkCommand
+import pytest
 from mock import MagicMock
+
+from sparkmagic.livyclientlib.sendstringtosparkcommand import SendStringToSparkCommand
 from sparkmagic.livyclientlib.exceptions import BadUserDataException
-from nose.tools import assert_raises, assert_equals
 from sparkmagic.livyclientlib.command import Command
 import sparkmagic.utils.constants as constants
 
@@ -71,14 +72,15 @@ def test_to_command_invalid():
     sparkcommand = SendStringToSparkCommand(
         input_variable_name, input_variable_value, output_variable_name
     )
-    assert_raises(
+    with pytest.raises(
         BadUserDataException,
-        sparkcommand.to_command,
-        "invalid",
-        input_variable_name,
-        input_variable_value,
-        output_variable_name,
-    )
+    ):
+        sparkcommand.to_command(
+            "invalid",
+            input_variable_name,
+            input_variable_value,
+            output_variable_name,
+        )
 
 
 def test_should_raise_when_input_aint_a_string():
@@ -88,14 +90,15 @@ def test_should_raise_when_input_aint_a_string():
     sparkcommand = SendStringToSparkCommand(
         input_variable_name, input_variable_value, output_variable_name
     )
-    assert_raises(
+    with pytest.raises(
         BadUserDataException,
-        sparkcommand.to_command,
-        "spark",
-        input_variable_name,
-        input_variable_value,
-        output_variable_name,
-    )
+    ):
+        sparkcommand.to_command(
+            "spark",
+            input_variable_name,
+            input_variable_value,
+            output_variable_name,
+        )
 
 
 def test_should_create_a_valid_scala_expression():
@@ -105,12 +108,9 @@ def test_should_create_a_valid_scala_expression():
     sparkcommand = SendStringToSparkCommand(
         input_variable_name, input_variable_value, output_variable_name
     )
-    assert_equals(
-        sparkcommand._scala_command(
-            input_variable_name, input_variable_value, output_variable_name
-        ),
-        Command('var {} = """{}"""'.format(output_variable_name, input_variable_value)),
-    )
+    assert sparkcommand._scala_command(
+        input_variable_name, input_variable_value, output_variable_name
+    ) == Command('var {} = """{}"""'.format(output_variable_name, input_variable_value))
 
 
 def test_should_create_a_valid_python_expression():
@@ -120,12 +120,9 @@ def test_should_create_a_valid_python_expression():
     sparkcommand = SendStringToSparkCommand(
         input_variable_name, input_variable_value, output_variable_name
     )
-    assert_equals(
-        sparkcommand._pyspark_command(
-            input_variable_name, input_variable_value, output_variable_name
-        ),
-        Command("{} = {}".format(output_variable_name, repr(input_variable_value))),
-    )
+    assert sparkcommand._pyspark_command(
+        input_variable_name, input_variable_value, output_variable_name
+    ) == Command("{} = {}".format(output_variable_name, repr(input_variable_value)))
 
 
 def test_should_create_a_valid_r_expression():
@@ -135,11 +132,8 @@ def test_should_create_a_valid_r_expression():
     sparkcommand = SendStringToSparkCommand(
         input_variable_name, input_variable_value, output_variable_name
     )
-    assert_equals(
-        sparkcommand._r_command(
-            input_variable_name, input_variable_value, output_variable_name
-        ),
-        Command(
-            """assign("{}","{}")""".format(output_variable_name, input_variable_value)
-        ),
+    assert sparkcommand._r_command(
+        input_variable_name, input_variable_value, output_variable_name
+    ) == Command(
+        """assign("{}","{}")""".format(output_variable_name, input_variable_value)
     )

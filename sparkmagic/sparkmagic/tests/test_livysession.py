@@ -1,6 +1,6 @@
 ﻿import json
 from mock import MagicMock, call
-from nose.tools import raises, assert_equals
+import pytest
 
 import sparkmagic.utils.constants as constants
 import sparkmagic.utils.configuration as conf
@@ -215,9 +215,9 @@ class TestLivySession(object):
         session = self._create_session(kind=kind)
         session.start()
 
-        assert_equals(kind, session.kind)
-        assert_equals("idle", session.status)
-        assert_equals(0, session.id)
+        assert kind == session.kind
+        assert "idle" == session.status
+        assert 0 == session.id
         self.http_client.post_session.assert_called_with(
             {"kind": "spark", "heartbeatTimeoutInSecond": 60}
         )
@@ -231,9 +231,9 @@ class TestLivySession(object):
         session = self._create_session(kind=kind)
         session.start()
 
-        assert_equals(kind, session.kind)
-        assert_equals("idle", session.status)
-        assert_equals(0, session.id)
+        assert kind == session.kind
+        assert "idle" == session.status
+        assert 0 == session.id
         self.http_client.post_session.assert_called_with(
             {"kind": "sparkr", "heartbeatTimeoutInSecond": 60}
         )
@@ -247,9 +247,9 @@ class TestLivySession(object):
         session = self._create_session(kind=kind)
         session.start()
 
-        assert_equals(kind, session.kind)
-        assert_equals("idle", session.status)
-        assert_equals(0, session.id)
+        assert kind == session.kind
+        assert "idle" == session.status
+        assert 0 == session.id
         self.http_client.post_session.assert_called_with(
             {"kind": "pyspark", "heartbeatTimeoutInSecond": 60}
         )
@@ -278,13 +278,12 @@ class TestLivySession(object):
         session.refresh_status_and_info()
         state = session.status
 
-        assert_equals("idle", state)
+        assert "idle" == state
         self.http_client.get_session.assert_called_with(0)
 
     def test_status_recovering(self):
-        """
-        Ensure 'recovering' state is supported: we go from recovering to idle.
-        """
+        """Ensure 'recovering' state is supported: we go from recovering to
+        idle."""
         self.http_client.post_session.return_value = self.session_create_json
 
         def get_session(i, calls=[]):
@@ -298,7 +297,7 @@ class TestLivySession(object):
         self.http_client.get_statement.return_value = self.ready_statement_json
         session = self._create_session()
         session.start()
-        assert_equals("idle", session.status)
+        assert "idle" == session.status
 
     def test_logs_gets_latest_logs(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -310,7 +309,7 @@ class TestLivySession(object):
 
         logs = session.get_logs()
 
-        assert_equals("hi\nhi", logs)
+        assert "hi\nhi" == logs
         self.http_client.get_all_session_logs.assert_called_with(0)
 
     def test_wait_for_idle_returns_when_in_state(self):
@@ -333,7 +332,7 @@ class TestLivySession(object):
         session.wait_for_idle(30)
 
         self.http_client.get_session.assert_called_with(0)
-        assert_equals(4, self.http_client.get_session.call_count)
+        assert 4 == self.http_client.get_session.call_count
 
     def test_wait_for_idle_prints_resource_limit_message(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -354,48 +353,48 @@ class TestLivySession(object):
         session.start()
 
         session.wait_for_idle(30)
-        assert_equals(session.ipython_display.send_error.call_count, 1)
+        assert session.ipython_display.send_error.call_count == 1
 
-    @raises(LivyUnexpectedStatusException)
     def test_wait_for_idle_throws_when_in_final_status(self):
-        self.http_client.post_session.return_value = self.session_create_json
-        self.get_session_responses = [
-            self.ready_sessions_json,
-            self.busy_sessions_json,
-            self.busy_sessions_json,
-            self.error_sessions_json,
-        ]
-        self.http_client.get_session.side_effect = self._next_session_response_get
-        self.http_client.get_all_session_logs.return_value = self.log_json
+        with pytest.raises(LivyUnexpectedStatusException):
+            self.http_client.post_session.return_value = self.session_create_json
+            self.get_session_responses = [
+                self.ready_sessions_json,
+                self.busy_sessions_json,
+                self.busy_sessions_json,
+                self.error_sessions_json,
+            ]
+            self.http_client.get_session.side_effect = self._next_session_response_get
+            self.http_client.get_all_session_logs.return_value = self.log_json
 
-        session = self._create_session()
-        session.get_row_html = MagicMock()
-        session.get_row_html.return_value = """<tr><td>row1</td></tr>"""
+            session = self._create_session()
+            session.get_row_html = MagicMock()
+            session.get_row_html.return_value = """<tr><td>row1</td></tr>"""
 
-        session.start()
+            session.start()
 
-        session.wait_for_idle(30)
+            session.wait_for_idle(30)
 
-    @raises(LivyClientTimeoutException)
     def test_wait_for_idle_times_out(self):
-        self.http_client.post_session.return_value = self.session_create_json
-        self.get_session_responses = [
-            self.ready_sessions_json,
-            self.ready_sessions_json,
-            self.busy_sessions_json,
-            self.busy_sessions_json,
-            self.ready_sessions_json,
-        ]
-        self.http_client.get_session.side_effect = self._next_session_response_get
-        self.http_client.get_statement.return_value = self.ready_statement_json
+        with pytest.raises(LivyClientTimeoutException):
+            self.http_client.post_session.return_value = self.session_create_json
+            self.get_session_responses = [
+                self.ready_sessions_json,
+                self.ready_sessions_json,
+                self.busy_sessions_json,
+                self.busy_sessions_json,
+                self.ready_sessions_json,
+            ]
+            self.http_client.get_session.side_effect = self._next_session_response_get
+            self.http_client.get_statement.return_value = self.ready_statement_json
 
-        session = self._create_session()
-        session.get_row_html = MagicMock()
-        session.get_row_html.return_value = """<tr><td>row1</td></tr>"""
+            session = self._create_session()
+            session.get_row_html = MagicMock()
+            session.get_row_html.return_value = """<tr><td>row1</td></tr>"""
 
-        session.start()
+            session.start()
 
-        session.wait_for_idle(0.01)
+            session.wait_for_idle(0.01)
 
     def test_delete_session_when_active(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -406,7 +405,7 @@ class TestLivySession(object):
 
         session.delete()
 
-        assert_equals("dead", session.status)
+        assert "dead" == session.status
 
     def test_delete_session_when_not_started(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -414,7 +413,7 @@ class TestLivySession(object):
 
         session.delete()
 
-        assert_equals(session.ipython_display.send_error.call_count, 1)
+        assert session.ipython_display.send_error.call_count == 1
 
     def test_delete_session_when_dead_throws(self):
         self.http_client.post.return_value = self.session_create_json
@@ -423,7 +422,7 @@ class TestLivySession(object):
 
         session.delete()
 
-        assert_equals(session.ipython_display.send_error.call_count, 0)
+        assert session.ipython_display.send_error.call_count == 0
 
     def test_start_emits_start_end_session(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -495,7 +494,7 @@ class TestLivySession(object):
 
         session.delete()
 
-        assert_equals(session.id, -1)
+        assert session.id == -1
         self.spark_events.emit_session_deletion_start_event.assert_called_once_with(
             session.guid, session.kind, end_id, end_status
         )
@@ -547,7 +546,7 @@ class TestLivySession(object):
 
         session.delete()
 
-        assert_equals(0, session.ipython_display.send_error.call_count)
+        assert 0 == session.ipython_display.send_error.call_count
         self.spark_events.emit_session_deletion_start_event.assert_called_once_with(
             session.guid, session.kind, end_id, end_status
         )
@@ -588,8 +587,8 @@ class TestLivySession(object):
 
         app_id = session.get_app_id()
 
-        assert_equals(expected_app_id, app_id)
-        assert_equals(expected_call_count, self.http_client.get_session.call_count)
+        assert expected_app_id == app_id
+        assert expected_call_count == self.http_client.get_session.call_count
 
     def _verify_get_driver_log_url(self, mock_driver_log_url, expected_url):
         mock_field = (
@@ -607,8 +606,8 @@ class TestLivySession(object):
 
         driver_log_url = session.get_driver_log_url()
 
-        assert_equals(expected_url, driver_log_url)
-        assert_equals(7, self.http_client.get_session.call_count)
+        assert expected_url == driver_log_url
+        assert 7 == self.http_client.get_session.call_count
 
     def test_get_empty_spark_ui_url(self):
         self._verify_get_spark_ui_url("null", None)
@@ -633,8 +632,8 @@ class TestLivySession(object):
 
         spark_ui_url = session.get_spark_ui_url()
 
-        assert_equals(expected_url, spark_ui_url)
-        assert_equals(7, self.http_client.get_session.call_count)
+        assert expected_url == spark_ui_url
+        assert 7 == self.http_client.get_session.call_count
 
     def test_get_row_html(self):
         session_id1 = 1
@@ -650,9 +649,9 @@ class TestLivySession(object):
         session1.get_user.return_value = "userTest"
         html1 = session1.get_row_html(1)
 
-        assert_equals(
-            html1,
-            """<tr><td>1</td><td>app1234</td><td>spark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>userTest</td><td>\u2714</td></tr>""",
+        assert (
+            html1
+            == """<tr><td>1</td><td>app1234</td><td>spark</td><td>idle</td><td><a target="_blank" href="https://microsoft.com/sparkui">Link</a></td><td><a target="_blank" href="https://microsoft.com/driverlog">Link</a></td><td>userTest</td><td>\u2714</td></tr>"""
         )
 
         session_id2 = 3
@@ -671,20 +670,20 @@ class TestLivySession(object):
 
         html2 = session2.get_row_html(1)
 
-        assert_equals(
-            html2,
-            """<tr><td>3</td><td>app5069</td><td>pyspark</td><td>busy</td><td></td><td></td><td>userTest2</td><td></td></tr>""",
+        assert (
+            html2
+            == """<tr><td>3</td><td>app5069</td><td>pyspark</td><td>busy</td><td></td><td></td><td>userTest2</td><td></td></tr>"""
         )
 
     def test_link(self):
         url = "https://microsoft.com"
-        assert_equals(
-            LivySession.get_html_link("Link", url),
-            """<a target="_blank" href="https://microsoft.com">Link</a>""",
+        assert (
+            LivySession.get_html_link("Link", url)
+            == """<a target="_blank" href="https://microsoft.com">Link</a>"""
         )
 
         url = None
-        assert_equals(LivySession.get_html_link("Link", url), "")
+        assert LivySession.get_html_link("Link", url) == ""
 
     def test_spark_session_available(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -692,7 +691,7 @@ class TestLivySession(object):
         self.http_client.get_statement.return_value = self.ready_statement_json
         session = self._create_session()
         session.start()
-        assert_equals(session.sql_context_variable_name, "spark")
+        assert session.sql_context_variable_name == "spark"
 
     def test_sql_context_available(self):
         self.http_client.post_session.return_value = self.session_create_json
@@ -704,15 +703,17 @@ class TestLivySession(object):
         self.http_client.get_statement.side_effect = self._next_statement_response_get
         session = self._create_session()
         session.start()
-        assert_equals(session.sql_context_variable_name, "sqlContext")
+        assert session.sql_context_variable_name == "sqlContext"
 
-    @raises(SqlContextNotFoundException)
     def test_spark_session_and_sql_context_unavailable(self):
-        self.http_client.post_session.return_value = self.session_create_json
-        self.http_client.get_session.return_value = self.ready_sessions_json
-        self.http_client.get_statement.return_value = self.ready_statement_failed_json
-        session = self._create_session()
-        session.start()
+        with pytest.raises(SqlContextNotFoundException):
+            self.http_client.post_session.return_value = self.session_create_json
+            self.http_client.get_session.return_value = self.ready_sessions_json
+            self.http_client.get_statement.return_value = (
+                self.ready_statement_failed_json
+            )
+            session = self._create_session()
+            session.start()
 
     def test_is_posted(self):
         self.http_client.post_session.return_value = self.session_create_json

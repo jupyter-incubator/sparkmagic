@@ -1,5 +1,4 @@
 from mock import MagicMock
-from nose.tools import with_setup, assert_equals
 
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.utils import parse_argstring_or_throw, initialize_auth
@@ -22,7 +21,7 @@ shell = None
 ipython_display = None
 
 
-def _setup():
+def setup_function():
     global magic, spark_controller, shell, ipython_display
     conf.override_all({})
 
@@ -32,11 +31,10 @@ def _setup():
     magic.spark_controller = spark_controller = MagicMock()
 
 
-def _teardown():
+def teardown_function():
     pass
 
 
-@with_setup(_setup, _teardown)
 def test_info_command_parses():
     print_info_mock = MagicMock()
     magic._print_local_info = print_info_mock
@@ -47,7 +45,6 @@ def test_info_command_parses():
     print_info_mock.assert_called_once_with()
 
 
-@with_setup(_setup, _teardown)
 def test_info_endpoint_command_parses():
     print_info_mock = MagicMock()
     magic._print_endpoint_info = print_info_mock
@@ -59,7 +56,6 @@ def test_info_endpoint_command_parses():
     print_info_mock.assert_called_once_with(None, 1234)
 
 
-@with_setup(_setup, _teardown)
 def test_info_command_exception():
     print_info_mock = MagicMock(side_effect=LivyClientTimeoutException("OHHHHHOHOHOHO"))
     magic._print_local_info = print_info_mock
@@ -73,7 +69,6 @@ def test_info_command_exception():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_add_sessions_command_parses():
     # Do not skip and python
     add_sessions_mock = MagicMock()
@@ -112,7 +107,6 @@ def test_add_sessions_command_parses():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_add_sessions_command_parses_kerberos():
     # Do not skip and python
     add_sessions_mock = MagicMock()
@@ -132,10 +126,9 @@ def test_add_sessions_command_parses_kerberos():
         False,
         {"kind": "pyspark"},
     )
-    assert_equals(auth_instance.url, "http://url.com")
+    assert auth_instance.url == "http://url.com"
 
 
-@with_setup(_setup, _teardown)
 def test_add_sessions_command_exception():
     # Do not skip and python
     add_sessions_mock = MagicMock(side_effect=BadUserDataException("hehe"))
@@ -159,7 +152,6 @@ def test_add_sessions_command_exception():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_add_sessions_command_extra_properties():
     conf.override_all({})
     magic.spark("config", '{"extra": "yes"}')
@@ -185,7 +177,6 @@ def test_add_sessions_command_extra_properties():
     conf.override_all({})
 
 
-@with_setup(_setup, _teardown)
 def test_delete_sessions_command_parses():
     mock_method = MagicMock()
     spark_controller.delete_session_by_name = mock_method
@@ -201,7 +192,6 @@ def test_delete_sessions_command_parses():
     mock_method.assert_called_once_with(Endpoint("URL", initialize_auth(args)), 4)
 
 
-@with_setup(_setup, _teardown)
 def test_delete_sessions_command_exception():
     mock_method = MagicMock(side_effect=LivyUnexpectedStatusException("FEEEEEELINGS"))
     spark_controller.delete_session_by_name = mock_method
@@ -213,7 +203,6 @@ def test_delete_sessions_command_exception():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_cleanup_command_parses():
     mock_method = MagicMock()
     spark_controller.cleanup = mock_method
@@ -224,7 +213,6 @@ def test_cleanup_command_parses():
     mock_method.assert_called_once_with()
 
 
-@with_setup(_setup, _teardown)
 def test_cleanup_command_exception():
     mock_method = MagicMock(
         side_effect=SessionManagementException("Livy did something VERY BAD")
@@ -239,7 +227,6 @@ def test_cleanup_command_exception():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_cleanup_endpoint_command_parses():
     mock_method = MagicMock()
     spark_controller.cleanup_endpoint = mock_method
@@ -256,7 +243,6 @@ def test_cleanup_endpoint_command_parses():
     mock_method.assert_called_with(Endpoint("endp", initialize_auth(args)))
 
 
-@with_setup(_setup, _teardown)
 def test_bad_command_writes_error():
     line = "bad_command"
     usage = "Please look at usage of %spark by executing `%spark?`."
@@ -268,7 +254,6 @@ def test_bad_command_writes_error():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_cell_command_parses():
     run_cell_method = MagicMock()
     result_value = ""
@@ -287,7 +272,6 @@ def test_run_cell_command_parses():
     ipython_display.write.assert_called_once_with(result_value)
 
 
-@with_setup(_setup, _teardown)
 def test_run_cell_command_writes_to_err():
     run_cell_method = MagicMock()
     result_value = ""
@@ -308,7 +292,6 @@ def test_run_cell_command_writes_to_err():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_cell_command_exception():
     run_cell_method = MagicMock()
     run_cell_method.side_effect = HttpClientException("meh")
@@ -328,7 +311,6 @@ def test_run_cell_command_exception():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_spark_command_parses():
     magic.execute_spark = MagicMock()
 
@@ -348,7 +330,6 @@ def test_run_spark_command_parses():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_spark_command_parses_with_coerce():
     magic.execute_spark = MagicMock()
 
@@ -372,7 +353,6 @@ def test_run_spark_command_parses_with_coerce():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_spark_command_parses_with_coerce_false():
     magic.execute_spark = MagicMock()
 
@@ -396,7 +376,6 @@ def test_run_spark_command_parses_with_coerce_false():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_sql_command_parses_with_coerce_false():
     magic.execute_sqlquery = MagicMock()
 
@@ -420,7 +399,6 @@ def test_run_sql_command_parses_with_coerce_false():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_spark_with_store_command_parses():
     magic.execute_spark = MagicMock()
 
@@ -443,7 +421,6 @@ def test_run_spark_with_store_command_parses():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_spark_with_store_correct_calls():
     run_cell_method = MagicMock()
     run_cell_method.return_value = (True, "", MIMETYPE_TEXT_PLAIN)
@@ -483,7 +460,6 @@ def test_run_spark_with_store_correct_calls():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_spark_command_exception():
     run_cell_method = MagicMock()
     run_cell_method.side_effect = LivyUnexpectedStatusException("WOW")
@@ -510,7 +486,6 @@ def test_run_spark_command_exception():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_spark_command_exception_while_storing():
     run_cell_method = MagicMock()
     exception = LivyUnexpectedStatusException("WOW")
@@ -542,7 +517,6 @@ def test_run_spark_command_exception_while_storing():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_sql_command_parses():
     run_cell_method = MagicMock()
     run_cell_method.return_value = (True, "", MIMETYPE_TEXT_PLAIN)
@@ -565,7 +539,6 @@ def test_run_sql_command_parses():
     assert result is not None
 
 
-@with_setup(_setup, _teardown)
 def test_run_sql_command_exception():
     run_cell_method = MagicMock()
     run_cell_method.side_effect = LivyUnexpectedStatusException("WOW")
@@ -590,7 +563,6 @@ def test_run_sql_command_exception():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_run_sql_command_knows_how_to_be_quiet():
     run_cell_method = MagicMock()
     run_cell_method.return_value = (True, "", MIMETYPE_TEXT_PLAIN)
@@ -614,7 +586,6 @@ def test_run_sql_command_knows_how_to_be_quiet():
     assert result is None
 
 
-@with_setup(_setup, _teardown)
 def test_logs_subcommand():
     get_logs_method = MagicMock()
     result_value = ""
@@ -633,7 +604,6 @@ def test_logs_subcommand():
     ipython_display.write.assert_called_once_with(result_value)
 
 
-@with_setup(_setup, _teardown)
 def test_logs_exception():
     get_logs_method = MagicMock(
         side_effect=LivyUnexpectedStatusException("How did this happen?")

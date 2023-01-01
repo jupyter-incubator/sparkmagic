@@ -1,4 +1,3 @@
-from nose.tools import with_setup
 import pandas as pd
 
 from ..widget import utils as utils
@@ -9,7 +8,7 @@ df = None
 encoding = None
 
 
-def _setup():
+def setup_function():
     global df, encoding
 
     records = [
@@ -61,11 +60,10 @@ def _setup():
     encoding = Encoding(chart_type="table", x="date", y="temp_diff")
 
 
-def _teardown():
+def teardown_function():
     pass
 
 
-@with_setup(_setup, _teardown)
 def test_on_render_viz():
     df["date"] = pd.to_datetime(df["date"])
     df["mystr2"] = pd.to_numeric(df["mystr2"])

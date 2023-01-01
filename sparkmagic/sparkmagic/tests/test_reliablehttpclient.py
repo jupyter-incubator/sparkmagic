@@ -2,14 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from mock import patch, PropertyMock, MagicMock
-from nose.tools import (
-    raises,
-    assert_equals,
-    with_setup,
-    assert_is_not_none,
-    assert_false,
-    assert_true,
-)
+import pytest
 import requests
 from requests_kerberos.kerberos_ import HTTPKerberosAuth, REQUIRED, OPTIONAL
 from sparkmagic.auth.basic import Basic
@@ -30,12 +23,12 @@ kerberos_auth = Kerberos()
 endpoint = Endpoint("http://url.com", basic_auth)
 
 
-def _setup():
+def setup_function():
     global retry_policy
     retry_policy = LinearRetryPolicy(0.01, 5)
 
 
-def _teardown():
+def teardown_function():
     pass
 
 
@@ -46,26 +39,24 @@ def return_sequential():
     return val
 
 
-@with_setup(_setup, _teardown)
 def test_compose_url():
     client = ReliableHttpClient(endpoint, {}, retry_policy)
 
     composed = client.compose_url("r")
-    assert_equals("http://url.com/r", composed)
+    assert "http://url.com/r" == composed
 
     composed = client.compose_url("/r")
-    assert_equals("http://url.com/r", composed)
+    assert "http://url.com/r" == composed
 
     client = ReliableHttpClient(endpoint, {}, retry_policy)
 
     composed = client.compose_url("r")
-    assert_equals("http://url.com/r", composed)
+    assert "http://url.com/r" == composed
 
     composed = client.compose_url("/r")
-    assert_equals("http://url.com/r", composed)
+    assert "http://url.com/r" == composed
 
 
-@with_setup(_setup, _teardown)
 def test_get():
     with patch("requests.Session.get") as patched_get:
         type(patched_get.return_value).status_code = 200
@@ -74,21 +65,19 @@ def test_get():
 
         result = client.get("r", [200])
 
-        assert_equals(200, result.status_code)
+        assert 200 == result.status_code
 
 
-@raises(HttpClientException)
-@with_setup(_setup, _teardown)
 def test_get_throws():
-    with patch("requests.Session.get") as patched_get:
-        type(patched_get.return_value).status_code = 500
+    with pytest.raises(HttpClientException):
+        with patch("requests.Session.get") as patched_get:
+            type(patched_get.return_value).status_code = 500
 
-        client = ReliableHttpClient(endpoint, {}, retry_policy)
+            client = ReliableHttpClient(endpoint, {}, retry_policy)
 
-        client.get("r", [200])
+            client.get("r", [200])
 
 
-@with_setup(_setup, _teardown)
 def test_get_will_retry():
     global sequential_values, retry_policy
     retry_policy = MagicMock()
@@ -106,12 +95,11 @@ def test_get_will_retry():
 
         result = client.get("r", [200])
 
-        assert_equals(200, result.status_code)
+        assert 200 == result.status_code
         retry_policy.should_retry.assert_called_once_with(500, False, 0)
         retry_policy.seconds_to_sleep.assert_called_once_with(0)
 
 
-@with_setup(_setup, _teardown)
 def test_post():
     with patch("requests.Session.post") as patched_post:
         type(patched_post.return_value).status_code = 200
@@ -120,21 +108,19 @@ def test_post():
 
         result = client.post("r", [200], {})
 
-        assert_equals(200, result.status_code)
+        assert 200 == result.status_code
 
 
-@raises(HttpClientException)
-@with_setup(_setup, _teardown)
 def test_post_throws():
-    with patch("requests.Session.post") as patched_post:
-        type(patched_post.return_value).status_code = 500
+    with pytest.raises(HttpClientException):
+        with patch("requests.Session.post") as patched_post:
+            type(patched_post.return_value).status_code = 500
 
-        client = ReliableHttpClient(endpoint, {}, retry_policy)
+            client = ReliableHttpClient(endpoint, {}, retry_policy)
 
-        client.post("r", [200], {})
+            client.post("r", [200], {})
 
 
-@with_setup(_setup, _teardown)
 def test_post_will_retry():
     global sequential_values, retry_policy
     retry_policy = MagicMock()
@@ -152,12 +138,11 @@ def test_post_will_retry():
 
         result = client.post("r", [200], {})
 
-        assert_equals(200, result.status_code)
+        assert 200 == result.status_code
         retry_policy.should_retry.assert_called_once_with(500, False, 0)
         retry_policy.seconds_to_sleep.assert_called_once_with(0)
 
 
-@with_setup(_setup, _teardown)
 def test_delete():
     with patch("requests.Session.delete") as patched_delete:
         type(patched_delete.return_value).status_code = 200
@@ -166,21 +151,19 @@ def test_delete():
 
         result = client.delete("r", [200])
 
-        assert_equals(200, result.status_code)
+        assert 200 == result.status_code
 
 
-@raises(HttpClientException)
-@with_setup(_setup, _teardown)
 def test_delete_throws():
-    with patch("requests.Session.delete") as patched_delete:
-        type(patched_delete.return_value).status_code = 500
+    with pytest.raises(HttpClientException):
+        with patch("requests.Session.delete") as patched_delete:
+            type(patched_delete.return_value).status_code = 500
 
-        client = ReliableHttpClient(endpoint, {}, retry_policy)
+            client = ReliableHttpClient(endpoint, {}, retry_policy)
 
-        client.delete("r", [200])
+            client.delete("r", [200])
 
 
-@with_setup(_setup, _teardown)
 def test_delete_will_retry():
     global sequential_values, retry_policy
     retry_policy = MagicMock()
@@ -198,12 +181,11 @@ def test_delete_will_retry():
 
         result = client.delete("r", [200])
 
-        assert_equals(200, result.status_code)
+        assert 200 == result.status_code
         retry_policy.should_retry.assert_called_once_with(500, False, 0)
         retry_policy.seconds_to_sleep.assert_called_once_with(0)
 
 
-@with_setup(_setup, _teardown)
 def test_will_retry_error_no():
     global sequential_values, retry_policy
     retry_policy = MagicMock()
@@ -221,35 +203,31 @@ def test_will_retry_error_no():
             retry_policy.should_retry.assert_called_once_with(None, True, 0)
 
 
-@with_setup(_setup, _teardown)
 def test_basic_auth_check_auth():
     endpoint = Endpoint("http://url.com", basic_auth)
     client = ReliableHttpClient(endpoint, {}, retry_policy)
     assert isinstance(client._auth, Basic)
     assert hasattr(client._auth, "username")
     assert hasattr(client._auth, "password")
-    assert_equals(client._auth.username, endpoint.auth.username)
-    assert_equals(client._auth.password, endpoint.auth.password)
+    assert client._auth.username == endpoint.auth.username
+    assert client._auth.password == endpoint.auth.password
 
 
-@with_setup(_setup, _teardown)
 def test_no_auth_check_auth():
     endpoint = Endpoint("http://url.com", None)
     client = ReliableHttpClient(endpoint, {}, retry_policy)
-    assert_equals(client._auth, None)
+    assert client._auth == None
 
 
-@with_setup(_setup, _teardown)
 def test_kerberos_auth_check_auth():
     endpoint = Endpoint("http://url.com", kerberos_auth)
     client = ReliableHttpClient(endpoint, {}, retry_policy)
-    assert_is_not_none(client._auth)
+    assert client._auth is not None
     assert isinstance(client._auth, HTTPKerberosAuth)
     assert hasattr(client._auth, "mutual_authentication")
-    assert_equals(client._auth.mutual_authentication, REQUIRED)
+    assert client._auth.mutual_authentication == REQUIRED
 
 
-@with_setup(_setup, _teardown)
 def test_kerberos_auth_custom_configuration():
     custom_kerberos_conf = {"mutual_authentication": OPTIONAL, "force_preemptive": True}
     overrides = {conf.kerberos_auth_configuration.__name__: custom_kerberos_conf}
@@ -257,9 +235,9 @@ def test_kerberos_auth_custom_configuration():
     kerberos_auth = Kerberos()
     endpoint = Endpoint("http://url.com", kerberos_auth)
     client = ReliableHttpClient(endpoint, {}, retry_policy)
-    assert_is_not_none(client._auth)
+    assert client._auth is not None
     assert isinstance(client._auth, HTTPKerberosAuth)
     assert hasattr(client._auth, "mutual_authentication")
-    assert_equals(client._auth.mutual_authentication, OPTIONAL)
+    assert client._auth.mutual_authentication == OPTIONAL
     assert hasattr(client._auth, "force_preemptive")
-    assert_equals(client._auth.force_preemptive, True)
+    assert client._auth.force_preemptive == True
