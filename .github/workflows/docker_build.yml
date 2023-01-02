@@ -19,12 +19,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - if: github.event_name == "push" 
+      - if: github.event_name == 'push' 
         name: Run docker compose build with local packages
         run: |
           docker compose build --build-arg dev_mode="true"
 
-      - if: github.event_name == "schedule" 
+      - if: github.event_name == 'schedule' 
         name: Run docker compose build with latest release
         run: |
           docker compose build
