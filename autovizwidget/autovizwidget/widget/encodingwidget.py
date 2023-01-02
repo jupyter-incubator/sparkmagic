@@ -43,8 +43,8 @@ class EncodingWidget(Box):
         )
 
         # X view
-        options_x_view = {text(i): text(i) for i in self.df.columns}
-        options_x_view["-"] = None
+        options_x_view = [(text(i), text(i)) for i in self.df.columns]
+        options_x_view.insert(0, ("-", None))
         self.x_view = self.ipywidget_factory.get_dropdown(
             options=options_x_view, description="X", value=self.encoding.x
         )
@@ -52,8 +52,8 @@ class EncodingWidget(Box):
         self.x_view.layout.width = "200px"
 
         # Y
-        options_y_view = {text(i): text(i) for i in self.df.columns}
-        options_y_view["-"] = None
+        options_y_view = [(text(i), text(i)) for i in self.df.columns]
+        options_y_view.insert(0, ("-", None))
         y_column_view = self.ipywidget_factory.get_dropdown(
             options=options_y_view, description="Y", value=self.encoding.y
         )
@@ -62,15 +62,16 @@ class EncodingWidget(Box):
 
         # Y aggregator
         value_for_view = self._get_value_for_aggregation(self.encoding.y_aggregation)
+        options_y_agg_view = [
+            ("-", Encoding.y_agg_none),
+            (Encoding.y_agg_avg, Encoding.y_agg_avg),
+            (Encoding.y_agg_min, Encoding.y_agg_min),
+            (Encoding.y_agg_max, Encoding.y_agg_max),
+            (Encoding.y_agg_sum, Encoding.y_agg_sum),
+            (Encoding.y_agg_count, Encoding.y_agg_count),
+        ]
         self.y_agg_view = self.ipywidget_factory.get_dropdown(
-            options={
-                "-": Encoding.y_agg_none,
-                Encoding.y_agg_avg: Encoding.y_agg_avg,
-                Encoding.y_agg_min: Encoding.y_agg_min,
-                Encoding.y_agg_max: Encoding.y_agg_max,
-                Encoding.y_agg_sum: Encoding.y_agg_sum,
-                Encoding.y_agg_count: Encoding.y_agg_count,
-            },
+            options=options_y_agg_view,
             description="Func.",
             value=value_for_view,
         )

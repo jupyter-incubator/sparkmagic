@@ -1,7 +1,6 @@
 from IPython.core.error import UsageError
 from mock import MagicMock
 import numpy as np
-from nose.tools import assert_equals, assert_is
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
@@ -27,7 +26,7 @@ def test_parse_argstring_or_throw():
         )
         assert False
     except BadUserDataException as e:
-        assert_equals(str(e), str(parse_argstring.side_effect))
+        assert str(e) == str(parse_argstring.side_effect)
 
     parse_argstring = MagicMock(side_effect=ValueError("AN UNKNOWN ERROR HAPPENED"))
     try:
@@ -36,7 +35,7 @@ def test_parse_argstring_or_throw():
         )
         assert False
     except ValueError as e:
-        assert_is(e, parse_argstring.side_effect)
+        assert e is parse_argstring.side_effect
 
 
 def test_records_to_dataframe_missing_value_first():

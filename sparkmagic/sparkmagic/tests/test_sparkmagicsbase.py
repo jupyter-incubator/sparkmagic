@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-import sparkmagic.utils.configuration as conf
+import pytest
 from mock import MagicMock
-from nose.tools import with_setup, assert_equals, assert_raises, raises
 
+import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.configuration import get_livy_kind
 from sparkmagic.utils.constants import (
     LANGS_SUPPORTED,
@@ -23,7 +23,7 @@ from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
 
 
-def _setup():
+def setup_function():
     global magic, session, shell, ipython_display
     shell = MagicMock()
     shell.user_ns = {}
@@ -35,7 +35,7 @@ def _setup():
     conf.override_all({})
 
 
-def _teardown():
+def teardown_function():
     pass
 
 
@@ -50,7 +50,6 @@ def test_get_livy_kind_covers_all_langs():
         get_livy_kind(lang)
 
 
-@with_setup(_setup, _teardown)
 def test_sql_df_execution_without_output_var():
     df = 0
     query = SQLQuery("")
@@ -60,10 +59,9 @@ def test_sql_df_execution_without_output_var():
 
     magic.spark_controller.run_sqlquery.assert_called_once_with(query, session)
     assert res == df
-    assert_equals(list(shell.user_ns.keys()), [])
+    assert list(shell.user_ns.keys()) == []
 
 
-@with_setup(_setup, _teardown)
 def test_sql_df_execution_with_output_var():
     df = 0
     query = SQLQuery("")
@@ -79,7 +77,6 @@ def test_sql_df_execution_with_output_var():
     assert shell.user_ns[output_var] == df
 
 
-@with_setup(_setup, _teardown)
 def test_sql_df_execution_quiet_without_output_var():
     df = 0
     cell = SQLQuery("")
@@ -92,10 +89,9 @@ def test_sql_df_execution_quiet_without_output_var():
 
     magic.spark_controller.run_sqlquery.assert_called_once_with(cell, session)
     assert res is None
-    assert_equals(list(shell.user_ns.keys()), [])
+    assert list(shell.user_ns.keys()) == []
 
 
-@with_setup(_setup, _teardown)
 def test_sql_df_execution_quiet_with_output_var():
     df = 0
     cell = SQLQuery("")
@@ -111,7 +107,6 @@ def test_sql_df_execution_quiet_with_output_var():
     assert shell.user_ns[output_var] == df
 
 
-@with_setup(_setup, _teardown)
 def test_sql_df_execution_quiet_with_coerce():
     df = 0
     cell = SQLQuery("", coerce=True)
@@ -127,7 +122,6 @@ def test_sql_df_execution_quiet_with_coerce():
     assert shell.user_ns[output_var] == df
 
 
-@with_setup(_setup, _teardown)
 def test_print_endpoint_info():
     current_session_id = 1
     session1 = MagicMock()
@@ -145,43 +139,39 @@ def test_print_endpoint_info():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_print_empty_endpoint_info():
     current_session_id = None
     magic._print_endpoint_info([], current_session_id)
     magic.ipython_display.html.assert_called_once_with("No active sessions.")
 
 
-@with_setup(_setup, _teardown)
-@raises(BadUserDataException)
 def test_send_to_spark_should_raise_when_variable_value_is_none():
-    input_variable_name = "x_in"
-    output_variable_name = "x_out"
-    var_type = "str"
-    max_rows = 25000
-    magic.shell.user_ns[input_variable_name] = None
+    with pytest.raises(BadUserDataException):
+        input_variable_name = "x_in"
+        output_variable_name = "x_out"
+        var_type = "str"
+        max_rows = 25000
+        magic.shell.user_ns[input_variable_name] = None
 
-    magic.do_send_to_spark(
-        "", input_variable_name, var_type, output_variable_name, max_rows, None
-    )
+        magic.do_send_to_spark(
+            "", input_variable_name, var_type, output_variable_name, max_rows, None
+        )
 
 
-@with_setup(_setup, _teardown)
-@raises(BadUserDataException)
 def test_send_to_spark_should_raise_when_type_is_incorrect():
-    input_variable_name = "x_in"
-    input_variable_value = "x_value"
-    output_variable_name = "x_out"
-    var_type = "incorrect"
-    max_rows = 25000
-    magic.shell.user_ns[input_variable_name] = input_variable_value
+    with pytest.raises(BadUserDataException):
+        input_variable_name = "x_in"
+        input_variable_value = "x_value"
+        output_variable_name = "x_out"
+        var_type = "incorrect"
+        max_rows = 25000
+        magic.shell.user_ns[input_variable_name] = input_variable_value
 
-    magic.do_send_to_spark(
-        "", input_variable_name, var_type, output_variable_name, max_rows, None
-    )
+        magic.do_send_to_spark(
+            "", input_variable_name, var_type, output_variable_name, max_rows, None
+        )
 
 
-@with_setup(_setup, _teardown)
 def test_send_to_spark_should_print_error_when_str_command_failed():
     input_variable_name = "x_in"
     input_variable_value = "x_value"
@@ -204,7 +194,6 @@ def test_send_to_spark_should_print_error_when_str_command_failed():
     assert not magic.ipython_display.write.called
 
 
-@with_setup(_setup, _teardown)
 def test_send_to_spark_should_print_error_when_df_command_failed():
     input_variable_name = "x_in"
     input_variable_value = "x_value"
@@ -227,7 +216,6 @@ def test_send_to_spark_should_print_error_when_df_command_failed():
     assert not magic.ipython_display.write.called
 
 
-@with_setup(_setup, _teardown)
 def test_send_to_spark_should_name_the_output_variable_the_same_as_input_name_when_custom_name_not_provided():
     input_variable_name = "x_in"
     input_variable_value = output_value = "x_value"
@@ -248,7 +236,6 @@ def test_send_to_spark_should_name_the_output_variable_the_same_as_input_name_wh
     assert not magic.ipython_display.send_error.called
 
 
-@with_setup(_setup, _teardown)
 def test_send_to_spark_should_write_successfully_when_everything_is_correct():
     input_variable_name = "x_in"
     input_variable_value = output_value = "x_value"
@@ -269,7 +256,6 @@ def test_send_to_spark_should_write_successfully_when_everything_is_correct():
     assert not magic.ipython_display.send_error.called
 
 
-@with_setup(_setup, _teardown)
 def test_spark_execution_without_output_var():
     output_var = None
 
@@ -283,21 +269,19 @@ def test_spark_execution_without_output_var():
         "out",
         MIMETYPE_TEXT_PLAIN,
     )
-    assert_raises(
-        SparkStatementException,
-        magic.execute_spark,
-        "",
-        output_var,
-        None,
-        None,
-        None,
-        session,
-        True,
-    )
-    assert not magic.spark_controller._spark_store_command.called
+    with pytest.raises(SparkStatementException):
+        magic.execute_spark(
+            "",
+            output_var,
+            None,
+            None,
+            None,
+            session,
+            True,
+        )
+        assert not magic.spark_controller._spark_store_command.called
 
 
-@with_setup(_setup, _teardown)
 def test_spark_execution_with_output_var():
     mockSparkCommand = MagicMock()
     magic._spark_store_command = MagicMock(return_value=mockSparkCommand)
@@ -321,20 +305,18 @@ def test_spark_execution_with_output_var():
         "out",
         MIMETYPE_TEXT_PLAIN,
     )
-    assert_raises(
-        SparkStatementException,
-        magic.execute_spark,
-        "",
-        output_var,
-        None,
-        None,
-        None,
-        session,
-        True,
-    )
+    with pytest.raises(SparkStatementException):
+        magic.execute_spark(
+            "",
+            output_var,
+            None,
+            None,
+            None,
+            session,
+            True,
+        )
 
 
-@with_setup(_setup, _teardown)
 def test_spark_exception_with_output_var():
     mockSparkCommand = MagicMock()
     magic._spark_store_command = MagicMock(return_value=mockSparkCommand)
@@ -346,17 +328,8 @@ def test_spark_exception_with_output_var():
         (True, "out", MIMETYPE_TEXT_PLAIN),
         exception,
     ]
-    assert_raises(
-        BadUserDataException,
-        magic.execute_spark,
-        "",
-        output_var,
-        None,
-        None,
-        None,
-        session,
-        True,
-    )
+    with pytest.raises(BadUserDataException):
+        magic.execute_spark("", output_var, None, None, None, session, True)
     magic.ipython_display.write.assert_called_once_with("out")
     magic._spark_store_command.assert_called_once_with(
         output_var, None, None, None, True
@@ -364,7 +337,6 @@ def test_spark_exception_with_output_var():
     assert shell.user_ns == {}
 
 
-@with_setup(_setup, _teardown)
 def test_spark_statement_exception():
     mockSparkCommand = MagicMock()
     magic._spark_store_command = MagicMock(return_value=mockSparkCommand)
@@ -374,21 +346,11 @@ def test_spark_statement_exception():
         (False, "out", "text/plain"),
         exception,
     ]
-    assert_raises(
-        SparkStatementException,
-        magic.execute_spark,
-        "",
-        None,
-        None,
-        None,
-        None,
-        session,
-        True,
-    )
+    with pytest.raises(SparkStatementException):
+        magic.execute_spark("", None, None, None, None, session, True)
     magic.spark_controller.cleanup.assert_not_called()
 
 
-@with_setup(_setup, _teardown)
 def test_spark_statement_exception_shutdowns_livy_session():
     conf.override_all({"shutdown_session_on_spark_statement_errors": True})
 
@@ -400,15 +362,6 @@ def test_spark_statement_exception_shutdowns_livy_session():
         (False, "out", "text/plain"),
         exception,
     ]
-    assert_raises(
-        SparkStatementException,
-        magic.execute_spark,
-        "",
-        None,
-        None,
-        None,
-        None,
-        session,
-        True,
-    )
+    with pytest.raises(SparkStatementException):
+        magic.execute_spark("", None, None, None, None, session, True)
     magic.spark_controller.cleanup.assert_called_once()

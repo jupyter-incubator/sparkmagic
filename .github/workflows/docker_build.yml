@@ -1,0 +1,30 @@
+name: Build Docker Image
+
+on:
+  push: {}
+  schedule:
+    # Run daily
+    - cron: '6 4 * * *'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - if: github.event_name == 'push' 
+        name: Run docker compose build with local packages
+        run: |
+          docker compose build --build-arg dev_mode="true"
+
+      - if: github.event_name == 'schedule' 
+        name: Run docker compose build with latest release
+        run: |
+          docker compose build

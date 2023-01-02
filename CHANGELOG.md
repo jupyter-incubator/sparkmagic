@@ -1,6 +1,30 @@
 # Changelog
 
-- For pretty-printed dataframe output, the table data is now wrapped in a `<pre>` tag so that it isn't parsed in anyway.
+## Next Release
+
+### Bug Fixes
+- Support non ASCII characters in `%%pretty` output
+
+## 0.20.3
+
+### Bug Fixes
+* Fix package install
+
+## 0.20.2
+
+### Updates
+* Add official support for Python 3.10 and 3.11
+* Migrate from nose to pytest for tests
+* Add Poetry as an option for local development
+
+### Bug Fixes
+* Support `ipywidgets==8.0.0` 
+
+## 0.20.1
+
+### Bug Fixes
+
+* Fixed compatibility issue with Pandas >=1.5.0 (https://github.com/jupyter-incubator/sparkmagic/issues/776). Thanks @GaspardBT
 
 ## 0.20.0
 

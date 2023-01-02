@@ -1,13 +1,14 @@
+import pytest
+from mock import MagicMock
+
 from hdijupyterutils.constants import INSTANCE_ID, EVENT_NAME, TIMESTAMP
 from hdijupyterutils.utils import get_instance_id, generate_uuid
-from nose.tools import with_setup, raises
-from mock import MagicMock
 
 import sparkmagic.utils.constants as constants
 from sparkmagic.utils.sparkevents import SparkEvents
 
 
-def _setup():
+def setup_function():
     global spark_events, guid1, guid2, guid3, time_stamp
 
     spark_events = SparkEvents()
@@ -20,11 +21,10 @@ def _setup():
     guid3 = generate_uuid()
 
 
-def _teardown():
+def teardown_function():
     pass
 
 
-@with_setup(_setup, _teardown)
 def test_emit_library_loaded_event():
     event_name = constants.LIBRARY_LOADED_EVENT
     kwargs_list = [
@@ -39,7 +39,6 @@ def test_emit_library_loaded_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_cluster_change_event():
     status_code = 200
 
@@ -60,7 +59,6 @@ def test_emit_cluster_change_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_session_creation_start_event():
     language = constants.SESSION_KIND_SPARK
     event_name = constants.SESSION_CREATION_START_EVENT
@@ -79,7 +77,6 @@ def test_emit_session_creation_start_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_session_creation_end_event():
     language = constants.SESSION_KIND_SPARK
     event_name = constants.SESSION_CREATION_END_EVENT
@@ -107,7 +104,6 @@ def test_emit_session_creation_end_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_session_deletion_start_event():
     language = constants.SESSION_KIND_SPARK
     event_name = constants.SESSION_DELETION_START_EVENT
@@ -130,7 +126,6 @@ def test_emit_session_deletion_start_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_session_deletion_end_event():
     language = constants.SESSION_KIND_SPARK
     event_name = constants.SESSION_DELETION_END_EVENT
@@ -158,7 +153,6 @@ def test_emit_session_deletion_end_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_statement_execution_start_event():
     language = constants.SESSION_KIND_PYSPARK
     session_id = 7
@@ -183,7 +177,6 @@ def test_emit_statement_execution_start_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_statement_execution_end_event():
     language = constants.SESSION_KIND_SPARK
     session_id = 7
@@ -223,7 +216,6 @@ def test_emit_statement_execution_end_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_sql_execution_start_event():
     event_name = constants.SQL_EXECUTION_START_EVENT
     session_id = 22
@@ -254,7 +246,6 @@ def test_emit_sql_execution_start_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_sql_execution_end_event():
     event_name = constants.SQL_EXECUTION_END_EVENT
     session_id = 17
@@ -293,7 +284,6 @@ def test_emit_sql_execution_end_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_magic_execution_start_event():
     event_name = constants.MAGIC_EXECUTION_START_EVENT
     magic_name = "sql"
@@ -315,7 +305,6 @@ def test_emit_magic_execution_start_event():
     spark_events.handler.handle_event.assert_called_once_with(kwargs_list)
 
 
-@with_setup(_setup, _teardown)
 def test_emit_magic_execution_end_event():
     event_name = constants.MAGIC_EXECUTION_END_EVENT
     magic_name = "sql"
@@ -350,6 +339,6 @@ def test_magic_verify_language_ok():
         SparkEvents()._verify_language_ok(language)
 
 
-@raises(AssertionError)
 def test_magic_verify_language_ok_error():
-    SparkEvents()._verify_language_ok("NYARGLEBARGLE")
+    with pytest.raises(AssertionError):
+        SparkEvents()._verify_language_ok("not a real language")

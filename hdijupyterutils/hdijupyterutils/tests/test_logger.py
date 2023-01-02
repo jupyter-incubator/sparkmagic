@@ -1,6 +1,5 @@
 # coding=utf-8
 import logging
-from nose.tools import assert_equals
 
 from hdijupyterutils.log import Log, logging_config
 
@@ -46,7 +45,7 @@ def test_log_returnvalue():
     mock = logger.logger
     logger.debug("word1")
     assert mock.level == "DEBUG"
-    assert_equals(mock.message, "test2\tword1")
+    assert mock.message == "test2\tword1"
     logger.error("word2")
     assert mock.level == "ERROR"
     assert mock.message == "test2\tword2"

@@ -1,5 +1,4 @@
 from mock import MagicMock, call
-from nose.tools import with_setup, assert_equals
 import pandas as pd
 from pandas.testing import assert_frame_equal, assert_series_equal
 
@@ -17,7 +16,7 @@ ipython_display = None
 spark_events = None
 
 
-def _setup():
+def setup_function():
     global renderer, df, encoding, encoding_widget, output, ipywidget_factory, ipython_display, spark_events
 
     renderer = MagicMock()
@@ -49,11 +48,10 @@ def _setup():
     spark_events = MagicMock()
 
 
-def _teardown():
+def teardown_function():
     pass
 
 
-@with_setup(_setup, _teardown)
 def test_on_render_viz():
     widget = AutoVizWidget(
         df,
@@ -69,10 +67,10 @@ def test_on_render_viz():
     # on_render_viz is called in the constructor, so no need to call it here.
     output.clear_output.assert_called_once_with()
 
-    assert_equals(len(renderer.render.mock_calls), 1)
-    assert_equals(len(renderer.render.mock_calls[0]), 3)
-    assert_equals(renderer.render.mock_calls[0][1][1], encoding)
-    assert_equals(renderer.render.mock_calls[0][1][2], output)
+    assert len(renderer.render.mock_calls) == 1
+    assert len(renderer.render.mock_calls[0]) == 3
+    assert renderer.render.mock_calls[0][1][1] == encoding
+    assert renderer.render.mock_calls[0][1][2] == output
     assert_frame_equal(renderer.render.mock_calls[0][1][0], df)
 
     encoding_widget.show_x.assert_called_once_with(True)
@@ -85,14 +83,12 @@ def test_on_render_viz():
 
     encoding._chart_type = Encoding.chart_type_scatter
     widget.on_render_viz()
-    assert_equals(len(spark_events.emit_graph_render_event.mock_calls), 2)
-    assert_equals(
-        spark_events.emit_graph_render_event.call_args,
-        call(Encoding.chart_type_scatter),
+    assert len(spark_events.emit_graph_render_event.mock_calls) == 2
+    assert spark_events.emit_graph_render_event.call_args == call(
+        Encoding.chart_type_scatter
     )
 
 
-@with_setup(_setup, _teardown)
 def test_create_viz_types_buttons():
     df_single_column = pd.DataFrame([{"buildingID": 0}])
     widget = AutoVizWidget(
@@ -163,7 +159,6 @@ def test_create_viz_types_buttons():
     )
 
 
-@with_setup(_setup, _teardown)
 def test_create_viz_empty_df():
     df = pd.DataFrame([])
     widget = AutoVizWidget(
@@ -183,7 +178,6 @@ def test_create_viz_empty_df():
     spark_events.emit_graph_render_event.assert_called_once_with(encoding.chart_type)
 
 
-@with_setup(_setup, _teardown)
 def test_convert_to_displayable_dataframe():
     bool_df = pd.DataFrame(
         [
@@ -207,8 +201,8 @@ def test_convert_to_displayable_dataframe():
     assert_frame_equal(bool_df, copy_of_df)
     assert_series_equal(bool_df["int_col"], result["int_col"])
     assert_series_equal(bool_df["float_col"], result["float_col"])
-    assert_equals(result.dtypes["bool_col"], object)
-    assert_equals(len(result["bool_col"]), 2)
-    assert_equals(result["bool_col"][0], "True")
-    assert_equals(result["bool_col"][1], "False")
+    assert result.dtypes["bool_col"] == object
+    assert len(result["bool_col"]) == 2
+    assert result["bool_col"][0] == "True"
+    assert result["bool_col"][1] == "False"
     spark_events.emit_graph_render_event.assert_called_once_with(encoding.chart_type)
