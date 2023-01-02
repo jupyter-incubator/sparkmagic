@@ -2,6 +2,11 @@
 
 ## Next Release
 
+## 0.20.3
+
+### Bug Fixes
+* Fix package install
+
 ## 0.20.2
 
 ### Updates
