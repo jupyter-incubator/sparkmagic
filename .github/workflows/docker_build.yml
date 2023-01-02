@@ -23,4 +23,4 @@ jobs:
       -
         name: Run docker compose build
         run: |
-          docker compose build
+          docker compose build --build-arg dev_mode="true"
