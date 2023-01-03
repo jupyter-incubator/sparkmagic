@@ -327,19 +327,20 @@ class TestDataframeParsing(unittest.TestCase):
                 Random stuff at the end
                 """
         self.maxDiff = 1200
+        pre = '<pre style="word-break: unset; background-color: unset;">'
         self.assertEqual(
             CellOutputHtmlParser.to_html(cell),
             (
                 "<pre>Random stuff at the start</pre><br />"
-                "<table><tr><th>id</th><th>animal</th></tr>"
-                "<tr><td>1</td><td>bat</td></tr>"
-                "<tr><td>2</td><td>mouse</td></tr>"
-                "<tr><td>3</td><td>horse</td></tr>"
+                f"<table><tr><th>{pre}id</pre></th><th>{pre}animal</pre></th></tr>"
+                f"<tr><td>{pre}1</pre></td><td>{pre}bat</pre></td></tr>"
+                f"<tr><td>{pre}2</pre></td><td>{pre}mouse</pre></td></tr>"
+                f"<tr><td>{pre}3</pre></td><td>{pre}horse</pre></td></tr>"
                 "</table><br /><pre>Random stuff in the middle</pre><br />"
-                "<table><tr><th>id</th><th>animal</th></tr>"
-                "<tr><td>1</td><td>cat</td></tr>"
-                "<tr><td>2</td><td>couse</td></tr>"
-                "<tr><td>3</td><td>corse</td></tr>"
+                f"<table><tr><th>{pre}id</pre></th><th>{pre}animal</pre></th></tr>"
+                f"<tr><td>{pre}1</pre></td><td>{pre}cat</pre></td></tr>"
+                f"<tr><td>{pre}2</pre></td><td>{pre}couse</pre></td></tr>"
+                f"<tr><td>{pre}3</pre></td><td>{pre}corse</pre></td></tr>"
                 "</table><br /><pre>Random stuff at the end</pre>"
             ),
         )

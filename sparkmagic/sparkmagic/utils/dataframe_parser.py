@@ -1,5 +1,4 @@
 import re
-import itertools
 from collections import OrderedDict
 from enum import Enum
 from functools import partial
@@ -77,7 +76,6 @@ def extractors(header_top, header_content):
 
             In our example:
             {'id': lambda row: row[0:4], 'animal': lambda row: row[4:11]}
-
     """
     header_pluses = re.finditer(r"\+", header_top)
 
@@ -183,7 +181,6 @@ class DataframeHtmlParser:
     def __init__(self, cell, start=0, end=None):
         """Creates a Dataframe parser for a single dataframe.
 
-
         :param cell The evaluated output of a cell.
                     Cell can contain more than one dataframe, but a single
                     DataframeHtmlParser can only parse table headers/rows for a
@@ -259,5 +256,11 @@ class DataframeHtmlParser:
         """Converts a spark dataframe row to a HTML row."""
         tag = "th" if is_header else "td"
         row_content = [x(row) for x in self.extractors.values()]
-        row_html = "".join(["<%s>%s</%s>" % (tag, rc, tag) for rc in row_content])
+        row_html = "".join(
+            [
+                '<%s><pre style="word-break: unset; background-color: unset;">%s</pre></%s>'
+                % (tag, rc, tag)
+                for rc in row_content
+            ]
+        )
         return "<tr>%s</tr>" % row_html
