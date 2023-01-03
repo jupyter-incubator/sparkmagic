@@ -1,5 +1,4 @@
 import re
-import itertools
 from collections import OrderedDict
 from enum import Enum
 from functools import partial
