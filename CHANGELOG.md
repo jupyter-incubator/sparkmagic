@@ -2,6 +2,8 @@
 
 ## Next Release
 
+## 0.20.4
+
 ### Bug Fixes
 - Support non ASCII characters in `%%pretty` output
 
