@@ -34,7 +34,6 @@ SparkOutputHandler = namedtuple("SparkOutputHandler", ["html", "text", "default"
 
 @magics_class
 class SparkMagicBase(Magics):
-
     _STRING_VAR_TYPE = "str"
     _PANDAS_DATAFRAME_VAR_TYPE = "df"
     _ALLOWED_LOCAL_TO_SPARK_TYPES = [_STRING_VAR_TYPE, _PANDAS_DATAFRAME_VAR_TYPE]

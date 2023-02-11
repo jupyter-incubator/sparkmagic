@@ -6,9 +6,13 @@ from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 
 
 class ConfigurableRetryPolicy(LinearRetryPolicy):
-    """Retry policy that returns a configurable number of seconds to sleep between calls,
-    takes all status codes 500 or above to be retriable, and retries a given maximum number of times.
-    If the retry count exceeds the number of items in the list, last item in the list is always returned."""
+    """Retry policy that returns a configurable number of seconds to sleep
+    between calls, takes all status codes 500 or above to be retriable, and
+    retries a given maximum number of times.
+
+    If the retry count exceeds the number of items in the list, last
+    item in the list is always returned.
+    """
 
     def __init__(self, retry_seconds_to_sleep_list, max_retries):
         super(ConfigurableRetryPolicy, self).__init__(-1, max_retries)

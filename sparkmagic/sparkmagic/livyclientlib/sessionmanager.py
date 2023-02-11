@@ -69,7 +69,7 @@ class SessionManager(object):
         return None
 
     def get_session_name_by_id_endpoint(self, id, endpoint):
-        for (name, session) in self._sessions.items():
+        for name, session in self._sessions.items():
             if session.id == int(id) and session.endpoint == endpoint:
                 return name
         return None
