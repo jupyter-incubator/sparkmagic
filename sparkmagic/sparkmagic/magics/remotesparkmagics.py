@@ -1,5 +1,8 @@
-﻿"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
-Provides the %spark magic."""
+﻿"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in
+remote cluster.
+
+Provides the %spark magic.
+"""
 
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
@@ -45,8 +48,12 @@ class RemoteSparkMagics(SparkMagicBase):
 
     @line_magic
     def manage_spark(self, line, local_ns=None):
-        """Magic to manage Spark endpoints and sessions. First, add an endpoint via the 'Add Endpoint' tab.
-        Then, create a session. You'll be able to select the session created from the %%spark magic."""
+        """Magic to manage Spark endpoints and sessions.
+
+        First, add an endpoint via the 'Add Endpoint' tab. Then, create
+        a session. You'll be able to select the session created from the
+        %%spark magic.
+        """
         return self.manage_widget
 
     @magic_arguments()

@@ -11,7 +11,6 @@ import pandas as pd
 
 
 class SendPandasDfToSparkCommand(SendToSparkCommand):
-
     # convert unicode to utf8 or pyspark will mark data as corrupted(and deserialize incorrectly)
     _python_decode = """
         import sys

@@ -139,7 +139,6 @@ class TestDataframeParsing(unittest.TestCase):
             next(rows)
 
     def test_dataframe_parsing(self):
-
         cell = """+---+------+
 | id|animal|
 +---+------+

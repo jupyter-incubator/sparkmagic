@@ -4,7 +4,8 @@
 
 class LinearRetryPolicy(object):
     """Retry policy that always returns the same number of seconds to sleep between calls,
-    takes all status codes 500 or above to be retriable, and retries a given maximum number of times."""
+    takes all status codes 500 or above to be retriable, and retries a given maximum number of times.
+    """
 
     def __init__(self, seconds_to_sleep, max_retries):
         self._seconds_to_sleep = seconds_to_sleep
