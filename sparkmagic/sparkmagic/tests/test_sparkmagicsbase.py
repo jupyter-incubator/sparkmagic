@@ -323,8 +323,16 @@ def test_spark_execution_ipython_display_html():
         "{ 'text/html': '<h1>test</h1>' }",
         MIMETYPE_TEXT_PLAIN,
     )
-    magic.execute_spark("", None, None, None, None, session, True)
-    magic.ipython_display.write.assert_called_once_with("<h1>test</h1>")
+    magic.execute_spark(
+        "",
+        None,
+        None,
+        None,
+        None,
+        session,
+        True,
+    )
+    magic.ipython_display.html.assert_called_once_with("<h1>test</h1>")
 
 
 def test_spark_exception_with_output_var():
