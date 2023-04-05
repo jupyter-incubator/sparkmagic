@@ -317,11 +317,7 @@ def test_spark_execution_with_output_var():
         )
 
 
-def test_spark_execution_with_nested_text_html_out():
-    mockSparkCommand = MagicMock()
-    magic._spark_store_command = MagicMock(return_value=mockSparkCommand)
-
-    magic.spark_controller.run_command.side_effect = None
+def test_spark_execution_ipython_display_html():
     magic.spark_controller.run_command.return_value = (
         True,
         "{ 'text/html': '<h1>test</h1>' }",
@@ -336,7 +332,6 @@ def test_spark_exception_with_output_var():
     magic._spark_store_command = MagicMock(return_value=mockSparkCommand)
     exception = BadUserDataException("Ka-boom!")
     output_var = "var_name"
-    df = "df"
 
     magic.spark_controller.run_command.side_effect = [
         (True, "out", MIMETYPE_TEXT_PLAIN),
