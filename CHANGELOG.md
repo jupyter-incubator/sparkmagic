@@ -2,6 +2,9 @@
 
 ## Next Release
 
+### Bug Fixes
+- Render the output of IPython.display.display_html as HTML
+
 ## 0.20.4
 
 ### Bug Fixes
