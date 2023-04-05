@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 
-"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in remote cluster.
-Provides the %spark magic."""
+"""Runs Scala, PySpark and SQL statement through Spark using a REST endpoint in
+remote cluster.
+
+Provides the %spark magic.
+"""
 
 # Copyright (c) 2015  aggftw@gmail.com
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
 from six import string_types
+import json
 
 from IPython.core.magic import Magics, magics_class
 from hdijupyterutils.ipythondisplay import IpythonDisplay
@@ -30,6 +34,10 @@ from sparkmagic.livyclientlib.exceptions import BadUserDataException
 
 # How to display different cell content types in IPython
 SparkOutputHandler = namedtuple("SparkOutputHandler", ["html", "text", "default"])
+
+
+def looks_like_json(s):
+    return s.startswith("{") and s.endswith("}")
 
 
 @magics_class
@@ -136,7 +144,24 @@ class SparkMagicBase(Magics):
                 if mimetype == MIMETYPE_TEXT_HTML:
                     output_handler.html(out)
                 else:
-                    output_handler.text(out)
+                    # Check for special case of { "text/html": "<div>...</div>" }
+                    # which is return by Livy from IPython display or display_html
+                    # parse out the html and display it
+                    if looks_like_json(out):
+                        try:
+                            # output will be in dict format (single quotes) so convert to JSON double quotes
+                            out_dict = json.loads(out.replace("'", '"'))
+                            if MIMETYPE_TEXT_HTML in out_dict:
+                                # display the html
+                                output_handler.html(out_dict[MIMETYPE_TEXT_HTML])
+                            else:
+                                # treat as text
+                                output_handler.text(out)
+                        except ValueError:
+                            # treat as text
+                            output_handler.text(out)
+                    else:
+                        output_handler.text(out)
             else:
                 output_handler.default(out)
             if output_var is not None:
