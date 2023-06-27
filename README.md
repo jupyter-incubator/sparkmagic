@@ -156,6 +156,28 @@ After installing, you need to register the custom authenticator with Sparkmagic 
               }
       ```
 
+## HTTP Session adapters
+
+when you need to customize HTTP request behavior for specific domains by modifying headers, implementing custom logic (e.g., using mTLS, retrying requests), or handling them differently. Utilize a custom adapter to gain fine-grained control over request processing.
+
+More details on how we can configure and use http adapter can be found [here](https://requests.readthedocs.io/en/latest/user/advanced/#transport-adapters)
+
+For configuring custom http adapter, edit the `~/.sparkmagic/config.json` with the following settings:
+
+```json
+  "http_session_config": {
+    "adapters":
+      [
+        {
+          "prefix": "http://",
+          "adapter": "customadapter.customadapter.CustomaAapter"
+        }
+      ]
+  },
+```
+
+This adds your CustomaAapter class in customadapter.py to sparkmagic http livy-requests session.
+
 ## Papermill
 
 If you want Papermill rendering to stop on a Spark error, edit the `~/.sparkmagic/config.json` with the following settings:

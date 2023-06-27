@@ -174,6 +174,11 @@ def logging_config():
 
 
 @_with_override
+def http_session_config():
+    return {"adapters": []}
+
+
+@_with_override
 def events_handler_class():
     return EVENTS_HANDLER_CLASS_NAME
 

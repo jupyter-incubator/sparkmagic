@@ -50,6 +50,16 @@
   "wait_for_idle_timeout_seconds": 15,
   "livy_session_startup_timeout_seconds": 60,
 
+  "http_session_config": {
+    "adapters":
+      [
+        {
+          "prefix": "http://",
+          "adapter": "requests.adapters.HTTPAdapter"
+        }
+      ]
+  },
+
   "fatal_error_suggestion": "The code failed because of a fatal error:\n\t{}.\n\nSome things to try:\na) Make sure Spark has enough available resources for Jupyter to create a Spark context.\nb) Contact your Jupyter administrator to make sure the Spark magics library is configured correctly.\nc) Restart the kernel.",
 
   "ignore_ssl_errors": false,

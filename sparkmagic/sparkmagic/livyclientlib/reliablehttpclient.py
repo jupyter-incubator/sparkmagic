@@ -5,7 +5,8 @@ from time import sleep
 import requests
 import sparkmagic.utils.configuration as conf
 from sparkmagic.utils.sparklogger import SparkLog
-from .exceptions import HttpClientException
+from .exceptions import HttpClientException, HttpSessionAdapterConfigException
+import importlib
 
 
 class ReliableHttpClient(object):
@@ -24,6 +25,26 @@ class ReliableHttpClient(object):
                 "ATTENTION: Will ignore SSL errors. This might render you vulnerable to attacks."
             )
             requests.packages.urllib3.disable_warnings()
+        self._set_http_session_config()
+
+    def _set_http_session_config(self):
+        http_session_config = conf.http_session_config()
+        if http_session_config and http_session_config.get("adapters"):
+            self._set_http_session_adapters(http_session_config["adapters"])
+
+    def _set_http_session_adapters(self, adapters):
+        for adapter in adapters:
+            full_class = adapter.get("adapter")
+            adapter_prefix = adapter.get("prefix")
+            if full_class is None or adapter_prefix is None:
+                raise HttpSessionAdapterConfigException(
+                    "Invalid http session adapter config, prefix: {} or class: {} "
+                    "not defined correctly".format(adapter_prefix, full_class)
+                )
+            module, class_name = full_class.rsplit(".", 1)
+            adapter_module = importlib.import_module(module)
+            adapter_class = getattr(adapter_module, class_name)
+            self._session.mount(adapter_prefix, adapter_class())
 
     def get_headers(self):
         return self._headers
