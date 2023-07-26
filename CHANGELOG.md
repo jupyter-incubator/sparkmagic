@@ -2,6 +2,9 @@
 
 ## Next Release
 
+### Updates
+- Added support for http requests session adapter configuration
+
 ## 0.20.5
 
 ### Bug Fixes

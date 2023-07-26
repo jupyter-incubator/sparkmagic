@@ -9,7 +9,10 @@ from sparkmagic.auth.basic import Basic
 from sparkmagic.auth.kerberos import Kerberos
 from sparkmagic.auth.customauth import Authenticator
 from sparkmagic.livyclientlib.endpoint import Endpoint
-from sparkmagic.livyclientlib.exceptions import HttpClientException
+from sparkmagic.livyclientlib.exceptions import (
+    HttpClientException,
+    HttpSessionAdapterConfigException,
+)
 from sparkmagic.livyclientlib.exceptions import BadUserConfigurationException
 from sparkmagic.livyclientlib.linearretrypolicy import LinearRetryPolicy
 from sparkmagic.livyclientlib.reliablehttpclient import ReliableHttpClient
@@ -241,3 +244,39 @@ def test_kerberos_auth_custom_configuration():
     assert client._auth.mutual_authentication == OPTIONAL
     assert hasattr(client._auth, "force_preemptive")
     assert client._auth.force_preemptive == True
+
+
+def test_http_custom_session_config():
+    http_abc_com = "http://abc.com"
+    https_xyz_com = "https://xyz.com"
+    custom_session_conf = {
+        "adapters": [
+            {"prefix": http_abc_com, "adapter": "requests.adapters.BaseAdapter"},
+            {"prefix": https_xyz_com, "adapter": "requests.adapters.HTTPAdapter"},
+        ]
+    }
+    overrides = {conf.http_session_config.__name__: custom_session_conf}
+    conf.override_all(overrides)
+    kerberos_auth = Kerberos()
+    endpoint = Endpoint("http://url.com", kerberos_auth)
+    client = ReliableHttpClient(endpoint, {}, retry_policy)
+    assert client._session is not None
+    assert client._session.adapters[http_abc_com] is not None
+    assert isinstance(
+        client._session.adapters[http_abc_com], requests.adapters.BaseAdapter
+    )
+    assert client._session.adapters[https_xyz_com] is not None
+    assert isinstance(
+        client._session.adapters[https_xyz_com], requests.adapters.HTTPAdapter
+    )
+
+
+def test_invalid_http_custom_session_config():
+    http_abc_com = "http://abc.com"
+    custom_session_conf = {"adapters": [{"prefix": http_abc_com}]}
+    overrides = {conf.http_session_config.__name__: custom_session_conf}
+    conf.override_all(overrides)
+    kerberos_auth = Kerberos()
+    endpoint = Endpoint("http://url.com", kerberos_auth)
+    with pytest.raises(HttpSessionAdapterConfigException):
+        ReliableHttpClient(endpoint, {}, retry_policy)

@@ -64,6 +64,10 @@ class SparkStatementException(LivyClientLibException):
     Spark statements."""
 
 
+class HttpSessionAdapterConfigException(LivyClientLibException):
+    """Exception that is thrown when an the http session adapter config is invalid"""
+
+
 # It has to be a KeyboardInterrupt to interrupt the notebook
 class SparkStatementCancelledException(KeyboardInterrupt):
     """Exception that is thrown when a Spark statement is cancelled."""
