@@ -156,9 +156,9 @@ After installing, you need to register the custom authenticator with Sparkmagic 
               }
       ```
 
-## HTTP Session adapters
+## HTTP Session Adapters
 
-when you need to customize HTTP request behavior for specific domains by modifying headers, implementing custom logic (e.g., using mTLS, retrying requests), or handling them differently. Utilize a custom adapter to gain fine-grained control over request processing.
+If you need to customize HTTP request behavior for specific domains by modifying headers, implementing custom logic (e.g., using mTLS, retrying requests), or handling them differently, you can use a custom adapter to gain fine-grained control over request processing.
 
 More details on how we can configure and use http adapter can be found [here](https://requests.readthedocs.io/en/latest/user/advanced/#transport-adapters)
 
