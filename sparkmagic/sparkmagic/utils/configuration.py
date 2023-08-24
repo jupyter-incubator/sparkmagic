@@ -2,6 +2,7 @@
 import copy
 import sys
 import base64
+from collections.abc import MutableMapping
 from hdijupyterutils.constants import (
     EVENTS_HANDLER_CLASS_NAME,
     LOGGING_CONFIG_CLASS_NAME,
@@ -81,16 +82,35 @@ def authenticators():
 
 
 # Configs
+def _recursive_merge(target, updates):
+    """
+    Recursively merge two dictionaries of dictionaries.
+    This function can mutate both parameters.
+    Callers should deepcopy dictionaries before passing them in.
+    """
+    for k, v in target.items():
+        if k in updates:
+            if all(isinstance(e, MutableMapping) for e in (v, updates[k])):
+                updates[k] = _recursive_merge(v, updates[k])
+    out = target.copy()
+    out.update(updates)
+    return out
 
 
 def get_session_properties(language):
-    properties = copy.deepcopy(session_configs())
+    properties = copy.deepcopy(session_configs_defaults())
+    properties = _recursive_merge(properties, copy.deepcopy(session_configs()))
     properties[LIVY_KIND_PARAM] = get_livy_kind(language)
     return properties
 
 
 @_with_override
 def session_configs():
+    return {}
+
+
+@_with_override
+def session_configs_defaults():
     return {}
 
 

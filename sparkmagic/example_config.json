@@ -68,7 +68,10 @@
     "driverMemory": "1000M",
     "executorCores": 2
   },
-
+  "session_configs_defaults": {
+    "conf": {
+        "spark.sql.catalog.spark_catalog.type": "hive"
+  },
   "use_auto_viz": true,
   "coerce_dataframe": true,
   "max_results_sql": 2500,

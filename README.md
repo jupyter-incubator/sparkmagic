@@ -157,6 +157,10 @@ After installing, you need to register the custom authenticator with Sparkmagic 
               }
       ```
 
+## Spark config settings
+
+There are two config options for spark settings `session_configs_defaults` and `session_configs`. `session_configs_defaults` sets default setting that have to be explicitly overidden in order for a user to change them. `session_configs` provides defaults that are all replaced whenever a user changes them using the configure magic.
+
 ## HTTP Session Adapters
 
 If you need to customize HTTP request behavior for specific domains by modifying headers, implementing custom logic (e.g., using mTLS, retrying requests), or handling them differently, you can use a custom adapter to gain fine-grained control over request processing.
