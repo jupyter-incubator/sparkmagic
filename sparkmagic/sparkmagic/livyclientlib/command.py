@@ -19,6 +19,7 @@ from sparkmagic.utils.constants import (
     MIMETYPE_TEXT_PLAIN,
     COMMAND_INTERRUPTED_MSG,
     COMMAND_CANCELLATION_FAILED_MSG,
+    MIMETYPE_APPLICATION_JSON
 )
 from .exceptions import (
     LivyUnexpectedStatusException,
@@ -144,6 +145,8 @@ class Command(ObjectWithGuid):
                         return (True, image, MIMETYPE_IMAGE_PNG)
                     elif MIMETYPE_TEXT_HTML in data:
                         return (True, data[MIMETYPE_TEXT_HTML], MIMETYPE_TEXT_HTML)
+                    elif MIMETYPE_APPLICATION_JSON in data:
+                        return (True, data[MIMETYPE_APPLICATION_JSON], MIMETYPE_APPLICATION_JSON)
                     else:
                         return (True, data[MIMETYPE_TEXT_PLAIN], MIMETYPE_TEXT_PLAIN)
                 elif statement_output["status"] == "error":
