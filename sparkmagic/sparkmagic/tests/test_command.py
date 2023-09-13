@@ -14,7 +14,7 @@ from sparkmagic.utils.constants import (
     MIMETYPE_TEXT_HTML,
     MIMETYPE_TEXT_PLAIN,
     COMMAND_INTERRUPTED_MSG,
-    MIMETYPE_APPLICATION_JSON
+    MIMETYPE_APPLICATION_JSON,
 )
 from sparkmagic.livyclientlib.command import Command
 from sparkmagic.livyclientlib.livysession import LivySession
@@ -125,9 +125,7 @@ def test_execute():
         "output": {
             "status": "ok",
             "execution_count": 0,
-            "data": {"application/json": {
-                "key_test": "value_test"
-            }},
+            "data": {"application/json": {"key_test": "value_test"}},
         },
     }
     result = command.execute(session)
