@@ -6,6 +6,7 @@
 - Added support for http requests session adapter configuration
 - Added support default spark session config settings. Any settings set in as defaults
   are preserved unless explicitly overridden by the user
+- Added support for application/json mime type in statement output
 
 ## 0.20.5
 
