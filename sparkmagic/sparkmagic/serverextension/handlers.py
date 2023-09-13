@@ -1,6 +1,12 @@
 import json
-from notebook.utils import url_path_join
-from notebook.base.handlers import IPythonHandler
+
+try:
+    from jupyter_server.utils import url_path_join
+    from jupyter_server.base.handlers import JupyterHandler as BaseHandler
+except ImportError:
+    from notebook.utils import url_path_join
+    from notebook.base.handlers import IPythonHandler as BaseHandler
+
 from tornado import web
 from tornado import gen
 from tornado.web import MissingArgumentError
@@ -13,7 +19,7 @@ from sparkmagic.utils.sparkevents import SparkEvents
 from sparkmagic.utils.sparklogger import SparkLog
 
 
-class ReconnectHandler(IPythonHandler):
+class ReconnectHandler(BaseHandler):
     logger = None
 
     @web.authenticated
