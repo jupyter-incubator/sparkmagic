@@ -31,7 +31,8 @@ RUN if [ "$dev_mode" = "true" ]; then \
     else pip install sparkmagic ; fi
 
 # Jupyter extensions changed in >7.x.x
-# For now, let's pin to 6 to avoid breaking things
+# For now (workaround), let's pin to 6 to avoid breaking things
+# xref: https://github.com/jupyter-incubator/sparkmagic/issues/825
 RUN pip install notebook==6.5.5
 
 RUN mkdir /home/$NB_USER/.sparkmagic
