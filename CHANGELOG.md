@@ -2,6 +2,8 @@
 
 ## Next Release
 
+## 0.21.0
+
 ### Updates
 
 - Added support for http requests session adapter configuration
@@ -12,6 +14,7 @@
 ### Bug Fixes
 
 - Support `notebook>=7.0.0`
+- Pin Docker.jupyter `notebook==6.5.5`
 
 ## 0.20.5
 
