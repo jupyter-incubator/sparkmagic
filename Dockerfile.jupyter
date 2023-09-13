@@ -30,6 +30,10 @@ RUN if [ "$dev_mode" = "true" ]; then \
       cd sparkmagic && pip install -e . && cd ../ ; \
     else pip install sparkmagic ; fi
 
+# Jupyter extensions changed in >7.x.x
+# For now, let's pin to 6 to avoid breaking things
+RUN pip install notebook==6.48
+
 RUN mkdir /home/$NB_USER/.sparkmagic
 COPY sparkmagic/example_config.json /home/$NB_USER/.sparkmagic/config.json
 RUN sed -i 's/localhost/spark/g' /home/$NB_USER/.sparkmagic/config.json
