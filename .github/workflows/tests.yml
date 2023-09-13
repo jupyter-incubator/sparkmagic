@@ -2,13 +2,13 @@ name: Run Unit Tests
 
 on:
   push: {}
+  pull_request: {}
   schedule:
     # Run daily
-    - cron: '6 4 * * *'
+    - cron: "6 4 * * *"
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
