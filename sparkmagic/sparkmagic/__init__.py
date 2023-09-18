@@ -1,6 +1,8 @@
-__version__ = "0.20.5"
+__version__ = "0.21.0"
 
-from sparkmagic.serverextension.handlers import load_jupyter_server_extension
+from sparkmagic.serverextension.handlers import (
+    load_jupyter_server_extension,
+)  # noqa: #501
 
 
 def _jupyter_server_extension_paths():
