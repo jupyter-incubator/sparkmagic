@@ -2,7 +2,7 @@ name: Build Docker Image
 
 on:
   push: {}
-  # pull_request: {}
+  pull_request: {}
   schedule:
     # Run daily
     - cron: "6 4 * * *"
@@ -36,9 +36,9 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push with local packages - SparkMagic
+      - name: Build and push with latest release - SparkMagic
         uses: docker/build-push-action@v5
-        # if: github.event_name == 'schedule'
+        if: github.event_name == 'schedule'
         with:
           context: .
           file: ${{ env.JUPYTER_DOCKERFILE }}
@@ -47,13 +47,39 @@ jobs:
           tags: |
             ${{ env.REPOSITORY_URL }}/${{ env.SPARKMAGIC_IMAGE_NAME }}
 
-      - name: Build and push with local packages - Jupyter
+      - name: Build and push with latest release - Jupyter
         uses: docker/build-push-action@v5
-        # if: github.event_name == 'schedule'
+        if: github.event_name == 'schedule'
         with:
           context: .
           file: ${{ env.JUPYTER_DOCKERFILE }}
           platforms: linux/amd64,linux/arm64
           push: true
+          tags: |
+            ${{ env.REPOSITORY_URL }}/${{ env.JUPYTER_IMAGE_NAME }}
+
+      - name: Build and push with local packages - SparkMagic
+        uses: docker/build-push-action@v5
+        if: github.event_name == 'push'
+        with:
+          context: .
+          file: ${{ env.JUPYTER_DOCKERFILE }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            dev_mode="true"
+          tags: |
+            ${{ env.REPOSITORY_URL }}/${{ env.SPARKMAGIC_IMAGE_NAME }}
+
+      - name: Build and push with local packages - Jupyter
+        uses: docker/build-push-action@v5
+        if: github.event_name == 'push'
+        with:
+          context: .
+          file: ${{ env.JUPYTER_DOCKERFILE }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            dev_mode="true"
           tags: |
             ${{ env.REPOSITORY_URL }}/${{ env.JUPYTER_IMAGE_NAME }}
