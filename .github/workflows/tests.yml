@@ -1,4 +1,4 @@
-name: Run Unit Tests
+name: Tests
 
 on:
   push: {}
@@ -6,6 +6,7 @@ on:
   schedule:
     # Run daily
     - cron: "6 4 * * *"
+  workflow_call:
 
 jobs:
   build:
