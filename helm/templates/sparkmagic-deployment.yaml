@@ -1,0 +1,22 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sparkmagic
+spec:
+  replicas: {{ .Values.sparkmagic.replicas }}
+  selector:
+    matchLabels:
+      app: sparkmagic
+  template:
+    metadata:
+      labels:
+        app: sparkmagic
+    spec:
+      containers:
+        - name: sparkmagic
+          image: "{{ .Values.sparkmagic.image.repository }}:{{ .Values.sparkmagic.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.sparkmagic.service.port }}
+              protocol: TCP

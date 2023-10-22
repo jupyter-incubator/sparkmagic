@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jupyter-notebook
+spec:
+  selector:
+    app: jupyter-notebook
+  ports:
+    - protocol: TCP
+      port: {{ .Values.jupyter.service.port }}
+      targetPort: {{ .Values.jupyter.service.port }}
+  type: LoadBalancer

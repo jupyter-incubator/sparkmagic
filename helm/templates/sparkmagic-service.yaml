@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sparkmagic
+spec:
+  selector:
+    app: sparkmagic
+  ports:
+    - protocol: TCP
+      port: {{ .Values.sparkmagic.service.port }}
+      targetPort: {{ .Values.sparkmagic.service.port }}
+  type: LoadBalancer

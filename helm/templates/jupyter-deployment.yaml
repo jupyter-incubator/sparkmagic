@@ -1,0 +1,22 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyter-notebook
+spec:
+  replicas: {{ .Values.sparkmagic.replicas }}
+  selector:
+    matchLabels:
+      app: jupyter-notebook
+  template:
+    metadata:
+      labels:
+        app: jupyter-notebook
+    spec:
+      containers:
+        - name: jupyter-notebook
+          image: "{{ .Values.jupyter.image.repository }}:{{ .Values.jupyter.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.jupyter.service.port }}
+              protocol: TCP

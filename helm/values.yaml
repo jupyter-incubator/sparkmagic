@@ -1,0 +1,15 @@
+---
+jupyter:
+  replicas: 1
+  image:
+    repository: ghcr.io/ljubon/sparkmagic/jupyter
+    tag: latest
+  service:
+    port: 8888
+
+sparkmagic:
+  image:
+    repository: ghcr.io/ljubon/sparkmagic/sparkmagic-livy
+    tag: latest
+  service:
+    port: 8998
