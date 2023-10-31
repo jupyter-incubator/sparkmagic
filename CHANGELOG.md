@@ -2,7 +2,7 @@
 
 ## Next Release
 
-- Eenable automated test run as required step for release process
+- Enable automated test run as required step for release process
 
 ## 0.21.0
 
