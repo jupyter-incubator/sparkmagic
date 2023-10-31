@@ -2,6 +2,8 @@
 
 ## Next Release
 
+- Enable basic DependaBot scanning for pip packages and GitHub actions used in CI
+
 ## 0.21.0
 
 ### Updates
