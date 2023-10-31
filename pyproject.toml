@@ -16,7 +16,7 @@ python = "^3.8"
 hdijupyterutils = {path = "./hdijupyterutils", develop = true }
 autovizwidget = {path = "./autovizwidget", develop = true }
 sparkmagic = {path = "./sparkmagic", develop = true }
-numpy = "^1.24.1"
+numpy = "^1.24.4"
 pandas = "^1.5.2"
 pytest = "^7.2.0"
 mock = "^5.0.0"
