@@ -1,0 +1,55 @@
+---
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        type: choice
+        description: Select type of bump version
+        # https://github.com/jaumann/github-bumpversion-action/tree/v0.0.7/?tab=readme-ov-file#bumping
+        options:
+          - major
+          - minor
+          - patch
+        default: 'patch'
+jobs:
+  release:
+    # Do not run this job for pull requests where both branches are from the same repo.
+    # Jobs that depend on this one will be skipped too.
+    # This prevents duplicate CI runs for our own pull requests, whilst preserving the ability to
+    # run the CI for each branch push to a fork, and for each pull request originating from a fork.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id
+    permissions:
+      contents: write
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+          ref: master
+
+      - name: Bump version and create tag
+        uses: jasonamyers/github-bumpversion-action@v1.0.5
+        id: bump
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: ${{ inputs.type }}
+
+      - name: Push tag
+        run: git push origin master --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release with changelog
+        id: create_release
+        uses: ncipollo/release-action@v1.13.0
+        with:
+          name: ${{ steps.bump.outputs.new_ver }}
+          bodyFile: CHANGELOG.md
+          tag: ${{ steps.bump.outputs.new_ver }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
