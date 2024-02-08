@@ -318,17 +318,17 @@ files = [
 
 [[package]]
 name = "comm"
-version = "0.1.2"
+version = "0.2.1"
 description = "Jupyter Python Comm implementation, for usage in ipykernel, xeus-python etc."
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "comm-0.1.2-py3-none-any.whl", hash = "sha256:9f3abf3515112fa7c55a42a6a5ab358735c9dccc8b5910a9d8e3ef5998130666"},
-    {file = "comm-0.1.2.tar.gz", hash = "sha256:3e2f5826578e683999b93716285b3b1f344f157bf75fa9ce0a797564e742f062"},
+    {file = "comm-0.2.1-py3-none-any.whl", hash = "sha256:87928485c0dfc0e7976fd89fc1e187023cf587e7c353e4a9b417555b44adf021"},
+    {file = "comm-0.2.1.tar.gz", hash = "sha256:0bc91edae1344d39d3661dcbc36937181fdaddb304790458f8b044dbc064b89a"},
 ]
 
 [package.dependencies]
-traitlets = ">=5.3"
+traitlets = ">=4"
 
 [package.extras]
 test = ["pytest"]
@@ -696,24 +696,24 @@ files = [
 
 [[package]]
 name = "ipywidgets"
-version = "8.0.4"
+version = "8.1.2"
 description = "Jupyter interactive widgets"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "ipywidgets-8.0.4-py3-none-any.whl", hash = "sha256:ebb195e743b16c3947fe8827190fb87b4d00979c0fbf685afe4d2c4927059fa1"},
-    {file = "ipywidgets-8.0.4.tar.gz", hash = "sha256:c0005a77a47d77889cafed892b58e33b4a2a96712154404c6548ec22272811ea"},
+    {file = "ipywidgets-8.1.2-py3-none-any.whl", hash = "sha256:bbe43850d79fb5e906b14801d6c01402857996864d1e5b6fa62dd2ee35559f60"},
+    {file = "ipywidgets-8.1.2.tar.gz", hash = "sha256:d0b9b41e49bae926a866e613a39b0f0097745d2b9f1f3dd406641b4a57ec42c9"},
 ]
 
 [package.dependencies]
-ipykernel = ">=4.5.1"
+comm = ">=0.1.3"
 ipython = ">=6.1.0"
-jupyterlab-widgets = ">=3.0,<4.0"
+jupyterlab-widgets = ">=3.0.10,<3.1.0"
 traitlets = ">=4.3.1"
-widgetsnbextension = ">=4.0,<5.0"
+widgetsnbextension = ">=4.0.10,<4.1.0"
 
 [package.extras]
-test = ["jsonschema", "pytest (>=3.6.0)", "pytest-cov", "pytz"]
+test = ["ipykernel", "jsonschema", "pytest (>=3.6.0)", "pytest-cov", "pytz"]
 
 [[package]]
 name = "isoduration"
@@ -978,13 +978,13 @@ files = [
 
 [[package]]
 name = "jupyterlab-widgets"
-version = "3.0.5"
+version = "3.0.10"
 description = "Jupyter interactive widgets for JupyterLab"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "jupyterlab_widgets-3.0.5-py3-none-any.whl", hash = "sha256:a04a42e50231b355b7087e16a818f541e53589f7647144ea0344c4bf16f300e5"},
-    {file = "jupyterlab_widgets-3.0.5.tar.gz", hash = "sha256:eeaecdeaf6c03afc960ddae201ced88d5979b4ca9c3891bcb8f6631af705f5ef"},
+    {file = "jupyterlab_widgets-3.0.10-py3-none-any.whl", hash = "sha256:dd61f3ae7a5a7f80299e14585ce6cf3d6925a96c9103c978eda293197730cb64"},
+    {file = "jupyterlab_widgets-3.0.10.tar.gz", hash = "sha256:04f2ac04976727e4f9d0fa91cdc2f1ab860f965e504c29dbd6a65c882c9d04c0"},
 ]
 
 [[package]]
@@ -2282,13 +2282,13 @@ test = ["websockets"]
 
 [[package]]
 name = "widgetsnbextension"
-version = "4.0.5"
+version = "4.0.10"
 description = "Jupyter interactive widgets for Jupyter Notebook"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "widgetsnbextension-4.0.5-py3-none-any.whl", hash = "sha256:eaaaf434fb9b08bd197b2a14ffe45ddb5ac3897593d43c69287091e5f3147bf7"},
-    {file = "widgetsnbextension-4.0.5.tar.gz", hash = "sha256:003f716d930d385be3fd9de42dd9bf008e30053f73bddde235d14fbeaeff19af"},
+    {file = "widgetsnbextension-4.0.10-py3-none-any.whl", hash = "sha256:d37c3724ec32d8c48400a435ecfa7d3e259995201fbefa37163124a9fcb393cc"},
+    {file = "widgetsnbextension-4.0.10.tar.gz", hash = "sha256:64196c5ff3b9a9183a8e699a4227fb0b7002f252c814098e66c4d1cd0644688f"},
 ]
 
 [[package]]
