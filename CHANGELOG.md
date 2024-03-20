@@ -3,7 +3,7 @@
 ## Next Release
 
 ### Updates
-
+- Enable cell-specific language to run against the same Spark Session (for polyglot notebooks).
 - Enable automated test run as required step for release process
 - Enable basic DependaBot scanning for pip packages and GitHub actions used in CI
 - Add CI support for release proces with [release.yaml](.github/workflows/release.yml) workflow

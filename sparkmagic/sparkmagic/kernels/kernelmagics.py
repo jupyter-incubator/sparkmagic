@@ -359,6 +359,13 @@ class KernelMagics(SparkMagicBase):
         help="Whether to automatically coerce the types (default, pass True if being explicit) "
         "of the dataframe or not (pass False)",
     )
+    @argument(
+        "-l",
+        "--language",
+        type=str,
+        default=None,
+        help=f"Specific language for the current cell (supported: {','.join(LANGS_SUPPORTED)})",
+    )
     @wrap_unexpected_exceptions
     @handle_expected_exceptions
     def spark(self, line, cell="", local_ns=None):
@@ -377,6 +384,7 @@ class KernelMagics(SparkMagicBase):
             args.samplefraction,
             None,
             coerce,
+            language=args.language,
         )
 
     @cell_magic

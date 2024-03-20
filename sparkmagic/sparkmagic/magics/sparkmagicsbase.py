@@ -124,6 +124,7 @@ class SparkMagicBase(Magics):
         session_name,
         coerce,
         output_handler=None,
+        language=None,
     ):
         output_handler = output_handler or SparkOutputHandler(
             html=self.ipython_display.html,
@@ -131,8 +132,9 @@ class SparkMagicBase(Magics):
             default=self.ipython_display.display,
         )
 
+        command = Command(cell).set_language(language)
         (success, out, mimetype) = self.spark_controller.run_command(
-            Command(cell), session_name
+            command, session_name
         )
         if not success:
             if conf.shutdown_session_on_spark_statement_errors():

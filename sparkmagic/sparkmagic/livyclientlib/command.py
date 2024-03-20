@@ -36,6 +36,7 @@ class Command(ObjectWithGuid):
         if spark_events is None:
             spark_events = SparkEvents()
         self._spark_events = spark_events
+        self.kind = None
 
     def __repr__(self):
         return "Command({}, ...)".format(repr(self.code))
@@ -46,14 +47,22 @@ class Command(ObjectWithGuid):
     def __ne__(self, other):
         return not self == other
 
+    def set_language(self, lang):
+        if lang is not None:
+            self.kind = conf.get_livy_kind(lang)
+        return self
+
     def execute(self, session):
+        kind = self.kind or session.kind
         self._spark_events.emit_statement_execution_start_event(
-            session.guid, session.kind, session.id, self.guid
+            session.guid, kind, session.id, self.guid
         )
         statement_id = -1
         try:
             session.wait_for_idle()
             data = {"code": self.code}
+            if self.kind:
+                data["kind"] = kind
             response = session.http_client.post_statement(session.id, data)
             statement_id = response["id"]
             output = self._get_statement_output(session, statement_id)
