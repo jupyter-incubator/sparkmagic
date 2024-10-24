@@ -1,4 +1,5 @@
 """Utility to read configs from file."""
+
 # Distributed under the terms of the Modified BSD License.
 import json
 import sys
