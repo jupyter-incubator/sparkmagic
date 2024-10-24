@@ -404,9 +404,11 @@ class LivySession(ObjectWithGuid):
             self.get_html_link("Link", self.get_spark_ui_url()),
             self.get_html_link("Link", self.get_driver_log_url()),
             self.get_user(),
-            ""
-            if current_session_id is None or current_session_id != self.id
-            else "\u2714",
+            (
+                ""
+                if current_session_id is None or current_session_id != self.id
+                else "\u2714"
+            ),
         )
 
     @staticmethod
