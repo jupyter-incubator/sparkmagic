@@ -4,6 +4,7 @@
 
 ### Updates
 
+- Updated pandas version to 2.x
 - Enable automated test run as required step for release process
 - Enable basic DependaBot scanning for pip packages and GitHub actions used in CI
 - Add CI support for release proces with [release.yaml](.github/workflows/release.yml) workflow

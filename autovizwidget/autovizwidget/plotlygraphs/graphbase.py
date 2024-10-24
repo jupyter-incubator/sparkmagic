@@ -115,7 +115,7 @@ class GraphBase(object):
         else:
             try:
                 if y_aggregation == Encoding.y_agg_avg:
-                    df_transformed = df_grouped.mean()
+                    df_transformed = df_grouped.mean(numeric_only=True)
                 elif y_aggregation == Encoding.y_agg_min:
                     df_transformed = df_grouped.min()
                 elif y_aggregation == Encoding.y_agg_max:
