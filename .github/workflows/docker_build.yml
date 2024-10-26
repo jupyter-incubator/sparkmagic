@@ -37,7 +37,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push with latest release - SparkMagic
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: github.event_name == 'schedule'
         with:
           context: .
@@ -48,7 +48,7 @@ jobs:
             ${{ env.REPOSITORY_URL }}/${{ env.SPARKMAGIC_IMAGE_NAME }}
 
       - name: Build and push with latest release - Jupyter
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: github.event_name == 'schedule'
         with:
           context: .
@@ -59,7 +59,7 @@ jobs:
             ${{ env.REPOSITORY_URL }}/${{ env.JUPYTER_IMAGE_NAME }}
 
       - name: Build and push with local packages - SparkMagic
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: github.event_name == 'push'
         with:
           context: .
@@ -72,7 +72,7 @@ jobs:
             ${{ env.REPOSITORY_URL }}/${{ env.SPARKMAGIC_IMAGE_NAME }}
 
       - name: Build and push with local packages - Jupyter
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: github.event_name == 'push'
         with:
           context: .
