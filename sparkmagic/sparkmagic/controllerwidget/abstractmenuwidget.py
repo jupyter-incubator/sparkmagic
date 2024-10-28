@@ -35,8 +35,8 @@ class AbstractMenuWidget(Box):
             self._repr_html_()
 
     def _repr_html_(self):
-        for child in self.children:
-            self.ipython_display.display(child)
+        # for child in self.children:
+        #     self.ipython_display.display(child)
         return ""
 
     def hide_all(self):
