@@ -45,11 +45,11 @@ def test_execute_valid_code():
     ret = kernel.do_execute(code, False)
 
     kernel.user_code_parser.get_code_to_run.assert_called_once_with(code)
-    assert execute_cell_mock.assert_called_once_with(ret, True)
+    execute_cell_mock.assert_called_once_with(ret, True)
     assert execute_cell_mock.return_value is ret
     assert kernel._fatal_error is None
 
-    assert execute_cell_mock.assert_called_once_with(code, True)
+    execute_cell_mock.assert_called_once_with(code, True)
     assert ipython_display.send_error.call_count == 0
 
 
@@ -62,7 +62,7 @@ def test_execute_throws_if_fatal_error_happened():
 
     assert execute_cell_mock.return_value is ret
     assert kernel._fatal_error == fatal_error
-    assert execute_cell_mock.assert_called_once_with("None", True)
+    execute_cell_mock.assert_called_once_with("None", True)
     assert ipython_display.send_error.call_count == 1
 
 
@@ -74,7 +74,7 @@ def test_execute_alerts_user_if_an_unexpected_error_happens():
 
     ret = kernel.do_execute(code, False)
     assert execute_cell_mock.return_value is ret
-    assert execute_cell_mock.assert_called_once_with("None", True)
+    execute_cell_mock.assert_called_once_with("None", True)
     assert ipython_display.send_error.call_count == 1
 
 
@@ -93,7 +93,7 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
     )
     assert execute_cell_mock.return_value is ret
     assert kernel._fatal_error == message
-    assert execute_cell_mock.assert_called_once_with("None", True)
+    execute_cell_mock.assert_called_once_with("None", True)
     assert ipython_display.send_error.call_count == 1
 
 
