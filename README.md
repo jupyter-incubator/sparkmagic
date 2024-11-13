@@ -58,14 +58,15 @@ See the [Sending Local Data to Spark notebook](examples/Send%20local%20data%20to
 
         pip install ipywidgets 
 
-3. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
+3. (Optional) Install the wrapper kernels. Run `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and run:
+   
         jupyter-kernelspec install sparkmagic/kernels/sparkkernel
         jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
         jupyter-kernelspec install sparkmagic/kernels/sparkrkernel
         
-4. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
+5. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
 
-5. (Optional) Enable the server extension so that clusters can be programatically changed:
+6. (Optional) Enable the server extension so that clusters can be programatically changed:
 
         jupyter server extension enable --py sparkmagic
 
