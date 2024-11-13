@@ -83,14 +83,16 @@ See the [Sending Local Data to Spark notebook](examples/Send%20local%20data%20to
 
         jupyter labextension install "@jupyter-widgets/jupyterlab-manager"
 
-4. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
+4. (Optional) Install the wrapper kernels. Run `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location run:
+
         jupyter-kernelspec install sparkmagic/kernels/sparkkernel
         jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
         jupyter-kernelspec install sparkmagic/kernels/sparkrkernel
-        
-5. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
 
-6. (Optional) Enable the server extension so that clusters can be programatically changed:
+        
+6. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
+
+7. (Optional) Enable the server extension so that clusters can be programatically changed:
 
         jupyter serverextension enable --py sparkmagic
 
