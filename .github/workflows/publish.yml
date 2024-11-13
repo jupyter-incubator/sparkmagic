@@ -4,16 +4,14 @@ on:
   release:
     types: [released]
 
-
 jobs:
-
   tests:
     name: "Tests"
     uses: "./.github/workflows/tests.yml"
 
   build:
     needs: [tests]
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ success() }}
     env:
       PYPI_TOKEN_AUTOVIZWIDGET: ${{ secrets.PYPI_TOKEN_AUTOVIZWIDGET }}
       PYPI_TOKEN_HDIJUPYTERUTILS: ${{ secrets.PYPI_TOKEN_HDIJUPYTERUTILS }}
