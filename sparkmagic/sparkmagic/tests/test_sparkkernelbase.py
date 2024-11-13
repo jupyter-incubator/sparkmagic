@@ -45,11 +45,10 @@ def test_execute_valid_code():
     ret = kernel.do_execute(code, False)
 
     kernel.user_code_parser.get_code_to_run.assert_called_once_with(code)
-    execute_cell_mock.assert_called_once_with(ret, True)
+
+    execute_cell_mock.assert_called_once_with(code, False, True, None, False)
     assert execute_cell_mock.return_value is ret
     assert kernel._fatal_error is None
-
-    execute_cell_mock.assert_called_once_with(code, True)
     assert ipython_display.send_error.call_count == 0
 
 
