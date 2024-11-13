@@ -89,8 +89,13 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
     kernel._execute_cell(code, False, shutdown_if_error=True, log_if_error=fatal_error)
 
     assert kernel._fatal_error == message
-    # assert kernel._complete_cell ran after the error
-    execute_cell_mock.assert_called_once_with("None", False, True, None, False)
+
+    # expect two calls, one for the code execution attempt
+    # and one for kernel._complete_cell after the error
+    assert execute_cell_mock.call_count == 2
+    execute_cell_mock.assert_any_call(code, False, True, None, False)
+    execute_cell_mock.assert_any_call("None", False, True, None, False)
+
     assert ipython_display.send_error.call_count == 1
 
 
