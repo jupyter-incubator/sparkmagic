@@ -17,6 +17,7 @@ class TestSparkKernel(SparkKernelBase):
         kwargs = {"testing": True}
         if user_code_parser is None:
             user_code_parser = MagicMock(return_value=code)
+            user_code_parser.get_code_to_run = MagicMock(return_value=code)
 
         super().__init__(
             None, None, None, None, None, LANG_PYTHON, user_code_parser, **kwargs
@@ -27,6 +28,7 @@ def setup_function():
     global kernel, execute_cell_mock, do_shutdown_mock, ipython_display
 
     user_code_parser = MagicMock(return_value=code)
+    user_code_parser.get_code_to_run = MagicMock(return_value=code)
     kernel = TestSparkKernel(user_code_parser)
 
     kernel._execute_cell_for_user = execute_cell_mock = MagicMock(
@@ -44,12 +46,13 @@ def test_execute_valid_code():
     # Verify that the execution flows through.
     ret = kernel.do_execute(code, False)
 
-    #  kernel.user_code_parser.get_code_to_run.assert_called_once_with(code)
+    kernel.user_code_parser.get_code_to_run.assert_called_once_with(code)
 
     execute_cell_mock.assert_called_once_with(code, False, True, None, False)
-    assert execute_cell_mock.return_value is ret
-    assert kernel._fatal_error is None
+    assert ret is execute_cell_mock.return_value
 
+    # no errors
+    assert kernel._fatal_error is None
     assert ipython_display.send_error.call_count == 0
 
 
