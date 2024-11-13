@@ -16,7 +16,7 @@ class TestSparkKernel(SparkKernelBase):
     def __init__(self, user_code_parser=None):
         kwargs = {"testing": True}
         if user_code_parser is None:
-            user_code_parser = MagicMock(return_value=code)
+            user_code_parser = MagicMock()
             user_code_parser.get_code_to_run = MagicMock(return_value=code)
 
         super().__init__(
@@ -27,7 +27,7 @@ class TestSparkKernel(SparkKernelBase):
 def setup_function():
     global kernel, execute_cell_mock, do_shutdown_mock, ipython_display
 
-    user_code_parser = MagicMock(return_value=code)
+    user_code_parser = MagicMock()
     user_code_parser.get_code_to_run = MagicMock(return_value=code)
     kernel = TestSparkKernel(user_code_parser)
 
