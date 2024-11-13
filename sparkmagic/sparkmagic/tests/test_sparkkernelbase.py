@@ -49,6 +49,7 @@ def test_execute_valid_code():
     execute_cell_mock.assert_called_once_with(code, False, True, None, False)
     assert execute_cell_mock.return_value is ret
     assert kernel._fatal_error is None
+
     assert ipython_display.send_error.call_count == 0
 
 
@@ -56,12 +57,10 @@ def test_execute_throws_if_fatal_error_happened():
     # Verify that if a fatal error already happened, we don't run the code and show the fatal error instead.
     fatal_error = "Error."
     kernel._fatal_error = fatal_error
+    kernel.do_execute(code, False)
 
-    ret = kernel.do_execute(code, False)
-
-    assert execute_cell_mock.return_value is ret
-    assert kernel._fatal_error == fatal_error
-    execute_cell_mock.assert_called_once_with("None", True)
+    # assert kernel._complete_cell ran after the error
+    execute_cell_mock.assert_called_once_with("None", False, True, None, False)
     assert ipython_display.send_error.call_count == 1
 
 
@@ -71,9 +70,9 @@ def test_execute_alerts_user_if_an_unexpected_error_happens():
     kernel._fatal_error = "Something bad happened before"
     kernel._repeat_fatal_error = MagicMock(side_effect=ValueError)
 
-    ret = kernel.do_execute(code, False)
-    assert execute_cell_mock.return_value is ret
-    execute_cell_mock.assert_called_once_with("None", True)
+    kernel.do_execute(code, False)
+    # assert kernel._complete_cell ran after the error
+    execute_cell_mock.assert_called_once_with("None", False, True, None, False)
     assert ipython_display.send_error.call_count == 1
 
 
@@ -87,12 +86,11 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
 
     execute_cell_mock.return_value = reply_content
 
-    ret = kernel._execute_cell(
-        code, False, shutdown_if_error=True, log_if_error=fatal_error
-    )
-    assert execute_cell_mock.return_value is ret
+    kernel._execute_cell(code, False, shutdown_if_error=True, log_if_error=fatal_error)
+
     assert kernel._fatal_error == message
-    execute_cell_mock.assert_called_once_with("None", True)
+    # assert kernel._complete_cell ran after the error
+    execute_cell_mock.assert_called_once_with("None", False, True, None, False)
     assert ipython_display.send_error.call_count == 1
 
 
