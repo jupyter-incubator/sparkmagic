@@ -48,20 +48,18 @@ See the [Sending Local Data to Spark notebook](examples/Send%20local%20data%20to
 
 ## Installation
 
+### Jupyter Notebook 7.x / JupyterLab 3.x
+
 1. Install the library
 
         pip install sparkmagic
 
 2. Make sure that ipywidgets is properly installed by running
 
-        jupyter nbextension enable --py --sys-prefix widgetsnbextension 
- 
-3. If you're using JupyterLab, you'll need to run another command:
+        pip install ipywidgets 
 
-        jupyter labextension install "@jupyter-widgets/jupyterlab-manager"
-
-4. (Optional) Install the wrapper kernels. Do `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and do:
-
+3. (Optional) Install the wrapper kernels. Run `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location and run:
+   
         jupyter-kernelspec install sparkmagic/kernels/sparkkernel
         jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
         jupyter-kernelspec install sparkmagic/kernels/sparkrkernel
@@ -69,6 +67,33 @@ See the [Sending Local Data to Spark notebook](examples/Send%20local%20data%20to
 5. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
 
 6. (Optional) Enable the server extension so that clusters can be programatically changed:
+
+        jupyter server extension enable --py sparkmagic
+
+### Jupyter Notebook 5.2 or earlier / JupyterLab 1 or 2
+
+1. Install the library
+
+        pip install sparkmagic
+
+2. Make sure that ipywidgets is properly installed by running
+ 
+        jupyter nbextension enable --py --sys-prefix widgetsnbextension 
+
+3. If you're using JupyterLab 1 or 2, you'll need to run another command:
+
+        jupyter labextension install "@jupyter-widgets/jupyterlab-manager"
+
+4. (Optional) Install the wrapper kernels. Run `pip show sparkmagic` and it will show the path where `sparkmagic` is installed at. `cd` to that location run:
+
+        jupyter-kernelspec install sparkmagic/kernels/sparkkernel
+        jupyter-kernelspec install sparkmagic/kernels/pysparkkernel
+        jupyter-kernelspec install sparkmagic/kernels/sparkrkernel
+
+        
+6. (Optional) Modify the configuration file at ~/.sparkmagic/config.json. Look at the [example_config.json](sparkmagic/example_config.json)
+
+7. (Optional) Enable the server extension so that clusters can be programatically changed:
 
         jupyter serverextension enable --py sparkmagic
 

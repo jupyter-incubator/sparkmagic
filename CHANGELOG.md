@@ -9,6 +9,7 @@
 - Enable basic DependaBot scanning for pip packages and GitHub actions used in CI
 - Add CI support for release proces with [release.yaml](.github/workflows/release.yml) workflow
   - Release documentation is updated acrodingly in [RELEASING.md](./RELEASING.md)
+- Update README.md with installation methods on newer Jupyter and JupyterLab releases
 
 ## 0.21.0
 
