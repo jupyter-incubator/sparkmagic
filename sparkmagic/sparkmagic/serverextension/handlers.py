@@ -110,9 +110,13 @@ class ReconnectHandler(BaseHandler):
         except KeyError:
             raise MissingArgumentError(key)
 
+    def _get_list_sessions(self):
+        sessions = self.session_manager.list_sessions()
+        return [session for session in sessions.result]
+
     @gen.coroutine
     def _get_kernel_manager(self, path, kernel_name):
-        sessions = self.session_manager.list_sessions()
+        sessions = self._get_list_sessions()
 
         kernel_id = None
         for session in sessions:
