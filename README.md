@@ -279,6 +279,40 @@ set the `dev_mode` build arg in `docker-compose.yml` to `true`, and then
 re-build the container. This will cause the container to install your
 local version of autovizwidget, hdijupyterutils, and sparkmagic. The local packages are installed with the editable flag, meaning you can make edits directly to the libraries within the Jupyterlab docker service to debug issues in realtime. To make local changes available in Jupyterlab, make  sure to re-run `docker compose build` before spinning up the services.
 
+### Alternative images
+
+If you want a different stack image for jupyter, just uncommnent the proper lines in the docker-compose.yml file.
+
+	jupyter:
+		image: jupyter/sparkmagic
+		#image: darkice01/sparkmagic-minimal
+		#image: darkice01/sparkmagic-scipy
+		#image: darkice01/sparkmagic-r
+		#image: darkice01/sparkmagic-tensorflow
+		#image: darkice01/sparkmagic-datascience
+		#image: darkice01/sparkmagic-pyspark
+		#image: darkice01/sparkmagic-all
+    		
+		build:
+		context: .
+      
+		dockerfile: Dockerfile.jupyter
+		#dockerfile: Dockerfile.jupyter-minimal
+		#dockerfile: Dockerfile.jupyter-scipy
+		#dockerfile: Dockerfile.jupyter-r
+		#dockerfile: Dockerfile.jupyter-tensorflow
+		#dockerfile: Dockerfile.jupyter-datascience
+		#dockerfile: Dockerfile.jupyter-pyspark
+		#dockerfile: Dockerfile.jupyter-all
+      		
+		args:
+        		dev_mode: "false"
+
+and then simply run:
+
+	docker-compose build
+    	docker-compose up
+
 ## Server extension API
 
 ### `/reconnectsparkmagic`:
