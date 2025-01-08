@@ -2,6 +2,10 @@
 
 ## Next Release
 
+### Updates
+- Enable cell-specific language to run against the same Spark Session (for polyglot notebooks).
+
+
 ## 0.22.0
 
 ### Updates
