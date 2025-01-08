@@ -4,10 +4,23 @@
 
 ### Updates
 - Enable cell-specific language to run against the same Spark Session (for polyglot notebooks).
+
+
+## 0.22.0
+
+### Updates
+
+- Drop official Python 3.7 support, add Python 3.12 support
+- Updated pandas version to 2.x
 - Enable automated test run as required step for release process
 - Enable basic DependaBot scanning for pip packages and GitHub actions used in CI
-- Add CI support for release proces with [release.yaml](.github/workflows/release.yml) workflow
-  - Release documentation is updated acrodingly in [RELEASING.md](./RELEASING.md)
+- Add CI support for release process with [release.yaml](.github/workflows/release.yml) workflow
+  - Release documentation is updated accordingly in [RELEASING.md](./RELEASING.md)
+- Update README.md with installation methods on newer Jupyter and JupyterLab releases
+
+### Bug Fixes
+
+- Address security vulnerabilities in dependencies
 
 ## 0.21.0
 

@@ -16,7 +16,8 @@ class TestSparkKernel(SparkKernelBase):
     def __init__(self, user_code_parser=None):
         kwargs = {"testing": True}
         if user_code_parser is None:
-            user_code_parser = MagicMock(return_value=code)
+            user_code_parser = MagicMock()
+            user_code_parser.get_code_to_run = MagicMock(return_value=code)
 
         super().__init__(
             None, None, None, None, None, LANG_PYTHON, user_code_parser, **kwargs
@@ -26,7 +27,8 @@ class TestSparkKernel(SparkKernelBase):
 def setup_function():
     global kernel, execute_cell_mock, do_shutdown_mock, ipython_display
 
-    user_code_parser = MagicMock(return_value=code)
+    user_code_parser = MagicMock()
+    user_code_parser.get_code_to_run = MagicMock(return_value=code)
     kernel = TestSparkKernel(user_code_parser)
 
     kernel._execute_cell_for_user = execute_cell_mock = MagicMock(
@@ -45,11 +47,12 @@ def test_execute_valid_code():
     ret = kernel.do_execute(code, False)
 
     kernel.user_code_parser.get_code_to_run.assert_called_once_with(code)
-    assert execute_cell_mock.called_once_with(ret, True)
-    assert execute_cell_mock.return_value is ret
-    assert kernel._fatal_error is None
 
-    assert execute_cell_mock.called_once_with(code, True)
+    execute_cell_mock.assert_called_once_with(code, False, True, None, False)
+    assert ret is execute_cell_mock.return_value
+
+    # no errors
+    assert kernel._fatal_error is None
     assert ipython_display.send_error.call_count == 0
 
 
@@ -57,12 +60,10 @@ def test_execute_throws_if_fatal_error_happened():
     # Verify that if a fatal error already happened, we don't run the code and show the fatal error instead.
     fatal_error = "Error."
     kernel._fatal_error = fatal_error
+    kernel.do_execute(code, False)
 
-    ret = kernel.do_execute(code, False)
-
-    assert execute_cell_mock.return_value is ret
-    assert kernel._fatal_error == fatal_error
-    assert execute_cell_mock.called_once_with("None", True)
+    # assert kernel._complete_cell ran after the error
+    execute_cell_mock.assert_called_once_with("None", False, True, None, False)
     assert ipython_display.send_error.call_count == 1
 
 
@@ -72,9 +73,9 @@ def test_execute_alerts_user_if_an_unexpected_error_happens():
     kernel._fatal_error = "Something bad happened before"
     kernel._repeat_fatal_error = MagicMock(side_effect=ValueError)
 
-    ret = kernel.do_execute(code, False)
-    assert execute_cell_mock.return_value is ret
-    assert execute_cell_mock.called_once_with("None", True)
+    kernel.do_execute(code, False)
+    # assert kernel._complete_cell ran after the error
+    execute_cell_mock.assert_called_once_with("None", False, True, None, False)
     assert ipython_display.send_error.call_count == 1
 
 
@@ -88,12 +89,16 @@ def test_execute_throws_if_fatal_error_happens_for_execution():
 
     execute_cell_mock.return_value = reply_content
 
-    ret = kernel._execute_cell(
-        code, False, shutdown_if_error=True, log_if_error=fatal_error
-    )
-    assert execute_cell_mock.return_value is ret
+    kernel._execute_cell(code, False, shutdown_if_error=True, log_if_error=fatal_error)
+
     assert kernel._fatal_error == message
-    assert execute_cell_mock.called_once_with("None", True)
+
+    # expect two calls, one for the code execution attempt
+    # and one for kernel._complete_cell after the error
+    assert execute_cell_mock.call_count == 2
+    execute_cell_mock.assert_any_call(code, False, True, None, False)
+    execute_cell_mock.assert_any_call("None", False, True, None, False)
+
     assert ipython_display.send_error.call_count == 1
 
 
