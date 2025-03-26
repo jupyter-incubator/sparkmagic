@@ -14,6 +14,9 @@ from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.livyclientlib.exceptions import *
 from sparkmagic.livyclientlib.sqlquery import SQLQuery
 from sparkmagic.livyclientlib.sparkstorecommand import SparkStoreCommand
+import pandas as pd
+
+import unittest
 
 magic = None
 spark_controller = None
@@ -584,6 +587,24 @@ def test_run_sql_command_knows_how_to_be_quiet():
         SQLQuery(cell, samplemethod=method_name), name
     )
     assert result is None
+
+def test_send_to_spark_with_str_variable():
+    magic.do_send_to_spark = MagicMock()
+    line = "-i str_var_name -n var_name_in_spark"
+    result = magic.send_to_spark(line)
+    magic.do_send_to_spark.assert_called_once_with(
+        '', 'str_var_name', 'str', 'var_name_in_spark', 2500, None
+    )
+
+def test_send_to_spark_with_pandas_variable():
+    magic.do_send_to_spark = MagicMock()
+    df = pd.DataFrame({'key': ['val1', 'val2']})
+    shell['df_var_name'] = df
+    line = "-i df_var_name -t df -n var_name_in_spark"
+    result = magic.send_to_spark(line)
+    magic.do_send_to_spark.assert_called_once_with(
+        '', 'df_var_name', 'df', 'var_name_in_spark', 2500, None
+    )
 
 
 def test_logs_subcommand():
