@@ -2,6 +2,11 @@
 
 ## Next Release
 
+### Bug Fixes
+
+- Update `setup.cfg` to support modern Setuptools formatting requirements
+
+
 ## 0.22.0
 
 ### Updates
