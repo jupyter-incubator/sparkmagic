@@ -1,4 +1,4 @@
-from IPython.core.display import display, HTML
+from IPython.display import display, HTML
 from IPython import get_ipython
 import sys
 
