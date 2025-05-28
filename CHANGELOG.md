@@ -2,6 +2,11 @@
 
 ## Next Release
 
+### Bug Fixes
+
+- Add support for `ipython>=9.0.0`
+- Remove support for `ipython<4.1.2`
+
 ## 0.22.0
 
 ### Updates

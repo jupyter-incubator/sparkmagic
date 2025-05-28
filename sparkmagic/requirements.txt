@@ -1,6 +1,6 @@
 hdijupyterutils>=0.6
 autovizwidget>=0.6
-ipython>=4.0.2
+ipython>=4.1.2
 pandas<3.0.0
 numpy
 requests
