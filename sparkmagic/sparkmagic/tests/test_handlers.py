@@ -63,7 +63,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         )
 
         # Mock session manager
-        self.session_list = [self.create_session_dict(self.path, self.kernel_id)]
+        self.session_list = MagicMock(return_value=[self.create_session_dict(self.path, self.kernel_id)])
         self.session_manager = MagicMock()
         self.session_manager.list_sessions = MagicMock(return_value=self.session_list)
         self.session_manager.create_session = MagicMock(
@@ -88,6 +88,7 @@ class TestSparkMagicHandler(AsyncTestCase):
         # Create mocked reconnect_handler
         ReconnectHandler.__bases__ = (SimpleObject,)
         self.reconnect_handler = ReconnectHandler()
+        self.reconnect_handler._get_list_sessions = self.session_list
         self.reconnect_handler.spark_events = self.spark_events
         self.reconnect_handler.session_manager = self.session_manager
         self.reconnect_handler.kernel_manager = self.kernel_manager
