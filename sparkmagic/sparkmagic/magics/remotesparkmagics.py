@@ -30,7 +30,11 @@ from sparkmagic.utils.constants import (
 from sparkmagic.controllerwidget.magicscontrollerwidget import MagicsControllerWidget
 from sparkmagic.livyclientlib.endpoint import Endpoint
 from sparkmagic.magics.sparkmagicsbase import SparkMagicBase
-from sparkmagic.livyclientlib.exceptions import handle_expected_exceptions
+from sparkmagic.livyclientlib.exceptions import (
+    handle_expected_exceptions,
+    wrap_unexpected_exceptions,
+    BadUserDataException
+)
 
 
 @magics_class
@@ -326,6 +330,63 @@ class RemoteSparkMagics(SparkMagicBase):
             )
         )
 
+    @magic_arguments()
+    @argument(
+        "-i",
+        "--input",
+        type=str,
+        default=None,
+        help="If present, indicated variable will be stored in variable"
+        " in Spark's context.",
+    )
+    @argument(
+        "-t",
+        "--vartype",
+        type=str,
+        default="str",
+        help="Optionally specify the type of input variable. "
+        "Available: 'str' - string(default) or 'df' - Pandas DataFrame",
+    )
+    @argument(
+        "-n",
+        "--varname",
+        type=str,
+        default=None,
+        help="Optionally specify the custom name for the input variable.",
+    )
+    @argument(
+        "-m",
+        "--maxrows",
+        type=int,
+        default=2500,
+        help="Maximum number of rows that will be pulled back "
+        "from the local dataframe",
+    )
+    @line_magic
+    @needs_local_scope
+    @wrap_unexpected_exceptions
+    @handle_expected_exceptions
+    def send_to_spark(self, line, local_ns=None):
+        """Magic to send a variable to spark cluster.
+
+        Usage: %send_to_spark -i variable -t str -n var
+
+        -i VAR_NAME: Local Pandas DataFrame(or String) of name VAR_NAME will be available in the %%spark context as a 
+          Spark dataframe(or String) with the same name.
+        -t TYPE: Specifies the type of variable passed as -i. Available options are:
+         `str` for string and `df` for Pandas DataFrame. Optional, defaults to `str`.
+        -n NAME: Custom name of variable passed as -i. Optional, defaults to -i variable name.
+        -m MAXROWS: Maximum amount of Pandas rows that will be sent to Spark. Defaults to 2500.
+        
+        """
+        args = parse_argstring_or_throw(self.send_to_spark, line)
+
+        if not args.input:
+            raise BadUserDataException("-i param not provided.")
+
+        self.do_send_to_spark(
+            "", args.input, args.vartype, args.varname, args.maxrows, None
+        )
 
 def load_ipython_extension(ip):
     ip.register_magics(RemoteSparkMagics)
