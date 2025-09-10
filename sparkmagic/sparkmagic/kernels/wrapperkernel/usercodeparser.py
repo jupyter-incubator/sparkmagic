@@ -23,6 +23,7 @@ class UserCodeParser(object):
     ]
 
     def get_code_to_run(self, code):
+        code = code.lstrip()
         try:
             all_but_first_line = code.split(None, 1)[1]
         except IndexError:

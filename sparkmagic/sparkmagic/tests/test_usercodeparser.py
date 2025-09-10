@@ -77,6 +77,15 @@ hi"""
 
     assert cell == parser.get_code_to_run(cell)
 
+def test_leading_whitespace_magic():
+    parser = UserCodeParser()
+    cell = """\n%magic
+hi
+hi
+hi"""
+
+    assert cell.lstrip() == parser.get_code_to_run(cell)
+
 
 def test_scala_code():
     parser = UserCodeParser()
