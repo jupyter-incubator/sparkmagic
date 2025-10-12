@@ -122,6 +122,7 @@ more content""".format(
         magic_name
     ) == parser.get_code_to_run(cell)
 
+
 def test_vscode_bootstrapping():
     parser = UserCodeParser()
     cell = """

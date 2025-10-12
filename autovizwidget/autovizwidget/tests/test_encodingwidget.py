@@ -16,12 +16,12 @@ def setup_function():
     global df, encoding, ipywidget_factory, change_hook
 
     records = [
-        {"buildingID": 0, "date": "6/1/13", "temp_diff": 12, "\u263A": True},
-        {"buildingID": 1, "date": "6/1/13", "temp_diff": 0, "\u263A": True},
-        {"buildingID": 2, "date": "6/1/14", "temp_diff": 11, "\u263A": True},
-        {"buildingID": 0, "date": "6/1/15", "temp_diff": 5, "\u263A": True},
-        {"buildingID": 1, "date": "6/1/16", "temp_diff": 19, "\u263A": True},
-        {"buildingID": 2, "date": "6/1/17", "temp_diff": 32, "\u263A": True},
+        {"buildingID": 0, "date": "6/1/13", "temp_diff": 12, "\u263a": True},
+        {"buildingID": 1, "date": "6/1/13", "temp_diff": 0, "\u263a": True},
+        {"buildingID": 2, "date": "6/1/14", "temp_diff": 11, "\u263a": True},
+        {"buildingID": 0, "date": "6/1/15", "temp_diff": 5, "\u263a": True},
+        {"buildingID": 1, "date": "6/1/16", "temp_diff": 19, "\u263a": True},
+        {"buildingID": 2, "date": "6/1/17", "temp_diff": 32, "\u263a": True},
     ]
     df = pd.DataFrame(records)
 
