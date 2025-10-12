@@ -42,5 +42,8 @@ class UserCodeParser(object):
             return code
         elif not code:
             return code
+        elif "_VSCODE_" in code:
+            # Avoids sending VSCode-jupyter bootstrapping logic to livy
+            return code
         else:
             return "%%spark\n{}".format(code)
