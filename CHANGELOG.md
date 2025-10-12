@@ -2,6 +2,10 @@
 
 ## Next Release
 
+## Bug Fixes
+
+- Resolve indefinite hanging bug when connecting to livy via vscode-jupyter
+
 ## 0.23.0
 
 ### Bug Fixes

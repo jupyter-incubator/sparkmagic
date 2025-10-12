@@ -121,3 +121,15 @@ more content""".format(
     assert "%%{}\nmy content è🐙\nmore content\n ".format(
         magic_name
     ) == parser.get_code_to_run(cell)
+
+
+def test_vscode_bootstrapping():
+    parser = UserCodeParser()
+    cell = """
+from IPython import get_ipython
+
+# Variable that prevent wrapping from happing more than_once
+__VSCODE_wrapped_run_cell = False
+"""
+
+    assert cell == parser.get_code_to_run(cell)
